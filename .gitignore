@@ -3,3 +3,4 @@ node_modules/
 .env
 .env.*
 *.log
+.claude/.simplify-ignore-cache/
