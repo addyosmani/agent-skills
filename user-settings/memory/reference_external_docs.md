@@ -1,6 +1,6 @@
 ---
 name: reference_external_docs
-description: Authoritative external references — Claude Code docs, AGENTS.md spec, GitHub Spec Kit, Notion KB workflow
+description: Authoritative external references — Claude Code docs, AGENTS.md spec, GitHub Spec Kit, Obsidian KB pipeline (ADR-0012)
 type: reference
 ---
 
@@ -28,15 +28,20 @@ Claude Code version we standardize on: **2.1.119** (verified 2026-04-26 via `cla
 
 - **`.aider.conf.yml`:** https://aider.chat/docs/usage/conventions.html (`read:` directive to pre-load files at session start, including `AGENTS.md`)
 
-## Notion KB workflow (operator's external memory)
+## Obsidian KB pipeline (operator's external memory, ADR-0012)
 
-The `notion-kb-workflow` skill in `batuta-agent-skills` operates against the operator's Notion workspace. Three modes:
+The KB lives in the operator's local Obsidian vault. Path resolved from `~/.claude/kb-vault.json` → `vault_root`. Structure: `<vault>/clients/<slug>/projects/<slug>/{sessions,sprints,decisions,gotchas,tasks}/` plus shared `<vault>/{decisions,gotchas,playbooks,glossary,_inbox,templates}/`.
 
-- `--read client:X project:Y` at session start on existing project
-- `--init client:X project:Y` for new project
-- `--append` at end of productive session
+Per-project automation (gated by `.claude/kb-config.json` flags, default `false`):
 
-The skill's MCP integration is configured via `~/.claude/mcp.json` (notion server). When in doubt about state across machines, Notion is the durable source.
+- `hooks/session-start.sh` — auto-loads client metadata + project status + last 3 vault sessions + active plan into the main agent's context at session start
+- `hooks/post-commit-kb.sh` with `adr_mirror_enabled: true` — mirrors any committed `docs/adr/NNNN-*.md` to `<vault>/decisions/adr-NNNN-<slug>.md`
+- `hooks/post-commit-kb.sh` with `kb_pipeline_enabled: true` — dispatches the `kb-pipeline` agent (Capture / Curate / Write phases) in a detached background process per commit
+- Manual `/kb-curate` for batch L1 → L2 promotion
+
+Cross-machine sync: vault is a private git repo (`jota-batuta/batuta-kb`). On Windows, `.git/` lives outside Google Drive sync via `git init --separate-git-dir` to avoid Drive thrashing on `.git/objects/`.
+
+**Deprecated**: `notion-kb-workflow` (frozen 2026-05-01). Notion KB content was migrated to `<vault>/glossary/domains/` on 2026-04-30 (40 entries from the "Batuta Knowledge Base" Notion DB).
 
 ## When to consult these
 

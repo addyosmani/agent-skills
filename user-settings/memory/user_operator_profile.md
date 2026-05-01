@@ -28,7 +28,7 @@ type: user
 
 - Every change goes through a PR. **Operator merges manually**; Claude creates PRs via `gh pr create` but never merges.
 - New project on day 0: GitHub repo first (`gh repo create jota-batuta/<name> --private` or `--public` for plugin forks), branch + draft PR before feature code.
-- Notion KB is durable memory across machines (`notion-kb-workflow` skill: `--read` / `--init` / `--append`).
+- Obsidian vault is durable memory across machines (per ADR-0012). Auto-loaded at session start by `hooks/session-start.sh`; auto-mirrored per commit by `hooks/post-commit-kb.sh`. Notion KB workflow deprecated 2026-05-01.
 
 ## How to apply this in future sessions
 

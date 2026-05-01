@@ -53,18 +53,77 @@ npx skills add vercel-labs/skills --skill find-skills
 ```
  UPSTREAM (unchanged)                  BATUTA LAYER
  ────────────────────                  ────────────
- 20 engineering skills                 6 mandatory skills (research-first-dev,
-                                          notion-kb-workflow, batuta-skill-authoring,
-                                          batuta-agent-authoring, batuta-project-hygiene,
-                                          using-agent-skills routing)
- + 7 slash commands                    + 6 agents with explicit model: (5 base + agent-architect)
+ 20 engineering skills                 10 Batuta-specific skills (full table below)
+ + 7 slash commands                    + 7 agents with explicit model: (5 base + agent-architect + kb-pipeline)
  + supplementary checklists            + 2 hooks (SessionStart + PreToolUse delegation-guard)
+                                          + post-commit-kb.sh (per-machine git hook)
                                        + project doc graph (PRD, SPEC, ADRs, plans, sessions)
                                        + audit chain contract
+                                       + rules/ (engineering invariants imported à la carte)
                                        + vendored: writing-skills (obra/superpowers, MIT), context7 (intellectronica, CC0)
 ```
 
 Attribution for upstream and vendored sources lives in [`ATTRIBUTION.md`](ATTRIBUTION.md).
+
+### Full skill inventory (30 skills)
+
+#### Upstream — `addyosmani/agent-skills` (20 skills)
+
+Inherited verbatim from the upstream marketplace. These are the production-grade engineering workflows that drive every phase of the SDLC. See the [Upstream README section](#agent-skills-upstream) below for the original descriptions.
+
+| Phase | Skill | One-line role |
+|---|---|---|
+| Define | `idea-refine` | Refine ideas through structured divergent + convergent thinking. |
+| Define | `spec-driven-development` | Write a spec before code; requirements first. |
+| Plan | `planning-and-task-breakdown` | Decompose specs into atomic, ordered tasks. |
+| Build | `incremental-implementation` | Land changes in small slices, never one big drop. |
+| Build | `test-driven-development` | Write the failing test first, then make it pass. |
+| Build | `context-engineering` | Optimize agent context (rules + memory + retrieval) at session start. |
+| Build | `source-driven-development` | Ground implementation in cited official documentation. |
+| Build | `frontend-ui-engineering` | Build production-quality UIs (a11y, design tokens, state). |
+| Build | `api-and-interface-design` | Design stable APIs, module boundaries, type contracts. |
+| Verify | `browser-testing-with-devtools` | Test in real browsers via Chrome DevTools MCP. |
+| Verify | `debugging-and-error-recovery` | Systematic root-cause debugging, not guesswork. |
+| Review | `code-review-and-quality` | Multi-axis code review before merge. |
+| Review | `code-simplification` | Reduce accidental complexity without changing behavior. |
+| Review | `security-and-hardening` | OWASP-grounded vulnerability scan + hardening. |
+| Review | `performance-optimization` | Profile-then-optimize Core Web Vitals + load times. |
+| Ship | `git-workflow-and-versioning` | Atomic commits, branches, conflict resolution. |
+| Ship | `ci-cd-and-automation` | Pipeline setup, gated jobs, deployment automation. |
+| Ship | `deprecation-and-migration` | Sunset old systems and migrate users safely. |
+| Ship | `documentation-and-adrs` | Record decisions and write docs future engineers can read. |
+| Ship | `shipping-and-launch` | Pre-launch checklist, monitoring, rollback. |
+| Meta | `using-agent-skills` | Discovery flowchart that routes to the right skill for the task. |
+
+(`using-agent-skills` is the meta-skill that drives auto-invocation; see `skills/using-agent-skills/SKILL.md`.)
+
+#### Batuta-specific — added by this fork (10 skills)
+
+Layered on top of upstream. Most have **mandatory triggers** documented in [`CLAUDE.md`](CLAUDE.md) so they fire without operator intervention.
+
+| Skill | Auto-trigger | Role |
+|---|---|---|
+| `batuta-project-hygiene` | Session start when project lacks `CLAUDE.md` OR doc skeleton; before feature work | Bootstrap project rules, doc graph (`docs/PRD.md`, `docs/SPEC.md`, `docs/adr/`, `docs/plans/`, `docs/sessions/`), GitHub repo, `.claude/kb-config.json`. Three modes: `project-init`, `project-retrofit`, `feature-init`. Scans `<vault>/clients/*` for the client-discovery menu. |
+| `batuta-skill-authoring` | Before any new `skills/<name>/SKILL.md` is created in this plugin | Discover-first gate (forces `npx skills find` against the 91k+ skills.sh catalog), distinctness check, conventions enforcement. Marker-file enforced by `pre-write-skill-gate.sh`. |
+| `batuta-agent-authoring` | Before any new `agents/<name>.md` is created in this plugin | Distinctness check against existing agents, tool-minimality, Batuta naming. Marker-file enforced by `pre-write-agent-gate.sh`. |
+| `batuta-rule-authoring` | Before any new file under `rules/` | Validates the §A.4 canonical format, §A.5 conventions (50–200 lines, imperative tone, anti-patterns mandatory), §A.6 admission gate of N=2 projects evidence. |
+| `research-first-dev` | Before writing code that imports/calls any external library or API not yet cited this session | Forces Context7 lookup, web-search fallback, and a `// Source: <url> (verified YYYY-MM-DD, <lib>@<version>)` citation comment at every import site. |
+| `code-graph` | When the operator asks about architecture, dependencies, refactor scope; or session start on a >5k-LOC repo without an index | Builds or queries a code knowledge graph. Dual-engine: `graphify` (multimodal, primary) + `codebase-memory-mcp` (code-only, Windows fallback). Four modes: `--scan`, `--watch`, `--mcp`, `--query`. |
+| `batuta-kb-vault` | When bootstrapping or operating the operator's Obsidian vault | Defines the L0/L1/L2/L3 vault structure (inbox / journals / curated / glossary), frontmatter contracts, tagging, inbox drain protocol. Companion to `kb-curate` and `kb-backfill`. |
+| `kb-curate` | PR-merge / `/kb-curate` slash / weekly cron / `/kb-end-session` | Promotes captured journal bullets (L1) to curated decisions, gotchas, playbooks, glossary entries (L2/L3). 7-category classification, hybrid control matrix. Powered by the `kb-curator` agent. |
+| `kb-backfill` | One-shot when extracting historical knowledge from a legacy repo into the vault inbox | 4-phase pipeline: README/CHANGELOG → commits → GitHub issues+PRs → optional code analysis. Idempotent, configurable scope. Powered by the `kb-backfiller` agent. |
+| ~~`notion-kb-workflow`~~ | **DEPRECATED 2026-05-01** ([ADR-0012](docs/adr/0012-obsidian-only-kb-pipeline.md)) | Frozen. Replaced by `hooks/session-start.sh` (auto context load) + `batuta-project-hygiene` mode `project-init` (vault menu) + `hooks/post-commit-kb.sh` + `agents/kb-pipeline.md` (per-commit dispatch). Do not invoke. |
+
+The `kb-pipeline` agent (in `agents/`, not `skills/`) is the per-commit dispatch target — runs Capture / Curate / Write phases against the commit diff. Triggered by `hooks/post-commit-kb.sh` when `kb_pipeline_enabled: true` in `.claude/kb-config.json`.
+
+#### Vendored — kept as upstream copies in `skills/_vendored/`
+
+| Vendored skill | Origin | License |
+|---|---|---|
+| `writing-skills` | obra/superpowers | MIT |
+| `context7` | intellectronica/context7 | CC0 |
+
+These are imported by Batuta skills (`batuta-skill-authoring` uses `writing-skills`; `research-first-dev` uses `context7`) and kept verbatim — not modified in this fork.
 
 ## Layers
 
@@ -75,7 +134,7 @@ The plugin contains two independent layers. They do not overlap; pick the right 
 | [`skills/`](skills/) | "What do I do when *X* situation arises?" | Auto-invocation by Claude Code via skill description matching | `SKILL.md` per directory with `name`/`description` frontmatter |
 | [`rules/`](rules/) | "How must the code look *always*?" | Explicit `@<path>` import from a project's `CLAUDE.md` | Plain Markdown with light frontmatter (`title`/`applies-to`/`last-reviewed`) |
 
-`skills/` carries 26 procedures (20 upstream + 6 Batuta-specific). `rules/` carries declarative invariants imported à la carte by consumer projects via `@.claude/rules/<rule>.md` (project-relative path resolved through symlinks created by `tools/setup-rules.sh`). New rules require passing the `batuta-rule-authoring` admission gate. See [`rules/README.md`](rules/README.md) for the full layer documentation and [`rules/_meta/how-to-import.md`](rules/_meta/how-to-import.md) for the consumer protocol.
+`skills/` carries 30 procedures (20 upstream + 10 Batuta-specific; full table in [What you get](#what-you-get) above). `rules/` carries declarative invariants imported à la carte by consumer projects via `@.claude/rules/<rule>.md` (project-relative path resolved through symlinks created by `tools/setup-rules.sh`). New rules require passing the `batuta-rule-authoring` admission gate. See [`rules/README.md`](rules/README.md) for the full layer documentation and [`rules/_meta/how-to-import.md`](rules/_meta/how-to-import.md) for the consumer protocol.
 
 ## Merging upstream updates
 
@@ -314,12 +373,16 @@ batuta-agent-skills/
 │   ├── sessions/              # session journals (Context|Decisions|Changes|Next)
 │   ├── getting-started.md, skill-anatomy.md, opencode-setup.md
 │   └── qa/                    # benchmark reports
-├── agents/                    # 6 agents with explicit model: (5 base + agent-architect)
+├── agents/                    # 7 agents with explicit model: (5 base + agent-architect + kb-pipeline)
+│                              #   Plus kb-curator, kb-backfiller invoked by their respective skills.
 ├── hooks/
 │   ├── hooks.json             # SessionStart + PreToolUse registration
-│   ├── session-start.sh       # session-start advice
-│   └── delegation-guard.sh    # PreToolUse Rule #0 enforcement
-├── skills/                    # 20 upstream skills + 7 Batuta-specific (research-first-dev, notion-kb-workflow, batuta-skill-authoring, batuta-agent-authoring, batuta-rule-authoring, batuta-project-hygiene, using-agent-skills)
+│   ├── session-start.sh       # session-start advice + KB context loader (vault auto-load)
+│   ├── delegation-guard.sh    # PreToolUse kill-switch enforcement
+│   ├── pre-write-skill-gate.sh   # marker check before any new skills/<name>/SKILL.md
+│   ├── pre-write-agent-gate.sh   # marker check before any new agents/<name>.md
+│   └── post-commit-kb.sh      # per-machine git hook (ADR auto-mirror + kb-pipeline dispatch)
+├── skills/                    # 20 upstream + 10 Batuta-specific — see "Full skill inventory" above
 ├── rules/                     # engineering invariants library (core/, stack/, domain-co/, delivery/) — imported à la carte by consumer projects
 ├── tools/
 │   └── setup-rules.sh         # consumer-side script: symlinks rules into a project's .claude/rules/

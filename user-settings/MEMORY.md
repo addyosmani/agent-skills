@@ -13,7 +13,7 @@ Index of persistent memory entries that apply across all projects and sessions o
 
 ## References (where things live)
 - [Plugins and project paths](memory/reference_paths.md) — plugin install path, project dirs, plans/sessions conventions
-- [External docs and standards](memory/reference_external_docs.md) — Claude Code docs, AGENTS.md spec, Spec Kit, Notion KB workflow
+- [External docs and standards](memory/reference_external_docs.md) — Claude Code docs, AGENTS.md spec, Spec Kit, Obsidian KB pipeline (ADR-0012)
 
 ## How to use this index
 - Lines are ≤ 150 chars: `- [Title](memory/file.md) — one-line hook`

@@ -186,9 +186,12 @@ The plugin ships skills organized by development phase. Each skill has a `SKILL.
 | Verify | `browser-testing-with-devtools`, `debugging-and-error-recovery` |
 | Review | `code-review-and-quality`, `code-simplification`, `security-and-hardening`, `performance-optimization` |
 | Ship | `git-workflow-and-versioning`, `ci-cd-and-automation`, `deprecation-and-migration`, `documentation-and-adrs`, `shipping-and-launch` |
-| Meta (Batuta-specific) | `batuta-project-hygiene`, `batuta-skill-authoring`, `batuta-agent-authoring`, `batuta-rule-authoring`, `research-first-dev`, `notion-kb-workflow`, `using-agent-skills` |
+| Meta (Batuta-specific) | `batuta-project-hygiene`, `batuta-skill-authoring`, `batuta-agent-authoring`, `batuta-rule-authoring`, `research-first-dev`, `using-agent-skills` |
+| KB pipeline (Batuta-specific, ADR-0012) | `batuta-kb-vault`, `kb-curate`, `kb-backfill` |
+| Architecture / refactor (Batuta-specific) | `code-graph` |
+| Deprecated | ~~`notion-kb-workflow`~~ (frozen 2026-05-01 per [ADR-0012](adr/0012-obsidian-only-kb-pipeline.md); replaced by `hooks/session-start.sh` + `hooks/post-commit-kb.sh` + `agents/kb-pipeline.md`) |
 
-Each skill is auto-discoverable via the `using-agent-skills` flowchart. The Batuta-specific meta-skills are mandatory triggers documented in `CLAUDE.md`.
+Each skill is auto-discoverable via the `using-agent-skills` flowchart. The Batuta-specific meta-skills are mandatory triggers documented in `CLAUDE.md`. The `kb-pipeline` agent (defined in `agents/kb-pipeline.md`, not a skill) is the per-commit dispatch target — it runs Capture / Curate / Write phases against the commit diff and writes to the operator's Obsidian vault.
 
 ## Cross-cutting constraints
 

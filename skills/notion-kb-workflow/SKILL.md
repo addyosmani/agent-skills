@@ -1,13 +1,29 @@
 ---
 name: notion-kb-workflow
-description: Use at session boundaries to sync context with a Notion knowledge base. Three modes - read prior context on start, initialize client+project pages, append session decisions on close.
+description: DEPRECATED — superseded by the Obsidian KB pipeline (ADR-0012). Do NOT invoke. The replacements are session-start.sh (auto context load), batuta-project-hygiene mode=project-init (vault menu), and post-commit-kb.sh + kb-pipeline agent (per-commit dispatch).
+status: deprecated
+deprecated_at: 2026-05-01
+deprecated_by: docs/adr/0012-obsidian-only-kb-pipeline.md
+replacements:
+  - hooks/session-start.sh (auto session-start vault context load)
+  - skills/batuta-project-hygiene/SKILL.md (mode=project-init vault client menu)
+  - hooks/post-commit-kb.sh + agents/kb-pipeline.md (per-commit ADR mirror + KB curation)
 ---
 
-# Notion KB Workflow
+# Notion KB Workflow — DEPRECATED
+
+> **DEPRECATED 2026-05-01.** Per [ADR-0012](../../docs/adr/0012-obsidian-only-kb-pipeline.md), Notion is no longer the source of truth for the internal Batuta KB. Obsidian is. **Do not invoke this skill.** The body below is preserved for historical reference; the workflow it describes will be removed in a future release.
+>
+> **Replacements**:
+> - **Session-start context load** → `hooks/session-start.sh` reads the operator's vault automatically when `.claude/kb-config.json` is present and the vault is reachable. No manual command needed.
+> - **New project bootstrap** → `batuta-project-hygiene` mode `project-init` scans `<vault>/clients/*` and presents a numbered menu of existing clients before asking for a new one.
+> - **End-of-session capture** → `hooks/post-commit-kb.sh` writes a journal bullet to `docs/sessions/` and mirrors it to the vault on every commit. With `kb_pipeline_enabled: true` in `.claude/kb-config.json`, the `kb-pipeline` agent runs Capture / Curate / Write phases against the commit diff in a detached background process.
+>
+> Operators with prior Notion KB content can keep it as a read-only archive in Notion, or migrate it via a one-shot export to `<vault>/glossary/domains/` (see `docs/sessions/2026-05-01-kb-pipeline-shipped.md` for the migration that already moved 40 entries from the "Batuta Knowledge Base" Notion DB on 2026-04-30).
 
 ## Overview
 
-**The context window is not your memory.** Session-to-session continuity requires a durable store outside the agent. This skill treats Notion (via the official Notion MCP plugin) as that store, with three explicit modes so the agent does not contaminate its working context with raw page dumps.
+**The context window is not your memory.** Session-to-session continuity requires a durable store outside the agent. This skill ORIGINALLY treated Notion (via the official Notion MCP plugin) as that store, with three explicit modes so the agent does not contaminate its working context with raw page dumps. The Obsidian-based replacement (ADR-0012) keeps the same intent — explicit boundaries, structured persistence, no auto-flooding — but uses local markdown files instead of a remote MCP, eliminating ~$15-25/month in token overhead and the network-dependency on the commit path.
 
 Prerequisite: the Notion MCP plugin must be installed and authenticated:
 

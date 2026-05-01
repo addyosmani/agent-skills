@@ -95,7 +95,7 @@ The marker file is gitignored (covered by `.claude/` patterns); it is operator-m
 | Excuse | Reality |
 |---|---|
 | "I already know no skill exists for this" | You haven't checked 91k+ skills. Run `npx skills find` anyway — takes 30 seconds. |
-| "My case is unique to Batuta" | Colombian regulations change yearly. Skills encode workflow, not domain facts. Domain facts go in Notion KB via `notion-kb-workflow`. |
+| "My case is unique to Batuta" | Colombian regulations change yearly. Skills encode workflow, not domain facts. Domain facts go in `<vault>/glossary/domains/` (managed by `batuta-kb-vault` + `kb-curate`; see ADR-0012). |
 | "The discovered skill is 80% right, I'll write a better one" | Fork the discovered skill, vendor it, layer Batuta conventions. Faster and keeps upstream updates. |
 | "writing-skills is too heavy for this trivial skill" | If it's trivial, it doesn't need to be a skill. Use a prompt. |
 

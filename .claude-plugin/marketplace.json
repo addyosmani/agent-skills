@@ -4,7 +4,7 @@
     "name": "jota-batuta"
   },
   "metadata": {
-    "description": "A minimal fork of addyosmani/agent-skills that layers four Batuta skills on top: research-first-dev, notion-kb-workflow, batuta-skill-authoring, batuta-agent-authoring. Inherits 20 upstream engineering skills."
+    "description": "Fork of addyosmani/agent-skills that layers 10 Batuta skills + 7 agents (5 base + agent-architect + kb-pipeline) + 3 hooks (SessionStart + delegation-guard + post-commit KB pipeline) on top. Inherits 20 upstream engineering skills."
   },
   "plugins": [
     {
@@ -13,7 +13,7 @@
         "source": "github",
         "repo": "jota-batuta/batuta-agent-skills"
       },
-      "description": "Batuta fork of agent-skills. 20 upstream skills + 4 Batuta skills: research-first-dev (citation gate for external APIs), notion-kb-workflow (3-mode Notion sync), batuta-skill-authoring (discover-first meta-skill), batuta-agent-authoring (distinctness meta-skill)."
+      "description": "Batuta fork of agent-skills. 20 upstream skills + 10 Batuta skills (batuta-project-hygiene, batuta-skill-authoring, batuta-agent-authoring, batuta-rule-authoring, research-first-dev, code-graph, batuta-kb-vault, kb-curate, kb-backfill, plus deprecated notion-kb-workflow). 7 agents with explicit model:. Auto KB pipeline per ADR-0012 (Obsidian-only, post-commit dispatch)."
     }
   ]
 }

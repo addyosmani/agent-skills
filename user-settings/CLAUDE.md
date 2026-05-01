@@ -57,15 +57,22 @@ A project that lives only on your disk is a project that will never ship. The Gi
 
 One exception to the artifact rule: `docs/` aimed at internal team members may be Spanish if explicitly stated in the project CLAUDE.md.
 
-## Notion KB as durable memory
+## Obsidian KB as durable memory (ADR-0012, supersedes Notion KB workflow)
 
-Use the `notion-kb-workflow` skill from `batuta-agent-skills` at three points:
+Per ADR-0012 in `batuta-agent-skills`, Obsidian is the single source of truth for the KB. Notion is deprecated for internal Batuta use (kept only when a client needs read access). The vault lives at `~/.claude/kb-vault.json` → `vault_root` (machine-wide config), structured as `<vault>/clients/<slug>/projects/<slug>/{sessions,sprints,decisions,gotchas,tasks}/` plus shared `<vault>/{decisions,gotchas,playbooks,glossary,_inbox,templates}/`.
 
-- `--read client:X project:Y` at the start of a session on an existing project.
-- `--init client:X project:Y` before writing code on a brand-new project.
-- `--append` at the end of a productive session.
+**Automatic at session start**: `hooks/session-start.sh` reads `<project>/.claude/kb-config.json` and injects client metadata, project status, last 3 vault sessions, and the active plan into the main agent's context. No manual command needed. If the config is missing, `batuta-project-hygiene mode=project-init` triggers and presents a numbered menu of existing clients from the vault before asking for a new one.
 
-The context window is not memory. Notion is.
+**Automatic per commit**: `hooks/post-commit-kb.sh` writes a journal bullet to `docs/sessions/` and mirrors it to the vault. Two opt-in flags in `.claude/kb-config.json` (default `false`):
+
+- `adr_mirror_enabled: true` → ADRs touched by the commit are copied to `<vault>/decisions/adr-NNNN-<slug>.md` with Obsidian frontmatter, idempotent via `source_hash`.
+- `kb_pipeline_enabled: true` → dispatches the `kb-pipeline` agent in background (`nohup timeout 120 claude --print ... & disown`); the agent runs Capture / Curate / Write phases against the commit diff and writes to vault L2 (decisions / gotchas / playbooks) or `_inbox/` (rejected / pending).
+
+**Manual when needed**: `/kb-curate` for batch L1→L2 promotion of accumulated journal bullets. `/kb-end-session` closes the project journal.
+
+**Deprecated**: `notion-kb-workflow --read | --init | --append`. Frozen as of 2026-05-01. Do not invoke.
+
+The context window is not memory. The Obsidian vault is.
 
 ## Claude Code boundaries
 

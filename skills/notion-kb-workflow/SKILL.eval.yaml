@@ -1,5 +1,15 @@
 skill: "notion-kb-workflow"
 version: "1.0"
+status: "deprecated"
+deprecated_at: "2026-05-01"
+note: |
+  These scenarios are FROZEN as historical regression evidence.
+  Per ADR-0012, the skill is deprecated as of 2026-05-01. New evals for the
+  replacement flow live alongside the replacement skills/agents:
+    - hooks/session-start.sh (no eval — runtime hook)
+    - skills/batuta-project-hygiene/SKILL.eval.yaml (covers project-init vault menu)
+    - agents/kb-pipeline.md (no eval yet — Sprint 5 will add tests/kb-pipeline/run.sh)
+  Do NOT add new cases to this file; do NOT use as a template for new skills.
 cases:
   - id: "trigger-01"
     description: "Session start on existing project should trigger --read mode"

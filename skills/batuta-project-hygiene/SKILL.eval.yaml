@@ -87,7 +87,8 @@ cases:
     quality_criteria:
       - "Does NOT invoke project-init (CLAUDE.md already exists)"
       - "Reads the existing CLAUDE.md to restore context"
-      - "Optionally proposes running notion-kb-workflow --read to fetch prior session decisions"
+      - "Trusts hooks/session-start.sh to have already loaded vault context (per ADR-0012); does NOT propose deprecated notion-kb-workflow --read"
     anti_criteria:
       - "Overwrites the existing CLAUDE.md"
       - "Invokes project-init despite the CLAUDE.md being present"
+      - "Proposes invoking notion-kb-workflow (deprecated as of 2026-05-01)"
