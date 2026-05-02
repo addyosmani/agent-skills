@@ -49,7 +49,7 @@ npx skills add vercel-labs/skills --skill find-skills
 ```
  UPSTREAM (unchanged)                  BATUTA LAYER
  --------------------                  ------------
- 21 engineering skills                 10 Batuta-specific skills
+ 21 engineering skills                 13 Batuta-specific skills
  + 7 slash commands                    + 9 agents with explicit model: declarations
  + supplementary checklists            + 5 hooks (SessionStart + 4 PreToolUse)
                                           + post-commit-kb.sh (per-machine git hook)
@@ -112,7 +112,7 @@ Architecture and dependency questions are answered from a persisted graph, not b
 
 Engine selection is automatic based on `~/.claude/code-graph-engines.json`. Bootstrap both with `tools/setup-code-graph.sh`. See [ADR-0007](docs/adr/0007-code-graph-dual-engine.md).
 
-## Full skill inventory (33 skills)
+## Full skill inventory (36 skills)
 
 ### Upstream -- addyosmani/agent-skills (21 skills)
 
@@ -142,7 +142,7 @@ Inherited verbatim from the upstream marketplace. See the [upstream repo](https:
 | Ship | `shipping-and-launch` | Pre-launch checklist, monitoring, rollback |
 | Meta | `using-agent-skills` | Discovery flowchart that routes to the right skill |
 
-### Batuta-specific -- added by this fork (10 skills)
+### Batuta-specific -- added by this fork (13 skills)
 
 Most have mandatory triggers documented in [`CLAUDE.md`](CLAUDE.md) so they fire without operator intervention.
 
@@ -157,6 +157,9 @@ Most have mandatory triggers documented in [`CLAUDE.md`](CLAUDE.md) so they fire
 | `batuta-kb-vault` | When bootstrapping or operating the Obsidian vault | Defines L0-L3 vault structure, frontmatter contracts, tagging, inbox drain |
 | `kb-curate` | PR-merge / `/kb-curate` / weekly cron / session end | Promotes journal bullets (L1) to curated decisions, gotchas, playbooks (L2/L3) |
 | `kb-backfill` | One-shot on legacy repos | 4-phase extraction: README/CHANGELOG, commits, GitHub issues+PRs, code analysis |
+| `kb-end-session` | End of productive session | Close session journal, commit, trigger `/kb-curate --scope session` |
+| `save-plan` | After exiting plan mode | Copy plan from `~/.claude/plans/` to `docs/plans/active/` for git persistence |
+| `batuta-status` | When operator wants cross-project overview | Snapshot of all active Batuta projects from vault + git state |
 | ~~`notion-kb-workflow`~~ | **DEPRECATED** ([ADR-0012](docs/adr/0012-obsidian-only-kb-pipeline.md)) | Frozen. Replaced by vault hooks + kb-pipeline agent. Do not invoke |
 
 ### Vendored -- upstream copies in skills/_vendored/ (2 skills)

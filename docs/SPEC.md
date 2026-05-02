@@ -208,7 +208,8 @@ The plugin ships skills organized by development phase. Each skill has a `SKILL.
 | Review | `code-review-and-quality`, `code-simplification`, `security-and-hardening`, `performance-optimization` |
 | Ship | `git-workflow-and-versioning`, `ci-cd-and-automation`, `deprecation-and-migration`, `documentation-and-adrs`, `shipping-and-launch` |
 | Meta (Batuta-specific) | `batuta-project-hygiene`, `batuta-skill-authoring`, `batuta-agent-authoring`, `batuta-rule-authoring`, `research-first-dev`, `using-agent-skills` |
-| KB pipeline (Batuta-specific, ADR-0012) | `batuta-kb-vault`, `kb-curate`, `kb-backfill` |
+| KB pipeline (Batuta-specific, ADR-0012) | `batuta-kb-vault`, `kb-curate`, `kb-backfill`, `kb-end-session` |
+| Meta / ops (Batuta-specific) | `save-plan`, `batuta-status` |
 | Architecture / refactor (Batuta-specific) | `code-graph` |
 | Deprecated | ~~`notion-kb-workflow`~~ (frozen 2026-05-01 per [ADR-0012](adr/0012-obsidian-only-kb-pipeline.md); replaced by `hooks/session-start.sh` + `hooks/post-commit-kb.sh` + `agents/kb-pipeline.md`) |
 
