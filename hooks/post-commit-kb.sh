@@ -180,6 +180,7 @@ date: $date_ymd
 client: $client
 project: $project
 tags: [session, client/$client]
+related: ["[[${client}]]", "[[${project}]]"]
 last_verified: $date_ymd
 ---
 
@@ -192,6 +193,7 @@ EOF
         echo "- **${ts_hhmm} · \`${sha_abbrev}\`** · ${subject}"
         echo "  - branch: \`${branch}\`"
         echo "  - files: ${files_count}"
+        echo "  - project: [[${client}]]/[[${project}]]"
       } >> "$vault_journal"
     fi
   else

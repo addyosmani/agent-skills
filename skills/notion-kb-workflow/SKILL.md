@@ -10,6 +10,8 @@ replacements:
   - hooks/post-commit-kb.sh + agents/kb-pipeline.md (per-commit ADR mirror + KB curation)
 ---
 
+> **DEPRECATED** (ADR-0012, 2026-04-30). DO NOT invoke `--read`, `--init`, or `--append`. Replacements: `hooks/session-start.sh` (context loading), `hooks/post-commit-kb.sh` + `agents/kb-pipeline.md` (capture), `skills/kb-curate/SKILL.md` (promotion). See CLAUDE.md § "notion-kb-workflow (DEPRECATED)".
+
 # Notion KB Workflow — DEPRECATED
 
 > **DEPRECATED 2026-05-01.** Per [ADR-0012](../../docs/adr/0012-obsidian-only-kb-pipeline.md), Notion is no longer the source of truth for the internal Batuta KB. Obsidian is. **Do not invoke this skill.** The body below is preserved for historical reference; the workflow it describes will be removed in a future release.

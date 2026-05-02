@@ -46,7 +46,7 @@ Before going external, check whether the operator has already researched this li
 
 **Lookup order (priority L2 > L3 > L1)**:
 
-1. **L2 (curated, source-of-truth)** — `<vault_root>/decisions/`, `<vault_root>/gotchas/`, `<vault_root>/playbooks/`, `<vault_root>/clients/<this-client>/projects/<this-project>/{decisions,gotchas}/`. Grep for the library name + topic. Read frontmatter `last_verified`.
+1. **L2 (curated, source-of-truth)** — `<vault_root>/decisions/`, `<vault_root>/gotchas/`, `<vault_root>/playbooks/`, `<vault_root>/clients/<this-client>/projects/<this-project>/{decisions,gotchas}/`. Grep for the library name + topic. Read frontmatter `last_verified`. Also check `related:` frontmatter fields for `[[library-name]]` wikilinks — these are more reliable than body-text grep when the vault has been curated. A `related:` hit confirms the entry is about the library, not just mentioning it.
 2. **L3 (glossary)** — `<vault_root>/glossary/products/`, `<vault_root>/glossary/domains/`. Useful when the library is part of a product the operator integrates frequently (`Prophet`, `ICG`, `SAP`).
 3. **L1 (journals, fallback only)** — `<vault_root>/clients/<c>/projects/<p>/sessions/`. Hits here are uncurated raw captures — surface them with disclaimer "no curado, verificá" and **always proceed to Step 2 anyway**.
 

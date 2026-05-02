@@ -65,6 +65,8 @@ The 7 categories: `decision-new`, `decision-supersede`, `gotcha-new`, `gotcha-up
 
 For `decision-supersede`, also stage an edit to the superseded file's frontmatter (`status: superseded by <new-id>`) — but only as a `.draft` patch the operator applies manually.
 
+**Wikilinks (mandatory)**: Every file written (both `.draft` and auto-applied) must include inline `[[wikilinks]]` and a `related:` frontmatter field per the vault convention (`batuta-kb-vault` SKILL.md Step 3.5). The `kb-curator` agent is instructed to generate these — if a returned output lacks them, reject and re-request.
+
 ### Step 4: Update journal frontmatter (idempotency)
 
 For every processed bullet, append (or update) sub-bullets:
@@ -104,6 +106,7 @@ Plain-text report with three sections: drafts pending review (file paths), auto-
 - A `decision-supersede` whose target does not exist in `decisions/` (typo or stale reference; surface as error, do not auto-create)
 - Auto-applies producing wikilink targets that do not exist (e.g. `[[Prophet]]` when `glossary/products/Prophet.md` is missing — the agent should have triggered glossary-entry first)
 - The same SHA processed twice (idempotency broken — check `curated_into:` write logic)
+- Auto-apply producing a file with zero `[[wikilinks]]` in the body or an empty `related:` frontmatter field — every vault entry must be connected to the graph
 
 ## Verification
 

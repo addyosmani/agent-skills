@@ -1,7 +1,7 @@
 # SPEC — batuta-agent-skills
 
 **Status:** living document
-**Last reviewed:** 2026-04-29 (v3.5)
+**Last reviewed:** 2026-05-02 (v3.6)
 **Companion documents:** [`PRD.md`](PRD.md) (why), [`adr/`](adr/) (per-decision rationale), [`usage/`](usage/) (operator recipes — upgrade, code-graph, consumer-projects, ci), feature-scoped specs in `docs/<feature>.md` and `skills/<skill>/SKILL.md` (how each module works)
 
 This is a project-wide architecture overview. It describes what the plugin contains, how the pieces fit, and what constraints they enforce. Per-module behavior lives in feature-scoped specs (cross-referenced from each section below).
@@ -20,11 +20,15 @@ batuta-agent-skills/
 │   ├── sessions/              ← session journals (YYYY-MM-DD-<slug>.md)
 │   ├── DELEGATION-RULE.md            ← delegation contract
 │   └── DELEGATION-RULE-SPECIALISTS.md ← feature spec: agent-architect + Haiku/Sonnet calibration
-├── agents/                    ← 6 plugin-shipped agents (5 base + 1 meta), all with explicit model:
+├── agents/                    ← 9 plugin-shipped agents (6 base + 1 meta + 3 KB pipeline), all with explicit model:
 ├── hooks/
 │   ├── hooks.json             ← SessionStart + PreToolUse registration
-│   ├── session-start.sh       ← session-start advice hook
-│   └── delegation-guard.sh    ← PreToolUse kill-switch hook
+│   ├── session-start.sh       ← session-start advice + KB context loader
+│   ├── delegation-guard.sh    ← PreToolUse kill-switch enforcement
+│   ├── pre-write-skill-gate.sh   ← marker check before new SKILL.md
+│   ├── pre-write-agent-gate.sh   ← marker check before new agents/*.md
+│   ├── pr-merge-guard.sh         ← blocks direct merge to main/master
+│   └── post-commit-kb.sh         ← per-machine git hook (ADR mirror + kb-pipeline dispatch)
 ├── skills/                    ← invocable skills (build, plan, spec, test, review, etc.)
 ├── rules/                     ← engineering invariants library (declarative; imported via @<path> from consumer CLAUDE.md)
 ├── tools/                     ← consumer-side scripts (setup-rules.sh)
@@ -32,7 +36,7 @@ batuta-agent-skills/
 └── references/                ← supplementary checklists
 ```
 
-## Layer 1 — Agents (six shipped, all with explicit `model:`)
+## Layer 1 — Agents (nine shipped, all with explicit `model:`)
 
 | Agent | Model | Role | Tool grants |
 |---|---|---|---|
@@ -42,8 +46,11 @@ batuta-agent-skills/
 | `security-auditor` | sonnet | GATE 3 — OWASP-grounded vulnerability scan | Read, Grep, Glob, Bash |
 | `test-engineer` | sonnet | GATE 1 — test design + coverage; `Write` scoped to test paths | Read, Write, Bash, Grep, Glob |
 | `agent-architect` | sonnet | Meta-agent: creates project-local specialists on demand | Read, Write, Glob, Grep, WebSearch, WebFetch |
+| `kb-pipeline` | sonnet | Per-commit KB orchestrator: Capture / Curate / Write to Obsidian vault | Read, Write, Edit, Bash, Grep, Glob |
+| `kb-curator` | sonnet | Markdown classifier for kb-curate: 7-category classification of journal bullets | Read, Write, Edit, Bash, Grep, Glob |
+| `kb-backfiller` | sonnet | Legacy repo extractor: READMEs, commits, issues, code analysis → vault inbox | Read, Write, Grep, Glob, Bash |
 
-The five base agents form the audit chain (test → review → security after implementation). `agent-architect` is the meta-layer for dynamic specialist creation; it does not execute work itself. See [`adr/0001-rule-zero-delegation-only-main.md`](adr/0001-rule-zero-delegation-only-main.md) for why these specific roles, [`adr/0002-implementer-haiku-separate-agent.md`](adr/0002-implementer-haiku-separate-agent.md) for why the Haiku tier is a separate agent, and [`DELEGATION-RULE-SPECIALISTS.md`](DELEGATION-RULE-SPECIALISTS.md) for the task-complexity calibration that picks the model.
+The six base agents (implementer, implementer-haiku, code-reviewer, security-auditor, test-engineer, and agent-architect's generated specialists) form the audit chain (test → review → security after implementation). `agent-architect` is the meta-layer for dynamic specialist creation; it does not execute work itself. The three KB agents (`kb-pipeline`, `kb-curator`, `kb-backfiller`) handle the Obsidian vault pipeline — per-commit capture, batch curation, and legacy backfill respectively. See [`adr/0001-rule-zero-delegation-only-main.md`](adr/0001-rule-zero-delegation-only-main.md) for why these specific roles, [`adr/0002-implementer-haiku-separate-agent.md`](adr/0002-implementer-haiku-separate-agent.md) for why the Haiku tier is a separate agent, [`adr/0012-obsidian-only-kb-pipeline.md`](adr/0012-obsidian-only-kb-pipeline.md) for the KB pipeline architecture, and [`DELEGATION-RULE-SPECIALISTS.md`](DELEGATION-RULE-SPECIALISTS.md) for the task-complexity calibration that picks the model.
 
 ## Layer 2 — Project-local specialists (created at runtime by `agent-architect`)
 
@@ -173,6 +180,20 @@ GitHub Actions workflow that runs the static validators + the E2E harness on eve
 The E2E harness lives in [`tests/e2e/`](../tests/e2e/) with 4 scenarios (engines-state roundtrip, skill-discovery, research-first citation, audit-chain clean-tree NOT-APPLICABLE) and the orchestrator `run.sh`. It uses `claude --print --plugin-dir "$REPO_ROOT" --model sonnet` to load HEAD instead of marketplace cache. See [`adr/0009-e2e-print-mode-methodology.md`](adr/0009-e2e-print-mode-methodology.md) for the methodology decision.
 
 Operator recipe (wiring this pattern into a consumer repo): [`usage/ci.md`](usage/ci.md).
+
+## Layer 11 — Obsidian KB pipeline (v3.6+)
+
+A 4-level knowledge base (`_inbox` L0 → `sessions/` L1 → `decisions/`+`gotchas/` L2 → `glossary/` L3) persisted in the operator's Obsidian vault. Captures decisions, gotchas, and patterns automatically on every commit; curates them into a connected graph via wikilinks.
+
+- **Capture (automatic):** `hooks/post-commit-kb.sh` writes a journal bullet to `docs/sessions/` and mirrors it to the vault with `[[client]]`/`[[project]]` wikilinks on every commit. When `kb_pipeline_enabled: true`, dispatches the `kb-pipeline` agent in background to run Capture / Curate / Write phases against the commit diff.
+- **ADR mirror (automatic):** When `adr_mirror_enabled: true`, committed ADRs are mirrored to `<vault>/decisions/adr-NNNN-<slug>.md` with Obsidian frontmatter. Idempotent via `source_hash`.
+- **Curation (semi-automatic):** `kb-curate` skill promotes L1 journal bullets to L2 curated entries via the `kb-curator` agent. 7-category classification with hybrid control matrix (auto-apply for low-risk categories, `.draft` review for high-risk).
+- **Backfill (manual):** `kb-backfill` skill extracts historical knowledge from legacy repos into `_inbox/` via the `kb-backfiller` agent. 4-phase pipeline.
+- **Wikilink convention (v3.6):** Every vault write must include inline `[[wikilinks]]` and a `related:` frontmatter field per `batuta-kb-vault` SKILL.md Step 3.5. This is the mechanism that connects notes in the Obsidian graph and enables `research-first-dev` Step 1.5 cross-project lookups.
+- **Context injection:** `hooks/session-start.sh` loads client metadata, project status, and recent vault sessions into the agent's context at session start.
+- **Config:** Per-project `.claude/kb-config.json` with `enabled`, `client`, `project`, `vault_root`, `adr_mirror_enabled`, `kb_pipeline_enabled`. Machine-wide vault root at `~/.claude/kb-vault.json`.
+
+See [`adr/0012-obsidian-only-kb-pipeline.md`](adr/0012-obsidian-only-kb-pipeline.md) for the architecture decision (single agent, async dispatch, Notion deprecated).
 
 ## Skills (invocable workflows)
 

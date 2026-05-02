@@ -83,8 +83,10 @@ Rationale: re-leer el repo cada vez que aparece una pregunta de arquitectura que
 
 Rationale: per ADR-0012, a single agent with three phases eliminates the failure modes of the three-agent design (queue-file races, inter-agent token cost). Distinct from `kb-curator` (batch L1→L2 classifier, manual `/kb-curate`) and `kb-backfiller` (one-shot historical extraction). Agent definition: [`agents/kb-pipeline.md`](agents/kb-pipeline.md).
 
+The kb-pipeline agent MUST generate `[[wikilinks]]` in every vault write and populate `related:` frontmatter. Without this, the vault graph remains disconnected and research-first Step 1.5 lookups return zero results. Convention: `batuta-kb-vault` SKILL.md Step 3.5. This repo has `kb_pipeline_enabled: true` and `adr_mirror_enabled: true` in `.claude/kb-config.json`.
+
 ### notion-kb-workflow (DEPRECATED — see ADR-0012)
-**Status**: deprecated as of 2026-04-30 per [`docs/adr/0012-obsidian-only-kb-pipeline.md`](docs/adr/0012-obsidian-only-kb-pipeline.md). Notion is no longer the source of truth for the internal KB; Obsidian is. The skill file remains in place until Sprint 4 rewrites it as `status: deprecated`.
+**Status**: deprecated as of 2026-04-30 per [`docs/adr/0012-obsidian-only-kb-pipeline.md`](docs/adr/0012-obsidian-only-kb-pipeline.md). Notion is no longer the source of truth for the internal KB; Obsidian is. The skill frontmatter now has `status: deprecated`.
 
 **DO NOT invoke** `--read`, `--init`, or `--append`. Replacements:
 - Session-start context loading → `hooks/session-start.sh` reads the vault automatically when `.claude/kb-config.json` is present.

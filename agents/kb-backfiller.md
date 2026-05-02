@@ -72,12 +72,16 @@ Phase-specific logic — only one of these per invocation:
 
 **Phase 1 — README + docs**: glob for `README.md`, `CONTRIBUTING.md`, `docs/**/*.md`, `notes/**/*.md`, `ADR-*.md`, `DECISIONS.md`, `NOTES.md`. For each, copy with frontmatter `confidence: high` (it's a verbatim copy).
 
+After copying the file verbatim, scan the content for mentions of known products, clients, or KB IDs (grep the vault `glossary/products/` and `glossary/domains/` for filename matches). Add a `related:` frontmatter field with wikilinks to any matches found.
+
 **Phase 2 — commit log**: `git log --since='2 years ago' --pretty='%H|%h|%ai|%an|%s|%b'`. Filter:
 - subject > 30 chars
 - NOT `^(chore|wip|fix typo|build|ci|deps|bump|docs):`
 - body present OR subject keyword (refactor|breaking|decision|migrate|deprecate|rationale|discovered|learned)
 
 For each surviving commit, append a journal-style bullet to `<vault_root>/clients/<c>/projects/<p>/sessions/<commit-date>.md` with `backfilled: true`. Confidence: `medium` (heuristic match).
+
+Include `[[client-slug]]` and `[[project-slug]]` wikilinks in the journal bullet. Add `related:` to the session frontmatter if creating a new session file.
 
 **Phase 3 — gh issues/PRs**: `gh issue list --state all --label decision,gotcha,breaking,question --limit 200 --json ...`. Same for `gh pr list --state merged --search 'in:body ...'`. Each hit → file in inbox. Confidence: `high` (operator labeled them).
 

@@ -85,6 +85,30 @@ Wikilinks and hashtags are how cross-project lookup works:
 
 `research-first-dev` Step 1.5 (Sprint 2) reads `last_verified` from frontmatter to enforce staleness policy. Keep frontmatter accurate.
 
+### Step 3.5: Wikilink convention
+
+Wikilinks (`[[...]]`) are the sole mechanism that connects notes in the Obsidian graph and enables `research-first-dev` Step 1.5 cross-project lookups. Every file written to the vault — by agents, hooks, or the operator — must follow this convention.
+
+**What gets linked (allowlist)**:
+
+- `[[KB-NN]]` — cross-reference to another KB entry by its ID (e.g., `[[KB-43]]`)
+- `[[client-slug]]` — link to the client metadata file (e.g., `[[kiosco]]`, `[[kiro]]`)
+- `[[project-slug]]` — link to the project subtree (e.g., `[[bancos-ekgs]]`, `[[bato-gek]]`)
+- `[[Technology Name]]` — link to a glossary product entry (e.g., `[[Temporal.io]]`, `[[Google ADK]]`, `[[Evolution API]]`, `[[n8n]]`)
+- `[[adr-NNNN-slug]]` — link to a mirrored ADR decision file in `decisions/`
+
+**What does NOT get linked**:
+
+- Commit SHAs, branch names, file paths — these are identifiers, not concepts
+- Generic terms (`Python`, `Docker`, `PostgreSQL`) unless a glossary entry exists for them in the Batuta context
+
+**Where links appear**:
+
+1. **Inline in body text** — at the first mention of a linkable concept. Example: "Usar `[[Temporal.io]]` self-hosted como backbone de orquestación."
+2. **`related:` frontmatter field** — a YAML list of all wikilinks used in the body, for explicit graph edges. Example: `related: ["[[KB-43]]", "[[Temporal.io]]", "[[kiosco]]"]`
+
+**Invariant**: a vault file with zero wikilinks and an empty `related:` field is disconnected from the graph. Agents that write to the vault must populate both. The `post-commit-kb.sh` hook populates `related:` with at least `[[client]]` and `[[project]]` for session journals.
+
 ### Step 4: Frontmatter contracts (templates/)
 
 Three templates ship in `templates/`:
@@ -98,8 +122,8 @@ project: bato-cajas
 repo: jota-batuta/bato-cajas
 branch: feature/<slug>
 commits: ["abc1234"]
-files_changed: 7
-tags: [client/bato-cajas]
+tags: [session, client/bato-cajas]
+related: ["[[bato-cajas]]"]
 last_verified: 2026-04-29
 ---
 ```
@@ -113,7 +137,10 @@ status: accepted
 deciders: [jota-batuta]
 client: null            # null = cross-cliente
 supersedes: null
+domain: <domain-slug>   # required, never "unknown"
+origin_project: <project-slug>
 tags: [decision]
+related: ["[[KB-NN]]", "[[Technology]]"]
 last_verified: 2026-04-29
 ---
 ```
@@ -127,6 +154,7 @@ product: "[[Prophet]]"
 severity: workaround
 client: bato-cajas
 tags: [gotcha, sev/workaround]
+related: ["[[KB-NN]]", "[[Prophet]]"]
 ---
 ```
 

@@ -79,6 +79,8 @@ For each input bullet (commit SHA + subject + branch + files-changed):
 - **glossary-entry** → write `<vault_root>/glossary/<axis>/<Term>.md` directly.
 - **noise** → write nothing.
 
+**Wikilinks (mandatory)**: Every file written (both `.draft` and auto-applied) must include inline `[[wikilinks]]` and a `related:` frontmatter field per the vault convention (`batuta-kb-vault` SKILL.md Step 3.5). At minimum: `[[client-slug]]`, `[[project-slug]]`, and `[[Technology Name]]` for any library/product/system mentioned. Cross-reference other KB entries when the content relates to an existing decision or gotcha.
+
 In every case, propose the journal sub-bullets `curated_into: [...]` and `curated_at: <ISO>` to the caller — the caller (`kb-curate` Step 4) applies them.
 
 ### Step 4: Return structured table
@@ -119,4 +121,5 @@ BULLETS_CURATED: 1
 - NEVER write to project source code (only `<vault_root>/**` and journal frontmatter)
 - NEVER auto-apply `decision-*`, `gotcha-update`, or `playbook-candidate` — those are draft-only
 - NEVER skip the `.draft` extension on review-required outputs
+- NEVER write a vault file with zero `[[wikilinks]]` in the body or an empty `related:` field — disconnected notes break the Obsidian graph
 - ALWAYS emit `BULLETS_CURATED: <N>` as the closing literal so the caller can detect partial failures

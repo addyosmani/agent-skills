@@ -91,7 +91,9 @@ Confidence floors: APPROVED requires 2+ aligned signals OR explicit ADR. Anythin
 
 For each curated bullet:
 
-- **APPROVED** → write to the destination path with full frontmatter. Filename: kebab-case slug from text, ≤ 60 chars. Frontmatter must include: `type`, `date`, `commit_sha`, `client`, `project`, `tags`. Body: a brief context paragraph plus the evidence excerpt.
+- **APPROVED** → write to the destination path with full frontmatter. Filename: kebab-case slug from text, ≤ 60 chars. Frontmatter must include: `type`, `date`, `commit_sha`, `client`, `project`, `tags`, `related`. Body: a brief context paragraph plus the evidence excerpt.
+
+**Wikilinks (mandatory)**: Every written file must include inline `[[wikilinks]]` per the convention in `batuta-kb-vault` SKILL.md Step 3.5. At minimum: `[[client-slug]]` and `[[project-slug]]` from the dispatch context, plus cross-KB references to other entries and `[[Technology Name]]` links for any technology mentioned in the body. Populate the `related:` frontmatter field with all wikilinks used. Without wikilinks, the entry is invisible to `research-first-dev` Step 1.5 and to the Obsidian graph view.
 - **INBOX** → write to `<vault_root>/_inbox/<date>-<slug>.md` with frontmatter `inbox_reason`, `commit_sha`, `client`, `project`. Operator drains via `kb-curate` later.
 - **NOISE** → no file write. Just count.
 - **DUPLICATE** detected (filename collision with existing approved entry) → write `<existing>.md.draft` with a proposed update; do not overwrite the live entry.
@@ -102,7 +104,7 @@ Idempotency: if any destination file already exists with the same `commit_sha` i
 After writing, append a one-line bullet to `<vault_root>/clients/<c>/projects/<p>/sessions/<date>.md`:
 
 ```
-- [<sha>] kb-pipeline: <N> APPROVED, <M> INBOX, <K> NOISE
+- [<sha>] kb-pipeline: <N> APPROVED, <M> INBOX, <K> NOISE — [[client-slug]]/[[project-slug]]
 ```
 
 ### Step 4: Emit report
