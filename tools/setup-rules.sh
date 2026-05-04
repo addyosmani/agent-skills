@@ -63,7 +63,7 @@ fi
 [[ ${#TO_LINK[@]} -eq 0 ]] && { echo "Nothing selected. Exiting."; exit 0; }
 
 mkdir -p "$RULES_DST"
-CREATED=(); SKIPPED=()
+CREATED=(); SKIPPED=(); COPIED=()
 
 for rule in "${TO_LINK[@]}"; do
   src="${RULES_SRC}/${rule}"
@@ -83,11 +83,24 @@ for rule in "${TO_LINK[@]}"; do
   esac
   if ! ln -s "$src" "$dst" 2>/dev/null; then
     if $IS_WINDOWS; then
-      echo "ERROR: symlink failed on Windows. Enable Developer Mode (Settings > For Developers > Developer Mode) and re-run." >&2
+      # Windows without Developer Mode cannot create symlinks. Fall back to a
+      # plain copy so the rule still ends up in .claude/rules/. The trade-off:
+      # plugin upgrades will not auto-propagate to the project; the operator
+      # must re-run setup-rules.sh after a plugin update. The warning at the
+      # end of the script makes that explicit.
+      if cp "$src" "$dst" 2>/dev/null; then
+        COPIED+=("$(basename "$dst") (copied; symlink unavailable without Developer Mode)")
+        continue
+      else
+        echo "ERROR: copy fallback also failed for $dst -> $src" >&2
+        echo "  This can happen when the destination directory is read-only or the source path is invalid." >&2
+        exit 1
+      fi
     else
       echo "ERROR: symlink failed for $dst -> $src" >&2
+      echo "  On non-Windows hosts symlink failures usually indicate a permissions or filesystem issue worth investigating before retrying." >&2
+      exit 1
     fi
-    exit 1
   fi
   CREATED+=("$(basename "$dst") -> $src")
 done
@@ -95,7 +108,16 @@ done
 echo ""
 echo "setup-rules.sh complete  |  plugin: $PLUGIN_PATH  |  dest: $RULES_DST"
 [[ ${#CREATED[@]} -gt 0 ]] && printf "  created : %s\n" "${CREATED[@]}"
+[[ ${#COPIED[@]} -gt 0 ]] && printf "  copied  : %s\n" "${COPIED[@]}"
 [[ ${#SKIPPED[@]} -gt 0 ]] && printf "  skipped : %s\n" "${SKIPPED[@]}"
+
+if (( ${#COPIED[@]} > 0 )); then
+  echo ""
+  echo "WARNING: ${#COPIED[@]} rule(s) were copied instead of symlinked (Windows without Developer Mode)."
+  echo "  Plugin upgrades will NOT auto-propagate to these copies. Re-run this script after"
+  echo "  'claude plugin update batuta-agent-skills' to refresh."
+  echo "  To enable symlinks (recommended): Settings > For Developers > Developer Mode."
+fi
 
 # Code-graph engine bootstrap is a separate operator-side step (changed in v4.0,
 # ADR-0013). Coupling rule import to the engine install dragged unrelated infra
