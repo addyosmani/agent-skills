@@ -46,6 +46,9 @@ When delegating, the main picks the model **by task complexity, not surface area
 | `test-engineer` | sonnet | GATE 1. Writes or runs tests, reports coverage gaps, blocks on failing tests. |
 | `code-reviewer` | sonnet | GATE 2. Five-axis review (correctness, readability, architecture, security, performance). Blocks on Critical findings. |
 | `security-auditor` | sonnet | GATE 3. OWASP-grounded vulnerability scan. Blocks on Critical or High findings. |
+| `kb-pipeline` | sonnet | Per-commit KB orchestrator. Auto-dispatched by `hooks/post-commit-kb.sh`. Three internal phases (Capture / Curate / Write) against the commit diff; writes to the Obsidian vault. Detached background process. |
+| `kb-curator` | sonnet | Batch L1→L2 journal classifier for `/kb-curate`. Seven-category triage (decision-new, decision-supersede, gotcha-new, gotcha-update, playbook, glossary, noise). Hybrid control matrix. |
+| `kb-backfiller` | sonnet | Read-only legacy extractor for `/kb-backfill`. Pulls READMEs, commit messages, GitHub issues/PRs, optional code analysis. Writes only to vault `_inbox/` for later promotion. |
 
 Model calibration:
 - **Haiku** — trivial: CSS or string change, rename without signature shifts, README/CHANGELOG edit, config flip, ≤ 3 files with no new conditional or async.

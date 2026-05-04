@@ -1,7 +1,7 @@
 # SPEC — batuta-agent-skills
 
 **Status:** living document
-**Last reviewed:** 2026-05-02 (v3.6)
+**Last reviewed:** 2026-05-04 (v4.0)
 **Companion documents:** [`PRD.md`](PRD.md) (why), [`adr/`](adr/) (per-decision rationale), [`usage/`](usage/) (operator recipes — upgrade, code-graph, consumer-projects, ci), feature-scoped specs in `docs/<feature>.md` and `skills/<skill>/SKILL.md` (how each module works)
 
 This is a project-wide architecture overview. It describes what the plugin contains, how the pieces fit, and what constraints they enforce. Per-module behavior lives in feature-scoped specs (cross-referenced from each section below).
@@ -130,26 +130,25 @@ This layer is independent of `skills/`. Skills are workflows triggered by events
 A static-check test suite that grep-verifies the v2.5+ enforcement contracts (audit chain scope Step 0, research-first Step 2, meta-agent template baking, batuta-agent-authoring verification rules, code-graph skill shape, code-graph helpers behavior, audit-chain × code-graph integration) are present in their respective files.
 
 - **Format:** bash scripts under `tests/v2.5-validators/<NN>-<short-name>.sh`. Each case exits 0 on PASS, non-zero on FAIL.
-- **Current cases:** 9 (cases 01–09). 01 audit chain Step 0; 02–03 implementer + implementer-haiku Step 2; 04 agent-architect baking; 05 batuta-agent-authoring rules; 06 delegation-guard kill-switch; 07 code-graph skill shape; 08 code-graph helpers behavior; 09 audit-chain × code-graph integration.
+- **Current cases:** 15 (cases 01–15). 01 audit chain Step 0; 02–03 implementer + implementer-haiku Step 2; 04 agent-architect baking; 05 batuta-agent-authoring rules; 06 delegation-guard kill-switch; 07 code-graph skill shape; 08 code-graph helpers behavior; 09 audit-chain × code-graph integration; 10 pr-merge-guard; 11 post-commit-kb shape; 12 kb-curate shape; 13 research-first step 1.5 (vault lookup); 14 kb-backfill shape; 15 new-rules shape.
 - **Orchestration:** `tests/v2.5-validators/run.sh` runs all cases and aggregates the result. CI-friendly exit code.
 - **Scope:** static contract checks only — grep against expected wording in the agent prompts and skill files. NOT runtime tests; does not invoke `claude` CLI.
 - **Adding a case:** required whenever a new enforcement contract is wired into an agent prompt or skill. The case must grep-check for the canonical wording the contract uses, not paraphrase, so source-file drift fails the test deliberately.
 
 This layer is the regression net for the runtime enforcement layers (3 and 4). When an auditor's Step 0 or an implementer's Step 2 gets accidentally edited away during a refactor, validators catch it before merge.
 
-## Layer 8 — Code knowledge graph (v2.8+)
+## Layer 8 — Code knowledge graph (v2.8+, single-engine since v4.0)
 
-A dual-engine code-graph layer so architecture / onboarding / refactor questions consult a persisted graph instead of re-reading the repo file by file.
+A code-graph layer so architecture / onboarding / refactor questions consult a persisted graph instead of re-reading the repo file by file.
 
-- **Primary engine:** `graphify` ([github.com/safishamsi/graphify](https://github.com/safishamsi/graphify), v0.5.4). Multimodal — code (25 languages via tree-sitter) + docs + PDFs + images + audio (Whisper local). Output: `graphify-out/{graph.json, GRAPH_REPORT.md, graph.html, cache/}`.
-- **Fallback engine:** `codebase-memory-mcp` ([github.com/DeusData/codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp), v0.6.0). Native C MCP server, code-only, 14 MCP tools (`index_repository`, `search_graph`, `trace_call_path`, ...). Critical on Windows where graphify currently has open install issues.
-- **Skill:** [`skills/code-graph/SKILL.md`](../skills/code-graph/SKILL.md). Auto-trigger by description matching on architecture / onboarding / refactor prompts. Step 0 reads cached engine state at `~/.claude/code-graph-engines.json` and dispatches to the best available engine.
-- **Slash:** [`.claude/commands/code-graph.md`](../.claude/commands/code-graph.md). Operator-invoked manual surface. Modes: `--scan`, `--watch`, `--mcp`, `--query`, with `--engine <name>` override.
-- **Bootstrap:** [`tools/setup-code-graph.sh`](../tools/setup-code-graph.sh). Operator-side. Installs both engines (uv > pipx > pip for graphifyy; SHA-256-verified GitHub release download for codebase-memory-mcp; provenance-attested via `gh attestation verify` if available). Idempotent. Chained from `tools/setup-rules.sh --all`.
-- **Audit chain integration (Step 0.5, v3.0+):** `code-reviewer` and `security-auditor` consult the active engine after Step 0 (NOT-APPLICABLE) and before the framework review, for blast-radius / attack-surface enumeration. Non-blocking; graceful-degrade to v2.9 behavior when no engine is available. `test-engineer` is intentionally NOT consulting (scope guard, ADR-0008).
-- **Rule:** [`rules/integrations/code-graph-usage.md`](../rules/integrations/code-graph-usage.md). Declarative contract for consumer projects (cite the engine, never run `graphify claude install`, never commit `graphify-out/`, etc.).
+- **Engine:** `codebase-memory-mcp` ([github.com/DeusData/codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp), v0.6.0). Native Go MCP server, code-only, ~14 MCP tools (`index_repository`, `search_graph`, `trace_call_path`, `get_architecture`, `get_code_snippet`, `query_graph`, `index_status`, ...). Stable on Linux, macOS, and Windows. Pre-v4.0 the plugin shipped graphify as a second engine; deprecated per [ADR-0013](adr/0013-v4.0-distillation.md) — bus factor 1, three blocking Windows install issues, no Batuta project used the multimodal path in production.
+- **Skill:** [`skills/code-graph/SKILL.md`](../skills/code-graph/SKILL.md). Auto-trigger by description matching on architecture / onboarding / refactor prompts. Step 0 reads cached engine state at `~/.claude/code-graph-engines.json` and dispatches to the engine.
+- **Slash:** [`.claude/commands/code-graph.md`](../.claude/commands/code-graph.md). Operator-invoked manual surface. Modes: `--scan`, `--watch`, `--query`.
+- **Bootstrap:** [`tools/setup-code-graph.sh`](../tools/setup-code-graph.sh). Operator-side. Installs `codebase-memory-mcp` (SHA-256-verified GitHub release download; provenance-attested via `gh attestation verify` if available). Idempotent. **Not** chained from `tools/setup-rules.sh --all` (changed in v4.0 — rule import is independent of engine bootstrap).
+- **Audit chain integration (Step 0.5, v3.0+):** `code-reviewer` and `security-auditor` consult the engine after Step 0 (NOT-APPLICABLE) and before the framework review, for blast-radius / attack-surface enumeration. Non-blocking; graceful-degrade to v2.9 behavior when the engine is not available. `test-engineer` is intentionally NOT consulting (scope guard, ADR-0008).
+- **Rule:** [`rules/integrations/code-graph-usage.md`](../rules/integrations/code-graph-usage.md). Declarative contract for consumer projects (cite the engine, never run `graphify claude install`, never commit the cache, etc.).
 
-See [`adr/0007-code-graph-dual-engine.md`](adr/0007-code-graph-dual-engine.md) for the dual-engine rationale and [`adr/0008-audit-chain-code-graph-integration.md`](adr/0008-audit-chain-code-graph-integration.md) for Step 0.5. Operator recipe: [`usage/code-graph.md`](usage/code-graph.md).
+See [`adr/0007-code-graph-dual-engine.md`](adr/0007-code-graph-dual-engine.md) for the original dual-engine rationale, [`adr/0008-audit-chain-code-graph-integration.md`](adr/0008-audit-chain-code-graph-integration.md) for Step 0.5, and [`adr/0013-v4.0-distillation.md`](adr/0013-v4.0-distillation.md) for the v4.0 single-engine simplification. Operator recipe: [`usage/code-graph.md`](usage/code-graph.md). Debug recipe: [`usage/debugging-with-code-graph.md`](usage/debugging-with-code-graph.md).
 
 ## Layer 9 — Supply-chain hardening (v2.9 + v3.1 + v3.4)
 
@@ -161,7 +160,7 @@ A 3-gate verification posture for the codebase-memory-mcp engine binary, plus ve
 | 2. SHA-256 against signed `checksums.txt` | Asset matches the manifest of the same release | Network MITM, half-tampered re-upload | v2.9 |
 | 3. `gh attestation verify` (Sigstore + GH Actions provenance) | Asset chains to the expected workflow run in the expected repo | Maintainer-account compromise re-publishing both asset + checksums | v3.1 |
 
-Asymmetric trust posture (intentional, documented in [ADR-0007 § Update](adr/0007-code-graph-dual-engine.md)): codebase-memory-mcp gets all 3 gates; graphifyy gets PyPI version-pin only (`==0.5.4`). PyPI hash-pinning is postponed because `uv tool install` does not expose `--require-hashes`. Tracked upstream at `astral-sh/uv#5945`.
+codebase-memory-mcp gets all 3 gates. (Pre-v4.0 the plugin also pinned graphifyy on PyPI with version-only — the asymmetric trust posture documented in ADR-0007 § Update. With graphify deprecated in v4.0, this asymmetry is moot; the single-engine surface is uniformly hardened.)
 
 In v3.4, the plugin's own GitHub Actions surface adopted the same posture: third-party actions pinned by full commit SHA (`actions/checkout@de0fac2e... # v6`, `actions/setup-node@49933ea5... # v4`, `raven-actions/actionlint@205b530c... # v2.1.2`); Claude CLI pinned to `@anthropic-ai/claude-code@2.1.123`.
 
@@ -171,7 +170,7 @@ GitHub Actions workflow that runs the static validators + the E2E harness on eve
 
 - **`.github/workflows/ci.yml`** with three gated jobs:
   1. `actionlint` — lints every workflow YAML file (~seconds, no secrets).
-  2. `static-validators` — runs `tests/v2.5-validators/run.sh` (9 cases) + the API-free E2E scenario 01 (engines-state roundtrip). Always runs.
+  2. `static-validators` — runs `tests/v2.5-validators/run.sh` (15 cases) + the API-free E2E scenario 01 (engines-state roundtrip). Always runs.
   3. `e2e` — runs `tests/e2e/run.sh` against `claude --print --model sonnet` (4 scenarios). Gated on `ANTHROPIC_API_KEY` repo secret via a probe step that exits clean when missing — fresh forks see green CI.
 - **Concurrency:** cancel-in-progress on the same ref to save tokens during fast iteration.
 - **Permissions:** `contents: read` (least-privilege).
