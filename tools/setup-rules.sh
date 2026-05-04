@@ -97,14 +97,11 @@ echo "setup-rules.sh complete  |  plugin: $PLUGIN_PATH  |  dest: $RULES_DST"
 [[ ${#CREATED[@]} -gt 0 ]] && printf "  created : %s\n" "${CREATED[@]}"
 [[ ${#SKIPPED[@]} -gt 0 ]] && printf "  skipped : %s\n" "${SKIPPED[@]}"
 
-# Chain to code-graph engine bootstrap (graphify + codebase-memory-mcp).
-# Only on --all (the catch-all bootstrap mode); single/interactive imports a specific
-# rule and should not pull in unrelated infrastructure. Operators wanting just the
-# code-graph engines can invoke setup-code-graph.sh directly.
-if [[ "$MODE" == "all" ]]; then
-  echo ""
-  echo "Chaining to setup-code-graph.sh ..."
-  bash "$(dirname "$0")/setup-code-graph.sh" || {
-    echo "  setup-code-graph.sh exited non-zero — engines may be partial. Re-run that script directly to debug." >&2
-  }
-fi
+# Code-graph engine bootstrap is a separate operator-side step (changed in v4.0,
+# ADR-0013). Coupling rule import to the engine install dragged unrelated infra
+# into projects that only wanted the rule symlinks. Operators who want both run
+# the two scripts in sequence; the message below makes that explicit.
+echo ""
+echo "Note: the code-graph engine bootstrap is a separate step. To install"
+echo "      codebase-memory-mcp, run:"
+echo "        bash $(dirname "$0")/setup-code-graph.sh"
