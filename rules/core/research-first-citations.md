@@ -1,7 +1,8 @@
 ---
 title: Research-first citations
 applies-to: ["python", "typescript", "any-language-with-imports"]
-last-reviewed: 2026-04-26
+last-reviewed: 2026-05-04
+enforcement: context-only
 ---
 
 # Research-first citations

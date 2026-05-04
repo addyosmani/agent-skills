@@ -1,7 +1,9 @@
 ---
 title: Skill authoring required before SKILL.md creation
 applies-to: ["markdown", "batuta-plugin"]
-last-reviewed: 2026-04-29
+last-reviewed: 2026-05-04
+enforcement: hook
+hook: hooks/pre-write-skill-gate.sh
 ---
 
 # Skill authoring required before SKILL.md creation

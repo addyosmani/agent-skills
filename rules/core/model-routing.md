@@ -2,6 +2,7 @@
 title: Model routing — delegate lookups and implementation away from main Opus
 applies-to: ["python", "typescript", "bash"]
 last-reviewed: 2026-05-04
+enforcement: context-only
 # §A.6: verbatim derivation of ~/.claude/CLAUDE.md "Native delegation + post-edit audit";
 # reinforced by ADR-0001, ADR-0002, docs/DELEGATION-RULE.md, and direct evidence from
 # a multi-bank financial pipeline (2026-05-04) where main Opus executed gh/WebFetch/Edit

@@ -1,7 +1,8 @@
 ---
 title: Secrets and PII handling
 applies-to: ["any-language", "regulated-data", "auth-systems"]
-last-reviewed: 2026-04-26
+last-reviewed: 2026-05-04
+enforcement: context-only
 ---
 
 # Secrets and PII handling

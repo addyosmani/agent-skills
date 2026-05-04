@@ -2,6 +2,7 @@
 title: Code knowledge graph usage
 applies-to: ["any-language-with-imports", "regulated-data"]
 last-reviewed: 2026-05-04
+enforcement: context-only
 ---
 
 # Code knowledge graph usage

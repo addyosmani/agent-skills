@@ -2,6 +2,7 @@
 title: No hardcoded magic values
 applies-to: ["python", "typescript"]
 last-reviewed: 2026-05-04
+enforcement: context-only
 # §A.6: derivation of global ~/.claude/CLAUDE.md "engineering invariants" (universal);
 # direct evidence: multi-bank financial pipeline (sessions 2026-05-02, 2026-05-03)
 # where 10-12 hardcoded literals caused pipeline failures when new banks were added.

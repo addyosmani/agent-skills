@@ -1,7 +1,9 @@
 ---
 title: Agent authoring required before agent file creation
 applies-to: ["markdown", "batuta-plugin"]
-last-reviewed: 2026-04-29
+last-reviewed: 2026-05-04
+enforcement: hook
+hook: hooks/pre-write-agent-gate.sh
 ---
 
 # Agent authoring required before agent file creation

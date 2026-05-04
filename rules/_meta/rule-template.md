@@ -4,6 +4,10 @@ applies-to: ["python", "sql"]   # array of language/stack/context tags this rule
                                 # Common values: python, typescript, sql, bash, markdown,
                                 # frontend, backend, regulated-data, multi-tenant, colombia
 last-reviewed: 2026-04-26       # YYYY-MM-DD; quarterly review cadence
+enforcement: context-only       # 'context-only' (loaded into agent context, no runtime gate)
+                                # OR 'hook' (PreToolUse hook blocks violations at tool-call time;
+                                # add a `hook:` field below pointing at the script path under hooks/).
+# hook: hooks/pre-write-skill-gate.sh   # only when enforcement: hook
 ---
 
 # <Title — same as frontmatter `title`>

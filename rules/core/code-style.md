@@ -1,7 +1,8 @@
 ---
 title: Code style conventions
 applies-to: ["python", "typescript", "javascript"]
-last-reviewed: 2026-04-26
+last-reviewed: 2026-05-04
+enforcement: context-only
 ---
 
 # Code style conventions
