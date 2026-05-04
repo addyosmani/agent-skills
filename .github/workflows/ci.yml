@@ -24,7 +24,7 @@ name: CI
 #     References: https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions
 #   - Claude Code CLI is pinned to a specific npm version. Latest-on-CI invites silent
 #     drift between PRs; pin + manual bump aligns with the rest of the supply-chain
-#     posture (codebase-memory-mcp release pin, graphifyy version pin).
+#     posture (codebase-memory-mcp release pin).
 
 on:
   # `pull_request` (NOT `pull_request_target`) — fork PRs run in fork context with no

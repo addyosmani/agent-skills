@@ -5,15 +5,19 @@
 #   (default)        human-readable summary
 #   --json           raw JSON state (passthrough of ~/.claude/code-graph-engines.json)
 #   --field <name>   a single field — one of:
-#                      graphify.status, graphify.version,
 #                      codebase_memory_mcp.status, codebase_memory_mcp.version, codebase_memory_mcp.binary,
 #                      best   (recommended engine name based on availability)
 #
 # Exit codes:
-#   0  at least one engine is OK
-#   1  both engines are MISSING or BROKEN
+#   0  the engine is OK
+#   1  the engine is MISSING or BROKEN
 #   2  state file does not exist (operator never ran setup-code-graph.sh)
 #   3  state file is malformed
+#
+# History: pre-v4.0 this script tracked two engines (graphify + codebase-memory-mcp).
+# graphify was deprecated in v4.0 — see ADR-0013. The state file may still carry a
+# `graphify` key marked DEPRECATED for backward compat with older callers; this
+# script ignores it.
 #
 # Source: https://github.com/jota-batuta/batuta-agent-skills (this plugin)
 
@@ -57,26 +61,20 @@ if ! jq empty "$STATE_FILE" 2>/dev/null; then
   exit 3
 fi
 
-g_status="$(jq -r '.graphify.status'              "$STATE_FILE")"
-g_ver="$(   jq -r '.graphify.version'             "$STATE_FILE")"
-c_status="$(jq -r '.codebase_memory_mcp.status'   "$STATE_FILE")"
-c_ver="$(   jq -r '.codebase_memory_mcp.version'  "$STATE_FILE")"
-c_bin="$(   jq -r '.codebase_memory_mcp.binary'   "$STATE_FILE")"
+c_status="$(jq -r '.codebase_memory_mcp.status // "MISSING"'   "$STATE_FILE")"
+c_ver="$(   jq -r '.codebase_memory_mcp.version // ""'         "$STATE_FILE")"
+c_bin="$(   jq -r '.codebase_memory_mcp.binary  // ""'         "$STATE_FILE")"
 
-# Determine the best available engine.
-# Preference order: graphify (multimodal) > codebase-memory (code-only) > none.
+# Determine the best available engine. codebase-memory-mcp is the only
+# supported engine since v4.0 (see ADR-0013).
 best="none"
-if   [[ "$g_status" == "OK" ]]; then best="graphify"
-elif [[ "$c_status" == "OK" ]]; then best="codebase-memory"
-fi
+if [[ "$c_status" == "OK" ]]; then best="codebase-memory"; fi
 
 case "$MODE" in
   json)
     cat "$STATE_FILE" ;;
   field)
     case "$FIELD" in
-      graphify.status)              echo "$g_status" ;;
-      graphify.version)             echo "$g_ver" ;;
       codebase_memory_mcp.status)   echo "$c_status" ;;
       codebase_memory_mcp.version)  echo "$c_ver" ;;
       codebase_memory_mcp.binary)   echo "$c_bin" ;;
@@ -84,11 +82,10 @@ case "$MODE" in
       *) echo "Unknown field: $FIELD" >&2; exit 1 ;;
     esac ;;
   summary)
-    printf "graphify             = %s  (%s)\n" "$g_status" "${g_ver:-n/a}"
     printf "codebase-memory-mcp  = %s  (%s)\n" "$c_status" "${c_ver:-n/a}"
     printf "best available       = %s\n" "$best"
     ;;
 esac
 
-# Exit code: 0 if at least one engine is OK, 1 otherwise.
+# Exit code: 0 if the engine is OK, 1 otherwise.
 [[ "$best" == "none" ]] && exit 1 || exit 0

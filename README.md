@@ -105,12 +105,7 @@ The `rules/` layer ships declarative invariants that consumer projects import vi
 
 ### Code knowledge graph
 
-Architecture and dependency questions are answered from a persisted graph, not by re-reading files every time. The `code-graph` skill supports two engines:
-
-- **graphify** (primary) -- multimodal, processes docs and images alongside code.
-- **codebase-memory-mcp** (fallback) -- code-only, stable on Windows.
-
-Engine selection is automatic based on `~/.claude/code-graph-engines.json`. Bootstrap both with `tools/setup-code-graph.sh`. See [ADR-0007](docs/adr/0007-code-graph-dual-engine.md).
+Architecture and dependency questions are answered from a persisted graph, not by re-reading files every time. The `code-graph` skill is backed by a single engine: **codebase-memory-mcp** (Go MCP server, code-only, stable on Linux/macOS/Windows). State lives at `~/.claude/code-graph-engines.json`. Bootstrap with `tools/setup-code-graph.sh`. See [ADR-0007](docs/adr/0007-code-graph-dual-engine.md) for the original dual-engine design and [ADR-0013](docs/adr/0013-v4.0-distillation.md) for the v4.0 single-engine simplification (graphify deprecated).
 
 ## Full skill inventory (36 skills)
 

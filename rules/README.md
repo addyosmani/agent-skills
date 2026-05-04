@@ -77,7 +77,7 @@ Conventions:
 
 ### `integrations/` — Contracts for plugin-coordinated external tools
 
-- [`code-graph-usage.md`](integrations/code-graph-usage.md) — when and how to use the dual-engine code knowledge graph (graphify + codebase-memory-mcp)
+- [`code-graph-usage.md`](integrations/code-graph-usage.md) — when and how to use the code knowledge graph (codebase-memory-mcp; graphify deprecated in v4.0)
 
 ### `domain-co/` — Colombia-specific conventions
 

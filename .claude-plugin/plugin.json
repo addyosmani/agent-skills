@@ -1,7 +1,7 @@
 {
   "name": "batuta-agent-skills",
-  "description": "Batuta fork of addyosmani/agent-skills. Dual-engine code-graph (graphify + codebase-memory-mcp) with audit-chain integration; trusts Claude's native delegation; kill-switches against plugin self-disable; rules/ layer; specialist agents; E2E test harness.",
-  "version": "3.8.0",
+  "description": "Batuta fork of addyosmani/agent-skills. Single-engine code-graph (codebase-memory-mcp) with audit-chain integration; trusts Claude's native delegation; kill-switches against plugin self-disable; rules/ layer; specialist agents; E2E test harness.",
+  "version": "4.0.0",
   "author": {
     "name": "jota-batuta",
     "url": "https://github.com/jota-batuta"

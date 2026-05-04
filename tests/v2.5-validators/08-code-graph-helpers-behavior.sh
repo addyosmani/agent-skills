@@ -106,9 +106,9 @@ fi
 rm -f "$fixture"
 
 # --- Pin variables present after sourcing ---
+# v4.0: GRAPHIFY_PIN removed (graphify deprecated, ADR-0013). Only CBM_PIN_TAG remains.
 echo ""
 echo "  pin variables:"
-assert_eq "GRAPHIFY_PIN is set after sourcing" "${GRAPHIFY_PIN:-UNSET}" "0.5.4"
 assert_eq "CBM_PIN_TAG is set after sourcing" "${CBM_PIN_TAG:-UNSET}" "v0.6.0"
 
 echo ""

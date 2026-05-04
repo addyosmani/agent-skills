@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
 # 07-code-graph-skill-shape.sh
-# Validates the code-graph dual-engine integration shipped in v2.8:
+# Validates the code-graph integration. Updated for v4.0 single-engine
+# (codebase-memory-mcp); graphify was deprecated in ADR-0013.
 #   (a) SKILL.md frontmatter (name, description) and required sections present.
 #   (b) SKILL.md does NOT contain `graphify claude install` as a positive instruction.
 #       It MAY appear inside Anti-Rationalizations / Red Flags / Process step text only
 #       as a prohibition. We allow occurrences only on lines that also mention
 #       'forbidden', 'never', 'do not', 'block', 'kill-switch', or 'red flag' (case-
 #       insensitive) — anywhere else is a positive use and fails.
-#   (c) SKILL.md documents engine selection (Step 0) and a fallback path.
+#   (c) SKILL.md documents engine selection (Step 0) and references codebase-memory-mcp.
 #   (d) The integrations rule exists and contains the mandatory Anti-patterns section.
-#   (e) ADR-0007 exists.
+#   (e) ADR-0007 exists (historical record of the dual-engine era).
 #   (f) Bootstrap scripts exist, are executable, and do NOT write to .claude/settings*.
 #   (g) Slash command exists with frontmatter description.
-# Contract introduced in v2.8.
+# Contract introduced in v2.8; v4.0 removed graphify-positive assertions.
 
 set -uo pipefail
 
@@ -60,16 +61,13 @@ else
     echo "$bad_lines" | sed 's/^/        /'
   fi
 
-  # --- (c) engine selection (Step 0) and fallback path documented ---
+  # --- (c) engine selection (Step 0) and engine reference documented ---
   grep -qiE 'step 0.*engine selection|engine selection.*always first' "$SKILL" \
     && ok "SKILL.md documents Step 0 engine selection" \
     || miss "SKILL.md documents Step 0 engine selection"
   grep -qE 'codebase-memory(-mcp)?' "$SKILL" \
-    && ok "SKILL.md references the fallback engine codebase-memory-mcp" \
-    || miss "SKILL.md references the fallback engine codebase-memory-mcp"
-  grep -qE 'graphify' "$SKILL" \
-    && ok "SKILL.md references the primary engine graphify" \
-    || miss "SKILL.md references the primary engine graphify"
+    && ok "SKILL.md references the engine codebase-memory-mcp" \
+    || miss "SKILL.md references the engine codebase-memory-mcp"
 fi
 
 # --- (d) integrations rule ---
@@ -111,20 +109,12 @@ else
 
   # v2.9 supply-chain hardening (M1 from GATE 3 audit closure):
   # codebase-memory-mcp must be release-pinned and SHA-256-verified.
-  # graphify must be PyPI-version-pinned.
+  # (graphify pin removed in v4.0 — ADR-0013.)
 
   # Pin variables present
-  grep -qE '^GRAPHIFY_PIN=' "$SETUP" \
-    && ok "setup-code-graph.sh declares GRAPHIFY_PIN" \
-    || miss "setup-code-graph.sh must declare GRAPHIFY_PIN (graphifyy version pin)"
   grep -qE '^CBM_PIN_TAG=' "$SETUP" \
     && ok "setup-code-graph.sh declares CBM_PIN_TAG" \
     || miss "setup-code-graph.sh must declare CBM_PIN_TAG (codebase-memory-mcp release tag)"
-
-  # graphify install must use the version pin (graphifyy==$GRAPHIFY_PIN)
-  grep -qE 'graphifyy==\$GRAPHIFY_PIN|graphifyy==[0-9]' "$SETUP" \
-    && ok "setup-code-graph.sh installs graphifyy with version pin" \
-    || miss "setup-code-graph.sh must pin graphifyy version (e.g. graphifyy==\$GRAPHIFY_PIN)"
 
   # codebase-memory-mcp must download release asset, NOT main-branch install.sh
   if grep -qE 'raw\.githubusercontent\.com/DeusData/codebase-memory-mcp/main/' "$SETUP"; then

@@ -31,15 +31,16 @@ restore() {
 }
 trap restore EXIT
 
-# Run with both engines skipped — exit 2 expected (BOTH MISSING).
-out_setup="$(bash "$SETUP" --skip-graphify --skip-cbm 2>&1)"
+# Run with the engine skipped — exit 2 expected (engine MISSING).
+# v4.0: graphify deprecated (ADR-0013), only --skip-cbm remains.
+out_setup="$(bash "$SETUP" --skip-cbm 2>&1)"
 rc_setup=$?
 if [[ $rc_setup -ne 2 ]]; then
-  echo "  FAIL setup-code-graph.sh --skip-graphify --skip-cbm should exit 2 (got $rc_setup)"
+  echo "  FAIL setup-code-graph.sh --skip-cbm should exit 2 (got $rc_setup)"
   echo "$out_setup" | sed 's/^/    /'
   exit 1
 fi
-echo "  OK   setup-code-graph.sh exits 2 when both engines skipped"
+echo "  OK   setup-code-graph.sh exits 2 when engine skipped"
 
 # State file must be readable JSON with the expected shape.
 if [[ ! -f "$STATE_FILE" ]]; then
@@ -56,13 +57,12 @@ if ! jq empty "$STATE_FILE" 2>/dev/null; then
 fi
 echo "  OK   state file is valid JSON"
 
-g_status="$(jq -r '.graphify.status' "$STATE_FILE")"
 c_status="$(jq -r '.codebase_memory_mcp.status' "$STATE_FILE")"
-if [[ "$g_status" != "MISSING" || "$c_status" != "MISSING" ]]; then
-  echo "  FAIL expected both engines MISSING after skip-both; got graphify=$g_status codebase=$c_status"
+if [[ "$c_status" != "MISSING" ]]; then
+  echo "  FAIL expected codebase_memory_mcp MISSING after skip; got codebase=$c_status"
   exit 1
 fi
-echo "  OK   state reports graphify=MISSING codebase-memory=MISSING"
+echo "  OK   state reports codebase-memory=MISSING"
 
 # check-code-graph-engines.sh --field best should report 'none'.
 out_check="$(bash "$CHECK" --field best 2>&1)"

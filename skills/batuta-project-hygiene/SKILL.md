@@ -269,7 +269,7 @@ Do NOT trigger:
 
 4b. **Engineering invariants bootstrap (auto-apply, no prompt)** — for projects with a manifest (`package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`), run the following automatically. Skip only on pure-docs repos with no manifest markers. Do NOT ask the operator.
 
-   - Run `bash ~/.claude/plugins/marketplaces/batuta-agent-skills/tools/setup-rules.sh --all` (deterministic path matching the install layout enforced by the plugin's own setup script; do not introduce a `find`-based lookup here). This script also chains into `setup-code-graph.sh` to install the dual code-graph engines (graphify + codebase-memory-mcp); a non-zero exit from the chain is reported but does NOT abort hygiene — the project still completes init/retrofit even if engines are unavailable on this OS.
+   - Run `bash ~/.claude/plugins/marketplaces/batuta-agent-skills/tools/setup-rules.sh --all` (deterministic path matching the install layout enforced by the plugin's own setup script; do not introduce a `find`-based lookup here). The code-graph engine bootstrap is a separate operator-side step — `setup-rules.sh` does NOT chain into it (changed in v4.0). After the rule import succeeds, also run `bash ~/.claude/plugins/marketplaces/batuta-agent-skills/tools/setup-code-graph.sh` to install codebase-memory-mcp; a non-zero exit from this step is reported but does NOT abort hygiene — the project still completes init/retrofit even if the engine is unavailable on this OS.
    - Append to project's `CLAUDE.md` immediately after the section header `## Mandatory Skills for Batuta Projects` block, a new section:
 
      ```markdown
@@ -389,7 +389,7 @@ Do NOT trigger:
 2. **For each missing item, run only the corresponding sub-step from `Mode: project-init`**:
    - Missing `docs/{PRD,SPEC}.md` or `docs/adr/0001-template-decision.md` → run step 4 (Create project documentation skeleton) for those files only. NEVER overwrite existing files.
    - Missing `docs/plans/active|archive/` or `docs/sessions/` → create directories with `.gitkeep`.
-   - Missing `.claude/rules/` symlinks → run step 4a (Cross-tool bootstrap) for rules only (call `bash ~/.claude/plugins/marketplaces/batuta-agent-skills/tools/setup-rules.sh --all` if operator opts in). Note: `--all` also bootstraps the code-graph engines (graphify + codebase-memory-mcp) automatically, so the retrofit covers them too without a separate step.
+   - Missing `.claude/rules/` symlinks → run step 4a (Cross-tool bootstrap) for rules only (call `bash ~/.claude/plugins/marketplaces/batuta-agent-skills/tools/setup-rules.sh --all` if operator opts in). Note: `--all` does NOT chain into the code-graph engine bootstrap (changed in v4.0). If the operator wants codebase-memory-mcp installed too, also run `bash ~/.claude/plugins/marketplaces/batuta-agent-skills/tools/setup-code-graph.sh` as a separate step.
    - Missing `## Engineering invariants` section in CLAUDE.md → append the section with the @ imports (per step 4b on project-init), preserving everything that's already in CLAUDE.md.
    - Missing `.claude/kb-config.json` AND missing `.git/hooks/post-commit` containing `post-commit-kb` → run step 4c (KB capture hook). Repo must have `.git/` already (retrofit does not run `git init`). NEVER overwrite an existing `post-commit` hook — append the Batuta line instead.
 3. **Preserve everything that already exists.** This mode is purely additive. If the operator has customized any of the existing files, those customizations stay.

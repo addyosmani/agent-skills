@@ -64,19 +64,18 @@ Rationale: prevents low-quality rule sprawl. Forces validation of §A.4 (canonic
 **MUST trigger** before writing code that imports or calls any external library/API not yet cited in this session.
 Rationale: most bugs come from assuming outdated APIs. Context7 lookup is cheap, rework is expensive. Evidence lives in a `// Source:` citation comment.
 
-### code-graph (auto + manual, dual-engine)
-**MUST trigger** ante cualquiera de:
-- Operador pregunta sobre arquitectura, dependencias, acoplamiento, refactor de scope amplio.
-- Inicio de sesión en repo > 5k LOC sin índice (`graphify-out/` ni cache `~/.cache/codebase-memory-mcp/`).
-- `code-reviewer` o `security-auditor` necesitan mapa de llamadas para auditar el diff.
+### code-graph (auto + manual)
+**MUST trigger** on any of:
+- Operator asks about architecture, dependencies, coupling, broad-scope refactors.
+- Session start on a repo > 5k LOC with no cached index (`~/.cache/codebase-memory-mcp/`).
+- `code-reviewer` or `security-auditor` need a call map to audit the diff.
 
-Skill: [`skills/code-graph/`](skills/code-graph/SKILL.md). Slash manual: [`/code-graph`](.claude/commands/code-graph.md).
-**Dual-engine**: graphify (multimodal, primario) + codebase-memory-mcp (solo código, fallback). El skill detecta cuál está disponible vía `~/.claude/code-graph-engines.json` y elige según la pregunta.
-Bootstrap: [`tools/setup-code-graph.sh`](tools/setup-code-graph.sh) instala ambos motores. Lo dispara automáticamente `tools/setup-rules.sh --all`, así que `batuta-project-hygiene mode=project-init|project-retrofit` lo cubre sin pasos extra.
-Política: multimodal habilitado por default cuando graphify está activo — proveedor LLM autorizado por contrato cliente. Excepción: proyectos NDA estricto declaran `code-graph-engine: codebase-memory` en su CLAUDE.md proyecto para forzar fallback solo-código.
-**NEVER** ejecutar `graphify claude install` (modifica `.claude/settings.json` → kill-switch v2.7). El registro del MCP server pasa por `claude mcp add --scope user` (escribe a `~/.claude.json`, fuera del kill-switch).
+Skill: [`skills/code-graph/`](skills/code-graph/SKILL.md). Slash manual: [`/code-graph`](.claude/commands/code-graph.md). Recipe: [`docs/usage/debugging-with-code-graph.md`](docs/usage/debugging-with-code-graph.md).
+**Single engine**: codebase-memory-mcp. The skill checks availability via `~/.claude/code-graph-engines.json` and dispatches MCP tool calls (`trace_call_path`, `search_graph`, `get_architecture`, `query_graph`, `get_code_snippet`).
+Bootstrap: [`tools/setup-code-graph.sh`](tools/setup-code-graph.sh) installs the engine. It is a separate operator-side step — `setup-rules.sh` does not chain into it.
+**NEVER** run `graphify claude install` (modifies `.claude/settings.json` → v2.7 kill-switch). graphify itself was deprecated in v4.0 (ADR-0013); the prohibition stays because the upstream command still exists. MCP registration goes through `claude mcp add --scope user` (writes to `~/.claude.json`, outside the kill-switch).
 
-Rationale: re-leer el repo cada vez que aparece una pregunta de arquitectura quema tokens y produce respuestas peores que un grafo persistido. Dual engine porque graphify tiene 3 issues bloqueantes en Windows ([safishamsi/graphify#378](https://github.com/safishamsi/graphify/issues/378), [#244](https://github.com/safishamsi/graphify/issues/244), [#501](https://github.com/safishamsi/graphify/issues/501)) y bus factor 1; codebase-memory-mcp es estable en Win11 pero no procesa docs/imágenes.
+Rationale: re-reading the repo for every architecture question burns tokens and produces worse answers than a persisted graph. codebase-memory-mcp covers 100% of code-only graph queries (call paths, callers, callees, cycles, blast radius), is stable on Windows, has organizational backing (DeusData), and is supply-chain hardened (release pin + SHA-256 + GH attestation). graphify was removed because of three blocking Windows issues ([#378](https://github.com/safishamsi/graphify/issues/378), [#244](https://github.com/safishamsi/graphify/issues/244), [#501](https://github.com/safishamsi/graphify/issues/501)) and bus factor 1.
 
 ### kb-pipeline (per-commit dispatch)
 **Auto-invoked** by `hooks/post-commit-kb.sh` when `.claude/kb-config.json` has `kb_pipeline_enabled: true`. The hook dispatches the agent in a detached background process via `nohup timeout 120 claude --print ... & disown` so the commit returns immediately. The agent runs three internal phases — Capture / Curate / Write — against the commit diff and writes to the vault (`<vault>/decisions/`, `gotchas/`, `playbooks/`) or `<vault>/_inbox/` for items that fail curation.

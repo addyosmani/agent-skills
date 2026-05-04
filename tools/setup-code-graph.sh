@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
-# setup-code-graph.sh — bootstrap the dual code-knowledge-graph stack:
-#   1) graphify  (CLI, multimodal — primary engine)
-#   2) codebase-memory-mcp  (MCP server, code-only — fallback engine)
+# setup-code-graph.sh — bootstrap the codebase-memory-mcp code-knowledge-graph engine.
 #
-# Operator-side: this script is invoked by the operator (or by setup-rules.sh --all,
-# or by batuta-project-hygiene mode=project-init|project-retrofit). It is NEVER
+# Operator-side: this script is invoked by the operator (or by
+# batuta-project-hygiene mode=project-init|project-retrofit). It is NEVER
 # invoked from inside a Claude tool call. Therefore it does not pass through the
 # delegation-guard.sh PreToolUse hook and may freely write to the operator's PATH
 # and to ~/.claude.json (via `claude mcp add`). It MUST NOT touch
@@ -12,15 +10,17 @@
 #
 # Idempotent: re-running is safe and quick.
 #
-# Source: https://github.com/safishamsi/graphify (verified 2026-04-29, graphifyy@0.5.4)
+# History: v2.8–v3.7 also bootstrapped graphify (multimodal CLI). v4.0
+# deprecated graphify (Windows-broken, bus factor 1) — see ADR-0013. The
+# state file keeps a `graphify` key marked DEPRECATED for backward compat
+# with older check-code-graph-engines.sh callers.
+#
 # Source: https://github.com/DeusData/codebase-memory-mcp (verified 2026-04-29, codebase-memory-mcp@0.6.0)
 # Source: https://code.claude.com/docs/en/mcp (verified 2026-04-29, claude mcp add semantics)
 
-# NOTE on `set -uo pipefail` (no `-e`): this script tracks per-engine status
-# (graphify and codebase-memory-mcp) and intentionally continues on partial failure
-# so the operator gets the most-functional configuration possible. Replacing with
-# `set -euo pipefail` would abort the second engine install whenever the first
-# fails — exactly the opposite of what we want for a fallback architecture.
+# NOTE on `set -uo pipefail` (no `-e`): this is a status-tracking installer that
+# intentionally continues past partial failures so the operator gets a coherent
+# state file regardless of which step failed.
 set -uo pipefail
 
 if (( BASH_VERSINFO[0] < 4 )); then
@@ -36,29 +36,21 @@ IS_WINDOWS=false
 
 # ---------- flags ----------
 UPGRADE=false
-SKIP_GRAPHIFY=false
 SKIP_CBM=false
 for arg in "$@"; do
   case "$arg" in
     --upgrade)        UPGRADE=true ;;
-    --skip-graphify)  SKIP_GRAPHIFY=true ;;
     --skip-cbm)       SKIP_CBM=true ;;
     -h|--help)
-      sed -n '2,15p' "$0"
+      sed -n '2,18p' "$0"
       exit 0 ;;
     *)
-      echo "Usage: $0 [--upgrade] [--skip-graphify] [--skip-cbm]" >&2
+      echo "Usage: $0 [--upgrade] [--skip-cbm]" >&2
       exit 1 ;;
   esac
 done
 
 # ---------- pinned versions (v2.9 hardening, M1 from GATE 3 audit) ----------
-# graphify: PyPI version pin only — uv/pipx do not expose hash-pinning
-# ergonomically; we trust PyPI's TLS + signed-distribution chain. See ADR-0007
-# § Asymmetric trust posture for the rationale.
-# Source: https://pypi.org/project/graphifyy/0.4.23/ (verified 2026-04-30, latest on PyPI)
-GRAPHIFY_PIN="0.4.23"
-
 # codebase-memory-mcp: full release-asset pin + SHA-256 verification against
 # the release's checksums.txt. The release tag below points at an immutable
 # GitHub Release; the binary is downloaded directly (skipping install.sh, which
@@ -71,8 +63,6 @@ STATE_DIR="$HOME/.claude"
 STATE_FILE="$STATE_DIR/code-graph-engines.json"
 mkdir -p "$STATE_DIR"
 
-GRAPHIFY_STATUS="MISSING"
-GRAPHIFY_VERSION=""
 CBM_STATUS="MISSING"
 CBM_VERSION=""
 CBM_BINARY=""
@@ -85,7 +75,7 @@ warn() { printf "  WARN: %s\n" "$1" >&2; }
 err()  { printf "  ERROR: %s\n" "$1" >&2; }
 
 semver_ge() {
-  # semver_ge "0.5.4" "0.5.4" → true ; "0.5.3" "0.5.4" → false
+  # semver_ge "0.6.0" "0.6.0" → true ; "0.5.9" "0.6.0" → false
   # Crude but enough for x.y.z. Strips leading 'v' and any non-numeric suffix.
   local a b
   a="${1#v}"; b="${2#v}"
@@ -125,106 +115,14 @@ sha256_of() {
   fi
 }
 
-# ---------- block 1: graphify ----------
-install_graphify() {
-  if $SKIP_GRAPHIFY; then
-    log "graphify install skipped (--skip-graphify)"
-    return
-  fi
-  echo ""
-  echo "[1/2] graphify (multimodal code knowledge graph, primary engine)"
-
-  if have graphify && ! $UPGRADE; then
-    # graphify CLI has no --version flag; use pip show as authoritative source.
-    GRAPHIFY_VERSION="$(pip show graphifyy 2>/dev/null | grep -i '^Version:' | awk '{print $2}')"
-    if [[ -n "$GRAPHIFY_VERSION" ]] && semver_ge "$GRAPHIFY_VERSION" "$GRAPHIFY_PIN"; then
-      GRAPHIFY_STATUS="OK"
-      log "✓ graphify $GRAPHIFY_VERSION already installed"
-      return
-    fi
-  fi
-
-  local installer=""
-  if   have uv;    then installer="uv tool install"
-  elif have pipx;  then installer="pipx install"
-  elif have pip;   then installer="pip install --user"
-  elif have pip3;  then installer="pip3 install --user"
-  fi
-
-  if [[ -z "$installer" ]]; then
-    if $IS_WINDOWS; then
-      err "no Python installer found (uv/pipx/pip). Install uv first:"
-      err "  powershell -ExecutionPolicy ByPass -c \"irm https://astral.sh/uv/install.ps1 | iex\""
-    else
-      err "no Python installer found (uv/pipx/pip). Install uv first:"
-      err "  curl -LsSf https://astral.sh/uv/install.sh | sh"
-    fi
-    GRAPHIFY_STATUS="MISSING"
-    return
-  fi
-
-  local action="install"
-  $UPGRADE && have graphify && action="upgrade"
-  log "Using: $installer (action: $action; pinned to graphifyy==$GRAPHIFY_PIN)"
-
-  # Version-pinned install. Hash-pinning at the PyPI layer is intentionally NOT
-  # done here (uv tool / pipx do not expose --require-hashes ergonomically and
-  # adding a separate requirements.txt is more surface than the value warrants).
-  # PyPI's TLS + signed-distribution chain is the implicit trust anchor for this
-  # engine. See ADR-0007 § Asymmetric trust posture.
-  # uv tool uses different verb for upgrade
-  if [[ "$installer" == "uv tool install" && "$action" == "upgrade" ]]; then
-    if ! uv tool upgrade "graphifyy==$GRAPHIFY_PIN"; then
-      err "graphify upgrade failed"
-      GRAPHIFY_STATUS="BROKEN"
-      return
-    fi
-  else
-    # shellcheck disable=SC2086
-    if ! $installer "graphifyy==$GRAPHIFY_PIN" 2>&1 | sed 's/^/    /'; then
-      err "graphify install failed"
-      GRAPHIFY_STATUS="BROKEN"
-      return
-    fi
-  fi
-
-  # Smoke test post-install
-  if ! have graphify; then
-    if $IS_WINDOWS; then
-      warn "graphify installed but not in PATH (Windows). Open a new shell or check ~/.local/bin"
-    else
-      warn "graphify installed but not in PATH. Open a new shell or check ~/.local/bin"
-    fi
-    GRAPHIFY_STATUS="BROKEN"
-    return
-  fi
-
-  GRAPHIFY_VERSION="$(graphify --version 2>/dev/null | head -n1 | awk '{print $NF}')"
-  if [[ -z "$GRAPHIFY_VERSION" ]]; then
-    # Known issue on Windows: install completes but `graphify --version` fails.
-    # See https://github.com/safishamsi/graphify/issues/378 (verified 2026-04-29).
-    if $IS_WINDOWS; then
-      warn "graphify CLI present but '--version' failed (likely safishamsi/graphify#378)"
-      warn "Marking graphify=BROKEN; codebase-memory-mcp will be the active engine"
-    else
-      warn "graphify CLI present but '--version' failed"
-    fi
-    GRAPHIFY_STATUS="BROKEN"
-    return
-  fi
-
-  GRAPHIFY_STATUS="OK"
-  log "✓ graphify $GRAPHIFY_VERSION ready"
-}
-
-# ---------- block 2: codebase-memory-mcp ----------
+# ---------- block 1: codebase-memory-mcp ----------
 install_cbm() {
   if $SKIP_CBM; then
     log "codebase-memory-mcp install skipped (--skip-cbm)"
     return
   fi
   echo ""
-  echo "[2/2] codebase-memory-mcp (code-only knowledge graph, fallback engine)"
+  echo "[1/2] codebase-memory-mcp (code knowledge graph engine)"
 
   if have codebase-memory-mcp && ! $UPGRADE; then
     CBM_BINARY="$(command -v codebase-memory-mcp)"
@@ -409,16 +307,19 @@ install_cbm() {
   log "✓ codebase-memory-mcp ${CBM_VERSION:-unknown} ready at $CBM_BINARY"
 }
 
-# ---------- block 3: persist state ----------
+# ---------- block 2: persist state ----------
 write_state() {
+  # The `graphify` key is preserved with status DEPRECATED so older
+  # check-code-graph-engines.sh installations (cached plugin) keep parsing
+  # the file without errors. New code should ignore this key entirely.
   cat > "$STATE_FILE" <<EOF
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "updated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "platform": "$OS",
   "graphify": {
-    "status": "$GRAPHIFY_STATUS",
-    "version": "$GRAPHIFY_VERSION"
+    "status": "DEPRECATED",
+    "version": ""
   },
   "codebase_memory_mcp": {
     "status": "$CBM_STATUS",
@@ -439,27 +340,25 @@ if [[ "${SOURCING_FOR_TESTS:-}" == "1" ]]; then
   return 0 2>/dev/null || exit 0
 fi
 
-echo "setup-code-graph.sh — dual engine bootstrap"
+echo "setup-code-graph.sh — codebase-memory-mcp bootstrap"
 echo "platform: $OS  |  upgrade: $UPGRADE"
 
-install_graphify
 install_cbm
 
 echo ""
-echo "[3/3] state"
+echo "[2/2] state"
 write_state
 
 echo ""
 echo "Summary:"
-log "graphify             = $GRAPHIFY_STATUS  (${GRAPHIFY_VERSION:-n/a})"
 log "codebase-memory-mcp  = $CBM_STATUS  (${CBM_VERSION:-n/a})"
 
-if [[ "$GRAPHIFY_STATUS" == "OK" || "$CBM_STATUS" == "OK" ]]; then
+if [[ "$CBM_STATUS" == "OK" ]]; then
   echo ""
-  echo "At least one engine is functional. The code-graph skill will pick the best available."
+  echo "Engine is functional. The code-graph skill is ready to use."
   exit 0
 else
   echo ""
-  err "BOTH engines failed. The code-graph skill will instruct re-bootstrap on next invocation."
+  err "Engine install failed. The code-graph skill will instruct re-bootstrap on next invocation."
   exit 2
 fi

@@ -42,7 +42,7 @@ Per-scenario exit codes (consumed by `run.sh`):
 
 ### `01-engines-state-roundtrip.sh` (no claude CLI required)
 
-Sanity check of the bootstrap → state → reader pipeline. Runs `tools/setup-code-graph.sh --skip-graphify --skip-cbm`, asserts exit 2, asserts `~/.claude/code-graph-engines.json` is valid JSON with both engines reported `MISSING`, asserts `tools/check-code-graph-engines.sh --field best` returns `none` and exits 1. Backs up and restores any pre-existing state file.
+Sanity check of the bootstrap → state → reader pipeline. Runs `tools/setup-code-graph.sh --skip-cbm`, asserts exit 2, asserts `~/.claude/code-graph-engines.json` is valid JSON with the engine reported `MISSING`, asserts `tools/check-code-graph-engines.sh --field best` returns `none` and exits 1. Backs up and restores any pre-existing state file. (Pre-v4.0 this scenario also exercised the `--skip-graphify` flag; graphify was deprecated in ADR-0013.)
 
 ### `02-claude-sonnet-skill-discovery.sh` (claude CLI required)
 
