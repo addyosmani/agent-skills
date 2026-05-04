@@ -26,6 +26,7 @@ cases=(
   "12-kb-curate-shape.sh"
   "13-research-first-step-1-5.sh"
   "14-kb-backfill-shape.sh"
+  "15-new-rules-shape.sh"
 )
 
 pass=0

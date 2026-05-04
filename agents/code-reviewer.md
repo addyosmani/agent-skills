@@ -75,6 +75,7 @@ Evaluate every change across these five dimensions:
 - Are names descriptive and consistent with project conventions?
 - Is the control flow straightforward (no deeply nested logic)?
 - Is the code well-organized (related code grouped, clear boundaries)?
+- **Anti-hardcoding check**: grep the diff for numeric literals > 3 digits, ALL_CAPS strings not declared as a constant, absolute paths, and embedded dates. For each hit, verify whether it should be a parameter or config value. If yes, raise as a Critical finding with citation to `rules/no-hardcoded-magic.md`.
 
 ### 3. Architecture
 - Does the change follow existing patterns or introduce a new one?

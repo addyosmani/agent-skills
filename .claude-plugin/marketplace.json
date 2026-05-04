@@ -4,7 +4,7 @@
     "name": "jota-batuta"
   },
   "metadata": {
-    "description": "Fork of addyosmani/agent-skills that layers 10 Batuta skills + 9 agents + 5 hooks (SessionStart + delegation-guard + authoring gates + KB pipeline dispatch) on top. Obsidian-first knowledge base with connected graph."
+    "description": "Fork of addyosmani/agent-skills that layers 13 Batuta skills + 9 agents + 5 hooks (SessionStart + delegation-guard + authoring gates + KB pipeline dispatch) on top. Obsidian-first knowledge base with connected graph."
   },
   "plugins": [
     {
@@ -13,7 +13,7 @@
         "source": "github",
         "repo": "jota-batuta/batuta-agent-skills"
       },
-      "description": "Batuta fork of agent-skills. 20 upstream skills + 10 Batuta-specific skills. 9 agents with explicit model: (6 base + agent-architect + 3 KB pipeline). Obsidian KB pipeline with wikilink-connected graph, auto-capture per commit, and research-first vault lookup. Auto KB pipeline per ADR-0012."
+      "description": "Batuta fork of agent-skills. 20 upstream skills + 13 Batuta-specific skills. 9 agents with explicit model: (6 base + agent-architect + 3 KB pipeline). Obsidian KB pipeline with wikilink-connected graph, auto-capture per commit, and research-first vault lookup. Auto KB pipeline per ADR-0012."
     }
   ]
 }

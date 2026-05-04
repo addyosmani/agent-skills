@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://batuta.dev/schemas/intent-capture/v1.json",
+  "title": "IntentCapture",
+  "description": "Structured operator intent for pre-execution confirmation. One object per operator turn batch.",
+  "type": "object",
+  "required": ["asks", "metadata", "status"],
+  "additionalProperties": false,
+  "properties": {
+    "asks": {
+      "type": "array",
+      "description": "One item per distinct ask in this batch.",
+      "minItems": 1,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "original_text",
+          "refined_text",
+          "scope",
+          "acceptance",
+          "priority",
+          "category",
+          "captured_at",
+          "clarifications"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ask identifier.",
+            "pattern": "^ask_[a-z0-9]{12}$"
+          },
+          "original_text": {
+            "type": "string",
+            "description": "Verbatim text from the operator before grilling.",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "refined_text": {
+            "type": "string",
+            "description": "Unambiguous restatement of the ask after grilling.",
+            "minLength": 10,
+            "maxLength": 500
+          },
+          "scope": {
+            "type": "object",
+            "description": "What the ask does and does not cover.",
+            "required": ["includes", "excludes"],
+            "additionalProperties": false,
+            "properties": {
+              "includes": {
+                "type": "array",
+                "description": "Files, modules, services, or concerns in scope.",
+                "items": { "type": "string", "minLength": 1 }
+              },
+              "excludes": {
+                "type": "array",
+                "description": "Explicitly out of scope — prevents scope creep.",
+                "items": { "type": "string", "minLength": 1 }
+              }
+            }
+          },
+          "acceptance": {
+            "type": "string",
+            "description": "Verifiable completion criterion agreed with the operator.",
+            "minLength": 5,
+            "maxLength": 300
+          },
+          "priority": {
+            "type": "string",
+            "description": "Relative priority within this batch.",
+            "enum": ["high", "medium", "low"]
+          },
+          "category": {
+            "type": "string",
+            "description": "Ask type, drives subagent routing in Step 6.",
+            "enum": ["feature", "bug", "research", "refactor", "meta"]
+          },
+          "captured_at": {
+            "type": "string",
+            "description": "ISO 8601 UTC timestamp when this ask was captured.",
+            "format": "date-time"
+          },
+          "clarifications": {
+            "type": "array",
+            "description": "Ordered log of grilling Q&A for audit trail.",
+            "items": {
+              "type": "object",
+              "required": ["question", "answer", "asked_at"],
+              "additionalProperties": false,
+              "properties": {
+                "question": {
+                  "type": "string",
+                  "description": "Question asked by the agent.",
+                  "minLength": 5
+                },
+                "answer": {
+                  "type": "string",
+                  "description": "Operator response.",
+                  "minLength": 1
+                },
+                "asked_at": {
+                  "type": "string",
+                  "description": "ISO 8601 UTC timestamp of the question.",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Session and agent context.",
+      "required": ["session_id", "operator_id", "created_at", "agent_version"],
+      "additionalProperties": false,
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "description": "Opaque identifier for the Claude Code session.",
+          "minLength": 1
+        },
+        "operator_id": {
+          "type": "string",
+          "description": "Operator handle — git username only. MUST NOT contain a full email address (use the local-part only or the GitHub handle). PII rule: full emails violate rules/core/secrets-and-pii.md rule 2a.",
+          "minLength": 1,
+          "pattern": "^[^@]*$"
+        },
+        "created_at": {
+          "type": "string",
+          "description": "ISO 8601 UTC timestamp when the intent object was first created.",
+          "format": "date-time"
+        },
+        "agent_version": {
+          "type": "string",
+          "description": "Plugin version that produced this intent, e.g. '3.8.0'.",
+          "minLength": 1
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "description": "Lifecycle state of the intent.",
+      "enum": [
+        "draft",
+        "grilling",
+        "ready_for_confirmation",
+        "confirmed",
+        "rejected",
+        "superseded"
+      ]
+    },
+    "confirmation": {
+      "type": ["object", "null"],
+      "description": "Populated only when status is 'confirmed'. Null otherwise.",
+      "required": ["confirmed_at", "confirmed_via"],
+      "additionalProperties": false,
+      "properties": {
+        "confirmed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "confirmed_via": {
+          "type": "string",
+          "enum": ["explicit_text", "askuserquestion"]
+        }
+      }
+    }
+  }
+}
