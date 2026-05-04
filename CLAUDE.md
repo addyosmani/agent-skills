@@ -84,13 +84,8 @@ Rationale: per ADR-0012, a single agent with three phases eliminates the failure
 
 The kb-pipeline agent MUST generate `[[wikilinks]]` in every vault write and populate `related:` frontmatter. Without this, the vault graph remains disconnected and research-first Step 1.5 lookups return zero results. Convention: `batuta-kb-vault` SKILL.md Step 3.5. This repo has `kb_pipeline_enabled: true` and `adr_mirror_enabled: true` in `.claude/kb-config.json`.
 
-### notion-kb-workflow (DEPRECATED — see ADR-0012)
-**Status**: deprecated as of 2026-04-30 per [`docs/adr/0012-obsidian-only-kb-pipeline.md`](docs/adr/0012-obsidian-only-kb-pipeline.md). Notion is no longer the source of truth for the internal KB; Obsidian is. The skill frontmatter now has `status: deprecated`.
-
-**DO NOT invoke** `--read`, `--init`, or `--append`. Replacements:
-- Session-start context loading → `hooks/session-start.sh` reads the vault automatically when `.claude/kb-config.json` is present.
-- New project bootstrap → `batuta-project-hygiene mode=project-init` scans `<vault>/clients/*` and offers a numbered menu of existing clients.
-- End-of-session capture → `hooks/post-commit-kb.sh` writes session bullets to vault on every commit; the `kb-pipeline` agent (when `kb_pipeline_enabled: true`) curates them in background.
+### notion-kb-workflow (REMOVED in v4.0)
+The directory was removed in v4.0 per [`docs/adr/0013-v4.0-distillation.md`](docs/adr/0013-v4.0-distillation.md), confirming the deprecation declared in [ADR-0012](docs/adr/0012-obsidian-only-kb-pipeline.md). For replacements see the kb-pipeline section above (session-start.sh, post-commit-kb.sh, batuta-project-hygiene mode=project-init). The full SKILL.md is preserved in git history for reference.
 
 ### agent-architect (delegated)
 **MUST trigger** when a slice requires domain expertise that the base agents (`implementer`, `code-reviewer`, `test-engineer`, `security-auditor`) do not cover — a specific framework, protocol, regulation, or Batuta client domain. Discovery-first is mandatory: the meta-agent lists existing agents before creating a duplicate.

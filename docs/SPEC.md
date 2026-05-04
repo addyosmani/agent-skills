@@ -210,7 +210,7 @@ The plugin ships skills organized by development phase. Each skill has a `SKILL.
 | KB pipeline (Batuta-specific, ADR-0012) | `batuta-kb-vault`, `kb-curate`, `kb-backfill`, `kb-end-session` |
 | Meta / ops (Batuta-specific) | `save-plan`, `batuta-status` |
 | Architecture / refactor (Batuta-specific) | `code-graph` |
-| Deprecated | ~~`notion-kb-workflow`~~ (frozen 2026-05-01 per [ADR-0012](adr/0012-obsidian-only-kb-pipeline.md); replaced by `hooks/session-start.sh` + `hooks/post-commit-kb.sh` + `agents/kb-pipeline.md`) |
+| Removed | ~~`notion-kb-workflow`~~ (deprecated 2026-05-01 per [ADR-0012](adr/0012-obsidian-only-kb-pipeline.md); directory deleted 2026-05-04 per [ADR-0013](adr/0013-v4.0-distillation.md); replaced by `hooks/session-start.sh` + `hooks/post-commit-kb.sh` + `agents/kb-pipeline.md`. SKILL.md preserved in git history.) |
 
 Each skill is auto-discoverable via the `using-agent-skills` flowchart. The Batuta-specific meta-skills are mandatory triggers documented in `CLAUDE.md`. The `kb-pipeline` agent (defined in `agents/kb-pipeline.md`, not a skill) is the per-commit dispatch target — it runs Capture / Curate / Write phases against the commit diff and writes to the operator's Obsidian vault.
 

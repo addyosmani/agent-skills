@@ -97,7 +97,7 @@ Key behaviors:
 - **Research-first vault lookup**: the `research-first-dev` skill checks the vault for prior decisions before reaching for external docs.
 - **Wikilinks and frontmatter**: all vault entries carry Obsidian-compatible frontmatter and use `[[wikilinks]]` for cross-references.
 
-Notion is deprecated for internal use (kept only when a client needs read access). The old `notion-kb-workflow` skill is frozen.
+Notion is deprecated for internal use (kept only when a client needs read access). The old `notion-kb-workflow` skill was removed in v4.0 (ADR-0013); its SKILL.md is preserved in git history.
 
 ### Engineering invariants (rules/)
 
@@ -155,7 +155,7 @@ Most have mandatory triggers documented in [`CLAUDE.md`](CLAUDE.md) so they fire
 | `kb-end-session` | End of productive session | Close session journal, commit, trigger `/kb-curate --scope session` |
 | `save-plan` | After exiting plan mode | Copy plan from `~/.claude/plans/` to `docs/plans/active/` for git persistence |
 | `batuta-status` | When operator wants cross-project overview | Snapshot of all active Batuta projects from vault + git state |
-| ~~`notion-kb-workflow`~~ | **DEPRECATED** ([ADR-0012](docs/adr/0012-obsidian-only-kb-pipeline.md)) | Frozen. Replaced by vault hooks + kb-pipeline agent. Do not invoke |
+| ~~`notion-kb-workflow`~~ | **REMOVED** in v4.0 ([ADR-0013](docs/adr/0013-v4.0-distillation.md), supersedes [ADR-0012](docs/adr/0012-obsidian-only-kb-pipeline.md)) | Directory deleted; replaced by vault hooks + kb-pipeline agent. SKILL.md in git history if needed |
 
 ### Vendored -- upstream copies in skills/_vendored/ (2 skills)
 
