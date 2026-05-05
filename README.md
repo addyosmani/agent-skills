@@ -98,7 +98,10 @@ Add skill contents to your Windsurf rules configuration. See [docs/windsurf-setu
 
 Uses agent-driven skill execution via AGENTS.md and the `skill` tool.
 
-See [docs/opencode-setup.md](docs/opencode-setup.md).
+**Workspace-local:** Copy `AGENTS.md` + `skills/` into your project.  
+**Global (all projects):** Install skills to `~/.agents/skills/` and reference a global `AGENTS.md` from `~/.claude/CLAUDE.md`.
+
+See [docs/opencode-setup.md](docs/opencode-setup.md) for both approaches.
 
 </details>
 
