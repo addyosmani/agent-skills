@@ -89,7 +89,12 @@ gemini skills install ./agent-skills/skills/
 <details>
 <summary><b>Windsurf</b></summary>
 
-Add skill contents to your Windsurf rules configuration. See [docs/windsurf-setup.md](docs/windsurf-setup.md).
+Uses Windsurf's modern Rules engine (global rules, workspace rules with activation modes, AGENTS.md).
+
+**Global (all projects):** Run `bash scripts/install-windsurf.sh` to install global rules and copy skills.  
+**Workspace-local:** Create `.windsurf/rules/*.md` with `trigger: model_decision` for on-demand skill activation.
+
+See [docs/windsurf-setup.md](docs/windsurf-setup.md) for full setup.
 
 </details>
 
