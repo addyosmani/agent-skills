@@ -316,7 +316,6 @@ npx lhci autorun
 
 For detailed performance checklists, optimization commands, and anti-pattern reference, see `references/performance-checklist.md`.
 
-
 ## Common Rationalizations
 
 | Rationalization | Reality |

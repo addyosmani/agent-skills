@@ -1,0 +1,31 @@
+name: Markdown lint
+
+on:
+  pull_request:
+    paths:
+      - ".markdownlint-cli2.jsonc"
+      - "CONTRIBUTING.md"
+      - "docs/**/*.md"
+      - "skills/**/SKILL.md"
+      - ".github/workflows/markdownlint.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - ".markdownlint-cli2.jsonc"
+      - "CONTRIBUTING.md"
+      - "docs/**/*.md"
+      - "skills/**/SKILL.md"
+      - ".github/workflows/markdownlint.yml"
+
+jobs:
+  markdownlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: DavidAnson/markdownlint-cli2-action@v23.2.0
+        with:
+          globs: |
+            CONTRIBUTING.md
+            docs/**/*.md
+            skills/**/SKILL.md

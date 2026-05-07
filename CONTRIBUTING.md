@@ -76,6 +76,24 @@ This works cleanly when `jq` lives in its own directory (e.g. `/opt/homebrew/bin
 
 The hook's `command -v jq` check fails under the stripped `PATH`, the `INFO`-priority fallback runs, and the test asserts the `jq is required` guidance message instead of the normal payload.
 
+## Markdown Formatting
+
+Run Markdown linting before opening PRs that touch skills or docs:
+
+```bash
+npx markdownlint-cli2
+```
+
+The current lint baseline intentionally starts with low-risk whitespace rules:
+
+- no trailing spaces
+- no hard tabs
+- no multiple consecutive blank lines
+- files end with a single newline
+
+Keep new `SKILL.md` files consistent with these rules. Broader style rules can
+be enabled later after existing documents are standardized.
+
 ## Reporting Issues
 
 Open an issue if you find:

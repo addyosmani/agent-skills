@@ -1,0 +1,14 @@
+{
+  "globs": [
+    "CONTRIBUTING.md",
+    "docs/**/*.md",
+    "skills/**/SKILL.md"
+  ],
+  "config": {
+    "default": false,
+    "MD009": true,
+    "MD010": true,
+    "MD012": true,
+    "MD047": true
+  }
+}
