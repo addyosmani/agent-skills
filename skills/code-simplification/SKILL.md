@@ -268,6 +268,65 @@ def process(data):
     if not data.has_permission():
         raise PermissionError("No permission")
     return do_work(data)
+
+# SIMPLIFY: Manual index counter
+# Before
+i = 0
+for item in items:
+    print(f"{i}: {item}")
+    i += 1
+# After
+for i, item in enumerate(items):
+    print(f"{i}: {item}")
+
+# SIMPLIFY: Parallel-list iteration via index
+# Before
+for i in range(len(names)):
+    print(names[i], scores[i])
+# After
+for name, score in zip(names, scores):
+    print(name, score)
+
+# SIMPLIFY: try/finally for resource cleanup
+# Before
+f = open(path)
+try:
+    data = f.read()
+finally:
+    f.close()
+# After
+with open(path) as f:
+    data = f.read()
+
+# SIMPLIFY: Membership check then lookup
+# Before
+if key in config:
+    value = config[key]
+else:
+    value = "default"
+# After
+value = config.get(key, "default")
+
+# SIMPLIFY: Manual default-value setup for a dict
+# Before
+counts = {}
+for word in words:
+    if word not in counts:
+        counts[word] = 0
+    counts[word] += 1
+# After
+from collections import Counter
+counts = Counter(words)
+
+# SIMPLIFY: Loop-with-flag boolean reduction
+# Before
+has_admin = False
+for user in users:
+    if user.is_admin:
+        has_admin = True
+        break
+# After
+has_admin = any(user.is_admin for user in users)
 ```
 
 ### React / JSX
