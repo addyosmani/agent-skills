@@ -71,11 +71,21 @@ Skills are loaded on-demand — only the skill name and description are loaded a
 
 ## Agents and Crons
 
-None.
+- **Claude Code** is the primary consumer via the `.claude-plugin/` system. On every session start, `hooks/session-start.sh` auto-injects the `using-agent-skills` meta-skill into context, and slash commands in `.claude/commands/` (spec, plan, build, test, review, code-simplify, ship) activate the corresponding skill workflows.
+- **OpenCode** discovers and invokes skills through AGENTS.md and the `skill` tool, loading skill definitions on-demand when the task matches a skill's description.
+- **Other agents** (Cursor, Gemini CLI, Windsurf, GitHub Copilot, Kiro) consume skills by copying `SKILL.md` files into their respective configuration directories or referencing the `skills/` path directly.
+- **Skill loading is lazy**: only the `name` and `description` frontmatter are loaded at startup. The full `SKILL.md` content is pulled into context only when the agent determines the skill is relevant to the current task.
+- **No automated packaging or distribution cron exists**. After modifying any skill, you must manually re-package it as a `.zip` (`cd skills && zip -r {skill-name}.zip {skill-name}/`) for distribution to agents.
 
 ## Gotchas
 
-None.
+- **Directory name must match frontmatter exactly**. The `name` field in YAML frontmatter and the kebab-case directory name must be identical (e.g., `name: idea-refine` → `skills/idea-refine/`). Mismatches break skill discovery.
+- **`SKILL.md` is case-sensitive**. The filename must be exactly `SKILL.md` in all caps. `skill.md`, `Skill.md`, or any variation will not be recognized by agents.
+- **Description field has strict requirements**. Max 1024 characters, must state what the skill does in third person, and must include clear "Use when" trigger conditions. Do NOT put process steps in the description — agents may follow the summary instead of the full skill.
+- **Scripts must be executable bash with `set -e`**. All scripts in `skills/{name}/scripts/` must start with `#!/bin/bash` and include `set -e`. Scripts are optional and should only be included when they provide real utility.
+- **Keep SKILL.md focused; split only when necessary**. Supporting files should only be created when content exceeds 100 lines. Reference material belongs in `references/` at the project root, not inside skill directories.
+- **Never duplicate content across skills**. Reference other skills by name (e.g., "Follow the `test-driven-development` skill for writing tests") rather than copying instructions. Cross-skill references keep the knowledge base maintainable and reduce token usage.
+- **This is a documentation-only repository**. There is no runtime, no deployment pipeline, and no services to restart. Changes are purely content updates to markdown and scripts.
 
 ## Active Work
 
