@@ -73,13 +73,19 @@ Apply these steps in order. Skipping any of them creates a defense gap.
 Before the agent acts on any text, classify the source:
 
 ```
-TIER 0  Operator instruction      Trusted (your prompt, your repo's CLAUDE.md)
+TIER 0  Operator instruction      Trusted (canonical version sits on a protected branch with required review)
 TIER 1  Authenticated user input  Treat as data, not instruction
-TIER 2  Local workspace file      Untrusted if any external contributor can write to it
-TIER 3  Installed dependency      Untrusted (anyone can publish to npm/PyPI)
+TIER 2  Local workspace file      Untrusted if any outside contributor can write to it
+TIER 3  Installed dependency      Untrusted (anyone can publish to npm or PyPI)
 TIER 4  Fetched external content  Untrusted, never instruction
-TIER 5  Tool output from MCP      Untrusted if tool is third-party
+TIER 5  Tool output from MCP      Untrusted if the tool comes from an outside vendor
 ```
+
+Trust follows write access, not file location. A file like `CLAUDE.md` is Tier 0
+only when its canonical copy lives on a protected branch with required review.
+The same file modified inside a pull request from an outside contributor is not
+Tier 0 until that pull request has been merged through that gate. Treat it as
+Tier 2 while the PR is open.
 
 Tier 0 is the only tier whose text may be interpreted as instruction. Every
 other tier must be wrapped, quoted, or summarized into structured data before
@@ -143,6 +149,12 @@ When `flagged` is non-empty, surface the finding to the operator before the
 agent continues. Do not silently scrub. The fact that a fetched page tried to
 inject is itself a security signal.
 
+The regex pass is a low cost first filter, not a defense layer. Wrapping plus
+tiering is the actual defense. Step 3 is best understood as a tripwire that
+catches naive payloads while alerting on everything else, not as a substitute
+for Step 1 or Step 2. The pattern list will lag novel phrasings. Tune it to
+your own corpus and review the false positive and false negative rate weekly.
+
 ### Step 4. Validate MCP tool descriptions on load and on change
 
 MCP tool descriptions are the highest-risk surface because the agent treats
@@ -162,9 +174,19 @@ function validateToolDescription(tool: MCPTool, knownTools: Set<string>) {
     /\.ssh|\.aws|\.netrc|\.env/i,
   ];
 
-  // Block tool shadowing: description references another tool's behavior
+  // Block tool shadowing: description tells the model to act on another tool.
+  // Use a verb-near-name pattern with word boundaries to avoid substring false
+  // positives. A description that simply mentions another tool by name should
+  // not trigger; a description that says "forward to <other_tool>" must.
   const otherTools = [...knownTools].filter(n => n !== tool.name);
-  const shadowing = otherTools.find(n => text.includes(n));
+  const shadowing = otherTools.find(n => {
+    const escaped = n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const verbNearName = new RegExp(
+      `\\b(use|call|invoke|run|read|write|send|cc|bcc|forward|copy|hand[\\s-]?off|chain|pipe)\\b[\\s\\S]{0,40}\\b${escaped}\\b`,
+      'i'
+    );
+    return verbNearName.test(text);
+  });
 
   return {
     safe: !RED_FLAGS.some(p => p.test(text)) && !shadowing,
@@ -174,9 +196,22 @@ function validateToolDescription(tool: MCPTool, knownTools: Set<string>) {
 }
 ```
 
-On hash drift (the description changed between sessions), require operator
-re-approval before the tool is callable. This defends against rugpull attacks
-where a remote MCP server alters its own description after gaining trust.
+On hash drift (the description changed between sessions), the response should
+scale with the trust profile of the server:
+
+- Local development servers and trusted enterprise registries: log the change,
+  diff the description for the operator on next use, and continue. Prompt for
+  full re-approval only when the manifest signature changes or the server
+  origin changes.
+- Outside vendor or remote third party MCP servers: full operator re-approval
+  before the tool is callable again.
+
+This defends against rugpull attacks where a remote MCP server alters its own
+description after gaining trust, while keeping the operational cost realistic.
+Legitimate updates ship through the same channel as malicious ones, so a
+blanket re-approval policy on every drift event burns operator attention and
+trains people to click through. Reserve the heavy gate for the surface where
+the attacker actually lives.
 
 ### Step 5. Validate dependency metadata before reading READMEs into context
 
@@ -223,9 +258,11 @@ This is your evidence trail when an incident requires forensic review.
 
 ### Refuse to summarize content that is itself adversarial
 
-If after Step 3 the redacted version is more than 30% smaller than the original,
-the input was likely a prompt injection payload, not a document. Refuse rather
-than paraphrase.
+A sudden loss of token mass after Step 3 redaction is one signal that the
+input was a prompt injection payload rather than a document. Pick a threshold
+based on your own corpus and watch for inputs where most of the content was
+stripped by the pattern pass. Treat it as a signal among several, not a hard
+rule, and combine with the wrapping and tiering steps before refusing.
 
 ### Strip zero-width and homoglyph attacks
 
