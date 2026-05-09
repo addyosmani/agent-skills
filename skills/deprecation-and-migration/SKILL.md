@@ -140,7 +140,15 @@ Create an adapter that translates calls from the old interface to the new implem
 class LegacyTaskService implements OldTaskAPI {
   constructor(private newService: NewTaskService) {}
 
-  // Old method signature, delegates to new implementation
+  // Old method signature, deleg
+
+## Version Boundary Management
+
+When managing deprecations across major versions, establish clear boundaries between old and new specifications:
+
+- **V1 Specifications**: Maintain in their current form until full migration is complete
+- **V2 Feature Planning**: Develop new features separately to avoid polluting V1 with forward-looking changes
+- **Clean Separation**: Use feature flags or separate branches to isolate version-specific logic during transition periodsates to new implementation
   getTask(id: number): OldTask {
     const task = this.newService.findById(String(id));
     return this.toOldFormat(task);
