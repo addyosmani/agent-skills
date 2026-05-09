@@ -2,6 +2,10 @@
 
 **Production-grade engineering skills for AI coding agents.**
 
+## Versioning
+
+This repository uses semantic versioning for core functionality. Individual platform plugins (Claude, Gemini, OpenCode, etc.) may have their own independent versioning schemes. Repository tags represent core versions, while platform-specific manifests can evolve at their own pace.
+
 Skills encode the workflows, quality gates, and best practices that senior engineers use when building software. These ones are packaged so AI agents follow them consistently across every phase of development.
 
 ```
