@@ -2,6 +2,17 @@
 
 agent-skills works with any AI coding agent that accepts Markdown instructions. This guide covers the universal approach. For tool-specific setup, see the dedicated guides.
 
+## Version Management and Feature Development
+
+To prevent specification pollution and maintain clean architectural progression:
+
+1. **Mark version boundaries** - Use clear version tags in your skill files (e.g., v1.0, v2.0) to indicate stable releases
+2. **Maintain feature backlogs** - Keep future enhancements in separate tracking files rather than embedding in active skills
+3. **Incremental requirements** - Add new capabilities through additive changes, preserving existing workflows
+4. **Technology migrations** - When evolving tools or frameworks, create parallel skills for transition periods
+
+This approach ensures skills remain focused and prevents accumulation of speculative features.
+
 ## How Skills Work
 
 Each skill is a Markdown file (`SKILL.md`) that describes a specific engineering workflow. When loaded into an agent's context, the agent follows the workflow — including verification steps, anti-patterns to avoid, and exit criteria.
