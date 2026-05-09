@@ -175,8 +175,7 @@ const CreateTaskSchema = z.object({
   description: z.string().max(2000).optional(),
   priority: z.enum(['low', 'medium', 'high']).default('medium'),
   dueDate: z.string().datetime().optional(),
-});
-
+```typescript
 // Validate at the route handler
 app.post('/api/tasks', async (req, res) => {
   const result = CreateTaskSchema.safeParse(req.body);
@@ -189,6 +188,7 @@ app.post('/api/tasks', async (req, res) => {
       },
     });
   }
+```
   // result.data is now typed and validated
   const task = await taskService.create(result.data);
   return res.status(201).json(task);
