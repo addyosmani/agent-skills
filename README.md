@@ -121,6 +121,13 @@ Skills are plain Markdown - they work with any agent that accepts system prompts
 
 </details>
 
+<details>
+<summary><b>Hermes Agent</b></summary>
+
+Hermes Agent supports these skills natively. Simply reference the skill files in your agent configuration. See [Hermes Agent Documentation](https://hermes-agent.com/docs) for setup instructions.
+
+</details>
+
 
 
 ---
