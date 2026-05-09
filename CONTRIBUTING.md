@@ -47,6 +47,35 @@ New skills should generally follow the standard anatomy:
 - Preserve the existing structure and tone
 - Test that YAML frontmatter remains valid after edits
 
+## Testing Hooks
+
+The session-start hook (`hooks/session-start.sh`) injects the `using-agent-skills` meta-skill into every new Claude Code session. A regression test at `hooks/session-start-test.sh` validates the hook's JSON payload — both when `jq` is available and when it isn't.
+
+Run it before opening any PR that touches:
+
+- `hooks/session-start.sh`
+- `skills/using-agent-skills/SKILL.md` (the meta-skill content embedded by the hook)
+
+```bash
+bash hooks/session-start-test.sh
+```
+
+Expected output: `session-start JSON payload OK`. The script exits non-zero on any assertion failure.
+
+### Reproducing the no-jq fallback
+
+The hook gracefully degrades to an `INFO`-priority payload when `jq` isn't on `PATH`. To exercise that branch locally, strip `jq`'s directory from `PATH` for the test invocation:
+
+```bash
+JQ_DIR=$(dirname "$(command -v jq)")
+PATH=$(echo "$PATH" | tr ':' '\n' | grep -v "^${JQ_DIR}$" | tr '\n' ':' | sed 's/:$//') \
+  bash hooks/session-start-test.sh
+```
+
+This works cleanly when `jq` lives in its own directory (e.g. `/opt/homebrew/bin` from Homebrew, `/usr/local/bin` from a manual install). If your `jq` shares a system bin with other tools the test depends on (such as `mktemp` in `/usr/bin`), the simpler approach is to install `jq` via a separate package manager so it has its own bin directory, then re-run.
+
+The hook's `command -v jq` check fails under the stripped `PATH`, the `INFO`-priority fallback runs, and the test asserts the `jq is required` guidance message instead of the normal payload.
+
 ## Reporting Issues
 
 Open an issue if you find:
