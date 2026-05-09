@@ -78,18 +78,7 @@ Ship with confidence. The goal is not just to deploy — it's to deploy safely, 
 
 Ship behind feature flags to decouple deployment from release:
 
-```typescript
-// Feature flag check
-const flags = await getFeatureFlags(userId);
 
-if (flags.taskSharing) {
-  // New feature: task sharing
-  return <TaskSharingPanel task={task} />;
-}
-
-// Default: existing behavior
-return null;
-```
 
 **Feature flag lifecycle:**
 
