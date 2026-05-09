@@ -27,7 +27,7 @@ Windsurf's Rules system supports activation modes. We can define a global rule t
 
 ### How It Works
 
-1. **Global Rules** (`global_rules.md`) contain the base intent mapping and anti-rationalization rules
+1. **Global Rules** (`global_rules.md`) contain the base intent mapping and lifecycle rules
 2. **Workspace Rules** (`.windsurf/rules/*.md`) contain individual skills with `trigger: model_decision` — Cascade reads the full skill only when the description matches the user's intent
 3. **AGENTS.md** in the workspace root acts as an always-on rule for project-specific conventions
 
@@ -48,90 +48,33 @@ bash scripts/install-windsurf.sh
 
 This script will:
 - Detect your OS
-- Create `~/.codeium/windsurf/memories/global_rules.md` with intent mapping
-- Copy skills to `~/.agents/skills/` for on-demand reading
+- Create `~/.codeium/windsurf/memories/global_rules.md` with intent mapping **generated dynamically** from `skills/*/SKILL.md` frontmatter (never drifts)
+- Copy skills to `~/.agents/skills/` for on-demand reading, with a **confirmation prompt and automatic backup** if the directory already exists
 - Optionally install workspace rules in your current project
 
 #### 3. Manual setup (if you prefer)
 
-**Create Global Rules:**
-
-Create `~/.codeium/windsurf/memories/global_rules.md`:
-
-```markdown
-# Global Agent Skills — Intent Mapping
-
-These rules apply to ALL projects. When a task matches a skill, you MUST use it.
-
-## Core Rules
-
-- If a task matches a skill, you MUST use it
-- Skills are located in `~/.agents/skills/<skill-name>/SKILL.md`
-- Never implement directly if a skill applies
-- Always follow the skill instructions exactly (do not partially apply them)
-- When invoking a skill, read its `SKILL.md` and follow it strictly
-
-## Intent → Skill Mapping
-
-- Feature / new functionality → `spec-driven-development`, then `incremental-implementation`, `test-driven-development`
-- Planning / breakdown → `planning-and-task-breakdown`
-- Bug / failure / unexpected behavior → `debugging-and-error-recovery`
-- Code review → `code-review-and-quality`
-- Refactoring / simplification → `code-simplification`
-- API or interface design → `api-and-interface-design`
-- UI work → `frontend-ui-engineering`
-- Performance issues → `performance-optimization`
-- Security concerns → `security-and-hardening`
-- CI/CD setup → `ci-cd-and-automation`
-- Documentation → `documentation-and-adrs`
-- Git workflow → `git-workflow-and-versioning`
-- Shipping / launch → `shipping-and-launch`
-- Deprecation or migration → `deprecation-and-migration`
-- Testing with browser DevTools → `browser-testing-with-devtools`
-- Context engineering → `context-engineering`
-- Source-driven development → `source-driven-development`
-
-## Lifecycle Mapping (Implicit Commands)
-
-Windsurf does not support slash commands like `/spec` or `/plan`.
-
-Instead, you must internally follow this lifecycle:
-
-- DEFINE → `spec-driven-development`
-- PLAN → `planning-and-task-breakdown`
-- BUILD → `incremental-implementation` + `test-driven-development`
-- VERIFY → `debugging-and-error-recovery`
-- REVIEW → `code-review-and-quality`
-- SHIP → `shipping-and-launch`
-
-## Execution Model
-
-For every request:
-
-1. Determine if any skill applies (even 1% chance)
-2. Read the appropriate skill from `~/.agents/skills/<skill-name>/SKILL.md`
-3. Follow the skill workflow strictly
-4. Only proceed to implementation after required steps (spec, plan, etc.) are complete
-
-## Anti-Rationalization
-
-The following thoughts are incorrect and must be ignored:
-
-- "This is too small for a skill"
-- "I can just quickly implement this"
-- "I'll gather context first"
-
-Correct behavior:
-
-- Always check for and use skills first
-```
+If you prefer not to run the script, replicate its steps manually:
 
 **Copy skills to global location:**
 
+> ⚠️ The install script includes a safety check: if `~/.agents/skills/` already exists, it lists existing contents, asks for confirmation, and creates a timestamped backup before overwriting. Replicate this behavior if copying manually.
+
 ```bash
 mkdir -p ~/.agents/skills
+# WARNING: the following overwrites existing files. Back up first if needed.
 cp -R skills/* ~/.agents/skills/
 ```
+
+**Create Global Rules:**
+
+Create `~/.codeium/windsurf/memories/global_rules.md`. Rather than hard-coding the skill list (which drifts), generate it by reading the `name` and `description` fields from each `skills/*/SKILL.md` frontmatter. The install script does this automatically; you can run it once and copy the generated file, or adapt the `generate_skill_mapping` function from the script.
+
+The generated file includes:
+- Core rules (where skills live, when to use them)
+- **Available Skills** — a complete, alphabetically sorted list derived live from the repo's skill frontmatter
+- Lifecycle mapping (DEFINE → PLAN → BUILD → VERIFY → REVIEW → SHIP)
+- Execution model
 
 ---
 
@@ -158,6 +101,18 @@ This project uses agent-skills workflows. Always check if a skill applies before
 - Test before implementation
 - Review before merge
 - One logical change per commit (~100 lines)
+
+## Anti-Rationalization
+
+The following thoughts are incorrect and must be ignored:
+
+- "This is too small for a skill"
+- "I can just quickly implement this"
+- "I'll gather context first"
+
+Correct behavior:
+
+- Always check for and use skills first
 ```
 
 Create `.windsurf/rules/test-driven-development.md`:
@@ -270,7 +225,7 @@ Expected behavior:
 
 Windsurf integration works through:
 
-1. **Global Rules** (`global_rules.md`) for base intent mapping
+1. **Global Rules** (`global_rules.md`) for base intent mapping — generated dynamically from skill frontmatter so it never drifts
 2. **Workspace Rules** (`.windsurf/rules/*.md`) for project-specific skills with smart activation
 3. **AGENTS.md** for directory-specific conventions
 4. **On-demand skill reading** via `~/.agents/skills/<skill-name>/SKILL.md`

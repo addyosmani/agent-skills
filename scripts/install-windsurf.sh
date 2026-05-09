@@ -38,85 +38,107 @@ check_repo() {
     fi
 }
 
-# Copy skills to global location
+# Extract a YAML value from frontmatter in a SKILL.md file
+get_yaml_value() {
+    local file="$1" key="$2"
+    sed -n '/^---$/,/^---$/p' "$file" | grep "^${key}:" | head -1 | sed "s/^${key}: *//"
+}
+
+# Generate the Intent → Skill Mapping section by reading all skill frontmatter
+generate_skill_mapping() {
+    local skills_dir="$1"
+    local tmpfile
+    tmpfile=$(mktemp)
+
+    for skill_file in "${skills_dir}"/*/SKILL.md; do
+        [ -f "$skill_file" ] || continue
+        local name desc
+        name=$(get_yaml_value "$skill_file" "name")
+        desc=$(get_yaml_value "$skill_file" "description")
+        if [ -n "$name" ] && [ -n "$desc" ]; then
+            printf -- "- \`%s\` — %s\n" "$name" "$desc" >> "$tmpfile"
+        fi
+    done
+
+    sort "$tmpfile"
+    rm -f "$tmpfile"
+}
+
+# Copy skills to global location with safety checks
 install_skills() {
     echo "📦 Installing skills to ${AGENTS_DIR}..."
     mkdir -p "${AGENTS_DIR}"
+
+    # Safety check: if directory already has content, warn and backup
+    if [ -d "${AGENTS_DIR}" ] && [ "$(ls -A "${AGENTS_DIR}" 2>/dev/null)" ]; then
+        echo ""
+        echo "⚠️  ${AGENTS_DIR} already exists and contains files."
+        echo "   Existing contents:"
+        ls -1 "${AGENTS_DIR}" | sed 's/^/     - /'
+        echo ""
+        read -p "   Overwrite? This will create a backup first. (y/N) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "❌ Installation cancelled."
+            exit 1
+        fi
+
+        local backup_dir="${AGENTS_DIR}.backup.$(date +%Y%m%d-%H%M%S)"
+        echo "   Creating backup at ${backup_dir}..."
+        cp -R "${AGENTS_DIR}" "${backup_dir}"
+        echo "   ✅ Backup created"
+    fi
+
     cp -R "${REPO_DIR}/skills/"* "${AGENTS_DIR}/"
     echo "✅ Installed $(ls -1 "${AGENTS_DIR}" | wc -l | tr -d ' ') skills"
 }
 
-# Create global rules file
+# Create global rules file (generated dynamically from skill frontmatter)
 create_global_rules() {
     echo "🌐 Creating global rules for Windsurf..."
     mkdir -p "${WINDSURF_MEMORIES_DIR}"
-    
-    cat > "${WINDSURF_MEMORIES_DIR}/global_rules.md" << 'EOF'
+
+    local skill_mapping
+    skill_mapping=$(generate_skill_mapping "${REPO_DIR}/skills")
+
+    cat > "${WINDSURF_MEMORIES_DIR}/global_rules.md" << EOF
 # Global Agent Skills — Intent Mapping
 
-These rules apply to ALL projects. When a task matches a skill, you MUST use it.
+These rules provide optional workflow guidance. For projects that have opted into agent-skills, check if a skill applies before acting.
 
 ## Core Rules
 
-- If a task matches a skill, you MUST use it
-- Skills are located in `~/.agents/skills/<skill-name>/SKILL.md`
+- Skills are located in \`~/.agents/skills/<skill-name>/SKILL.md\`
+- If a substantive task matches a skill, use it
 - Never implement directly if a skill applies
 - Always follow the skill instructions exactly (do not partially apply them)
-- When invoking a skill, read its `SKILL.md` and follow it strictly
+- When invoking a skill, read its \`SKILL.md\` and follow it strictly
 
-## Intent → Skill Mapping
+## Available Skills
 
-- Feature / new functionality → `spec-driven-development`, then `incremental-implementation`, `test-driven-development`
-- Planning / breakdown → `planning-and-task-breakdown`
-- Bug / failure / unexpected behavior → `debugging-and-error-recovery`
-- Code review → `code-review-and-quality`
-- Refactoring / simplification → `code-simplification`
-- API or interface design → `api-and-interface-design`
-- UI work → `frontend-ui-engineering`
-- Performance issues → `performance-optimization`
-- Security concerns → `security-and-hardening`
-- CI/CD setup → `ci-cd-and-automation`
-- Documentation → `documentation-and-adrs`
-- Git workflow → `git-workflow-and-versioning`
-- Shipping / launch → `shipping-and-launch`
-- Deprecation or migration → `deprecation-and-migration`
-- Testing with browser DevTools → `browser-testing-with-devtools`
-- Context engineering → `context-engineering`
-- Source-driven development → `source-driven-development`
+${skill_mapping}
 
 ## Lifecycle Mapping (Implicit Commands)
 
-Windsurf does not support slash commands like `/spec` or `/plan`.
+Windsurf does not support slash commands like \`/spec\` or \`/plan\`.
 
 Instead, you must internally follow this lifecycle:
 
-- DEFINE → `spec-driven-development`
-- PLAN → `planning-and-task-breakdown`
-- BUILD → `incremental-implementation` + `test-driven-development`
-- VERIFY → `debugging-and-error-recovery`
-- REVIEW → `code-review-and-quality`
-- SHIP → `shipping-and-launch`
+- DEFINE → \`spec-driven-development\`
+- PLAN → \`planning-and-task-breakdown\`
+- BUILD → \`incremental-implementation\` + \`test-driven-development\`
+- VERIFY → \`debugging-and-error-recovery\`
+- REVIEW → \`code-review-and-quality\`
+- SHIP → \`shipping-and-launch\`
 
 ## Execution Model
 
-For every request:
+For substantive requests:
 
-1. Determine if any skill applies (even 1% chance)
-2. Read the appropriate skill from `~/.agents/skills/<skill-name>/SKILL.md`
+1. Determine if any skill applies
+2. Read the appropriate skill from \`~/.agents/skills/<skill-name>/SKILL.md\`
 3. Follow the skill workflow strictly
 4. Only proceed to implementation after required steps (spec, plan, etc.) are complete
-
-## Anti-Rationalization
-
-The following thoughts are incorrect and must be ignored:
-
-- "This is too small for a skill"
-- "I can just quickly implement this"
-- "I'll gather context first"
-
-Correct behavior:
-
-- Always check for and use skills first
 EOF
 
     echo "✅ Global rules created at ${WINDSURF_MEMORIES_DIR}/global_rules.md"
@@ -142,7 +164,7 @@ install_workspace_rules() {
     echo "📁 Installing workspace rules..."
     mkdir -p ".windsurf/rules"
 
-    # Base rules
+    # Base rules (includes anti-rationalization, scoped to opted-in projects)
     cat > ".windsurf/rules/agent-skills.md" << 'EOF'
 ---
 trigger: always_on
@@ -158,6 +180,18 @@ This project uses agent-skills workflows. Always check if a skill applies before
 - Test before implementation
 - Review before merge
 - One logical change per commit (~100 lines)
+
+## Anti-Rationalization
+
+The following thoughts are incorrect and must be ignored:
+
+- "This is too small for a skill"
+- "I can just quickly implement this"
+- "I'll gather context first"
+
+Correct behavior:
+
+- Always check for and use skills first
 EOF
 
     # TDD rule
