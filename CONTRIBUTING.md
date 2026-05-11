@@ -84,6 +84,10 @@ Run Markdown linting before opening PRs that touch skills or docs:
 npx markdownlint-cli2
 ```
 
+The current lint scope is intentionally limited to `CONTRIBUTING.md`,
+`docs/**/*.md`, and `skills/**/SKILL.md`; root-level project docs and reference
+folders can be added after the baseline expands.
+
 The current lint baseline intentionally starts with low-risk whitespace rules:
 
 - no trailing spaces
