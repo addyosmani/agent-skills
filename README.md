@@ -134,6 +134,7 @@ The commands above are entry points. The pack includes 22 skills total — 21 li
 | Skill | What It Does | Use When |
 |-------|-------------|----------|
 | [using-agent-skills](skills/using-agent-skills/SKILL.md) | Maps incoming work to the right skill workflow and defines shared operating rules | Starting a session or deciding which skill applies |
+| [skill-design-patterns](skills/skill-design-patterns/SKILL.md) | Design and review skills using the standard anatomy — anti-rationalization tables, red flags, verification checklists, and quality gates | Creating a new skill, reviewing an existing skill, or establishing skill conventions |
 
 ### Define - Clarify what to build
 

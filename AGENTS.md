@@ -28,6 +28,7 @@ The agent should automatically map user intent to skills:
 - Refactoring / simplification → `code-simplification`
 - API or interface design → `api-and-interface-design`
 - UI work → `frontend-ui-engineering`
+- Creating or improving a skill → `skill-design-patterns`
 
 ### Lifecycle Mapping (Implicit Commands)
 
@@ -82,6 +83,8 @@ See [agents/README.md](agents/README.md) for the decision matrix and [references
 **Claude Code interop:** the personas in `agents/` work as Claude Code subagents (auto-discovered from this plugin's `agents/` directory) and as Agent Teams teammates (referenced by name when spawning). Two platform constraints align with our rules: subagents cannot spawn other subagents, and teams cannot nest. Plugin agents silently ignore the `hooks`, `mcpServers`, and `permissionMode` frontmatter fields.
 
 ## Creating a New Skill
+
+> For the complete skill design workflow with quality gates, anti-rationalization patterns, and verification checklists, invoke the `skill-design-patterns` skill.
 
 ### Directory Structure
 
