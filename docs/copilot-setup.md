@@ -22,9 +22,9 @@ Copilot supports specialized agent personas. Use the agent-skills agents:
 
 ```bash
 # Copy agent definitions
-cp /path/to/agent-skills/agents/code-reviewer.md .github/agents/code-reviewer.md
-cp /path/to/agent-skills/agents/test-engineer.md .github/agents/test-engineer.md
-cp /path/to/agent-skills/agents/security-auditor.md .github/agents/security-auditor.md
+cp /path/to/agent-skills/agents/code-reviewer.md .github/agents/code-reviewer.agent.md
+cp /path/to/agent-skills/agents/test-engineer.md .github/agents/test-engineer.agent.md
+cp /path/to/agent-skills/agents/security-auditor.md .github/agents/security-auditor.agent.md
 ```
 
 Invoke agents in Copilot Chat:
