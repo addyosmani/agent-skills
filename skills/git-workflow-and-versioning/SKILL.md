@@ -1,6 +1,6 @@
 ---
 name: git-workflow-and-versioning
-description: Structures git workflow practices. Use when making any code change. Use when committing, branching, resolving conflicts, or when you need to organize work across multiple parallel streams. Use when cutting a release, choosing a semantic version bump, tagging, or writing a changelog.
+description: Structures git workflow practices. Use when making any code change. Use when committing, branching, opening pull requests, resolving conflicts, or when you need to organize work across multiple parallel streams. Use when cutting a release, choosing a semantic version bump, tagging, or writing a changelog.
 ---
 
 # Git Workflow and Versioning
@@ -64,7 +64,7 @@ x1y2z3a Add task feature, fix sidebar, update deps, refactor utils
 
 ### 3. Descriptive Messages
 
-Commit messages explain the *why*, not just the *what*:
+Commit messages explain the _why_, not just the _what_:
 
 ```
 # Good: Explains intent
@@ -79,6 +79,7 @@ update auth.ts
 ```
 
 **Format:**
+
 ```
 <type>: <short description>
 
@@ -86,6 +87,7 @@ update auth.ts
 ```
 
 **Types:**
+
 - `feat` — New feature
 - `fix` — Bug fix
 - `refactor` — Code change that neither fixes a bug nor adds a feature
@@ -165,6 +167,7 @@ git worktree remove ../project-feature-a
 ```
 
 Benefits:
+
 - Multiple agents can work on different features simultaneously
 - No branch switching needed (each directory has its own branch)
 - If one experiment fails, delete the worktree — nothing is lost
@@ -207,6 +210,86 @@ POTENTIAL CONCERNS:
 ```
 
 This pattern catches wrong assumptions early and gives reviewers a clear map of the change. The "DIDN'T TOUCH" section is especially important — it shows you exercised scope discipline and didn't go on an unsolicited renovation.
+
+## Pull Request Workflow
+
+Opening a pull request is a quality gate, not a mechanical upload. The PR should make review easy, show evidence, and leave no ambiguity about what is in scope.
+
+### 1. Check the Contribution Surface
+
+Before pushing:
+
+```bash
+git remote -v
+git branch --show-current
+git status --short
+git log --oneline --decorate -5
+```
+
+- Read `CONTRIBUTING.md`, PR templates, DCO/CLA notes, and required test commands.
+- Confirm the target branch (`main`, `master`, `develop`, release branch) before creating the PR.
+- Search open PRs and issues for duplicate work.
+- For open-source contributions, use an author identity that matches the contributor account and any CLA/DCO requirements.
+
+### 2. Make the Diff Reviewable
+
+Before opening the PR:
+
+- Keep one logical change per PR.
+- Split refactors, formatting, generated output, and behavior changes unless the repository explicitly wants them together.
+- Include generated files only when the repository expects them.
+- Remove local artifacts, debug logs, `.env` files, editor config, and hidden tool attribution.
+- Rebase or merge from the target branch if the repository requires an up-to-date branch.
+
+### 3. Verify and Capture Evidence
+
+Run the smallest commands that prove the change:
+
+```bash
+git diff --stat
+git diff --check
+npm test
+```
+
+Adapt the commands to the repository. Prefer focused package tests first, then broader tests when the blast radius justifies it. If a known unrelated test fails, document the exact failure and why it is unrelated instead of hiding it.
+
+### 4. Write the PR
+
+Use the repository's template when present. A good PR body answers:
+
+```markdown
+## Summary
+
+- What changed and why
+
+## Testing
+
+- `command`: result
+
+## Risk
+
+- Known risks, compatibility notes, or "None identified"
+
+Fixes #123
+```
+
+The title should describe the user-visible or maintainer-visible value:
+
+```
+fix(parser): preserve escaped delimiters in quoted fields
+test(api): cover nil response handling
+docs(skill): add pull request readiness workflow
+```
+
+### 5. Follow Through After Opening
+
+The work is not done when the URL exists:
+
+- Watch initial CI and bot checks long enough to catch formatting, DCO, CLA, or template failures.
+- If a bot fails, fix the branch rather than opening a replacement PR.
+- Address maintainer feedback with small follow-up commits that preserve review context.
+- Avoid force-pushing after review starts unless rebasing or history repair is clearly needed.
+- Do not leave "waiting for review" comments unless you have meaningful new evidence or a maintainer asked for a ping.
 
 ## Pre-Commit Hygiene
 
@@ -269,7 +352,7 @@ git log --grep="validation" --oneline
 
 ## Release & Versioning
 
-Commits are how *you* track change; a **version** is how your *consumers* track it. The moment anything else depends on your code — another team, a published package, a deployed client — "latest on main" stops being a sufficient answer to "what am I running, and is it safe to upgrade?" A version number and a changelog are the contract that answers it.
+Commits are how _you_ track change; a **version** is how your _consumers_ track it. The moment anything else depends on your code — another team, a published package, a deployed client — "latest on main" stops being a sufficient answer to "what am I running, and is it safe to upgrade?" A version number and a changelog are the contract that answers it.
 
 ### Semantic Versioning
 
@@ -300,11 +383,17 @@ A changelog is not `git log`. It's the curated, consumer-facing answer to "what 
 
 ```markdown
 ## [1.4.0] - 2025-06-12
+
 ### Added
+
 - Bulk task import via CSV
+
 ### Fixed
+
 - Timezone drift in recurring task due dates
+
 ### Deprecated
+
 - `GET /v1/tasks/all` — use the paginated `GET /v1/tasks` (removal in 2.0)
 ```
 
@@ -312,17 +401,17 @@ Write the entry in the same change that makes the change, while the impact is fr
 
 ## Common Rationalizations
 
-| Rationalization | Reality |
-|---|---|
-| "I'll commit when the feature is done" | One giant commit is impossible to review, debug, or revert. Commit each slice. |
-| "The message doesn't matter" | Messages are documentation. Future you (and future agents) will need to understand what changed and why. |
-| "I'll squash it all later" | Squashing destroys the development narrative. Prefer clean incremental commits from the start. |
-| "Branches add overhead" | Short-lived branches are free and prevent conflicting work from colliding. Long-lived branches are the problem — merge within 1-3 days. |
-| "I'll split this change later" | Large changes are harder to review, riskier to deploy, and harder to revert. Split before submitting, not after. |
-| "I don't need a .gitignore" | Until `.env` with production secrets gets committed. Set it up immediately. |
-| "It's just a small fix, bump the patch" | Check what consumers can observe. A behavior change they relied on is a major, whatever the diff size. |
-| "The changelog is just the commit log" | Commits are for you; the changelog is for consumers, curated by impact. Generating one from raw commits buries what matters. |
-| "We'll write the changelog at release time" | By then the impact is reconstructed from memory and half of it is missing. Write the entry with the change. |
+| Rationalization                             | Reality                                                                                                                                 |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| "I'll commit when the feature is done"      | One giant commit is impossible to review, debug, or revert. Commit each slice.                                                          |
+| "The message doesn't matter"                | Messages are documentation. Future you (and future agents) will need to understand what changed and why.                                |
+| "I'll squash it all later"                  | Squashing destroys the development narrative. Prefer clean incremental commits from the start.                                          |
+| "Branches add overhead"                     | Short-lived branches are free and prevent conflicting work from colliding. Long-lived branches are the problem — merge within 1-3 days. |
+| "I'll split this change later"              | Large changes are harder to review, riskier to deploy, and harder to revert. Split before submitting, not after.                        |
+| "I don't need a .gitignore"                 | Until `.env` with production secrets gets committed. Set it up immediately.                                                             |
+| "It's just a small fix, bump the patch"     | Check what consumers can observe. A behavior change they relied on is a major, whatever the diff size.                                  |
+| "The changelog is just the commit log"      | Commits are for you; the changelog is for consumers, curated by impact. Generating one from raw commits buries what matters.            |
+| "We'll write the changelog at release time" | By then the impact is reconstructed from memory and half of it is missing. Write the entry with the change.                             |
 
 ## Red Flags
 

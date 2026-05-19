@@ -107,18 +107,19 @@ This is useful when you want to ensure a specific workflow is followed without w
 
 ## Slash Commands
 
-The repo ships 8 slash commands under `.gemini/commands/`: 7 lifecycle commands plus the `/webperf` specialist audit. Gemini CLI auto-discovers them when you run from the project root.
+The repo ships 8 slash commands under `.gemini/commands/` that map to the development lifecycle, plus the `/webperf` specialist audit. Gemini CLI auto-discovers them when you run from the project root.
 
-| Command | What it does |
-|---------|--------------|
-| `/spec` | Write a structured spec before writing code |
-| `/planning` | Break work into small, verifiable tasks |
-| `/build` | Implement the next task incrementally |
-| `/test` | Run TDD workflow — red, green, refactor |
-| `/review` | Five-axis code review |
-| `/code-simplify` | Reduce complexity without changing behavior |
-| `/ship` | Pre-launch checklist via parallel persona fan-out |
-| `/webperf` | Audit browser-facing apps for Core Web Vitals and performance issues |
+| Command          | What it does                                                         |
+| ---------------- | -------------------------------------------------------------------- |
+| `/spec`          | Write a structured spec before writing code                          |
+| `/planning`      | Break work into small, verifiable tasks                              |
+| `/build`         | Implement the next task incrementally                                |
+| `/test`          | Run TDD workflow — red, green, refactor                              |
+| `/review`        | Five-axis code review                                                |
+| `/pr`            | Prepare a reviewable pull request                                    |
+| `/code-simplify` | Reduce complexity without changing behavior                          |
+| `/ship`          | Pre-launch checklist via parallel persona fan-out                    |
+| `/webperf`       | Audit browser-facing apps for Core Web Vitals and performance issues |
 
 Each command invokes the corresponding skill automatically — no manual skill loading required.
 
@@ -127,6 +128,6 @@ Each command invokes the corresponding skill automatically — no manual skill l
 ## Usage Tips
 
 1. **Prefer skills over GEMINI.md** — Skills activate on demand and keep your context window focused. Only put skills in GEMINI.md if you want them always loaded.
-2. **Skill descriptions matter** — Each SKILL.md has a `description` field in its frontmatter that tells agents when to activate it. The descriptions in this repo are optimized for auto-discovery across all supported tools (Claude Code, Gemini CLI, etc.) by clearly stating both *what* the skill does and *when* it should be triggered.
+2. **Skill descriptions matter** — Each SKILL.md has a `description` field in its frontmatter that tells agents when to activate it. The descriptions in this repo are optimized for auto-discovery across all supported tools (Claude Code, Gemini CLI, etc.) by clearly stating both _what_ the skill does and _when_ it should be triggered.
 3. **Use agents for review** — Copy `agents/code-reviewer.md` content when requesting structured code reviews.
 4. **Combine with references** — Reference checklists from `references/` when working on specific quality areas like testing or performance.

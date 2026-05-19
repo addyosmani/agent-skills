@@ -19,6 +19,7 @@ git clone https://github.com/addyosmani/agent-skills.git
 ### 2. Choose a skill
 
 Browse the `skills/` directory. Each subdirectory contains a `SKILL.md` with:
+
 - **When to use** — triggers that indicate this skill applies
 - **Process** — step-by-step workflow
 - **Verification** — how to confirm the work is done
@@ -93,11 +94,11 @@ See [skill-anatomy.md](skill-anatomy.md) for the full specification.
 
 The `agents/` directory contains pre-configured agent personas:
 
-| Agent | Purpose |
-|-------|---------|
-| `code-reviewer.md` | Five-axis code review |
-| `test-engineer.md` | Test strategy and writing |
-| `security-auditor.md` | Vulnerability detection |
+| Agent                        | Purpose                                              |
+| ---------------------------- | ---------------------------------------------------- |
+| `code-reviewer.md`           | Five-axis code review                                |
+| `test-engineer.md`           | Test strategy and writing                            |
+| `security-auditor.md`        | Vulnerability detection                              |
 | `web-performance-auditor.md` | Core Web Vitals & performance audit (via `/webperf`) |
 
 Load an agent definition when you need specialized review. For example, ask your coding agent to "review this change using the code-reviewer agent persona" and provide the agent definition.
@@ -106,17 +107,18 @@ Load an agent definition when you need specialized review. For example, ask your
 
 The `.claude/commands/` directory contains slash commands for Claude Code:
 
-| Command | Skill Invoked |
-|---------|---------------|
-| `/spec` | spec-driven-development |
-| `/plan` | planning-and-task-breakdown |
-| `/build` | incremental-implementation + test-driven-development |
-| `/build auto` | planning-and-task-breakdown → incremental-implementation + test-driven-development (whole plan, one approval) |
-| `/test` | test-driven-development |
-| `/review` | code-review-and-quality |
-| `/code-simplify` | code-simplification |
-| `/ship` | shipping-and-launch |
-| `/webperf` | web-performance-auditor (specialist agent, web apps only) |
+| Command          | Skill Invoked                                                                                                 |
+| ---------------- | ------------------------------------------------------------------------------------------------------------- |
+| `/spec`          | spec-driven-development                                                                                       |
+| `/plan`          | planning-and-task-breakdown                                                                                   |
+| `/build`         | incremental-implementation + test-driven-development                                                          |
+| `/build auto`    | planning-and-task-breakdown → incremental-implementation + test-driven-development (whole plan, one approval) |
+| `/test`          | test-driven-development                                                                                       |
+| `/review`        | code-review-and-quality                                                                                       |
+| `/pr`            | git-workflow-and-versioning                                                                                   |
+| `/code-simplify` | code-simplification                                                                                           |
+| `/ship`          | shipping-and-launch                                                                                           |
+| `/webperf`       | web-performance-auditor (specialist agent, web apps only)                                                     |
 
 > **Note:** When installed as a Claude Code plugin you may see a warning like
 > _"Default commands/ folder is ignored because the manifest sets 'commands'"_.
@@ -128,15 +130,15 @@ The `.claude/commands/` directory contains slash commands for Claude Code:
 
 The `references/` directory contains supplementary checklists:
 
-| Reference | Use With |
-|-----------|----------|
-| `testing-patterns.md` | test-driven-development |
-| `performance-checklist.md` | performance-optimization |
-| `security-checklist.md` | security-and-hardening |
-| `accessibility-checklist.md` | frontend-ui-engineering |
-| `definition-of-done.md` | all skills / every change |
+| Reference                    | Use With                          |
+| ---------------------------- | --------------------------------- |
+| `testing-patterns.md`        | test-driven-development           |
+| `performance-checklist.md`   | performance-optimization          |
+| `security-checklist.md`      | security-and-hardening            |
+| `accessibility-checklist.md` | frontend-ui-engineering           |
+| `definition-of-done.md`      | all skills / every change         |
 | `observability-checklist.md` | observability-and-instrumentation |
-| `orchestration-patterns.md` | context-engineering |
+| `orchestration-patterns.md`  | context-engineering               |
 
 Load a reference when you need detailed patterns beyond what the skill covers.
 

@@ -1,0 +1,43 @@
+description = "Prepare a reviewable pull request with clean commits, evidence, and follow-up plan"
+
+prompt = """
+Invoke the git-workflow-and-versioning skill. If the change includes code or behavior changes, also invoke code-review-and-quality before creating the PR.
+
+Prepare the current branch for a pull request:
+
+1. Inspect repository contribution rules, PR template, branch target, and required checks.
+2. Review `git status`, staged changes, unstaged changes, and recent commits.
+3. Confirm the diff is focused; split unrelated changes before opening the PR.
+4. Run the smallest relevant verification commands and capture exact command output.
+5. Ensure commits are atomic, descriptive, and signed-off if the repository requires DCO.
+6. Draft a PR title and body that explains the problem, the fix, tests run, and any known risks.
+7. Check for duplicate open PRs or issues before publishing.
+8. If the user explicitly asked to publish, push the branch and open the PR with the repository's preferred tool.
+
+## Output
+
+```markdown
+## PR Readiness
+
+### Scope
+- [What changed and why]
+
+### Verification
+- [Exact commands run and result]
+
+### Risk
+- [Known risk, follow-up, or "None identified"]
+
+### PR
+- Title: [...]
+- Body: [...]
+- Link: [URL if opened, otherwise "not opened"]
+```
+
+## Rules
+
+1. Do not open or push a PR unless the user explicitly asked for a public action in this turn.
+2. Do not include unrelated cleanup, generated clutter, secrets, local config, or hidden tool attribution.
+3. Do not paper over failing tests; explain any known failure clearly in the PR body.
+4. After opening the PR, watch initial CI long enough to catch immediate bot failures.
+"""
