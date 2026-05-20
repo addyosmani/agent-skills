@@ -5,12 +5,23 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+env:
+  CLAUDE_CODE_VERSION: '2.1.145'
+
+concurrency:
+  group: plugin-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate-skills:
     name: Validate skill content
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -24,11 +35,12 @@ jobs:
     name: Validate plugin structure
     needs: validate-skills
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
 
       - name: Install Claude Code
-        run: npm install -g @anthropic-ai/claude-code
+        run: npm install -g @anthropic-ai/claude-code@${{ env.CLAUDE_CODE_VERSION }}
 
       - name: Validate marketplace and plugin manifests
         run: claude plugin validate .
@@ -37,11 +49,12 @@ jobs:
     name: Test plugin installation
     runs-on: ubuntu-latest
     needs: validate
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
 
       - name: Install Claude Code
-        run: npm install -g @anthropic-ai/claude-code
+        run: npm install -g @anthropic-ai/claude-code@${{ env.CLAUDE_CODE_VERSION }}
 
       - name: Configure git to use HTTPS
         run: git config --global url."https://github.com/".insteadOf "git@github.com:"
@@ -54,3 +67,6 @@ jobs:
 
       - name: Install plugin
         run: claude plugin install agent-skills@addy-agent-skills --scope user
+
+      - name: Verify plugin is installed
+        run: claude plugin list | grep -q agent-skills
