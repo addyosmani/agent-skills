@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+set -e
+
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(cd "${HOOK_DIR}/.." && pwd)"
+
+"${REPO_DIR}/scripts/sync-copilot-assets.sh"

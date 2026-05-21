@@ -74,6 +74,56 @@ GitHub Copilot supports project-level instructions via `.github/copilot-instruct
 
 Use the agents for targeted review workflows in Copilot Chat.
 
+## Local Sync
+
+Automatically copy skills and agents into every Git project under your local projects directory after each `git pull`.
+
+### One-time setup
+
+```bash
+cd /path/to/agent-skills
+
+cp sync-copilot-assets.config.example sync-copilot-assets.local.config
+# Edit sync-copilot-assets.local.config to set TARGET_ROOT, EXCLUDED_PATHS, etc.
+
+./scripts/install-git-hooks.sh
+```
+
+Verify the hook is installed:
+
+```bash
+git config --local --get core.hooksPath
+# .githooks
+```
+
+### Run manually
+
+```bash
+cd /path/to/agent-skills
+git pull
+./scripts/sync-copilot-assets.sh
+```
+
+### How it works
+
+- Discovers target projects by finding `.git` directories under `TARGET_ROOT`.
+- By default `TARGET_ROOT` is the parent directory of this repo, so cloning `agent-skills` next to your other projects requires no extra configuration.
+- Copies `skills/**/SKILL.md` to `<project>/.github/skills/<skill-name>/SKILL.md`.
+- Copies `agents/*.md` to `<project>/.github/agents/<agent-name>.md`.
+- Skips files that are identical to the source.
+- Updates files that match a previous Git-tracked version of the source (safe upgrade).
+- Reports conflicts when a destination file differs from both the current and all historical source versions.
+- Set `OVERWRITE_EXISTING="true"` in your local config to always overwrite.
+
+### Config options (`sync-copilot-assets.local.config`)
+
+| Variable | Default | Description |
+|---|---|---|
+| `TARGET_ROOT` | parent directory of this repo | Root directory to scan for Git projects |
+| `SYNC_CONTENT` | `both` | What to sync: `skills`, `agents`, or `both` |
+| `OVERWRITE_EXISTING` | `false` | Overwrite files not matching source history |
+| `EXCLUDED_PATHS` | this repo | Paths to exclude from scanning |
+
 ## Usage Tips
 
 1. **Keep instructions concise** — Copilot instructions work best when focused. Summarize the key rules rather than including full skill files.

@@ -1,0 +1,8 @@
+TARGET_ROOT="${SOURCE_PARENT_DIR}"
+SYNC_CONTENT="both"
+OVERWRITE_EXISTING="false"
+
+EXCLUDED_PATHS=(
+  "${SOURCE_DIR}"
+  # "${TARGET_ROOT}/SomeDirectoryToExclude"
+)
