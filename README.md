@@ -118,9 +118,9 @@ Skills are plain Markdown - they work with any agent that accepts system prompts
 
 ---
 
-## All 23 Skills
+## All 24 Skills
 
-The commands above are entry points. The pack includes 23 skills total — 22 lifecycle skills plus the `using-agent-skills` meta-skill. Each skill is a structured workflow with steps, verification gates, and anti-rationalization tables. You can also reference any skill directly.
+The commands above are entry points. The pack includes 24 skills total — 23 lifecycle skills plus the `using-agent-skills` meta-skill. Each skill is a structured workflow with steps, verification gates, and anti-rationalization tables. You can also reference any skill directly.
 
 ### Meta - Discover which skill applies
 
@@ -140,6 +140,7 @@ The commands above are entry points. The pack includes 23 skills total — 22 li
 
 | Skill | What It Does | Use When |
 |-------|-------------|----------|
+| [vertical-slicing](skills/vertical-slicing/SKILL.md) | Thin end-to-end slices that each deliver verifiable, demoable functionality through every layer | Breaking down a spec into tasks, when implementation order is unclear, or when horizontal layering is tempting |
 | [planning-and-task-breakdown](skills/planning-and-task-breakdown/SKILL.md) | Decompose specs into small, verifiable tasks with acceptance criteria and dependency ordering | You have a spec and need implementable units |
 
 ### Build - Write the code
@@ -242,10 +243,11 @@ Every skill follows a consistent anatomy:
 
 ```
 agent-skills/
-├── skills/                            # 23 skills (22 lifecycle + 1 meta)
+├── skills/                            # 24 skills (23 lifecycle + 1 meta)
 │   ├── interview-me/                  #   Define
 │   ├── idea-refine/                   #   Define
 │   ├── spec-driven-development/       #   Define
+│   ├── vertical-slicing/              #   Plan
 │   ├── planning-and-task-breakdown/   #   Plan
 │   ├── incremental-implementation/    #   Build
 │   ├── context-engineering/           #   Build
