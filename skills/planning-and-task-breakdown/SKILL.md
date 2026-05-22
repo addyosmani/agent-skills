@@ -221,3 +221,5 @@ Before starting implementation, confirm:
 - [ ] No task touches more than ~5 files
 - [ ] Checkpoints exist between major phases
 - [ ] The human has reviewed and approved the plan
+
+**Companion skill:** Invoke `workflow-tracker` alongside this skill to maintain a live phase tracker via `TodoWrite`.

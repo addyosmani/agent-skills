@@ -244,3 +244,5 @@ After completing all increments for a task:
 - [ ] The build is clean
 - [ ] The feature works end-to-end as specified
 - [ ] No uncommitted changes remain
+
+**Companion skill:** Invoke `workflow-tracker` alongside this skill to maintain a live phase tracker via `TodoWrite`.

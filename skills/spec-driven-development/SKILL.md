@@ -164,6 +164,8 @@ Break the plan into discrete, implementable tasks:
 
 Execute tasks one at a time following `skills/incremental-implementation/SKILL.md` (`incremental-implementation`) and `skills/test-driven-development/SKILL.md` (`test-driven-development`). Use `skills/context-engineering/SKILL.md` (`context-engineering`) to load the right spec sections and source files at each step rather than flooding the agent with the entire spec.
 
+**Companion skill:** Invoke `workflow-tracker` alongside this skill at the start of a session to maintain a live phase tracker (SPEC → PLAN → BUILD → TEST → REVIEW → SIMPLIFY → SHIP) via `TodoWrite`.
+
 ## Keeping the Spec Alive
 
 The spec is a living document, not a one-time artifact:
