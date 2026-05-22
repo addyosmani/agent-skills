@@ -118,15 +118,16 @@ Skills are plain Markdown - they work with any agent that accepts system prompts
 
 ---
 
-## All 23 Skills
+## All 24 Skills
 
-The commands above are entry points. The pack includes 23 skills total — 22 lifecycle skills plus the `using-agent-skills` meta-skill. Each skill is a structured workflow with steps, verification gates, and anti-rationalization tables. You can also reference any skill directly.
+The commands above are entry points. The pack includes 24 skills total — 22 lifecycle skills, the `workflow-tracker` companion skill, and the `using-agent-skills` meta-skill. Each skill is a structured workflow with steps, verification gates, and anti-rationalization tables. You can also reference any skill directly.
 
 ### Meta - Discover which skill applies
 
 | Skill | What It Does | Use When |
 |-------|-------------|----------|
 | [using-agent-skills](skills/using-agent-skills/SKILL.md) | Maps incoming work to the right skill workflow and defines shared operating rules | Starting a session or deciding which skill applies |
+| [workflow-tracker](skills/workflow-tracker/SKILL.md) | Maintains a live TodoWrite phase list (SPEC→PLAN→BUILD→TEST→REVIEW→SIMPLIFY→SHIP) alongside lifecycle skills | Start of any development task to track progress across phases |
 
 ### Define - Clarify what to build
 
@@ -242,10 +243,10 @@ Every skill follows a consistent anatomy:
 
 ```
 agent-skills/
-├── skills/                            # 23 skills (22 lifecycle + 1 meta)
-│   ├── interview-me/                  #   Define
-│   ├── idea-refine/                   #   Define
-│   ├── spec-driven-development/       #   Define
+├── skills/                            # 24 skills (22 lifecycle + 2 meta)
+│   ├── interview-me/                  #   Spec
+│   ├── idea-refine/                   #   Spec
+│   ├── spec-driven-development/       #   Spec
 │   ├── planning-and-task-breakdown/   #   Plan
 │   ├── incremental-implementation/    #   Build
 │   ├── context-engineering/           #   Build
@@ -254,20 +255,21 @@ agent-skills/
 │   ├── frontend-ui-engineering/       #   Build
 │   ├── test-driven-development/       #   Build
 │   ├── api-and-interface-design/      #   Build
-│   ├── browser-testing-with-devtools/ #   Verify
-│   ├── debugging-and-error-recovery/  #   Verify
+│   ├── browser-testing-with-devtools/ #   Test
+│   ├── debugging-and-error-recovery/  #   Test
 │   ├── code-review-and-quality/       #   Review
-│   ├── code-simplification/          #   Review
 │   ├── security-and-hardening/        #   Review
 │   ├── performance-optimization/      #   Review
+│   ├── code-simplification/           #   Simplify
 │   ├── git-workflow-and-versioning/   #   Ship
 │   ├── ci-cd-and-automation/          #   Ship
 │   ├── deprecation-and-migration/     #   Ship
 │   ├── documentation-and-adrs/        #   Ship
 │   ├── shipping-and-launch/           #   Ship
+│   ├── workflow-tracker/              #   Meta: live phase tracker
 │   └── using-agent-skills/            #   Meta: how to use this pack
 ├── agents/                            # 3 specialist personas
-├── references/                        # 4 supplementary checklists
+├── references/                        # 5 supplementary references (incl. lifecycle.md)
 ├── hooks/                             # Session lifecycle hooks
 ├── .claude/commands/                  # 7 slash commands (Claude Code)
 ├── .gemini/commands/                  # 7 slash commands (Gemini CLI)
