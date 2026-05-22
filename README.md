@@ -286,6 +286,16 @@ Skills bake in best practices from Google's engineering culture — including co
 
 ---
 
+## Finance & Trading Skills
+
+Community skills for financial market data and trading workflows:
+
+| Skill | What It Does | Use When |
+|-------|-------------|----------|
+| [longbridge](https://github.com/longbridge/skills/tree/main/skills/longbridge) | Live financial market data, trading, and portfolio analysis for US, HK, A-share, and Singapore markets via Longbridge Securities CLI | Quotes, K-lines, fundamentals, news, options, portfolio, institutional data |
+
+---
+
 ## Contributing
 
 Skills should be **specific** (actionable steps, not vague advice), **verifiable** (clear exit criteria with evidence requirements), **battle-tested** (based on real workflows), and **minimal** (only what's needed to guide the agent).
