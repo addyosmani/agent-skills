@@ -163,8 +163,6 @@ Phases map 1:1 to the slash commands. See `references/lifecycle.md` for the cano
 | Spec | `/spec` | interview-me | Surface what the user actually wants before any plan, spec, or code exists |
 | Spec | `/spec` | idea-refine | Refine ideas through structured divergent and convergent thinking |
 | Spec | `/spec` | spec-driven-development | Requirements and acceptance criteria before code |
-| Spec | `/spec` | ubiquitous-language | Shared domain vocabulary — CONTEXT.md and lightweight ADRs |
-| Plan | `/plan` | vertical-slicing | Thin end-to-end slices, each independently demoable |
 | Plan | `/plan` | planning-and-task-breakdown | Decompose into small, verifiable tasks |
 | Build | `/build` | incremental-implementation | Thin vertical slices, test each before expanding |
 | Build | `/build` | source-driven-development | Verify against official docs before implementing |

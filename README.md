@@ -118,9 +118,9 @@ Skills are plain Markdown - they work with any agent that accepts system prompts
 
 ---
 
-## All 26 Skills
+## All 24 Skills
 
-The commands above are entry points. The pack includes 26 skills total — 24 lifecycle skills, the `workflow-tracker` companion skill, and the `using-agent-skills` meta-skill. Each skill is a structured workflow with steps, verification gates, and anti-rationalization tables. You can also reference any skill directly.
+The commands above are entry points. The pack includes 24 skills total — 22 lifecycle skills, the `workflow-tracker` companion skill, and the `using-agent-skills` meta-skill. Each skill is a structured workflow with steps, verification gates, and anti-rationalization tables. You can also reference any skill directly.
 
 ### Meta - Discover which skill applies
 
@@ -243,11 +243,10 @@ Every skill follows a consistent anatomy:
 
 ```
 agent-skills/
-├── skills/                            # 26 skills (24 lifecycle + 2 meta)
+├── skills/                            # 24 skills (22 lifecycle + 2 meta)
 │   ├── interview-me/                  #   Spec
 │   ├── idea-refine/                   #   Spec
 │   ├── spec-driven-development/       #   Spec
-│   ├── ubiquitous-language/           #   Spec
 │   ├── planning-and-task-breakdown/   #   Plan
 │   ├── incremental-implementation/    #   Build
 │   ├── context-engineering/           #   Build
