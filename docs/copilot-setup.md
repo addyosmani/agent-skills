@@ -2,7 +2,7 @@
 
 ## Setup
 
-### Copilot Instructions
+### Copilot Skills
 
 Copilot supports creating agent skills using a `.github/skills`, `.claude/skills`, or `.agents/skills` directory in your repository.
 
@@ -22,9 +22,13 @@ Copilot supports specialized agent personas. Use the agent-skills agents:
 
 ```bash
 # Copy agent definitions
+cp /path/to/agent-skills/agents/README.md .github/agents/README.md
 cp /path/to/agent-skills/agents/code-reviewer.md .github/agents/code-reviewer.md
 cp /path/to/agent-skills/agents/test-engineer.md .github/agents/test-engineer.md
 cp /path/to/agent-skills/agents/security-auditor.md .github/agents/security-auditor.md
+
+# Copy references (referenced in agents README)
+cp -r /path/to/agent-skills/references .github/references
 ```
 
 Invoke agents in Copilot Chat:
