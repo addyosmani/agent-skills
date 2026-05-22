@@ -43,8 +43,9 @@ ASSUMPTIONS I'M MAKING:
 2. Authentication uses session-based cookies (not JWT)
 3. The database is PostgreSQL (based on existing Prisma schema)
 4. We're targeting modern browsers only (no IE11)
-→ Correct me now or I'll proceed with these.
 ```
+
+After listing assumptions, use the `question` tool to ask whether to proceed. Options: "Proceed with these assumptions" and "Correct an assumption".
 
 Don't silently fill in ambiguous requirements. The spec's entire purpose is to surface misunderstandings *before* code gets written — assumptions are the most dangerous form of misunderstanding.
 
@@ -123,8 +124,9 @@ REFRAMED SUCCESS CRITERIA:
 - Dashboard LCP < 2.5s on 4G connection
 - Initial data load completes in < 500ms
 - No layout shift during load (CLS < 0.1)
-→ Are these the right targets?
 ```
+
+After presenting the reframed criteria, use the `question` tool to confirm them. Options: "Yes, these are correct", "Adjust one or more targets", and "No — these are wrong (specify)".
 
 This lets you loop, retry, and problem-solve toward a clear goal rather than guessing what "faster" means.
 

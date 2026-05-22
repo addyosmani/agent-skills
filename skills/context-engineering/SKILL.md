@@ -212,8 +212,9 @@ A) Follow the spec — add REST endpoint, potentially deprecate GraphQL later
 B) Follow existing patterns — use GraphQL, update the spec
 C) Ask — this seems like an intentional decision I shouldn't override
 
-→ Which approach should I take?
 ```
+
+Use the `question` tool with options matching A/B/C above.
 
 ### When Requirements Are Incomplete
 
@@ -233,8 +234,9 @@ A) Allow duplicates (simplest)
 B) Reject with validation error (strictest)
 C) Append a number suffix like "Task (2)" (most user-friendly)
 
-→ Which behavior do you want?
 ```
+
+Use the `question` tool with options matching A/B/C above, plus "Specify a different behavior".
 
 ### The Inline Planning Pattern
 

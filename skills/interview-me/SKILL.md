@@ -108,13 +108,15 @@ Here's what I now think you want:
 Yes / no / refine?
 ```
 
+After presenting the restate, collect the user's response using the `question` tool with these options: "Yes — this is correct, proceed", "No — one or more lines are wrong (specify)", and "Refine — partially correct, needs adjustment".
+
 Including "Out of scope" is non-negotiable. Half of misalignment is silent disagreement about what is *not* being built.
 
 ### Step 5: Confirm — explicit yes, not "whatever you think"
 
 The gate is an explicit "yes." The following are **not** yes:
 
-- "Whatever you think is best." → The user is delegating, which means they don't have 95% confidence either. Re-ask with two concrete options framed as a choice.
+- "Whatever you think is best." → The user is delegating, which means they don't have 95% confidence either. Re-ask with two concrete options framed as a choice, using the `question` tool with the two concrete alternatives you have identified (e.g., "Option A — [agent's first concrete framing]" and "Option B — [agent's second concrete framing]").
 - "Sounds good." → Ambiguous. Ask: "Anything you'd refine?" Silence isn't confirmation.
 - "Sure, let's go." → Often a polite exit, not an endorsement. Same follow-up.
 - Silence followed by "okay let's start." → The user has given up on the interview, not converged. Stop and ask whether you've missed something.
@@ -135,7 +137,7 @@ This is a checkable test, not a vibe. It also has a floor: if you've gone severa
 
 The output of this skill is a **confirmed statement of intent**: the restate from Step 4, with an explicit yes from Step 5. That's the deliverable. Specs, plans, and task lists are downstream; they consume the intent this skill produces.
 
-If the user wants the intent to persist (a multi-session project, a handoff to another collaborator), offer to save it to `docs/intent/[topic].md`. Only save if they confirm.
+If the user wants the intent to persist (a multi-session project, a handoff to another collaborator), offer to save it to `docs/intent/[topic].md`. Use the `question` tool to collect their decision, with options "Yes, save to docs/intent/[topic].md" and "No, don't save". Only save if they confirm.
 
 ## Example
 

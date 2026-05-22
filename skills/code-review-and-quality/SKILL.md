@@ -210,7 +210,7 @@ After any refactoring or implementation change, check for orphaned code:
 
 1. Identify code that is now unreachable or unused
 2. List it explicitly
-3. **Ask before deleting:** "Should I remove these now-unused elements: [list]?"
+3. **Ask before deleting:** Use the `question` tool with the header "Remove dead code?" and options: "Yes, remove all", "Yes, remove specific items", "No, leave them in place"
 
 Don't leave dead code lying around — it confuses future readers and agents. But don't silently delete things you're not sure about. When in doubt, ask.
 

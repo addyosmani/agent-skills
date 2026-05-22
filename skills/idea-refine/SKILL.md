@@ -66,7 +66,7 @@ When the user invokes this skill with an idea (`$ARGUMENTS`), guide them through
    - What's been tried before?
    - Why now?
 
-   Use the `AskUserQuestion` tool to gather this input. Do NOT proceed until you understand who this is for and what success looks like.
+   Use the `question` tool to ask each sharpening question individually, with options "Answer this question" and "Skip this question", so the user can engage at their own pace. Do NOT proceed until you understand who this is for and what success looks like.
 
 3. **Generate 5-8 idea variations** using these lenses:
    - **Inversion:** "What if we did the opposite?"
@@ -137,7 +137,7 @@ Produce a concrete artifact — a markdown one-pager that moves work forward:
 
 **The "Not Doing" list is arguably the most valuable part.** Focus is about saying no to good ideas. Make the trade-offs explicit.
 
-Ask the user if they'd like to save this to `docs/ideas/[idea-name].md` (or a location of their choosing). Only save if they confirm.
+Use the `question` tool to ask where to save this, with options: "Save to docs/ideas/[idea-name].md", "Save to a different location", or "Don't save". Only save if they confirm a location.
 
 ### Anti-patterns to Avoid
 

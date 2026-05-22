@@ -51,8 +51,9 @@ ASSUMPTIONS I'M MAKING:
 1. [assumption about requirements]
 2. [assumption about architecture]
 3. [assumption about scope]
-→ Correct me now or I'll proceed with these.
 ```
+
+After presenting assumptions, use the `question` tool with options: "Proceed with these assumptions" or "Correct an assumption". Wait for the response before continuing.
 
 Don't silently fill in ambiguous requirements. The most common failure mode is making wrong assumptions and running with them unchecked. Surface uncertainty early — it's cheaper than rework.
 
@@ -62,8 +63,7 @@ When you encounter inconsistencies, conflicting requirements, or unclear specifi
 
 1. **STOP.** Do not proceed with a guess.
 2. Name the specific confusion.
-3. Present the tradeoff or ask the clarifying question.
-4. Wait for resolution before continuing.
+3. Present the tradeoff or clarifying question, then use the `question` tool with options such as "Choose interpretation A (describe)", "Choose interpretation B (describe)", and "Provide additional context to resolve the conflict". Wait for resolution before continuing.
 
 **Bad:** Silently picking one interpretation and hoping it's right.
 **Good:** "I see X in the spec but Y in the existing code. Which takes precedence?"
