@@ -41,7 +41,7 @@ Before adding or updating anything, check what already exists:
         └── 0002-*.md
 ```
 
-- If `CONTEXT-MAP.md` exists, read it to find all contexts. Infer which context the current topic belongs to. If unclear, ask.
+- If `CONTEXT-MAP.md` exists, read it to find all contexts. Infer which context the current topic belongs to. If unclear, use the `question` tool with the actual context names as options, plus "It spans multiple contexts".
 - If only a root `CONTEXT.md` exists, single context.
 - If neither exists, create `CONTEXT.md` lazily — only when the first term is ready to record.
 
@@ -49,7 +49,7 @@ Before adding or updating anything, check what already exists:
 
 Before writing anything, the term must be fully resolved:
 
-1. **Check for conflict.** Does `CONTEXT.md` already define this concept under a different name? If so, surface the conflict: "Your glossary defines this as X, but you are using Y — which should be canonical?"
+1. **Check for conflict.** Does `CONTEXT.md` already define this concept under a different name? If so, use the `question` tool with options: "Use the existing term (X) as canonical, mark new term as alias", "Use the new term (Y) as canonical, update existing references", or "Define a third term (specify)".
 2. **Sharpen the definition.** Is the proposed definition one or two sentences? Does it define what the concept *is* — not what it does? Does it avoid implementation details?
 3. **Pick the canonical name.** If multiple words exist for the same concept, pick one. List the others under `_Avoid_`.
 4. **Check for relationships.** Does this term have a clear cardinality relationship with another term already in the glossary? Express it.
@@ -123,7 +123,7 @@ That's it. An ADR can be a single paragraph. Only add optional sections (`Status
 
 ### Step 5 — Cross-reference downstream skills
 
-If a spec file (`docs/spec-*.md` or equivalent) exists and is actively being drafted, search it for the alias terms listed in `_Avoid_` for the entry you just added. If any alias appears in the spec, flag it to the user: state the old alias, the canonical name, and which file:line needs updating. Do not silently substitute — confirm the canonical name before editing the spec.
+If a spec file (`docs/spec-*.md` or equivalent) exists and is actively being drafted, search it for the alias terms listed in `_Avoid_` for the entry you just added. If any alias appears in the spec, flag it to the user: state the old alias, the canonical name, and which file:line needs updating. Do not silently substitute — use the `question` tool with options: "Yes, replace all alias occurrences with the canonical name", "No, leave the spec as-is for now", or "Replace only specific occurrences (specify)".
 
 ## Multi-context repos
 
