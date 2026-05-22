@@ -176,3 +176,11 @@ OpenCode integration works by combining:
 - Automatic skill invocation via reasoning
 
 This results in a **fully agent-driven, production-grade engineering workflow** without requiring plugins or manual commands.
+
+---
+
+## Using superpowers with agent-skills
+
+If you are running both the `superpowers` OpenCode plugin and `agent-skills`, see the combined workflow reference:
+
+[docs/superpowers-workflow.md](superpowers-workflow.md)

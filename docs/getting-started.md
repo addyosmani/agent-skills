@@ -125,6 +125,10 @@ The `references/` directory contains supplementary checklists:
 
 Load a reference when you need detailed patterns beyond what the skill covers.
 
+## Using superpowers + agent-skills together
+
+If you are running the `superpowers` process backbone alongside `agent-skills`, see [superpowers-workflow.md](superpowers-workflow.md) for a full phase-by-phase reference: which skills fire at each phase, what the hard gates are, and common mistakes to watch for.
+
 ## Spec and task artifacts
 
 The `/spec` and `/plan` commands create working artifacts (`SPEC.md`, `tasks/plan.md`, `tasks/todo.md`). Treat them as **living documents** while the work is in progress:
