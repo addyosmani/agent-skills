@@ -89,7 +89,9 @@ Add skill contents to your Windsurf rules configuration. See [docs/windsurf-setu
 <details>
 <summary><b>OpenCode</b></summary>
 
-Uses agent-driven skill execution via AGENTS.md and the `skill` tool.
+Supports both:
+- Agent-driven skill execution via `AGENTS.md` and the `skill` tool
+- Slash-command parity via `.opencode/commands/` (`/spec`, `/plan`, `/build`, `/test`, `/review`, `/code-simplify`, `/ship`)
 
 See [docs/opencode-setup.md](docs/opencode-setup.md).
 
@@ -271,6 +273,7 @@ agent-skills/
 ├── hooks/                             # Session lifecycle hooks
 ├── .claude/commands/                  # 7 slash commands (Claude Code)
 ├── .gemini/commands/                  # 7 slash commands (Gemini CLI)
+├── .opencode/commands/                # 7 slash commands (OpenCode)
 └── docs/                              # Setup guides per tool
 ```
 
