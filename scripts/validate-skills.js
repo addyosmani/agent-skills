@@ -13,6 +13,7 @@
  *
  * Checks (warnings, do not block CI):
  *   - cross-skill references point to known skills
+ *   - local file references point to existing files or directories
  *
  * Exit codes: 0 = all clear, 1 = one or more errors
  */
@@ -24,7 +25,10 @@ const path = require('path');
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
-const SKILLS_DIR = path.resolve(__dirname, '..', 'skills');
+const SKILLS_DIR = process.env.SKILLS_DIR
+  ? path.resolve(process.env.SKILLS_DIR)
+  : path.resolve(__dirname, '..', 'skills');
+const REPO_ROOT = path.resolve(SKILLS_DIR, '..');
 
 const MAX_DESCRIPTION_LENGTH = 1024;
 
@@ -62,6 +66,14 @@ const SKILL_REF_PATTERNS = [
   /\bsee `([a-z][a-z0-9-]+[a-z0-9])`/g,
   /──→ ([a-z][a-z0-9-]+[a-z0-9])\b/g,          // ASCII diagram arrows
   /→ `([a-z][a-z0-9-]+[a-z0-9])`/g,
+];
+
+// Local references that are likely to be part of a skill bundle.
+// This intentionally focuses on explicit paths to avoid warning on
+// generic inline code or prose examples.
+const LOCAL_REF_PATTERNS = [
+  /!?\[[^\]\n]*\]\(([^)\s]+)(?:\s+["'][^)]*["'])?\)/g,
+  /`((?:\.{1,2}\/|scripts\/|references\/|examples\/|assets\/|templates\/)[^`\s]+)`/g,
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -102,6 +114,72 @@ function extractSkillReferences(content) {
     }
   }
   return refs;
+}
+
+function stripFencedCodeBlocks(content) {
+  return content.replace(/```[\s\S]*?```/g, '');
+}
+
+function normalizeLocalReference(rawRef) {
+  let ref = rawRef.trim().replace(/^<|>$/g, '');
+
+  if (
+    !ref ||
+    ref.startsWith('#') ||
+    ref.startsWith('/mnt/skills/user/') ||
+    ref.startsWith('~/') ||
+    ref.startsWith('$')
+  ) {
+    return null;
+  }
+
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(ref) || path.isAbsolute(ref)) {
+    return null;
+  }
+
+  ref = ref.split('#')[0].split('?')[0];
+  if (!ref || ref === '.') return null;
+
+  try {
+    ref = decodeURIComponent(ref);
+  } catch {
+    // Keep the raw reference if it is not URI-encoded.
+  }
+
+  return ref;
+}
+
+function extractLocalReferences(content) {
+  const refs = new Set();
+  const body = stripFencedCodeBlocks(content);
+
+  for (const pattern of LOCAL_REF_PATTERNS) {
+    pattern.lastIndex = 0;
+    let m;
+    while ((m = pattern.exec(body)) !== null) {
+      const ref = normalizeLocalReference(m[1]);
+      if (ref) refs.add(ref);
+    }
+  }
+
+  return refs;
+}
+
+function findMissingLocalReferences(content, skillDir) {
+  const missing = [];
+
+  for (const ref of extractLocalReferences(content)) {
+    const targets = [path.resolve(skillDir, ref)];
+    if (/^(?:references|docs)\//.test(ref)) {
+      targets.push(path.resolve(REPO_ROOT, ref));
+    }
+
+    if (!targets.some(target => fs.existsSync(target))) {
+      missing.push(ref);
+    }
+  }
+
+  return missing.sort();
 }
 
 // ─── Validator ───────────────────────────────────────────────────────────────
@@ -173,6 +251,11 @@ function validateSkill(dirName, knownSkills) {
     if (!knownSkills.has(ref)) {
       warnings.push(`Dead cross-reference: \`${ref}\` is not a known skill`);
     }
+  }
+
+  // ── Local file references ───────────────────────────────────────────────
+  for (const ref of findMissingLocalReferences(content, path.dirname(skillPath))) {
+    warnings.push(`Missing local reference: \`${ref}\``);
   }
 
   return { errors, warnings, exempt };
