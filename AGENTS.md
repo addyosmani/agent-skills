@@ -91,7 +91,7 @@ skills/
     SKILL.md              # Required: skill definition
     scripts/              # Required: executable scripts
       {script-name}.sh    # Bash scripts (preferred)
-  {skill-name}.zip        # Required: packaged for distribution
+  {skill-name}.zip        # Distribution artifact — not committed to git; create after merge
 ```
 
 ### Naming Conventions
@@ -173,6 +173,8 @@ After creating or updating a skill:
 cd skills
 zip -r {skill-name}.zip {skill-name}/
 ```
+
+> **Note:** Zip files are distribution artifacts — they are not committed to git and are not required in a PR. Create the zip after the skill directory is merged.
 
 ### End-User Installation
 

@@ -221,3 +221,7 @@ Before starting implementation, confirm:
 - [ ] No task touches more than ~5 files
 - [ ] Checkpoints exist between major phases
 - [ ] The human has reviewed and approved the plan
+
+## See Also
+
+- `vertical-slicing` — Use before this skill when the right task boundaries are unclear. Vertical slicing determines *what* the tasks are (one behavior per slice); this skill determines *how* to order and specify them.

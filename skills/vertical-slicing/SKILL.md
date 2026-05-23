@@ -9,7 +9,7 @@ description: Decomposes work into thin end-to-end slices that each deliver verif
 
 A vertical slice cuts through all layers of the stack — schema, API, logic, UI, tests — for one narrow piece of behavior, and delivers something demoable at the end. The alternative, horizontal slicing, builds one entire layer before moving to the next. Horizontal slicing feels organized but routinely produces integration failures at the end, tests that test imagined behavior, and work that cannot be reviewed or demoed mid-stream.
 
-This skill is the decomposition companion to `incremental-implementation` (which governs how to execute a slice) and `planning-and-task-breakdown` (which governs how to order slices). Use this skill when the right boundaries between slices are unclear.
+This skill is the decomposition companion to `incremental-implementation` (which governs how to execute a slice) and `planning-and-task-breakdown` (which governs how to order slices). Use this skill when breaking down a spec or requirement into tasks.
 
 ## When to Use
 
@@ -98,9 +98,9 @@ Behaviors:
 
 ### Step 2: Order by dependency and risk
 
-- **Dependency order:** If Slice B cannot exist without Slice A (e.g. "mark complete" requires a task to exist), A comes first.
 - **Risk order:** Put the riskiest slice first. A risky slice is one where the approach is uncertain, the integration is novel, or failure would invalidate subsequent slices. Discovering a risk early is cheap. Discovering it after five slices is expensive.
-- **Tracer bullet first:** The first slice is always the tracer bullet — the thinnest possible path that proves end-to-end connectivity.
+- **Tracer bullet first:** For any new feature, the tracer bullet IS the riskiest slice — it is the one that proves the end-to-end path even exists. So "tracer bullet first" is a special case of risk-first, not a competing rule. Start with the tracer bullet, then order remaining slices by dependency and residual risk.
+- **Dependency order:** If Slice B cannot exist without Slice A (e.g. "mark complete" requires a task to exist), A comes first.
 
 ### Step 3: Write each slice
 
@@ -110,7 +110,7 @@ Each slice needs:
 | ----- | ------- |
 | **Title** | One short verb phrase describing the behavior: "User can create a task" |
 | **Type** | AFK or HITL |
-| **Layers touched** | Which layers this slice passes through (schema, API, logic, UI, tests) |
+| **Layers touched** *(optional)* | Which layers this slice passes through (schema, API, logic, UI, tests). Useful when the team is unfamiliar with the stack; omit if it pushes focus toward implementation over behavior. |
 | **Acceptance criteria** | Specific, testable conditions — not implementation steps |
 | **Blocked by** | Which prior slices must complete first, or "None" |
 | **Demoable as** | What you can show or verify when this slice is complete |
@@ -129,7 +129,7 @@ Before handing to an agent or starting implementation, check each slice against:
 
 The right size for a slice is the smallest surface that produces demoable behavior.
 
-**Too large:** A slice that takes more than one focused session to implement, or whose acceptance criteria cannot be stated in three or fewer bullet points, or that touches two or more independent subsystems.
+**Too large:** A slice that takes more than one focused session to implement, or that touches two or more independent subsystems.
 
 **Too small:** A slice that does not produce anything demoable. If completing the slice leaves the system in an untestable intermediate state, it is not a slice — it is a horizontal layer pretending to be a slice.
 
