@@ -286,6 +286,16 @@ Skills bake in best practices from Google's engineering culture — including co
 
 ---
 
+## Community Skills
+
+Third-party skills that extend the pack with domain-specific workflows:
+
+| Skill | What It Does | Install |
+|-------|-------------|---------|
+| [flowhunt-skill](https://github.com/heyneuron/flowhunt-skill) | Automation discovery audit — 5-question workflow intake, then audits Gmail/Calendar/Slack/task trackers to surface automation opportunities | `npx skills add heyneuron/flowhunt-skill` |
+
+---
+
 ## Contributing
 
 Skills should be **specific** (actionable steps, not vague advice), **verifiable** (clear exit criteria with evidence requirements), **battle-tested** (based on real workflows), and **minimal** (only what's needed to guide the agent).
