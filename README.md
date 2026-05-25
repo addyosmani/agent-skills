@@ -294,6 +294,14 @@ See [docs/skill-anatomy.md](docs/skill-anatomy.md) for the format specification 
 
 ---
 
+## Related Skills Packs
+
+Community and official skills packs for domain-specific workflows:
+
+- **[longbridge/skills](https://github.com/longbridge/skills)** — 125+ financial market skills by Longbridge Securities. Real-time quotes, charts, fundamentals, portfolio analysis, valuation, options, and more for HK / US / A-share / SG markets. Trilingual (Simplified Chinese / Traditional Chinese / English). Install: `/plugin marketplace add longbridge/skills`
+
+---
+
 ## License
 
 MIT - use these skills in your projects, teams, and tools.
