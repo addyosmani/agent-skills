@@ -96,6 +96,13 @@ See [docs/opencode-setup.md](docs/opencode-setup.md).
 </details>
 
 <details>
+<summary><b>Hermes Agent</b></summary>
+
+Copy the `skills/` directories into `~/.hermes/skills`, then start a new Hermes session so the skill index refreshes. See [docs/hermes-agent-setup.md](docs/hermes-agent-setup.md).
+
+</details>
+
+<details>
 <summary><b>GitHub Copilot</b></summary>
 
 Use agent definitions from `agents/` as Copilot personas and skill content in `.github/copilot-instructions.md`. See [docs/copilot-setup.md](docs/copilot-setup.md).
