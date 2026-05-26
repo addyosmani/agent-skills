@@ -36,6 +36,17 @@ New skills should generally follow the standard anatomy:
 
 The frontmatter fields above are required. The section anatomy is a recommended pattern: equivalent headings such as `How It Works`, `Workflow`, or `Core Process` are fine when they preserve the same intent and keep the skill easy to follow.
 
+### Formatting Conventions
+
+Keep formatting predictable so both humans and agents can scan skills consistently:
+
+- Put YAML frontmatter at the top of `SKILL.md` with `name` before `description`
+- Use ATX headings (`## Heading`) for sections
+- Use `-` for unordered lists
+- Prefer fenced code blocks with a language tag, such as `bash`, `json`, or `markdown`
+- Keep tables compact and only use them when side-by-side comparison is clearer than bullets
+- Omit empty sections rather than adding placeholders
+
 ### What Not to Do
 
 - Don't duplicate content between skills — reference other skills instead

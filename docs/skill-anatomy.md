@@ -116,6 +116,15 @@ If a skill does not need runnable helpers, do not create an empty `scripts/` dir
 5. **Progressive disclosure.** Main SKILL.md is the entry point. Supporting files are loaded only when needed.
 6. **Token-conscious.** Every section must justify its inclusion. If removing it wouldn't change agent behavior, remove it.
 
+## Formatting Conventions
+
+- Put YAML frontmatter first, with `name` before `description`
+- Use ATX headings (`## Heading`) rather than underlined headings
+- Use `-` for unordered lists
+- Use fenced code blocks with a language tag when the language is known
+- Keep examples short enough to scan, and move long reference material into supporting files
+- Avoid placeholder sections; omit sections that do not add actionable guidance
+
 ## Naming Conventions
 
 - Skill directories: `lowercase-hyphen-separated`
