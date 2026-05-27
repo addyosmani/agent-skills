@@ -114,6 +114,19 @@ Skills are plain Markdown - they work with any agent that accepts system prompts
 
 </details>
 
+<details>
+<summary><b>Agentsmesh (multi-tool)</b></summary>
+
+One CLI that installs this pack and generates native config for Claude Code, Cursor, Copilot, Codex, Gemini CLI, Windsurf, Kiro, OpenCode, and 20+ more — useful when you use more than one tool or work on a team that does.
+
+```bash
+agentsmesh init
+agentsmesh install github:addyosmani/agent-skills
+```
+
+The pack's layout is auto-detected, so no per-file flags are needed. `agentsmesh refresh addyosmani-agent-skills-pack` pulls future updates. See [docs/agentsmesh-setup.md](docs/agentsmesh-setup.md).
+
+</details>
 
 
 ---
