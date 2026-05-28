@@ -12,7 +12,8 @@ Pick the next pending task from the plan. For each task:
 5. Run the full test suite to check for regressions
 6. Run the build to verify compilation
 7. Commit with a descriptive message
-8. Mark the task complete and move to the next one
+8. Push changes to trigger CI/CD pipeline
+9. Mark the task complete and move to the next one
 
 If any step fails, follow the debugging-and-error-recovery skill.
 """
