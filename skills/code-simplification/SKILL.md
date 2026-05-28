@@ -1,54 +1,52 @@
 ---
 name: code-simplification
-description: Simplifies code for clarity. Use when refactoring code for clarity without changing behavior. Use when code works but is harder to read, maintain, or extend than it should be. Use when reviewing code that has accumulated unnecessary complexity.
+description: 为清晰度简化代码。用于在不改变 behavior 的前提下重构代码以提升清晰度。也用于代码能工作但比应有状态更难读、维护或扩展，或 review 到累积了不必要复杂度的代码时。
 ---
 
 # Code Simplification
 
-> Inspired by the [Claude Code Simplifier plugin](https://github.com/anthropics/claude-plugins-official/blob/main/plugins/code-simplifier/agents/code-simplifier.md). Adapted here as a model-agnostic, process-driven skill for any AI coding agent.
+> 灵感来自 [Claude Code Simplifier plugin](https://github.com/anthropics/claude-plugins-official/blob/main/plugins/code-simplifier/agents/code-simplifier.md)。这里改写为 model-agnostic、process-driven 的 skill，供任何 AI coding agent 使用。
 
 ## Overview
-
-Simplify code by reducing complexity while preserving exact behavior. The goal is not fewer lines — it's code that is easier to read, understand, modify, and debug. Every simplification must pass a simple test: "Would a new team member understand this faster than the original?"
+通过降低复杂度简化代码，同时严格保持 behavior 不变。目标不是更少行，而是更容易阅读、理解、修改和 debug 的代码。每个 simplification 都必须通过一个简单测试：“新团队成员会比读原版更快理解它吗？”
 
 ## When to Use
+- Feature 已工作且 tests pass，但 implementation 感觉比需要的更重
+- Code review 中指出 readability 或 complexity issues
+- 遇到深层 nested logic、long functions 或不清晰命名
+- 重构在时间压力下写出的代码
+- Consolidating 分散在多个 files 的 related logic
+- Merge 后引入了 duplication 或 inconsistency
 
-- After a feature is working and tests pass, but the implementation feels heavier than it needs to be
-- During code review when readability or complexity issues are flagged
-- When you encounter deeply nested logic, long functions, or unclear names
-- When refactoring code written under time pressure
-- When consolidating related logic scattered across files
-- After merging changes that introduced duplication or inconsistency
+**何时不要使用：**
 
-**When NOT to use:**
+- Code 已经 clean 且 readable，不要为了简化而简化
+- 你还不理解 code 做什么，先理解再简化
+- Code 是 performance-critical，且“更简单”的版本可测地更慢
+- 你即将整个 rewrite module，简化 throwaway code 是浪费
 
-- Code is already clean and readable — don't simplify for the sake of it
-- You don't understand what the code does yet — comprehend before you simplify
-- The code is performance-critical and the "simpler" version would be measurably slower
-- You're about to rewrite the module entirely — simplifying throwaway code wastes effort
-
-## The Five Principles
+## 五项原则
 
 ### 1. Preserve Behavior Exactly
 
-Don't change what the code does — only how it expresses it. All inputs, outputs, side effects, error behavior, and edge cases must remain identical. If you're not sure a simplification preserves behavior, don't make it.
+不要改变代码做什么，只改变它如何表达。所有 inputs、outputs、side effects、error behavior 和 edge cases 必须保持一致。如果不确定某个 simplification 是否保持 behavior，就不要做。
 
 ```
-ASK BEFORE EVERY CHANGE:
-→ Does this produce the same output for every input?
-→ Does this maintain the same error behavior?
-→ Does this preserve the same side effects and ordering?
-→ Do all existing tests still pass without modification?
+每次变更前先问：
+→ 是否对每个 input 都产生相同 output？
+→ 是否保持相同 error behavior？
+→ 是否保持相同 side effects 和 ordering？
+→ 所有现有 tests 是否无需修改仍通过？
 ```
 
 ### 2. Follow Project Conventions
 
-Simplification means making code more consistent with the codebase, not imposing external preferences. Before simplifying:
+Simplification 是让代码更符合 codebase，而不是施加外部偏好。简化前：
 
 ```
-1. Read CLAUDE.md / project conventions
-2. Study how neighboring code handles similar patterns
-3. Match the project's style for:
+1. 阅读 CLAUDE.md / project conventions
+2. 研究 neighboring code 如何处理类似 patterns
+3. 匹配项目在这些方面的 style：
    - Import ordering and module system
    - Function declaration style
    - Naming conventions
@@ -56,11 +54,11 @@ Simplification means making code more consistent with the codebase, not imposing
    - Type annotation depth
 ```
 
-Simplification that breaks project consistency is not simplification — it's churn.
+破坏 project consistency 的 simplification 不是简化，而是 churn。
 
 ### 3. Prefer Clarity Over Cleverness
 
-Explicit code is better than compact code when the compact version requires a mental pause to parse.
+当 compact version 需要读者停下来解析时，显式代码好过紧凑代码。
 
 ```typescript
 // UNCLEAR: Dense ternary chain
@@ -91,98 +89,98 @@ for (const item of items) {
 
 ### 4. Maintain Balance
 
-Simplification has a failure mode: over-simplification. Watch for these traps:
+Simplification 有一种 failure mode：过度简化。注意这些 traps：
 
-- **Inlining too aggressively** — removing a helper that gave a concept a name makes the call site harder to read
-- **Combining unrelated logic** — two simple functions merged into one complex function is not simpler
-- **Removing "unnecessary" abstraction** — some abstractions exist for extensibility or testability, not complexity
-- **Optimizing for line count** — fewer lines is not the goal; easier comprehension is
+- **Inlining too aggressively** — 移除给 concept 命名的 helper，会让 call site 更难读
+- **Combining unrelated logic** — 两个简单 functions 合并成一个复杂 function，并不更简单
+- **Removing "unnecessary" abstraction** — 有些 abstractions 是为 extensibility 或 testability 存在，而不是复杂度
+- **Optimizing for line count** — 更少行不是目标，更容易理解才是
 
 ### 5. Scope to What Changed
 
-Default to simplifying recently modified code. Avoid drive-by refactors of unrelated code unless explicitly asked to broaden scope. Unscoped simplification creates noise in diffs and risks unintended regressions.
+默认只简化最近修改的代码。避免对无关代码做 drive-by refactors，除非用户明确要求扩大 scope。Unscoped simplification 会制造 diff 噪声，并带来 unintended regressions 风险。
 
-## The Simplification Process
+## Simplification Process
 
-### Step 1: Understand Before Touching (Chesterton's Fence)
+### Step 1: Understand Before Touching（Chesterton's Fence）
 
-Before changing or removing anything, understand why it exists. This is Chesterton's Fence: if you see a fence across a road and don't understand why it's there, don't tear it down. First understand the reason, then decide if the reason still applies.
+在改变或移除任何东西前，先理解它为什么存在。这就是 Chesterton's Fence：如果你看到路中间有栅栏，却不明白为什么在那里，不要拆掉它。先理解原因，再判断原因是否仍适用。
 
 ```
-BEFORE SIMPLIFYING, ANSWER:
-- What is this code's responsibility?
-- What calls it? What does it call?
-- What are the edge cases and error paths?
-- Are there tests that define the expected behavior?
-- Why might it have been written this way? (Performance? Platform constraint? Historical reason?)
-- Check git blame: what was the original context for this code?
+简化前先回答：
+- 这段 code 的 responsibility 是什么？
+- 谁调用它？它调用什么？
+- Edge cases 和 error paths 是什么？
+- 是否有 tests 定义 expected behavior？
+- 它为什么可能这样写？（Performance？Platform constraint？Historical reason？）
+- Check git blame：这段 code 的 original context 是什么？
 ```
 
-If you can't answer these, you're not ready to simplify. Read more context first.
+如果答不上来，就还没准备好简化。先读更多 context。
 
 ### Step 2: Identify Simplification Opportunities
 
-Scan for these patterns — each one is a concrete signal, not a vague smell:
+扫描这些 patterns。每一项都是具体 signal，不是模糊 smell：
 
 **Structural complexity:**
 
 | Pattern | Signal | Simplification |
 |---------|--------|----------------|
-| Deep nesting (3+ levels) | Hard to follow control flow | Extract conditions into guard clauses or helper functions |
-| Long functions (50+ lines) | Multiple responsibilities | Split into focused functions with descriptive names |
-| Nested ternaries | Requires mental stack to parse | Replace with if/else chains, switch, or lookup objects |
-| Boolean parameter flags | `doThing(true, false, true)` | Replace with options objects or separate functions |
-| Repeated conditionals | Same `if` check in multiple places | Extract to a well-named predicate function |
+| Deep nesting (3+ levels) | Control flow 难以跟踪 | 提取 conditions 为 guard clauses 或 helper functions |
+| Long functions (50+ lines) | 多个 responsibilities | 拆成命名清晰的 focused functions |
+| Nested ternaries | 需要 mental stack 才能解析 | 替换为 if/else chains、switch 或 lookup objects |
+| Boolean parameter flags | `doThing(true, false, true)` | 替换为 options objects 或 separate functions |
+| Repeated conditionals | 同一个 `if` check 多处出现 | 提取为命名良好的 predicate function |
 
 **Naming and readability:**
 
 | Pattern | Signal | Simplification |
 |---------|--------|----------------|
-| Generic names | `data`, `result`, `temp`, `val`, `item` | Rename to describe the content: `userProfile`, `validationErrors` |
-| Abbreviated names | `usr`, `cfg`, `btn`, `evt` | Use full words unless the abbreviation is universal (`id`, `url`, `api`) |
-| Misleading names | Function named `get` that also mutates state | Rename to reflect actual behavior |
-| Comments explaining "what" | `// increment counter` above `count++` | Delete the comment — the code is clear enough |
-| Comments explaining "why" | `// Retry because the API is flaky under load` | Keep these — they carry intent the code can't express |
+| Generic names | `data`, `result`, `temp`, `val`, `item` | Rename 为描述内容的名字：`userProfile`, `validationErrors` |
+| Abbreviated names | `usr`, `cfg`, `btn`, `evt` | 使用完整单词，除非 abbreviation 是通用的（`id`, `url`, `api`） |
+| Misleading names | 名为 `get` 的 function 同时 mutates state | Rename 以反映实际 behavior |
+| Comments explaining "what" | `// increment counter` above `count++` | 删除 comment，code 已足够清楚 |
+| Comments explaining "why" | `// Retry because the API is flaky under load` | 保留，这些承载 code 无法表达的 intent |
 
 **Redundancy:**
 
 | Pattern | Signal | Simplification |
 |---------|--------|----------------|
-| Duplicated logic | Same 5+ lines in multiple places | Extract to a shared function |
-| Dead code | Unreachable branches, unused variables, commented-out blocks | Remove (after confirming it's truly dead) |
-| Unnecessary abstractions | Wrapper that adds no value | Inline the wrapper, call the underlying function directly |
-| Over-engineered patterns | Factory-for-a-factory, strategy-with-one-strategy | Replace with the simple direct approach |
-| Redundant type assertions | Casting to a type that's already inferred | Remove the assertion |
+| Duplicated logic | 相同 5+ lines 多处出现 | 提取为 shared function |
+| Dead code | Unreachable branches、unused variables、commented-out blocks | 移除（先确认它确实 dead） |
+| Unnecessary abstractions | 不增加 value 的 wrapper | Inline wrapper，直接调用 underlying function |
+| Over-engineered patterns | Factory-for-a-factory、strategy-with-one-strategy | 替换为简单直接做法 |
+| Redundant type assertions | Cast 到已 inferred 的 type | 移除 assertion |
 
 ### Step 3: Apply Changes Incrementally
 
-Make one simplification at a time. Run tests after each change. **Submit refactoring changes separately from feature or bug fix changes.** A PR that refactors and adds a feature is two PRs — split them.
+一次只做一个 simplification。每次 change 后运行 tests。**Refactoring changes 要与 feature 或 bug fix changes 分开提交。** 一个 PR 同时 refactor 和加 feature，就是两个 PR，拆开。
 
 ```
-FOR EACH SIMPLIFICATION:
-1. Make the change
-2. Run the test suite
-3. If tests pass → commit (or continue to next simplification)
-4. If tests fail → revert and reconsider
+对每个 simplification：
+1. 做 change
+2. 运行 test suite
+3. 如果 tests pass → commit（或继续下一个 simplification）
+4. 如果 tests fail → revert 并重新考虑
 ```
 
-Avoid batching multiple simplifications into a single untested change. If something breaks, you need to know which simplification caused it.
+避免把多个 simplifications 批量放进一个未测试 change。如果出问题，你需要知道是哪一个 simplification 导致的。
 
-**The Rule of 500:** If a refactoring would touch more than 500 lines, invest in automation (codemods, sed scripts, AST transforms) rather than making the changes by hand. Manual edits at that scale are error-prone and exhausting to review.
+**Rule of 500:** 如果 refactoring 会触碰超过 500 行，投资自动化（codemods、sed scripts、AST transforms），不要手工改。这个规模的 manual edits 容易出错，也难以 review。
 
 ### Step 4: Verify the Result
 
-After all simplifications, step back and evaluate the whole:
+所有 simplifications 完成后，退一步评估整体：
 
 ```
-COMPARE BEFORE AND AFTER:
-- Is the simplified version genuinely easier to understand?
-- Did you introduce any new patterns inconsistent with the codebase?
-- Is the diff clean and reviewable?
-- Would a teammate approve this change?
+比较前后：
+- Simplified version 是否真的更容易理解？
+- 是否引入了任何与 codebase 不一致的新 patterns？
+- Diff 是否 clean 且 reviewable？
+- Teammate 会 approve 这个 change 吗？
 ```
 
-If the "simplified" version is harder to understand or review, revert. Not every simplification attempt succeeds.
+如果“simplified”版本更难理解或 review，就 revert。不是每次 simplification attempt 都会成功。
 
 ## Language-Specific Guidance
 
@@ -295,37 +293,35 @@ function UserBadge({ user }: Props) {
 ```
 
 ## Common Rationalizations
-
 | Rationalization | Reality |
 |---|---|
-| "It's working, no need to touch it" | Working code that's hard to read will be hard to fix when it breaks. Simplifying now saves time on every future change. |
-| "Fewer lines is always simpler" | A 1-line nested ternary is not simpler than a 5-line if/else. Simplicity is about comprehension speed, not line count. |
-| "I'll just quickly simplify this unrelated code too" | Unscoped simplification creates noisy diffs and risks regressions in code you didn't intend to change. Stay focused. |
-| "The types make it self-documenting" | Types document structure, not intent. A well-named function explains *why* better than a type signature explains *what*. |
-| "This abstraction might be useful later" | Don't preserve speculative abstractions. If it's not used now, it's complexity without value. Remove it and re-add when needed. |
-| "The original author must have had a reason" | Maybe. Check git blame — apply Chesterton's Fence. But accumulated complexity often has no reason; it's just the residue of iteration under pressure. |
-| "I'll refactor while adding this feature" | Separate refactoring from feature work. Mixed changes are harder to review, revert, and understand in history. |
+| “能工作，没必要动” | 难读的 working code 在出问题时也难修。现在简化，会节省未来每次 change 的时间。 |
+| “行数越少越简单” | 1 行 nested ternary 不比 5 行 if/else 简单。Simplicity 关乎理解速度，不是 line count。 |
+| “我顺手把这段无关代码也简化一下” | Unscoped simplification 会制造 noisy diffs，并给你无意修改的代码带来 regressions 风险。保持聚焦。 |
+| “Types 让它 self-documenting” | Types 记录 structure，不记录 intent。命名良好的 function 比 type signature 更能解释 *why*。 |
+| “这个 abstraction 以后可能有用” | 不要保留 speculative abstractions。如果现在没用，它就是没有价值的复杂度。移除，未来需要再加。 |
+| “原作者肯定有理由” | 也许。Check git blame，应用 Chesterton's Fence。但累积复杂度经常没有理由，只是压力下迭代的残留。 |
+| “我加 feature 时顺便 refactor” | 把 refactoring 与 feature work 分开。Mixed changes 更难 review、revert，也更难理解历史。 |
 
 ## Red Flags
 
-- Simplification that requires modifying tests to pass (you likely changed behavior)
-- "Simplified" code that is longer and harder to follow than the original
-- Renaming things to match your preferences rather than project conventions
-- Removing error handling because "it makes the code cleaner"
-- Simplifying code you don't fully understand
-- Batching many simplifications into one large, hard-to-review commit
-- Refactoring code outside the scope of the current task without being asked
+- Simplification 需要修改 tests 才能通过（你很可能改变了 behavior）
+- “Simplified” code 比原版更长且更难跟踪
+- 按你的偏好而不是 project conventions 重命名
+- 因为“让代码更干净”而移除 error handling
+- 简化你尚未完全理解的代码
+- 把许多 simplifications 批量放进一个大而难 review 的 commit
+- 未经要求就 refactor 当前 task scope 外的代码
 
 ## Verification
+完成 simplification pass 后：
 
-After completing a simplification pass:
-
-- [ ] All existing tests pass without modification
-- [ ] Build succeeds with no new warnings
-- [ ] Linter/formatter passes (no style regressions)
-- [ ] Each simplification is a reviewable, incremental change
-- [ ] The diff is clean — no unrelated changes mixed in
-- [ ] Simplified code follows project conventions (checked against CLAUDE.md or equivalent)
-- [ ] No error handling was removed or weakened
-- [ ] No dead code was left behind (unused imports, unreachable branches)
-- [ ] A teammate or review agent would approve the change as a net improvement
+- [ ] 所有现有 tests 无需修改即可通过
+- [ ] Build 成功，且没有 new warnings
+- [ ] Linter/formatter 通过（无 style regressions）
+- [ ] 每个 simplification 都是 reviewable、incremental change
+- [ ] Diff clean，未混入 unrelated changes
+- [ ] Simplified code 遵循 project conventions（已对照 CLAUDE.md 或等价文件检查）
+- [ ] 没有移除或削弱 error handling
+- [ ] 没有留下 dead code（unused imports、unreachable branches）
+- [ ] Teammate 或 review agent 会认为该 change 是 net improvement 并 approve

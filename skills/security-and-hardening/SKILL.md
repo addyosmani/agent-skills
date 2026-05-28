@@ -1,55 +1,55 @@
 ---
 name: security-and-hardening
-description: Hardens code against vulnerabilities. Use when handling user input, authentication, data storage, or external integrations. Use when building any feature that accepts untrusted data, manages user sessions, or interacts with third-party services.
+description: 加固代码以抵御 vulnerabilities。处理 user input、authentication、data storage 或 external integrations 时使用。构建任何接受 untrusted data、管理 user sessions 或与 third-party services 交互的 feature 时使用。
 ---
 
 # Security and Hardening
 
 ## Overview
 
-Security-first development practices for web applications. Treat every external input as hostile, every secret as sacred, and every authorization check as mandatory. Security isn't a phase — it's a constraint on every line of code that touches user data, authentication, or external systems.
+面向 web applications 的 security-first development practices。把每个 external input 都视为 hostile，把每个 secret 都视为 sacred，把每个 authorization check 都视为 mandatory。Security 不是一个阶段，而是每行触达 user data、authentication 或 external systems 的代码都必须遵守的约束。
 
 ## When to Use
 
-- Building anything that accepts user input
-- Implementing authentication or authorization
-- Storing or transmitting sensitive data
-- Integrating with external APIs or services
-- Adding file uploads, webhooks, or callbacks
-- Handling payment or PII data
+- 构建任何接受 user input 的功能
+- 实现 authentication 或 authorization
+- 存储或传输 sensitive data
+- 集成 external APIs 或 services
+- 添加 file uploads、webhooks 或 callbacks
+- 处理 payment 或 PII data
 
 ## The Three-Tier Boundary System
 
 ### Always Do (No Exceptions)
 
-- **Validate all external input** at the system boundary (API routes, form handlers)
-- **Parameterize all database queries** — never concatenate user input into SQL
-- **Encode output** to prevent XSS (use framework auto-escaping, don't bypass it)
-- **Use HTTPS** for all external communication
-- **Hash passwords** with bcrypt/scrypt/argon2 (never store plaintext)
-- **Set security headers** (CSP, HSTS, X-Frame-Options, X-Content-Type-Options)
+- **Validate all external input** at the system boundary（API routes、form handlers）
+- **Parameterize all database queries**，绝不要把 user input 拼接进 SQL
+- **Encode output** 以防止 XSS（使用 framework auto-escaping，不要绕过）
+- **Use HTTPS** 进行所有 external communication
+- **Hash passwords** with bcrypt/scrypt/argon2（绝不存 plaintext）
+- **Set security headers**（CSP、HSTS、X-Frame-Options、X-Content-Type-Options）
 - **Use httpOnly, secure, sameSite cookies** for sessions
-- **Run `npm audit`** (or equivalent) before every release
+- **Run `npm audit`**（或等价工具）before every release
 
 ### Ask First (Requires Human Approval)
 
-- Adding new authentication flows or changing auth logic
-- Storing new categories of sensitive data (PII, payment info)
-- Adding new external service integrations
-- Changing CORS configuration
-- Adding file upload handlers
-- Modifying rate limiting or throttling
-- Granting elevated permissions or roles
+- 添加新的 authentication flows 或修改 auth logic
+- 存储新的 sensitive data 类别（PII、payment info）
+- 添加新的 external service integrations
+- 修改 CORS configuration
+- 添加 file upload handlers
+- 修改 rate limiting 或 throttling
+- 授予 elevated permissions 或 roles
 
 ### Never Do
 
-- **Never commit secrets** to version control (API keys, passwords, tokens)
-- **Never log sensitive data** (passwords, tokens, full credit card numbers)
+- **Never commit secrets** 到 version control（API keys、passwords、tokens）
+- **Never log sensitive data**（passwords、tokens、完整 credit card numbers）
 - **Never trust client-side validation** as a security boundary
 - **Never disable security headers** for convenience
 - **Never use `eval()` or `innerHTML`** with user-provided data
-- **Never store sessions in client-accessible storage** (localStorage for auth tokens)
-- **Never expose stack traces** or internal error details to users
+- **Never store sessions in client-accessible storage**（auth tokens 不放 localStorage）
+- **Never expose stack traces** 或 internal error details 给 users
 
 ## OWASP Top 10 Prevention
 
@@ -215,30 +215,30 @@ function validateUpload(file: UploadedFile) {
 
 ## Triaging npm audit Results
 
-Not all audit findings require immediate action. Use this decision tree:
+并非所有 audit findings 都需要立即处理。使用此 decision tree：
 
 ```
 npm audit reports a vulnerability
 ├── Severity: critical or high
-│   ├── Is the vulnerable code reachable in your app?
-│   │   ├── YES --> Fix immediately (update, patch, or replace the dependency)
-│   │   └── NO (dev-only dep, unused code path) --> Fix soon, but not a blocker
-│   └── Is a fix available?
-│       ├── YES --> Update to the patched version
-│       └── NO --> Check for workarounds, consider replacing the dependency, or add to allowlist with a review date
+│   ├── vulnerable code 在 app 中是否 reachable？
+│   │   ├── YES --> 立即修复（update、patch 或 replace dependency）
+│   │   └── NO（dev-only dep、unused code path）--> 尽快修复，但不阻塞
+│   └── 是否有 fix？
+│       ├── YES --> Update 到 patched version
+│       └── NO --> 检查 workarounds，考虑 replace dependency，或加入 allowlist 并设置 review date
 ├── Severity: moderate
-│   ├── Reachable in production? --> Fix in the next release cycle
-│   └── Dev-only? --> Fix when convenient, track in backlog
+│   ├── Production 中 reachable？ --> 下一个 release cycle 修复
+│   └── Dev-only？ --> 方便时修复，并在 backlog 跟踪
 └── Severity: low
-    └── Track and fix during regular dependency updates
+    └── 跟踪，并在常规 dependency updates 中修复
 ```
 
 **Key questions:**
-- Is the vulnerable function actually called in your code path?
-- Is the dependency a runtime dependency or dev-only?
-- Is the vulnerability exploitable given your deployment context (e.g., a server-side vulnerability in a client-only app)?
+- Vulnerable function 是否真的在你的 code path 中被调用？
+- Dependency 是 runtime dependency 还是 dev-only？
+- 在你的 deployment context 下该 vulnerability 是否 exploitable（例如 client-only app 中的 server-side vulnerability）？
 
-When you defer a fix, document the reason and set a review date.
+当你 defer fix 时，记录原因并设置 review date。
 
 ## Rate Limiting
 
@@ -264,9 +264,9 @@ app.use('/api/auth/', rateLimit({
 
 ```
 .env files:
-  ├── .env.example  → Committed (template with placeholder values)
-  ├── .env          → NOT committed (contains real secrets)
-  └── .env.local    → NOT committed (local overrides)
+  ├── .env.example  → Committed（包含 placeholder values 的 template）
+  ├── .env          → NOT committed（包含真实 secrets）
+  └── .env.local    → NOT committed（local overrides）
 
 .gitignore must include:
   .env
@@ -276,7 +276,7 @@ app.use('/api/auth/', rateLimit({
   *.key
 ```
 
-**Always check before committing:**
+**每次 committing 前都检查：**
 ```bash
 # Check for accidentally staged secrets
 git diff --cached | grep -i "password\|secret\|api_key\|token"
@@ -286,64 +286,64 @@ git diff --cached | grep -i "password\|secret\|api_key\|token"
 
 ```markdown
 ### Authentication
-- [ ] Passwords hashed with bcrypt/scrypt/argon2 (salt rounds ≥ 12)
-- [ ] Session tokens are httpOnly, secure, sameSite
-- [ ] Login has rate limiting
-- [ ] Password reset tokens expire
+- [ ] Passwords 使用 bcrypt/scrypt/argon2 hash（salt rounds ≥ 12）
+- [ ] Session tokens 是 httpOnly、secure、sameSite
+- [ ] Login 有 rate limiting
+- [ ] Password reset tokens 会过期
 
 ### Authorization
-- [ ] Every endpoint checks user permissions
-- [ ] Users can only access their own resources
-- [ ] Admin actions require admin role verification
+- [ ] 每个 endpoint 都检查 user permissions
+- [ ] Users 只能访问自己的 resources
+- [ ] Admin actions 需要 admin role verification
 
 ### Input
-- [ ] All user input validated at the boundary
-- [ ] SQL queries are parameterized
-- [ ] HTML output is encoded/escaped
+- [ ] 所有 user input 都在 boundary validated
+- [ ] SQL queries 已 parameterized
+- [ ] HTML output 已 encoded/escaped
 
 ### Data
-- [ ] No secrets in code or version control
-- [ ] Sensitive fields excluded from API responses
-- [ ] PII encrypted at rest (if applicable)
+- [ ] Code 或 version control 中无 secrets
+- [ ] Sensitive fields 从 API responses 中排除
+- [ ] PII at rest 已 encrypted（如适用）
 
 ### Infrastructure
-- [ ] Security headers configured (CSP, HSTS, etc.)
-- [ ] CORS restricted to known origins
-- [ ] Dependencies audited for vulnerabilities
-- [ ] Error messages don't expose internals
+- [ ] Security headers 已配置（CSP、HSTS 等）
+- [ ] CORS 限制为 known origins
+- [ ] Dependencies 已 audit vulnerabilities
+- [ ] Error messages 不暴露 internals
 ```
 ## See Also
 
-For detailed security checklists and pre-commit verification steps, see `references/security-checklist.md`.
+详细 security checklists 和 pre-commit verification steps 见 `references/security-checklist.md`。
 
 ## Common Rationalizations
 
 | Rationalization | Reality |
 |---|---|
-| "This is an internal tool, security doesn't matter" | Internal tools get compromised. Attackers target the weakest link. |
-| "We'll add security later" | Security retrofitting is 10x harder than building it in. Add it now. |
-| "No one would try to exploit this" | Automated scanners will find it. Security by obscurity is not security. |
-| "The framework handles security" | Frameworks provide tools, not guarantees. You still need to use them correctly. |
-| "It's just a prototype" | Prototypes become production. Security habits from day one. |
+| “This is an internal tool, security doesn't matter” | Internal tools 也会被攻破。Attackers 会攻击最弱环节。 |
+| “We'll add security later” | 事后补 security 难度是内建的 10 倍。现在就加。 |
+| “No one would try to exploit this” | Automated scanners 会找到它。Security by obscurity 不是 security。 |
+| “The framework handles security” | Frameworks 提供工具，不提供保证。你仍需正确使用。 |
+| “It's just a prototype” | Prototypes 会进入 production。从 day one 建立 security habits。 |
 
 ## Red Flags
 
-- User input passed directly to database queries, shell commands, or HTML rendering
-- Secrets in source code or commit history
-- API endpoints without authentication or authorization checks
-- Missing CORS configuration or wildcard (`*`) origins
-- No rate limiting on authentication endpoints
-- Stack traces or internal errors exposed to users
-- Dependencies with known critical vulnerabilities
+- User input 直接传入 database queries、shell commands 或 HTML rendering
+- Secrets 出现在 source code 或 commit history
+- API endpoints 缺少 authentication 或 authorization checks
+- 缺失 CORS configuration 或使用 wildcard（`*`）origins
+- Authentication endpoints 没有 rate limiting
+- Stack traces 或 internal errors 暴露给 users
+- Dependencies 有已知 critical vulnerabilities
 
 ## Verification
 
-After implementing security-relevant code:
+实现 security-relevant code 后：
 
-- [ ] `npm audit` shows no critical or high vulnerabilities
-- [ ] No secrets in source code or git history
-- [ ] All user input validated at system boundaries
-- [ ] Authentication and authorization checked on every protected endpoint
-- [ ] Security headers present in response (check with browser DevTools)
-- [ ] Error responses don't expose internal details
-- [ ] Rate limiting active on auth endpoints
+- [ ] `npm audit` 没有 critical 或 high vulnerabilities
+- [ ] Source code 或 git history 中无 secrets
+- [ ] 所有 user input 在 system boundaries validated
+- [ ] 每个 protected endpoint 都检查 authentication 和 authorization
+- [ ] Response 中存在 security headers（用 browser DevTools 检查）
+- [ ] Error responses 不暴露 internal details
+- [ ] Auth endpoints 上 rate limiting active

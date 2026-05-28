@@ -1,40 +1,38 @@
 ---
 name: planning-and-task-breakdown
-description: Breaks work into ordered tasks. Use when you have a spec or clear requirements and need to break work into implementable tasks. Use when a task feels too large to start, when you need to estimate scope, or when parallel work is possible.
+description: 将 work 拆成有序 tasks。用于已有 spec 或清晰 requirements、需要拆成可实现 tasks 时。也用于 task 太大而无法开始、需要估算 scope，或可以并行 work 时。
 ---
 
 # Planning and Task Breakdown
 
 ## Overview
-
-Decompose work into small, verifiable tasks with explicit acceptance criteria. Good task breakdown is the difference between an agent that completes work reliably and one that produces a tangled mess. Every task should be small enough to implement, test, and verify in a single focused session.
+将 work 拆解为小而可验证的 tasks，并配有明确 acceptance criteria。好的 task breakdown，决定了 agent 是能可靠完成工作，还是产出一团乱麻。每个 task 都应足够小，可以在一次专注 session 内实现、测试和验证。
 
 ## When to Use
+- 你已有 spec，需要拆成可实现 units
+- Task 太大或太模糊，难以开始
+- Work 需要跨多个 agents 或 sessions 并行
+- 你需要向人类沟通 scope
+- 实现顺序不明显
 
-- You have a spec and need to break it into implementable units
-- A task feels too large or vague to start
-- Work needs to be parallelized across multiple agents or sessions
-- You need to communicate scope to a human
-- The implementation order isn't obvious
+**何时不要使用：** Scope 明显的单文件变更，或 spec 已包含定义良好的 tasks。
 
-**When NOT to use:** Single-file changes with obvious scope, or when the spec already contains well-defined tasks.
+## Planning 流程
 
-## The Planning Process
+### Step 1: 进入 Plan Mode
 
-### Step 1: Enter Plan Mode
+写任何代码前，在 read-only mode 下操作：
 
-Before writing any code, operate in read-only mode:
+- 阅读 spec 和相关 codebase sections
+- 识别 existing patterns 和 conventions
+- 映射 components 之间的 dependencies
+- 记录 risks 和 unknowns
 
-- Read the spec and relevant codebase sections
-- Identify existing patterns and conventions
-- Map dependencies between components
-- Note risks and unknowns
+**Planning 期间不要写代码。** 输出是 plan document，不是 implementation。
 
-**Do NOT write code during planning.** The output is a plan document, not implementation.
+### Step 2: 识别 Dependency Graph
 
-### Step 2: Identify the Dependency Graph
-
-Map what depends on what:
+映射谁依赖谁：
 
 ```
 Database schema
@@ -52,49 +50,49 @@ Database schema
     └── Seed data / migrations
 ```
 
-Implementation order follows the dependency graph bottom-up: build foundations first.
+实现顺序按 dependency graph 自底向上：先构建 foundations。
 
-### Step 3: Slice Vertically
+### Step 3: 垂直切片
 
-Instead of building all the database, then all the API, then all the UI — build one complete feature path at a time:
+不要先构建所有 database，再构建所有 API，再构建所有 UI；一次构建一条完整 feature path：
 
-**Bad (horizontal slicing):**
+**坏（horizontal slicing）：**
 ```
-Task 1: Build entire database schema
-Task 2: Build all API endpoints
-Task 3: Build all UI components
-Task 4: Connect everything
-```
-
-**Good (vertical slicing):**
-```
-Task 1: User can create an account (schema + API + UI for registration)
-Task 2: User can log in (auth schema + API + UI for login)
-Task 3: User can create a task (task schema + API + UI for creation)
-Task 4: User can view task list (query + API + UI for list view)
+Task 1: 构建整个 database schema
+Task 2: 构建所有 API endpoints
+Task 3: 构建所有 UI components
+Task 4: 连接所有内容
 ```
 
-Each vertical slice delivers working, testable functionality.
+**好（vertical slicing）：**
+```
+Task 1: User 可以创建 account（registration 的 schema + API + UI）
+Task 2: User 可以 log in（login 的 auth schema + API + UI）
+Task 3: User 可以创建 task（creation 的 task schema + API + UI）
+Task 4: User 可以查看 task list（list view 的 query + API + UI）
+```
 
-### Step 4: Write Tasks
+每个 vertical slice 都交付可工作的、可测试的 functionality。
 
-Each task follows this structure:
+### Step 4: 编写 Tasks
+
+每个 task 遵循此结构：
 
 ```markdown
-## Task [N]: [Short descriptive title]
+## Task [N]: [简短描述性标题]
 
-**Description:** One paragraph explaining what this task accomplishes.
+**Description:** 一段说明此 task 完成什么。
 
 **Acceptance criteria:**
-- [ ] [Specific, testable condition]
-- [ ] [Specific, testable condition]
+- [ ] [具体、可测试的条件]
+- [ ] [具体、可测试的条件]
 
 **Verification:**
 - [ ] Tests pass: `npm test -- --grep "feature-name"`
 - [ ] Build succeeds: `npm run build`
-- [ ] Manual check: [description of what to verify]
+- [ ] Manual check: [要验证什么的说明]
 
-**Dependencies:** [Task numbers this depends on, or "None"]
+**Dependencies:** [依赖的 Task 编号，或 "None"]
 
 **Files likely touched:**
 - `src/path/to/file.ts`
@@ -103,42 +101,42 @@ Each task follows this structure:
 **Estimated scope:** [Small: 1-2 files | Medium: 3-5 files | Large: 5+ files]
 ```
 
-### Step 5: Order and Checkpoint
+### Step 5: 排序并设置 Checkpoint
 
-Arrange tasks so that:
+安排 tasks 时确保：
 
-1. Dependencies are satisfied (build foundation first)
-2. Each task leaves the system in a working state
-3. Verification checkpoints occur after every 2-3 tasks
-4. High-risk tasks are early (fail fast)
+1. Dependencies 已满足（先构建 foundation）
+2. 每个 task 完成后系统都处于可工作状态
+3. 每 2-3 个 tasks 后有 verification checkpoints
+4. 高风险 tasks 靠前（fail fast）
 
-Add explicit checkpoints:
+添加明确 checkpoints：
 
 ```markdown
 ## Checkpoint: After Tasks 1-3
-- [ ] All tests pass
+- [ ] 所有 tests pass
 - [ ] Application builds without errors
 - [ ] Core user flow works end-to-end
-- [ ] Review with human before proceeding
+- [ ] 继续前与人类 review
 ```
 
-## Task Sizing Guidelines
+## Task 大小指南
 
 | Size | Files | Scope | Example |
 |------|-------|-------|---------|
-| **XS** | 1 | Single function or config change | Add a validation rule |
-| **S** | 1-2 | One component or endpoint | Add a new API endpoint |
-| **M** | 3-5 | One feature slice | User registration flow |
+| **XS** | 1 | 单个 function 或 config change | 添加 validation rule |
+| **S** | 1-2 | 一个 component 或 endpoint | 添加新 API endpoint |
+| **M** | 3-5 | 一个 feature slice | User registration flow |
 | **L** | 5-8 | Multi-component feature | Search with filtering and pagination |
-| **XL** | 8+ | **Too large — break it down further** | — |
+| **XL** | 8+ | **太大，需要继续拆分** | — |
 
-If a task is L or larger, it should be broken into smaller tasks. An agent performs best on S and M tasks.
+如果 task 是 L 或更大，应拆成更小 tasks。Agent 最适合执行 S 和 M tasks。
 
-**When to break a task down further:**
-- It would take more than one focused session (roughly 2+ hours of agent work)
-- You cannot describe the acceptance criteria in 3 or fewer bullet points
-- It touches two or more independent subsystems (e.g., auth and billing)
-- You find yourself writing "and" in the task title (a sign it is two tasks)
+**何时继续拆分 task：**
+- 需要超过一次专注 session（约 2+ 小时 agent work）
+- 无法用 3 条或更少 bullets 描述 acceptance criteria
+- 触及两个或更多独立 subsystems（例如 auth 和 billing）
+- Task title 中出现 “and”（通常意味着这是两个 tasks）
 
 ## Plan Document Template
 
@@ -146,11 +144,11 @@ If a task is L or larger, it should be broken into smaller tasks. An agent perfo
 # Implementation Plan: [Feature/Project Name]
 
 ## Overview
-[One paragraph summary of what we're building]
+[一段总结要构建什么]
 
 ## Architecture Decisions
-- [Key decision 1 and rationale]
-- [Key decision 2 and rationale]
+- [Key decision 1 及 rationale]
+- [Key decision 2 及 rationale]
 
 ## Task List
 
@@ -159,7 +157,7 @@ If a task is L or larger, it should be broken into smaller tasks. An agent perfo
 - [ ] Task 2: ...
 
 ### Checkpoint: Foundation
-- [ ] Tests pass, builds clean
+- [ ] Tests pass，builds clean
 
 ### Phase 2: Core Features
 - [ ] Task 3: ...
@@ -182,42 +180,41 @@ If a task is L or larger, it should be broken into smaller tasks. An agent perfo
 | [Risk] | [High/Med/Low] | [Strategy] |
 
 ## Open Questions
-- [Question needing human input]
+- [需要人类输入的问题]
 ```
 
-## Parallelization Opportunities
+## 并行化机会
 
-When multiple agents or sessions are available:
+当有多个 agents 或 sessions 可用时：
 
-- **Safe to parallelize:** Independent feature slices, tests for already-implemented features, documentation
-- **Must be sequential:** Database migrations, shared state changes, dependency chains
-- **Needs coordination:** Features that share an API contract (define the contract first, then parallelize)
+- **可安全并行：** 独立 feature slices、已实现 features 的 tests、documentation
+- **必须串行：** Database migrations、shared state changes、dependency chains
+- **需要协调：** 共享 API contract 的 features（先定义 contract，再并行）
 
 ## Common Rationalizations
-
-| Rationalization | Reality |
+| 合理化 | 现实 |
 |---|---|
-| "I'll figure it out as I go" | That's how you end up with a tangled mess and rework. 10 minutes of planning saves hours. |
-| "The tasks are obvious" | Write them down anyway. Explicit tasks surface hidden dependencies and forgotten edge cases. |
-| "Planning is overhead" | Planning is the task. Implementation without a plan is just typing. |
-| "I can hold it all in my head" | Context windows are finite. Written plans survive session boundaries and compaction. |
+| “我会边做边弄清楚” | 这会导致一团乱麻和返工。10 分钟 planning 可节省数小时。 |
+| “Tasks 很明显” | 仍然写下来。明确 tasks 会暴露隐藏 dependencies 和被遗忘的 edge cases。 |
+| “Planning 是 overhead” | Planning 就是 task。没有 plan 的 implementation 只是打字。 |
+| “我可以全记在脑子里” | Context windows 有限。书面 plans 能跨 session boundaries 和 compaction 存活。 |
 
 ## Red Flags
 
-- Starting implementation without a written task list
-- Tasks that say "implement the feature" without acceptance criteria
-- No verification steps in the plan
-- All tasks are XL-sized
-- No checkpoints between tasks
-- Dependency order isn't considered
+- 没有书面 task list 就开始 implementation
+- Tasks 写成“implement the feature”，却没有 acceptance criteria
+- Plan 中没有 verification steps
+- 所有 tasks 都是 XL-sized
+- Tasks 之间没有 checkpoints
+- 未考虑 dependency order
 
 ## Verification
 
-Before starting implementation, confirm:
+开始 implementation 前，确认：
 
-- [ ] Every task has acceptance criteria
-- [ ] Every task has a verification step
-- [ ] Task dependencies are identified and ordered correctly
-- [ ] No task touches more than ~5 files
-- [ ] Checkpoints exist between major phases
-- [ ] The human has reviewed and approved the plan
+- [ ] 每个 task 都有 acceptance criteria
+- [ ] 每个 task 都有 verification step
+- [ ] Task dependencies 已识别且顺序正确
+- [ ] 没有 task 触及超过约 5 个 files
+- [ ] Major phases 之间存在 checkpoints
+- [ ] 人类已 review 并 approve plan

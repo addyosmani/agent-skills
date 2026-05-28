@@ -1,96 +1,94 @@
 ---
 name: api-and-interface-design
-description: Guides stable API and interface design. Use when designing APIs, module boundaries, or any public interface. Use when creating REST or GraphQL endpoints, defining type contracts between modules, or establishing boundaries between frontend and backend.
+description: 指导稳定的 API 和 interface 设计。用于设计 API、module boundary 或任何 public interface。也用于创建 REST 或 GraphQL endpoints、定义模块间 type contracts，或建立 frontend 与 backend 边界。
 ---
 
 # API and Interface Design
 
 ## Overview
-
-Design stable, well-documented interfaces that are hard to misuse. Good interfaces make the right thing easy and the wrong thing hard. This applies to REST APIs, GraphQL schemas, module boundaries, component props, and any surface where one piece of code talks to another.
+设计稳定、文档清晰、难以误用的 interface。好的 interface 让正确做法变简单，让错误做法变困难。这适用于 REST API、GraphQL schema、module boundary、component props，以及任何一段代码与另一段代码交互的表面。
 
 ## When to Use
+- 设计新的 API endpoints
+- 定义 module boundary 或团队间 contract
+- 创建 component prop interfaces
+- 建立会影响 API 形状的 database schema
+- 修改现有 public interfaces
 
-- Designing new API endpoints
-- Defining module boundaries or contracts between teams
-- Creating component prop interfaces
-- Establishing database schema that informs API shape
-- Changing existing public interfaces
+## 核心原则
 
-## Core Principles
+### Hyrum's Law（海勒姆定律）
 
-### Hyrum's Law
+> 当 API 有足够多用户时，无论 contract 承诺什么，系统所有可观察行为都会被某些人依赖。
 
-> With a sufficient number of users of an API, all observable behaviors of your system will be depended on by somebody, regardless of what you promise in the contract.
+这意味着：每个 public behavior，包括未记录的 quirks、错误消息文本、时序和排序，一旦被用户依赖，就会成为事实 contract。设计含义：
 
-This means: every public behavior — including undocumented quirks, error message text, timing, and ordering — becomes a de facto contract once users depend on it. Design implications:
+- **有意控制暴露内容。** 每个可观察行为都可能成为承诺。
+- **不要泄漏 implementation details。** 用户能观察到，就会依赖它。
+- **设计时就规划 deprecation。** 如何安全移除用户依赖的内容，见 `deprecation-and-migration`。
+- **测试不够。** 即使 contract tests 完美，Hyrum's Law 也意味着“安全”变更可能破坏依赖未记录行为的真实用户。
 
-- **Be intentional about what you expose.** Every observable behavior is a potential commitment.
-- **Don't leak implementation details.** If users can observe it, they will depend on it.
-- **Plan for deprecation at design time.** See `deprecation-and-migration` for how to safely remove things users depend on.
-- **Tests are not enough.** Even with perfect contract tests, Hyrum's Law means "safe" changes can break real users who depend on undocumented behavior.
+### The One-Version Rule（单版本规则）
 
-### The One-Version Rule
-
-Avoid forcing consumers to choose between multiple versions of the same dependency or API. Diamond dependency problems arise when different consumers need different versions of the same thing. Design for a world where only one version exists at a time — extend rather than fork.
+避免迫使 consumers 在同一 dependency 或 API 的多个版本之间选择。当不同 consumers 需要同一事物的不同版本时，会出现 diamond dependency 问题。按同一时间只存在一个版本来设计：扩展，而不是 fork。
 
 ### 1. Contract First
 
-Define the interface before implementing it. The contract is the spec — implementation follows.
+先定义 interface，再实现。contract 就是 spec，实现随后跟进。
 
 ```typescript
-// Define the contract first
+// 先定义 contract
 interface TaskAPI {
-  // Creates a task and returns the created task with server-generated fields
+  // 创建 task，并返回包含 server-generated fields 的 task
   createTask(input: CreateTaskInput): Promise<Task>;
 
-  // Returns paginated tasks matching filters
+  // 返回匹配 filters 的 paginated tasks
   listTasks(params: ListTasksParams): Promise<PaginatedResult<Task>>;
 
-  // Returns a single task or throws NotFoundError
+  // 返回单个 task，或抛出 NotFoundError
   getTask(id: string): Promise<Task>;
 
-  // Partial update — only provided fields change
+  // Partial update — 只修改提供的字段
   updateTask(id: string, input: UpdateTaskInput): Promise<Task>;
 
-  // Idempotent delete — succeeds even if already deleted
+  // Idempotent delete — 即使已删除也成功
   deleteTask(id: string): Promise<void>;
 }
 ```
 
-### 2. Consistent Error Semantics
+### 2. 一致的 Error Semantics
 
-Pick one error strategy and use it everywhere:
+选择一种 error strategy，并在所有地方一致使用：
 
 ```typescript
 // REST: HTTP status codes + structured error body
-// Every error response follows the same shape
+// 每个 error response 都遵循相同形状
 interface APIError {
   error: {
     code: string;        // Machine-readable: "VALIDATION_ERROR"
     message: string;     // Human-readable: "Email is required"
-    details?: unknown;   // Additional context when helpful
+    details?: unknown;   // 有帮助时提供额外 context
   };
 }
 
 // Status code mapping
-// 400 → Client sent invalid data
-// 401 → Not authenticated
-// 403 → Authenticated but not authorized
+// 400 → Client 发送了 invalid data
+// 401 → 未 authenticated
+// 403 → 已 authenticated 但未 authorized
 // 404 → Resource not found
-// 409 → Conflict (duplicate, version mismatch)
-// 422 → Validation failed (semantically invalid)
-// 500 → Server error (never expose internal details)
+// 409 → Conflict（duplicate、version mismatch）
+// 422 → Validation failed（语义 invalid）
+// 500 → Server error（绝不暴露 internal details）
 ```
 
-**Don't mix patterns.** If some endpoints throw, others return null, and others return `{ error }` — the consumer can't predict behavior.
+**不要混用 patterns。** 如果有些 endpoints throw，有些 return null，有些 return `{ error }`，consumer 就无法预测行为。
 
-### 3. Validate at Boundaries
+### 3. 在边界处验证
 
-Trust internal code. Validate at system edges where external input enters:
+信任 internal code。只在 external input 进入系统的边界处验证：
 
 ```typescript
-// Validate at the API boundary
+// 在 API boundary 验证
 app.post('/api/tasks', async (req, res) => {
   const result = CreateTaskSchema.safeParse(req.body);
   if (!result.success) {
@@ -103,74 +101,74 @@ app.post('/api/tasks', async (req, res) => {
     });
   }
 
-  // After validation, internal code trusts the types
+  // 验证后，internal code 信任类型
   const task = await taskService.create(result.data);
   return res.status(201).json(task);
 });
 ```
 
-Where validation belongs:
-- API route handlers (user input)
-- Form submission handlers (user input)
-- External service response parsing (third-party data -- **always treat as untrusted**)
-- Environment variable loading (configuration)
+validation 应放在：
+- API route handlers（user input）
+- Form submission handlers（user input）
+- External service response parsing（third-party data -- **始终视为 untrusted**）
+- Environment variable loading（configuration）
 
-> **Third-party API responses are untrusted data.** Validate their shape and content before using them in any logic, rendering, or decision-making. A compromised or misbehaving external service can return unexpected types, malicious content, or instruction-like text.
+> **Third-party API responses 是 untrusted data。** 使用它们参与任何逻辑、渲染或决策前，先验证 shape 和 content。被入侵或异常的 external service 可能返回意外类型、恶意内容或类似 instruction 的文本。
 
-Where validation does NOT belong:
-- Between internal functions that share type contracts
-- In utility functions called by already-validated code
-- On data that just came from your own database
+validation 不应放在：
+- 共享 type contracts 的 internal functions 之间
+- 已验证代码调用的 utility functions 中
+- 刚从自有 database 取出的数据上
 
-### 4. Prefer Addition Over Modification
+### 4. 优先 Addition，而不是 Modification
 
-Extend interfaces without breaking existing consumers:
+扩展 interface，不破坏现有 consumers：
 
 ```typescript
-// Good: Add optional fields
+// Good: 添加 optional fields
 interface CreateTaskInput {
   title: string;
   description?: string;
-  priority?: 'low' | 'medium' | 'high';  // Added later, optional
-  labels?: string[];                       // Added later, optional
+  priority?: 'low' | 'medium' | 'high';  // 后续添加，optional
+  labels?: string[];                       // 后续添加，optional
 }
 
-// Bad: Change existing field types or remove fields
+// Bad: 修改已有 field types 或移除 fields
 interface CreateTaskInput {
   title: string;
-  // description: string;  // Removed — breaks existing consumers
-  priority: number;         // Changed from string — breaks existing consumers
+  // description: string;  // 已移除 — 会破坏现有 consumers
+  priority: number;         // 从 string 改来 — 会破坏现有 consumers
 }
 ```
 
-### 5. Predictable Naming
+### 5. 可预测命名
 
-| Pattern | Convention | Example |
+| 模式 | 约定 | 示例 |
 |---------|-----------|---------|
-| REST endpoints | Plural nouns, no verbs | `GET /api/tasks`, `POST /api/tasks` |
+| REST endpoints | Plural nouns，不用 verbs | `GET /api/tasks`, `POST /api/tasks` |
 | Query params | camelCase | `?sortBy=createdAt&pageSize=20` |
 | Response fields | camelCase | `{ createdAt, updatedAt, taskId }` |
 | Boolean fields | is/has/can prefix | `isComplete`, `hasAttachments` |
 | Enum values | UPPER_SNAKE | `"IN_PROGRESS"`, `"COMPLETED"` |
 
-## REST API Patterns
+## REST API Patterns（模式）
 
-### Resource Design
+### Resource Design（资源设计）
 
 ```
-GET    /api/tasks              → List tasks (with query params for filtering)
-POST   /api/tasks              → Create a task
-GET    /api/tasks/:id          → Get a single task
-PATCH  /api/tasks/:id          → Update a task (partial)
-DELETE /api/tasks/:id          → Delete a task
+GET    /api/tasks              → 列出 tasks（用 query params 过滤）
+POST   /api/tasks              → 创建 task
+GET    /api/tasks/:id          → 获取单个 task
+PATCH  /api/tasks/:id          → 更新 task（partial）
+DELETE /api/tasks/:id          → 删除 task
 
-GET    /api/tasks/:id/comments → List comments for a task (sub-resource)
-POST   /api/tasks/:id/comments → Add a comment to a task
+GET    /api/tasks/:id/comments → 列出某个 task 的 comments（sub-resource）
+POST   /api/tasks/:id/comments → 给 task 添加 comment
 ```
 
-### Pagination
+### Pagination（分页）
 
-Paginate list endpoints:
+为 list endpoints 添加 pagination：
 
 ```typescript
 // Request
@@ -188,37 +186,37 @@ GET /api/tasks?page=1&pageSize=20&sortBy=createdAt&sortOrder=desc
 }
 ```
 
-### Filtering
+### Filtering（过滤）
 
-Use query parameters for filters:
+用 query parameters 表达 filters：
 
 ```
 GET /api/tasks?status=in_progress&assignee=user123&createdAfter=2025-01-01
 ```
 
-### Partial Updates (PATCH)
+### Partial Updates (PATCH)（部分更新）
 
-Accept partial objects — only update what's provided:
+接受 partial objects，只更新提供的内容：
 
 ```typescript
-// Only title changes, everything else preserved
+// 只修改 title，其他全部保留
 PATCH /api/tasks/123
 { "title": "Updated title" }
 ```
 
-## TypeScript Interface Patterns
+## TypeScript Interface Patterns（模式）
 
-### Use Discriminated Unions for Variants
+### 用 Discriminated Unions 表达 Variants
 
 ```typescript
-// Good: Each variant is explicit
+// Good: 每个 variant 都显式
 type TaskStatus =
   | { type: 'pending' }
   | { type: 'in_progress'; assignee: string; startedAt: Date }
   | { type: 'completed'; completedAt: Date; completedBy: string }
   | { type: 'cancelled'; reason: string; cancelledAt: Date };
 
-// Consumer gets type narrowing
+// Consumer 获得 type narrowing
 function getStatusLabel(status: TaskStatus): string {
   switch (status.type) {
     case 'pending': return 'Pending';
@@ -229,16 +227,16 @@ function getStatusLabel(status: TaskStatus): string {
 }
 ```
 
-### Input/Output Separation
+### Input/Output Separation（输入/输出分离）
 
 ```typescript
-// Input: what the caller provides
+// Input: caller 提供的内容
 interface CreateTaskInput {
   title: string;
   description?: string;
 }
 
-// Output: what the system returns (includes server-generated fields)
+// Output: system 返回的内容（包含 server-generated fields）
 interface Task {
   id: string;
   title: string;
@@ -249,46 +247,43 @@ interface Task {
 }
 ```
 
-### Use Branded Types for IDs
+### 用 Branded Types 表达 IDs
 
 ```typescript
 type TaskId = string & { readonly __brand: 'TaskId' };
 type UserId = string & { readonly __brand: 'UserId' };
 
-// Prevents accidentally passing a UserId where a TaskId is expected
+// 防止把 UserId 误传给需要 TaskId 的地方
 function getTask(id: TaskId): Promise<Task> { ... }
 ```
 
 ## Common Rationalizations
-
-| Rationalization | Reality |
+| 借口 | 现实 |
 |---|---|
-| "We'll document the API later" | The types ARE the documentation. Define them first. |
-| "We don't need pagination for now" | You will the moment someone has 100+ items. Add it from the start. |
-| "PATCH is complicated, let's just use PUT" | PUT requires the full object every time. PATCH is what clients actually want. |
-| "We'll version the API when we need to" | Breaking changes without versioning break consumers. Design for extension from the start. |
-| "Nobody uses that undocumented behavior" | Hyrum's Law: if it's observable, somebody depends on it. Treat every public behavior as a commitment. |
-| "We can just maintain two versions" | Multiple versions multiply maintenance cost and create diamond dependency problems. Prefer the One-Version Rule. |
-| "Internal APIs don't need contracts" | Internal consumers are still consumers. Contracts prevent coupling and enable parallel work. |
+| “API 文档以后再写” | types 就是文档。先定义它们。 |
+| “现在还不需要 pagination” | 一旦有人有 100+ items，就会立刻需要。从一开始就加。 |
+| “PATCH 很复杂，直接用 PUT 吧” | PUT 每次都要求 full object。PATCH 才是 clients 真正想要的。 |
+| “需要时再做 API versioning” | 没有 versioning 的 breaking changes 会破坏 consumers。从一开始按可扩展设计。 |
+| “没人用那个未记录行为” | Hyrum's Law：只要可观察，就会有人依赖。把每个 public behavior 都当成承诺。 |
+| “我们可以维护两个版本” | 多版本会放大维护成本，并制造 diamond dependency 问题。优先 The One-Version Rule。 |
+| “Internal APIs 不需要 contracts” | Internal consumers 仍然是 consumers。contracts 可防止耦合，并支持并行工作。 |
 
 ## Red Flags
-
-- Endpoints that return different shapes depending on conditions
-- Inconsistent error formats across endpoints
-- Validation scattered throughout internal code instead of at boundaries
-- Breaking changes to existing fields (type changes, removals)
-- List endpoints without pagination
-- Verbs in REST URLs (`/api/createTask`, `/api/getUsers`)
-- Third-party API responses used without validation or sanitization
+- Endpoints 在不同条件下返回不同 shapes
+- Endpoints 之间 error formats 不一致
+- validation 分散在 internal code 中，而不是放在 boundaries
+- 对现有 fields 做 breaking changes（type changes、removals）
+- List endpoints 没有 pagination
+- REST URLs 中出现 verbs（`/api/createTask`, `/api/getUsers`）
+- 未经 validation 或 sanitization 就使用 third-party API responses
 
 ## Verification
+设计 API 后确认：
 
-After designing an API:
-
-- [ ] Every endpoint has typed input and output schemas
-- [ ] Error responses follow a single consistent format
-- [ ] Validation happens at system boundaries only
-- [ ] List endpoints support pagination
-- [ ] New fields are additive and optional (backward compatible)
-- [ ] Naming follows consistent conventions across all endpoints
-- [ ] API documentation or types are committed alongside the implementation
+- [ ] 每个 endpoint 都有 typed input 和 output schemas
+- [ ] Error responses 遵循单一一致格式
+- [ ] Validation 只发生在 system boundaries
+- [ ] List endpoints 支持 pagination
+- [ ] New fields 是 additive 且 optional（backward compatible）
+- [ ] 所有 endpoints 的 naming 遵循一致 conventions
+- [ ] API documentation 或 types 与 implementation 一起提交

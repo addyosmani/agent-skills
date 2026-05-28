@@ -1,158 +1,156 @@
 ---
 name: documentation-and-adrs
-description: Records decisions and documentation. Use when making architectural decisions, changing public APIs, shipping features, or when you need to record context that future engineers and agents will need to understand the codebase.
+description: 记录决策和 documentation。用于做 architectural decisions、修改 public APIs、shipping features，或需要记录未来 engineers 和 agents 理解 codebase 所需 context 时。
 ---
 
 # Documentation and ADRs
 
 ## Overview
-
-Document decisions, not just code. The most valuable documentation captures the *why* — the context, constraints, and trade-offs that led to a decision. Code shows *what* was built; documentation explains *why it was built this way* and *what alternatives were considered*. This context is essential for future humans and agents working in the codebase.
+记录 decisions，而不只是记录 code。最有价值的 documentation 捕获 *why*：导致某个 decision 的 context、constraints 和 trade-offs。Code 展示构建了 *what*；documentation 解释 *为什么这样构建* 以及 *考虑过哪些 alternatives*。这些 context 对未来处理 codebase 的人类和 agents 都必不可少。
 
 ## When to Use
+- 做重要 architectural decision
+- 在竞争 approaches 之间选择
+- 添加或修改 public API
+- Shipping 会改变 user-facing behavior 的 feature
+- 帮助新 team members（或 agents）熟悉项目
+- 当你发现自己反复解释同一件事时
 
-- Making a significant architectural decision
-- Choosing between competing approaches
-- Adding or changing a public API
-- Shipping a feature that changes user-facing behavior
-- Onboarding new team members (or agents) to the project
-- When you find yourself explaining the same thing repeatedly
+**何时不要使用：** 不要记录显而易见的 code。不要添加重复代码含义的 comments。不要为 throwaway prototypes 写 docs。
 
-**When NOT to use:** Don't document obvious code. Don't add comments that restate what the code already says. Don't write docs for throwaway prototypes.
+## Architecture Decision Records (ADRs)（架构决策记录）
 
-## Architecture Decision Records (ADRs)
+ADRs 捕获重大技术决策背后的 reasoning。它们是你能写出的最高价值 documentation。
 
-ADRs capture the reasoning behind significant technical decisions. They're the highest-value documentation you can write.
+### When to Write an ADR（何时写 ADR）
 
-### When to Write an ADR
+- 选择 framework、library 或 major dependency
+- 设计 data model 或 database schema
+- 选择 authentication strategy
+- 决定 API architecture（REST vs. GraphQL vs. tRPC）
+- 在 build tools、hosting platforms 或 infrastructure 之间选择
+- 任何回滚成本很高的 decision
 
-- Choosing a framework, library, or major dependency
-- Designing a data model or database schema
-- Selecting an authentication strategy
-- Deciding on an API architecture (REST vs. GraphQL vs. tRPC)
-- Choosing between build tools, hosting platforms, or infrastructure
-- Any decision that would be expensive to reverse
+### ADR Template（ADR 模板）
 
-### ADR Template
-
-Store ADRs in `docs/decisions/` with sequential numbering:
+将 ADRs 按顺序编号存放在 `docs/decisions/`：
 
 ```markdown
-# ADR-001: Use PostgreSQL for primary database
+# ADR-001: 使用 PostgreSQL 作为 primary database
 
-## Status
+## Status（状态）
 Accepted | Superseded by ADR-XXX | Deprecated
 
-## Date
+## Date（日期）
 2025-01-15
 
-## Context
-We need a primary database for the task management application. Key requirements:
-- Relational data model (users, tasks, teams with relationships)
-- ACID transactions for task state changes
-- Support for full-text search on task content
-- Managed hosting available (for small team, limited ops capacity)
+## Context（背景）
+我们需要 task management application 的 primary database。关键 requirements：
+- Relational data model（users、tasks、teams 及其 relationships）
+- task state changes 需要 ACID transactions
+- 支持 task content 的 full-text search
+- 有 managed hosting（小团队，ops capacity 有限）
 
-## Decision
-Use PostgreSQL with Prisma ORM.
+## Decision（决策）
+使用 PostgreSQL 和 Prisma ORM。
 
-## Alternatives Considered
+## Alternatives Considered（考虑过的替代方案）
 
 ### MongoDB
-- Pros: Flexible schema, easy to start with
-- Cons: Our data is inherently relational; would need to manage relationships manually
-- Rejected: Relational data in a document store leads to complex joins or data duplication
+- Pros: Flexible schema，容易启动
+- Cons: 我们的数据天然 relational；需要手动管理 relationships
+- Rejected: 在 document store 中存 relational data 会导致复杂 joins 或 data duplication
 
 ### SQLite
-- Pros: Zero configuration, embedded, fast for reads
-- Cons: Limited concurrent write support, no managed hosting for production
-- Rejected: Not suitable for multi-user web application in production
+- Pros: Zero configuration、embedded、reads 很快
+- Cons: concurrent write support 有限，production 没有 managed hosting
+- Rejected: 不适合 production 中的 multi-user web application
 
 ### MySQL
-- Pros: Mature, widely supported
-- Cons: PostgreSQL has better JSON support, full-text search, and ecosystem tooling
-- Rejected: PostgreSQL is the better fit for our feature requirements
+- Pros: Mature、widely supported
+- Cons: PostgreSQL 有更好的 JSON support、full-text search 和 ecosystem tooling
+- Rejected: PostgreSQL 更适合我们的 feature requirements
 
-## Consequences
-- Prisma provides type-safe database access and migration management
-- We can use PostgreSQL's full-text search instead of adding Elasticsearch
-- Team needs PostgreSQL knowledge (standard skill, low risk)
-- Hosting on managed service (Supabase, Neon, or RDS)
+## Consequences（后果）
+- Prisma 提供 type-safe database access 和 migration management
+- 可使用 PostgreSQL full-text search，而无需添加 Elasticsearch
+- 团队需要 PostgreSQL knowledge（standard skill，low risk）
+- Hosting 使用 managed service（Supabase、Neon 或 RDS）
 ```
 
-### ADR Lifecycle
+### ADR Lifecycle（ADR 生命周期）
 
 ```
 PROPOSED → ACCEPTED → (SUPERSEDED or DEPRECATED)
 ```
 
-- **Don't delete old ADRs.** They capture historical context.
-- When a decision changes, write a new ADR that references and supersedes the old one.
+- **不要删除旧 ADRs。** 它们捕获 historical context。
+- decision 变化时，写新的 ADR，引用并 supersede 旧 ADR。
 
-## Inline Documentation
+## Inline Documentation（内联文档）
 
-### When to Comment
+### When to Comment（何时写注释）
 
-Comment the *why*, not the *what*:
+Comment *why*，不要 comment *what*：
 
 ```typescript
-// BAD: Restates the code
+// BAD: 重复 code 含义
 // Increment counter by 1
 counter += 1;
 
-// GOOD: Explains non-obvious intent
-// Rate limit uses a sliding window — reset counter at window boundary,
-// not on a fixed schedule, to prevent burst attacks at window edges
+// GOOD: 解释不明显的 intent
+// Rate limit 使用 sliding window，在 window boundary 重置 counter，
+// 而不是按固定 schedule 重置，以防止 window edges 的 burst attacks
 if (now - windowStart > WINDOW_SIZE_MS) {
   counter = 0;
   windowStart = now;
 }
 ```
 
-### When NOT to Comment
+### When NOT to Comment（何时不要写注释）
 
 ```typescript
-// Don't comment self-explanatory code
+// 不要 comment self-explanatory code
 function calculateTotal(items: CartItem[]): number {
   return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 }
 
-// Don't leave TODO comments for things you should just do now
-// TODO: add error handling  ← Just add it
+// 不要留下 TODO comments 给现在就该做的事
+// TODO: add error handling  ← 直接加上
 
-// Don't leave commented-out code
-// const oldImplementation = () => { ... }  ← Delete it, git has history
+// 不要留下 commented-out code
+// const oldImplementation = () => { ... }  ← 删除它，git 有 history
 ```
 
-### Document Known Gotchas
+### Document Known Gotchas（记录已知陷阱）
 
 ```typescript
 /**
- * IMPORTANT: This function must be called before the first render.
- * If called after hydration, it causes a flash of unstyled content
- * because the theme context isn't available during SSR.
+ * IMPORTANT: 此 function 必须在 first render 前调用。
+ * 如果 hydration 后调用，会造成 unstyled content flash，
+ * 因为 SSR 期间 theme context 不可用。
  *
- * See ADR-003 for the full design rationale.
+ * 完整 design rationale 见 ADR-003。
  */
 export function initializeTheme(theme: Theme): void {
   // ...
 }
 ```
 
-## API Documentation
+## API Documentation（API 文档）
 
-For public APIs (REST, GraphQL, library interfaces):
+对 public APIs（REST、GraphQL、library interfaces）：
 
-### Inline with Types (Preferred for TypeScript)
+### Inline with Types（TypeScript 首选）
 
 ```typescript
 /**
- * Creates a new task.
+ * 创建新 task。
  *
- * @param input - Task creation data (title required, description optional)
- * @returns The created task with server-generated ID and timestamps
- * @throws {ValidationError} If title is empty or exceeds 200 characters
- * @throws {AuthenticationError} If the user is not authenticated
+ * @param input - Task creation data（title required，description optional）
+ * @returns 包含 server-generated ID 和 timestamps 的 created task
+ * @throws {ValidationError} 如果 title 为空或超过 200 characters
+ * @throws {AuthenticationError} 如果 user 未 authenticated
  *
  * @example
  * const task = await createTask({ title: 'Buy groceries' });
@@ -163,13 +161,13 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
 }
 ```
 
-### OpenAPI / Swagger for REST APIs
+### OpenAPI / Swagger for REST APIs（REST API）
 
 ```yaml
 paths:
   /api/tasks:
     post:
-      summary: Create a task
+      summary: 创建 task
       requestBody:
         required: true
         content:
@@ -178,101 +176,98 @@ paths:
               $ref: '#/components/schemas/CreateTaskInput'
       responses:
         '201':
-          description: Task created
+          description: Task 已创建
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Task'
         '422':
-          description: Validation error
+          description: 验证错误
 ```
 
-## README Structure
+## README Structure（README 结构）
 
-Every project should have a README that covers:
+每个项目都应有 README，覆盖：
 
 ```markdown
-# Project Name
+# 项目名称
 
-One-paragraph description of what this project does.
+用一段话描述这个项目做什么。
 
-## Quick Start
-1. Clone the repo
-2. Install dependencies: `npm install`
-3. Set up environment: `cp .env.example .env`
-4. Run the dev server: `npm run dev`
+## Quick Start（快速开始）
+1. Clone repo
+2. 安装 dependencies：`npm install`
+3. 设置 environment：`cp .env.example .env`
+4. 运行 dev server：`npm run dev`
 
-## Commands
-| Command | Description |
+## Commands（命令）
+| Command | 说明 |
 |---------|-------------|
-| `npm run dev` | Start development server |
-| `npm test` | Run tests |
+| `npm run dev` | 启动 development server |
+| `npm test` | 运行 tests |
 | `npm run build` | Production build |
-| `npm run lint` | Run linter |
+| `npm run lint` | 运行 linter |
 
-## Architecture
-Brief overview of the project structure and key design decisions.
-Link to ADRs for details.
+## Architecture（架构）
+简要说明 project structure 和关键 design decisions。
+链接到 ADRs 获取细节。
 
-## Contributing
-How to contribute, coding standards, PR process.
+## Contributing（贡献）
+如何 contribute、coding standards、PR process。
 ```
 
-## Changelog Maintenance
+## Changelog Maintenance（维护 Changelog）
 
-For shipped features:
+对已 shipping features：
 
 ```markdown
 # Changelog
 
 ## [1.2.0] - 2025-01-20
-### Added
-- Task sharing: users can share tasks with team members (#123)
-- Email notifications for task assignments (#124)
+### Added（新增）
+- Task sharing：users 可以与 team members 分享 tasks (#123)
+- Task assignments 的 email notifications (#124)
 
-### Fixed
-- Duplicate tasks appearing when rapidly clicking create button (#125)
+### Fixed（修复）
+- 快速点击 create button 时出现 duplicate tasks (#125)
 
-### Changed
-- Task list now loads 50 items per page (was 20) for better UX (#126)
+### Changed（变更）
+- 为改善 UX，task list 现在每页加载 50 items（之前是 20）(#126)
 ```
 
-## Documentation for Agents
+## Documentation for Agents（面向 Agents 的文档）
 
-Special consideration for AI agent context:
+AI agent context 的特别考虑：
 
-- **CLAUDE.md / rules files** — Document project conventions so agents follow them
-- **Spec files** — Keep specs updated so agents build the right thing
-- **ADRs** — Help agents understand why past decisions were made (prevents re-deciding)
-- **Inline gotchas** — Prevent agents from falling into known traps
+- **CLAUDE.md / rules files** — 记录 project conventions，确保 agents 遵循
+- **Spec files** — 保持 specs 更新，确保 agents 构建正确内容
+- **ADRs** — 帮助 agents 理解过去 decisions 的原因（避免重新决策）
+- **Inline gotchas** — 防止 agents 掉入已知陷阱
 
 ## Common Rationalizations
-
-| Rationalization | Reality |
+| 借口 | 现实 |
 |---|---|
-| "The code is self-documenting" | Code shows what. It doesn't show why, what alternatives were rejected, or what constraints apply. |
-| "We'll write docs when the API stabilizes" | APIs stabilize faster when you document them. The doc is the first test of the design. |
-| "Nobody reads docs" | Agents do. Future engineers do. Your 3-months-later self does. |
-| "ADRs are overhead" | A 10-minute ADR prevents a 2-hour debate about the same decision six months later. |
-| "Comments get outdated" | Comments on *why* are stable. Comments on *what* get outdated — that's why you only write the former. |
+| “代码是 self-documenting” | Code 显示 what，不显示 why、不显示哪些 alternatives 被拒绝，也不显示适用 constraints。 |
+| “API 稳定后再写 docs” | 写 docs 会让 API 更快稳定。doc 是 design 的第一个 test。 |
+| “没人读 docs” | Agents 会读。未来 engineers 会读。三个月后的你也会读。 |
+| “ADRs 是 overhead” | 10 分钟 ADR 能避免 6 个月后为同一 decision 争论 2 小时。 |
+| “Comments 会过时” | 关于 *why* 的 comments 稳定。关于 *what* 的 comments 会过时，所以只写前者。 |
 
 ## Red Flags
-
-- Architectural decisions with no written rationale
-- Public APIs with no documentation or types
-- README that doesn't explain how to run the project
-- Commented-out code instead of deletion
-- TODO comments that have been there for weeks
-- No ADRs in a project with significant architectural choices
-- Documentation that restates the code instead of explaining intent
+- Architectural decisions 没有 written rationale
+- Public APIs 没有 documentation 或 types
+- README 没解释如何运行项目
+- 用 commented-out code 代替删除
+- TODO comments 已存在数周
+- 有重大 architectural choices 的项目没有 ADRs
+- Documentation 重复 code，而不是解释 intent
 
 ## Verification
+完成 documentation 后确认：
 
-After documenting:
-
-- [ ] ADRs exist for all significant architectural decisions
-- [ ] README covers quick start, commands, and architecture overview
-- [ ] API functions have parameter and return type documentation
-- [ ] Known gotchas are documented inline where they matter
-- [ ] No commented-out code remains
-- [ ] Rules files (CLAUDE.md etc.) are current and accurate
+- [ ] 所有重大 architectural decisions 都有 ADRs
+- [ ] README 覆盖 quick start、commands 和 architecture overview
+- [ ] API functions 有 parameter 和 return type documentation
+- [ ] Known gotchas 在重要位置 inline documented
+- [ ] 没有剩余 commented-out code
+- [ ] Rules files（CLAUDE.md 等）是 current 且 accurate
