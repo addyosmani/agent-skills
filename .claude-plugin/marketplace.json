@@ -9,10 +9,7 @@
   "plugins": [
     {
       "name": "agent-skills",
-      "source": {
-        "source": "github",
-        "repo": "addyosmani/agent-skills"
-      },
+      "source": "./",
       "description": "Production-grade engineering skills covering every phase of software development: spec, plan, build, verify, review, and ship."
     }
   ]

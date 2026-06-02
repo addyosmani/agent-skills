@@ -29,15 +29,6 @@ echo "\n---\n" >> .cursorrules
 cat /path/to/agent-skills/skills/code-review-and-quality/SKILL.md >> .cursorrules
 ```
 
-### Option 3: Notepads
-
-Cursor's Notepads feature lets you store reusable context. Create a notepad for each skill you use frequently:
-
-1. Open Cursor → Settings → Notepads
-2. Create a new notepad named "swe: Test-Driven Development"
-3. Paste the content of `skills/test-driven-development/SKILL.md`
-4. Reference it in chat with `@notepad swe: Test-Driven Development`
-
 ## Recommended Configuration
 
 ### Essential Skills (Always Load)
@@ -48,20 +39,20 @@ Add these to `.cursor/rules/`:
 2. `code-review-and-quality.md` — Five-axis review
 3. `incremental-implementation.md` — Build in small verifiable slices
 
-### Phase-Specific Skills (Load as Notepads)
+### Phase-Specific Skills (Load on Demand)
 
-Create notepads for skills you use contextually:
+For phase-specific work, create additional rule files as needed:
 
-- "swe: Spec Development" → `spec-driven-development/SKILL.md`
-- "swe: Frontend UI" → `frontend-ui-engineering/SKILL.md`
-- "swe: Security" → `security-and-hardening/SKILL.md`
-- "swe: Performance" → `performance-optimization/SKILL.md`
+- `spec-development.md` -> `spec-driven-development/SKILL.md`
+- `frontend-ui.md` -> `frontend-ui-engineering/SKILL.md`
+- `security.md` -> `security-and-hardening/SKILL.md`
+- `performance.md` -> `performance-optimization/SKILL.md`
 
-Reference them with `@notepad` when working on relevant tasks.
+Add these to `.cursor/rules/` when working on relevant tasks, then remove when done to manage context limits.
 
 ## Usage Tips
 
-1. **Don't load all skills at once** — Cursor has context limits. Load 2-3 skills as rules and keep others as notepads.
-2. **Reference skills explicitly** — Tell Cursor "Follow the test-driven-development rules for this change" to ensure it reads the loaded rules.
-3. **Use agents for review** — Copy `agents/code-reviewer.md` content and tell Cursor to "review this diff using this code review framework."
-4. **Load references on demand** — When working on performance, reference `@notepad performance-checklist` or paste the checklist content.
+1. **Don't load all skills at once** - Cursor has context limits. Load 2-3 essential skills as rules and add phase-specific skills as needed.
+2. **Reference skills explicitly** - Tell Cursor "Follow the test-driven-development rules for this change" to ensure it reads the loaded rules.
+3. **Use agents for review** - Copy `agents/code-reviewer.md` content and tell Cursor to "review this diff using this code review framework."
+4. **Load references on demand** - When working on performance, add `performance.md` to `.cursor/rules/` or paste the checklist content directly.
