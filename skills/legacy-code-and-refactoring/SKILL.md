@@ -22,7 +22,7 @@ Legacy code is code without tests — regardless of its age. Without tests, you 
 - Removing or sunsetting an entire system — use the `deprecation-and-migration` skill
 - Diagnosing an active failure — use the `debugging-and-error-recovery` skill first; come back here for the fix
 
-## Core Process
+## Process
 
 ### 1. Understand before touching
 
