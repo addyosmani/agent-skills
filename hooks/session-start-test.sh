@@ -11,6 +11,13 @@ if command -v jq >/dev/null 2>&1; then
   has_jq=1
 fi
 
+expected_command='bash "${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh"'
+actual_command="$(node -e "const fs=require('fs'); const hooks=JSON.parse(fs.readFileSync('hooks/hooks.json','utf8')); process.stdout.write(hooks.hooks.SessionStart[0].hooks[0].command);")"
+if [ "$actual_command" != "$expected_command" ]; then
+  echo "unexpected SessionStart command: $actual_command" >&2
+  exit 1
+fi
+
 payload="$(bash hooks/session-start.sh)"
 printf '%s' "$payload" > "$tmp_payload"
 
