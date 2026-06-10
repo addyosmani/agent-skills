@@ -43,9 +43,6 @@ jobs:
       - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code
 
-      - name: Configure git to use HTTPS
-        run: git config --global url."https://github.com/".insteadOf "git@github.com:"
-
       - name: Add marketplace
         run: claude plugin marketplace add ./
 
