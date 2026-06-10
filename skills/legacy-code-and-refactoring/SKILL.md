@@ -103,11 +103,11 @@ For replacing a whole module or system, don't big-bang rewrite. Route through an
 1. Put a facade in front of the legacy module (callers now hit the facade)
 2. Implement one slice of behavior in the new code
 3. Route that slice to the new path — feature-flagged, with a kill switch
-4. Compare outputs in production (run both, log diffs) until confidence is earned
+4. Compare outputs in production (run both, log diffs — reads only, see warning below) until confidence is earned
 5. Repeat per slice; delete legacy code as each slice proves out
 ```
 
-**Shadow reads only.** Running both paths doubles any side effect: a shadowed write path means two database writes, two charged cards, two sent emails. For write paths, suppress the new path's side effects (dry-run mode, a recording adapter) and compare the writes it *would* have made against the real ones.
+**Shadow reads only.** Running both paths doubles any side effect: a shadowed write path means two database writes, two charged cards, two sent emails. For write paths, suppress the new path's side effects — run it in dry-run mode, or swap its DB/payment/mail client for one that records each call instead of executing it — and compare the recorded writes against the real ones. Normalize nondeterministic fields (timestamps, generated IDs) before diffing, or every comparison is noise. And even pure reads double backend load: sample the shadow traffic if the dependency is already hot.
 
 Each step ships, each step is reversible, and the system never stops working. A rewrite that takes six months delivers nothing for six months and re-discovers every edge case the old code already handled.
 
