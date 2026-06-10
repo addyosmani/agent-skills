@@ -63,6 +63,25 @@ Copy any `SKILL.md` into `.cursor/rules/`, or reference the full `skills/` direc
 </details>
 
 <details>
+<summary><b>Antigravity CLI</b></summary>
+
+Install as a native plugin for automatic skill and subagent discovery. See [docs/antigravity-setup.md](docs/antigravity-setup.md).
+
+**Install from the repo:**
+
+```bash
+agy plugin install https://github.com/addyosmani/agent-skills.git
+```
+
+**Install from a local clone:**
+
+```bash
+agy plugin install ./agent-skills
+```
+
+</details>
+
+<details>
 <summary><b>Gemini CLI</b></summary>
 
 Install as native skills for auto-discovery, or add to `GEMINI.md` for persistent context. See [docs/gemini-cli-setup.md](docs/gemini-cli-setup.md).
