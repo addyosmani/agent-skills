@@ -34,11 +34,11 @@ git log -S "functionName" --oneline            # who calls/changed this logic?
 grep -rn "functionName" --include="*.js" .     # blast radius: every caller
 ```
 
-Apply Chesterton's Fence (see `code-simplification`): if you can't explain why a weird branch exists, you're not ready to delete it. Write down what you believe the code does — that belief becomes the first characterization test. For non-trivial uncertainty, run the `doubt-driven-development` skill on your reading of the code.
+Apply Chesterton's Fence: if you can't explain why a weird branch exists, you're not ready to delete it. Write down what you believe the code does — that belief becomes the first characterization test.
 
 ### 2. Pin current behavior with characterization tests
 
-A characterization test asserts what the code **does**, not what it should do. Bugs included — today's callers may depend on them (Hyrum's Law, see `api-and-interface-design`).
+A characterization test asserts what the code **does**, not what it should do. Bugs included — today's callers may depend on them (Hyrum's Law).
 
 ```typescript
 // You don't know what calculateDiscount returns for edge cases? Ask it.
@@ -93,7 +93,7 @@ Commit 2: behavior   — the bug fix or feature.
                        One test changes/appears, and it changed first (red → green).
 ```
 
-If a "refactor" commit requires editing a test expectation, it wasn't a refactor — stop and split it. Mixed commits are unreviewable (`code-review-and-quality` can't tell intended change from accident) and unbisectable. Keep each commit independently green (`git-workflow-and-versioning`).
+If a "refactor" commit requires editing a test expectation, it wasn't a refactor — stop and split it. Mixed commits are unreviewable (the reviewer can't tell intended change from accident) and unbisectable. Keep each commit independently green (`git-workflow-and-versioning`).
 
 ### 5. Choose strangler fig over rewrite
 
@@ -104,14 +104,16 @@ For replacing a whole module or system, don't big-bang rewrite. Route through an
 2. Implement one slice of behavior in the new code
 3. Route that slice to the new path — feature-flagged, with a kill switch
 4. Compare outputs in production (run both, log diffs) until confidence is earned
-5. Repeat per slice; delete legacy code as each slice proves out (deprecation-and-migration)
+5. Repeat per slice; delete legacy code as each slice proves out
 ```
 
-Each step ships (`incremental-implementation`), each step is reversible, and the system never stops working. A rewrite that takes six months delivers nothing for six months and re-discovers every edge case the old code already handled.
+**Shadow reads only.** Running both paths doubles any side effect: a shadowed write path means two database writes, two charged cards, two sent emails. For write paths, suppress the new path's side effects (dry-run mode, a recording adapter) and compare the writes it *would* have made against the real ones.
+
+Each step ships, each step is reversible, and the system never stops working. A rewrite that takes six months delivers nothing for six months and re-discovers every edge case the old code already handled.
 
 ### 6. Leave it better — within scope
 
-Apply the boy-scout rule at the scale of the task: the code you touched ends up tested and slightly clearer. Do **not** expand into adjacent cleanup — scope discipline (see `using-agent-skills` core behaviors) applies doubly in legacy code, where every extra touched line is extra risk. Note follow-ups; don't do them now.
+Apply the boy-scout rule at the scale of the task: the code you touched ends up tested and slightly clearer. Do **not** expand into adjacent cleanup — scope discipline applies doubly in legacy code, where every extra touched line is extra risk. Note follow-ups; don't do them now.
 
 ## Common Rationalizations
 
@@ -146,4 +148,13 @@ After changing legacy code, confirm:
 - [ ] Bugs discovered during characterization were pinned and filed, not silently fixed
 - [ ] Every touched code path is covered by a test that fails if it breaks
 - [ ] No changes outside the task's scope (diff reviewed for accidental cleanup)
-- [ ] For strangler-fig work: old and new paths compared on real traffic, kill switch tested
+- [ ] For strangler-fig work: old and new paths compared on real traffic (reads shadowed, writes dry-run — no doubled side effects), kill switch tested
+
+## Related Skills
+
+- `code-simplification` — Chesterton's Fence; the follow-up pass once the code is tested and readable
+- `doubt-driven-development` — cross-examine your reading of unfamiliar code before acting on it
+- `api-and-interface-design` — Hyrum's Law: observable behavior is a de facto contract
+- `code-review-and-quality` — why mixed refactor/behavior diffs are unreviewable
+- `incremental-implementation` — shipping strangler-fig slices one at a time
+- `deprecation-and-migration` — retiring the legacy path once the new one proves out
