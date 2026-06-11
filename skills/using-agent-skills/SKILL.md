@@ -38,7 +38,8 @@ Task arrives
     ├── Deprecating/migrating? ────────→ deprecation-and-migration
     ├── Writing docs/ADRs? ───────────→ documentation-and-adrs
     ├── Adding logs/metrics/alerts? ───→ observability-and-instrumentation
-    └── Deploying/launching? ─────────→ shipping-and-launch
+    ├── Deploying/launching? ─────────→ shipping-and-launch
+    └── Low on context / ending session / passing work on? → handoff
 ```
 
 ## Core Operating Behaviors
@@ -160,6 +161,8 @@ For a complete feature, the typical skill sequence is:
 
 Not every task needs every skill. A bug fix might only need: `debugging-and-error-recovery` → `test-driven-development` → `code-review-and-quality`.
 
+When a session runs out of context before the work is done, use `handoff` at any point to compact the current state into a document the next session can resume from.
+
 ## Quick Reference
 
 | Phase | Skill | One-Line Summary |
@@ -187,3 +190,4 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 | Ship | documentation-and-adrs | Document the why, not just the what |
 | Ship | observability-and-instrumentation | Structured logs, RED metrics, traces, symptom-based alerts |
 | Ship | shipping-and-launch | Pre-launch checklist, monitoring, rollback plan |
+| Any | handoff | Compact the session into a resume-ready doc for the next agent |

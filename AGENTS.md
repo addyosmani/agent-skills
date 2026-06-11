@@ -28,6 +28,7 @@ The agent should automatically map user intent to skills:
 - Refactoring / simplification → `code-simplification`
 - API or interface design → `api-and-interface-design`
 - UI work → `frontend-ui-engineering`
+- Running low on context / ending a session / passing work to another agent → `handoff`
 
 ### Lifecycle Mapping (Implicit Commands)
 

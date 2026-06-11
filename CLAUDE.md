@@ -21,6 +21,7 @@ docs/         → Setup guides for different tools
 **Verify:** browser-testing-with-devtools, debugging-and-error-recovery
 **Review:** code-review-and-quality, code-simplification, security-and-hardening, performance-optimization
 **Ship:** git-workflow-and-versioning, ci-cd-and-automation, deprecation-and-migration, documentation-and-adrs, observability-and-instrumentation, shipping-and-launch
+**Cross-cutting:** handoff (compact a session into a resume-ready doc for the next agent)
 
 ## Conventions
 
