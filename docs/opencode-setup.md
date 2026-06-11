@@ -6,7 +6,12 @@ This guide explains how to use Agent Skills with OpenCode in a way that closely 
 
 OpenCode supports custom `/commands`, but does not have a native plugin system or automatic skill routing like Claude Code.
 
-Instead, we achieve parity through:
+This repository supports two OpenCode usage modes:
+
+- Command mode (slash command parity via `.opencode/commands/`)
+- Agent-driven mode (automatic skill mapping via `AGENTS.md`)
+
+Automatic skill routing parity is achieved through:
 
 - A strong system prompt (`AGENTS.md`)
 - The built-in `skill` tool
@@ -14,13 +19,21 @@ Instead, we achieve parity through:
 
 This creates an **agent-driven workflow** where skills are selected and executed automatically.
 
-While it is possible to recreate `/spec`, `/plan`, and other commands in OpenCode, this integration intentionally uses an agent-driven approach instead:
+If you prefer command-driven workflows, the repo includes:
+
+- `.opencode/commands/spec.md`
+- `.opencode/commands/plan.md`
+- `.opencode/commands/build.md`
+- `.opencode/commands/test.md`
+- `.opencode/commands/review.md`
+- `.opencode/commands/code-simplify.md`
+- `.opencode/commands/ship.md`
+
+If you prefer natural language workflows, use the agent-driven approach:
 
 - Skills are selected automatically based on intent
 - Workflows are enforced via `AGENTS.md`
 - No manual command invocation is required
-
-This more closely matches how Claude Code behaves in practice, where skills are triggered automatically rather than manually.
 
 ---
 
@@ -38,6 +51,7 @@ git clone https://github.com/addyosmani/agent-skills.git
 
 - `AGENTS.md` (root)
 - `skills/` directory
+- Optional: `.opencode/commands/` for slash command workflows
 
 No additional installation is required.
 
@@ -83,7 +97,7 @@ The development lifecycle is encoded implicitly:
 - REVIEW → `code-review-and-quality`
 - SHIP → `shipping-and-launch`
 
-This replaces slash commands like `/spec`, `/plan`, etc.
+This complements slash commands like `/spec`, `/plan`, etc.
 
 ---
 
@@ -145,8 +159,7 @@ These rules are enforced via `AGENTS.md`.
 
 ## Limitations
 
-- No native slash commands (handled via intent mapping instead)
-- No plugin system (handled via prompt + structure)
+- No native plugin system (handled via prompt + structure)
 - Skill invocation depends on model compliance
 
 Despite these, the workflow closely matches Claude Code in practice.
