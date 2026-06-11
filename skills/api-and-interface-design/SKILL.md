@@ -5,6 +5,8 @@ description: Guides stable API and interface design. Use when designing APIs, mo
 
 # API and Interface Design
 
+> The HTTP semantics guidance (error formats, idempotency, rate limiting, caching, evolution) was expanded with patterns shared by [Paul Hammond (@citypaul)](https://github.com/citypaul/.dotfiles) in [#16](https://github.com/addyosmani/agent-skills/issues/16).
+
 ## Overview
 
 Design stable, well-documented interfaces that are hard to misuse. Good interfaces make the right thing easy and the wrong thing hard. This applies to REST APIs, GraphQL schemas, module boundaries, component props, and any surface where one piece of code talks to another.
@@ -85,6 +87,13 @@ interface APIError {
 
 **Don't mix patterns.** If some endpoints throw, others return null, and others return `{ error }` — the consumer can't predict behavior.
 
+**Choosing an error format — consistency matters more than the specific shape.** Two reasonable choices:
+
+- **Public APIs with external consumers:** [RFC 9457 Problem Details](https://www.rfc-editor.org/rfc/rfc9457) (`application/problem+json`) is the gold standard. Use the standard members — `type` (a URI identifying the problem), `title`, `status`, `detail`, `instance` — and add forward-compatible extension members for machine-readable context. Per RFC 9457 §5, don't leak sensitive internals in `detail`.
+- **Internal APIs with a single frontend:** a simpler consistent shape (like the `APIError` above) is fine. Don't adopt `problem+json` ceremony you won't use.
+
+The requirement is that *every* endpoint uses the *same* shape — not that you adopt a particular standard. Don't return Problem Details for some errors and an ad-hoc body for others.
+
 ### 3. Validate at Boundaries
 
 Trust internal code. Validate at system edges where external input enters:
@@ -142,6 +151,13 @@ interface CreateTaskInput {
   priority: number;         // Changed from string — breaks existing consumers
 }
 ```
+
+**When you must evolve a contract**, do it without a hard break:
+
+- **Pick one versioning strategy and apply it consistently** — date-based pinning (Stripe-style, version sent in a header), a URL segment (`/v2/...`), or a version header. Date pinning ages best for large public APIs; a URL segment is simplest for internal ones.
+- **Signal removal before you remove it** — emit `Deprecation` and `Sunset` response headers ([RFC 8594](https://www.rfc-editor.org/rfc/rfc8594)) so consumers get programmatic warning, then follow `deprecation-and-migration` for the rollout.
+- **Watch enum evolution** — adding a new enum value is a breaking change for strict consumers that exhaustively switch on it. Document that clients must tolerate unknown values (Postel's Law: be liberal in what you accept).
+- **Verify with consumer-driven contract tests** (e.g. Pact) so a provider change that breaks a real consumer fails in CI, not in production.
 
 ### 5. Predictable Naming
 
@@ -205,6 +221,68 @@ Accept partial objects — only update what's provided:
 PATCH /api/tasks/123
 { "title": "Updated title" }
 ```
+
+## HTTP Semantics
+
+These behaviors are part of your API contract just as much as the response body. Get them right at design time.
+
+### Idempotency
+
+An idempotent request produces the same result whether it's sent once or many times — essential when clients retry on timeouts or flaky networks. Design for at-least-once delivery.
+
+| Method | Idempotent? | Notes |
+|--------|-------------|-------|
+| GET, HEAD | Yes | Never mutate state |
+| PUT | Yes | Full replacement — repeating is safe |
+| DELETE | Yes | Repeat must succeed (or 404), not error |
+| POST | No (by default) | Use an idempotency key to make it safe |
+
+For `POST` that creates resources or moves money, accept an **idempotency key** (Stripe pattern): the client sends a unique `Idempotency-Key` header; the server stores the result against that key and replays it on retry instead of acting twice.
+
+```
+POST /api/payments
+Idempotency-Key: 9f8b1c2e-4a6d-4f1b-9c3a-7e2d1f0b5a8c
+// Retrying with the same key returns the original result — no double charge.
+```
+
+Make `DELETE` idempotent: deleting an already-deleted resource should return `204`/`200` (or `404`), never a `500`.
+
+### Rate Limiting
+
+Rate limits are part of the contract, not an afterthought. Tell clients where they stand:
+
+- Return the standard headers on every response: `RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset`.
+- On `429 Too Many Requests`, include `Retry-After` so clients back off instead of hammering.
+
+```
+HTTP/1.1 429 Too Many Requests
+RateLimit-Limit: 100
+RateLimit-Remaining: 0
+RateLimit-Reset: 30
+Retry-After: 30
+```
+
+### HTTP Caching
+
+Caching is a correctness concern, not just performance — wrong directives serve stale or sensitive data.
+
+- `Cache-Control` drives it. Note `no-cache` does **not** mean "don't cache" — it means "revalidate before using." Use `no-store` for anything sensitive (auth responses, PII).
+- Support **ETag** + `If-None-Match` so clients revalidate cheaply and get `304 Not Modified` when nothing changed.
+- Set `Vary` (e.g. `Vary: Accept, Authorization`) when the response depends on request headers, or shared caches will serve the wrong variant.
+
+```
+Cache-Control: private, max-age=0, must-revalidate
+ETag: "a1b2c3"
+Vary: Accept, Authorization
+```
+
+### Security
+
+API security overlaps heavily with the `security-and-hardening` skill — follow it (and the [security checklist](../../references/security-checklist.md)) rather than duplicating it here. API-specific reminders:
+
+- Set defensive headers on API responses: `X-Content-Type-Options: nosniff`, `Content-Security-Policy: default-src 'none'`, `Referrer-Policy: no-referrer`.
+- Require TLS 1.2+ ([RFC 9325 / BCP 195](https://www.rfc-editor.org/rfc/rfc9325)).
+- For authn/authz design — the OWASP API Security Top 10 (BOLA, mass assignment, SSRF), JWT algorithm allowlisting, and OAuth2 + PKCE — see `security-and-hardening`.
 
 ## TypeScript Interface Patterns
 
@@ -270,6 +348,9 @@ function getTask(id: TaskId): Promise<Task> { ... }
 | "Nobody uses that undocumented behavior" | Hyrum's Law: if it's observable, somebody depends on it. Treat every public behavior as a commitment. |
 | "We can just maintain two versions" | Multiple versions multiply maintenance cost and create diamond dependency problems. Prefer the One-Version Rule. |
 | "Internal APIs don't need contracts" | Internal consumers are still consumers. Contracts prevent coupling and enable parallel work. |
+| "Retries are the client's problem" | Clients retry on timeouts whether you plan for it or not. Without idempotency, retries double-charge and duplicate records. Design for at-least-once delivery. |
+| "We'll add rate limiting later" | Rate limits are part of the contract. Bolting them on later breaks clients that never saw the headers. Expose them from the start. |
+| "Error messages are just for debugging" | Error bodies are a machine-readable interface — consumers branch on `code`/`type`. Inconsistent or leaky errors break them and expose internals. |
 
 ## Red Flags
 
@@ -280,6 +361,10 @@ function getTask(id: TaskId): Promise<Task> { ... }
 - List endpoints without pagination
 - Verbs in REST URLs (`/api/createTask`, `/api/getUsers`)
 - Third-party API responses used without validation or sanitization
+- State-changing `POST`s with no idempotency-key support
+- `429` responses with no `Retry-After`, or responses with no rate-limit headers at all
+- `no-cache` and `no-store` used interchangeably, or sensitive responses without `no-store`
+- New enum values added without documenting that clients must tolerate unknown ones
 
 ## Verification
 
@@ -292,3 +377,8 @@ After designing an API:
 - [ ] New fields are additive and optional (backward compatible)
 - [ ] Naming follows consistent conventions across all endpoints
 - [ ] API documentation or types are committed alongside the implementation
+- [ ] Error responses follow one format (RFC 9457 for public APIs, or a single consistent shape)
+- [ ] State-changing `POST`s accept an idempotency key (or are documented as unsafe to retry)
+- [ ] Rate-limit headers are present, and `429` responses include `Retry-After`
+- [ ] `Cache-Control`/`ETag`/`Vary` are set deliberately; sensitive responses use `no-store`
+- [ ] Breaking changes emit `Deprecation`/`Sunset` headers and follow a versioning strategy
