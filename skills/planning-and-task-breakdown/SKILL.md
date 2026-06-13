@@ -1,8 +1,16 @@
 ---
 name: planning-and-task-breakdown
 description: Breaks work into ordered tasks. Use when you have a spec or clear requirements and need to break work into implementable tasks. Use when a task feels too large to start, when you need to estimate scope, or when parallel work is possible.
+kind: inline
+model: gemini-2.5-pro
+temperature: 0.3
+max_turns: 15
+tools:
+  - view_file
+  - grep_search
+  - list_dir
+  - write_to_file
 ---
-
 # Planning and Task Breakdown
 
 ## Overview

@@ -1,8 +1,18 @@
 ---
 name: incremental-implementation
 description: Delivers changes incrementally. Use when implementing any feature or change that touches more than one file. Use when you're about to write a large amount of code at once, or when a task feels too big to land in one step.
+kind: inline
+model: gemini-2.5-pro
+temperature: 0.3
+max_turns: 20
+tools:
+  - view_file
+  - write_to_file
+  - replace_file_content
+  - multi_replace_file_content
+  - grep_search
+  - list_dir
 ---
-
 # Incremental Implementation
 
 ## Overview

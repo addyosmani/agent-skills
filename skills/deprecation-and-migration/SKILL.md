@@ -1,8 +1,17 @@
 ---
 name: deprecation-and-migration
 description: Manages deprecation and migration. Use when removing old systems, APIs, or features. Use when migrating users from one implementation to another. Use when deciding whether to maintain or sunset existing code.
+kind: subagent
+model: gemini-2.5-pro
+temperature: 0.2
+max_turns: 20
+tools:
+  - view_file
+  - write_to_file
+  - replace_file_content
+  - multi_replace_file_content
+  - grep_search
 ---
-
 # Deprecation and Migration
 
 ## Overview

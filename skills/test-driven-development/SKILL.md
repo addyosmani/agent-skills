@@ -1,8 +1,18 @@
 ---
 name: test-driven-development
 description: Drives development with tests. Use when implementing any logic, fixing any bug, or changing any behavior. Use when you need to prove that code works, when a bug report arrives, or when you're about to modify existing functionality.
+kind: inline
+model: gemini-2.5-pro
+temperature: 0.2
+max_turns: 20
+tools:
+  - run_command
+  - view_file
+  - write_to_file
+  - replace_file_content
+  - grep_search
+  - list_dir
 ---
-
 # Test-Driven Development
 
 ## Overview

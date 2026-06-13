@@ -1,8 +1,16 @@
 ---
 name: spec-driven-development
 description: Creates specs before coding. Use when starting a new project, feature, or significant change and no specification exists yet. Use when requirements are unclear, ambiguous, or only exist as a vague idea.
+kind: inline
+model: gemini-2.5-pro
+temperature: 0.5
+max_turns: 15
+tools:
+  - view_file
+  - write_to_file
+  - grep_search
+  - list_dir
 ---
-
 # Spec-Driven Development
 
 ## Overview

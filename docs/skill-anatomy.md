@@ -18,7 +18,11 @@ skills/
 
 ## SKILL.md Format
 
-### Frontmatter (Required)
+### Frontmatter
+
+Every `SKILL.md` requires a YAML frontmatter block at the very top of the file to configure metadata and execution parameters.
+
+#### Standard Fields (Required)
 
 ```yaml
 ---
@@ -27,11 +31,44 @@ description: Guides agents through [task/workflow]. Use when [specific trigger c
 ---
 ```
 
-**Rules:**
-- `name`: Lowercase, hyphen-separated. Must match the directory name.
-- `description`: Start with what the skill does in third person, then include one or more clear "Use when" trigger conditions. Include both *what* and *when*. Maximum 1024 characters.
+* **`name`**: Lowercase, hyphen-separated. Must match the directory name.
+* **`description`**: Starts with what the skill does in third person, followed by clear "Use when..." trigger conditions. Maximum 1024 characters.
 
-**Why this matters:** Agents discover skills by reading descriptions. The description is injected into the system prompt, so it must tell the agent both what the skill provides and when to activate it. Do not summarize the workflow — if the description contains process steps, the agent may follow the summary instead of reading the full skill.
+**Why this matters:** Agents discover skills semantically by parsing descriptions. The description is injected into the system prompt, telling the agent what the skill provides and when to activate it. Do not summarize the workflow—if the description contains process steps, the agent may follow the summary instead of reading the full skill.
+
+#### Advanced Orchestration Fields (Optional, Supported by Antigravity CLI)
+
+To optimize execution efficiency, resource allocation, and safety, you can configure advanced YAML metadata properties:
+
+```yaml
+---
+name: backend-db-migration
+description: Designed to safely execute database migrations...
+kind: subagent
+model: gemini-2.5-pro
+temperature: 0.2
+max_turns: 15
+tools:
+  - run_command
+  - view_file
+  - write_to_file
+---
+```
+
+* **`kind`**: Specifies the category or mode of execution.
+  * `inline` (Default): The skill runs directly within the parent session's context.
+  * `subagent`: The skill instantiates a new isolated subagent in the background. Good for complex tasks to keep the parent conversation clean.
+  * `workflow`: Indicates the skill defines a multi-step structured flow.
+* **`model`**: Overrides the session's default LLM for this skill.
+  * Use `gemini-3.5-flash` for deterministic, lightweight, or formatting tasks (e.g., git commits, markdown documentation).
+  * Use `gemini-2.5-pro` for high-reasoning, complex logic, or auditing tasks (e.g., debugging, security audits, database migrations).
+* **`temperature`**: Sets model response randomness (`0.0` to `2.0`).
+  * Low (`0.0` - `0.3`): Deterministic tasks like debugging, refactoring, and code migration.
+  * High (`0.7` - `1.0`): Creative tasks like ideation, brainstorming, and design review.
+* **`max_turns`**: A positive integer setting the maximum conversation turns before execution is halted. Prevents the agent from getting stuck in infinite correction loops.
+* **`tools`**: A YAML list of tools allowed during execution (e.g., `view_file`, `chrome-devtools/*`).
+  * **Principle of Least Privilege:** Restricting tools improves security (e.g., preventing a reviewer from writing files or running terminal commands).
+  * **Token Savings:** Only requested tool definitions are loaded into context, reducing token overhead.
 
 ### Standard Sections (Recommended Pattern)
 

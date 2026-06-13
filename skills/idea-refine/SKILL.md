@@ -1,8 +1,16 @@
 ---
 name: idea-refine
 description: Refines raw ideas into sharp, actionable concepts through structured divergent and convergent thinking. Use when an idea is still vague, when you need to stress-test assumptions before committing to a plan, or when you want to expand options before converging on one. Triggers on "ideate", "refine this idea", or "stress-test my plan".
+kind: inline
+model: gemini-2.5-pro
+temperature: 0.8
+max_turns: 15
+tools:
+  - view_file
+  - write_to_file
+  - grep_search
+  - ask_question
 ---
-
 # Idea Refine
 
 Refines raw ideas into sharp, actionable concepts worth building through structured divergent and convergent thinking.

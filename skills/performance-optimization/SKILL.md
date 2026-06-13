@@ -1,8 +1,18 @@
 ---
 name: performance-optimization
 description: Optimizes application performance. Use when performance requirements exist, when you suspect performance regressions, or when Core Web Vitals or load times need improvement. Use when profiling reveals bottlenecks that need fixing.
+kind: subagent
+model: gemini-2.5-pro
+temperature: 0.2
+max_turns: 20
+tools:
+  - run_command
+  - view_file
+  - write_to_file
+  - replace_file_content
+  - grep_search
+  - list_dir
 ---
-
 # Performance Optimization
 
 ## Overview

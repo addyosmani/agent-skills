@@ -1,8 +1,14 @@
 ---
 name: using-agent-skills
 description: Discovers and invokes agent skills. Use when starting a session or when you need to discover which skill applies to the current task. This is the meta-skill that governs how all other skills are discovered and invoked.
+kind: inline
+model: gemini-3.5-flash
+temperature: 0.2
+max_turns: 8
+tools:
+  - view_file
+  - grep_search
 ---
-
 # Using Agent Skills
 
 ## Overview

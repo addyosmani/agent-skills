@@ -1,8 +1,15 @@
 ---
 name: security-and-hardening
 description: Hardens code against vulnerabilities. Use when handling user input, authentication, data storage, or external integrations. Use when building any feature that accepts untrusted data, manages user sessions, or interacts with third-party services.
+kind: subagent
+model: gemini-2.5-pro
+temperature: 0.1
+max_turns: 20
+tools:
+  - view_file
+  - grep_search
+  - list_dir
 ---
-
 # Security and Hardening
 
 ## Overview

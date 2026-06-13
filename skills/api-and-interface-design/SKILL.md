@@ -1,8 +1,15 @@
 ---
 name: api-and-interface-design
 description: Guides stable API and interface design. Use when designing APIs, module boundaries, or any public interface. Use when creating REST or GraphQL endpoints, defining type contracts between modules, or establishing boundaries between frontend and backend.
+kind: inline
+model: gemini-2.5-pro
+temperature: 0.3
+max_turns: 10
+tools:
+  - view_file
+  - grep_search
+  - list_dir
 ---
-
 # API and Interface Design
 
 ## Overview

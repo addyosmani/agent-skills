@@ -1,8 +1,16 @@
 ---
 name: browser-testing-with-devtools
 description: Tests in real browsers via Chrome DevTools MCP. Use when building or debugging anything that runs in a browser. Use when you need to inspect the DOM, capture console errors, analyze network requests, profile performance, or verify visual output with real runtime data. Requires the chrome-devtools MCP server to be configured.
+kind: subagent
+model: gemini-2.5-pro
+temperature: 0.2
+max_turns: 25
+tools:
+  - run_command
+  - view_file
+  - grep_search
+  - chrome-devtools/*
 ---
-
 # Browser Testing with DevTools
 
 ## Overview

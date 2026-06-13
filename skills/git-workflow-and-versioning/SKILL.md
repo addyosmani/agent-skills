@@ -1,8 +1,15 @@
 ---
 name: git-workflow-and-versioning
 description: Structures git workflow practices. Use when making any code change. Use when committing, branching, resolving conflicts, or when you need to organize work across multiple parallel streams.
+kind: inline
+model: gemini-3.5-flash
+temperature: 0.1
+max_turns: 10
+tools:
+  - run_command
+  - view_file
+  - grep_search
 ---
-
 # Git Workflow and Versioning
 
 ## Overview

@@ -1,8 +1,16 @@
 ---
 name: ci-cd-and-automation
 description: Automates CI/CD pipeline setup. Use when setting up or modifying build and deployment pipelines. Use when you need to automate quality gates, configure test runners in CI, or establish deployment strategies.
+kind: subagent
+model: gemini-3.5-flash
+temperature: 0.2
+max_turns: 15
+tools:
+  - run_command
+  - view_file
+  - write_to_file
+  - replace_file_content
 ---
-
 # CI/CD and Automation
 
 ## Overview

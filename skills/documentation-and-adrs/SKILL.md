@@ -1,8 +1,16 @@
 ---
 name: documentation-and-adrs
 description: Records decisions and documentation. Use when making architectural decisions, changing public APIs, shipping features, or when you need to record context that future engineers and agents will need to understand the codebase.
+kind: inline
+model: gemini-3.5-flash
+temperature: 0.6
+max_turns: 10
+tools:
+  - view_file
+  - write_to_file
+  - replace_file_content
+  - grep_search
 ---
-
 # Documentation and ADRs
 
 ## Overview

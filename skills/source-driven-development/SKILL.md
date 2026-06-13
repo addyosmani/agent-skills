@@ -1,8 +1,16 @@
 ---
 name: source-driven-development
 description: Grounds every implementation decision in official documentation. Use when you want authoritative, source-cited code free from outdated patterns. Use when building with any framework or library where correctness matters.
+kind: inline
+model: gemini-2.5-pro
+temperature: 0.2
+max_turns: 10
+tools:
+  - view_file
+  - grep_search
+  - search_web
+  - read_url_content
 ---
-
 # Source-Driven Development
 
 ## Overview

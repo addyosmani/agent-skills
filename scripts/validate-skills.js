@@ -76,12 +76,40 @@ function parseFrontmatter(content) {
   if (!match) return null;
 
   const result = {};
-  for (const line of match[1].split(/\r?\n/)) {
+  const lines = match[1].split(/\r?\n/);
+  let currentKey = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    // Check if it's a list item
+    if (trimmed.startsWith('-') && currentKey) {
+      if (!Array.isArray(result[currentKey])) {
+        result[currentKey] = [];
+      }
+      const val = trimmed.slice(1).trim().replace(/^['"]|['"]$/g, '');
+      result[currentKey].push(val);
+      continue;
+    }
+
     const colonIdx = line.indexOf(':');
     if (colonIdx === -1) continue;
-    const key   = line.slice(0, colonIdx).trim();
+
+    const key = line.slice(0, colonIdx).trim();
     const value = line.slice(colonIdx + 1).trim().replace(/^['"]|['"]$/g, '');
-    if (key) result[key] = value;
+
+    currentKey = key;
+    if (value) {
+      if (value.startsWith('[') && value.endsWith(']')) {
+        result[key] = value.slice(1, -1).split(',').map(s => s.trim().replace(/^['"]|['"]$/g, ''));
+      } else {
+        result[key] = value;
+      }
+    } else {
+      result[key] = null;
+    }
   }
   return result;
 }
@@ -139,6 +167,47 @@ function validateSkill(dirName, knownSkills) {
       `Description is ${fm.description.length} chars — exceeds the ${MAX_DESCRIPTION_LENGTH}-char limit` +
       ` (agents inject this into the system prompt)`
     );
+  }
+
+  // ── Antigravity Advanced Frontmatter Fields Validation ─────────────────────
+  const VALID_KINDS = ['inline', 'subagent', 'workflow'];
+  
+  if (fm.kind !== undefined) {
+    if (fm.kind === null || !VALID_KINDS.includes(fm.kind)) {
+      errors.push(`Invalid 'kind' value '${fm.kind}'. Must be one of: ${VALID_KINDS.join(', ')}`);
+    }
+  }
+
+  if (fm.model !== undefined) {
+    if (fm.model === null || typeof fm.model !== 'string' || fm.model.trim() === '') {
+      errors.push(`Invalid 'model' value '${fm.model}'. Must be a non-empty string`);
+    }
+  }
+
+  if (fm.temperature !== undefined) {
+    const temp = fm.temperature === null ? NaN : parseFloat(fm.temperature);
+    if (isNaN(temp) || temp < 0.0 || temp > 2.0) {
+      errors.push(`Invalid 'temperature' value '${fm.temperature}'. Must be a float between 0.0 and 2.0`);
+    }
+  }
+
+  if (fm.max_turns !== undefined) {
+    const turns = fm.max_turns === null ? NaN : parseInt(fm.max_turns, 10);
+    if (isNaN(turns) || turns <= 0) {
+      errors.push(`Invalid 'max_turns' value '${fm.max_turns}'. Must be a positive integer`);
+    }
+  }
+
+  if (fm.tools !== undefined) {
+    if (fm.tools === null || !Array.isArray(fm.tools)) {
+      errors.push(`Invalid 'tools' field. Must be a YAML list/array of strings`);
+    } else {
+      for (const tool of fm.tools) {
+        if (typeof tool !== 'string' || tool.trim() === '') {
+          errors.push(`Invalid tool entry '${tool}' in tools. Must be a non-empty string`);
+        }
+      }
+    }
   }
 
   // ── Exemption guard ──────────────────────────────────────────────────────
