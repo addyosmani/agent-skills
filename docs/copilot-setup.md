@@ -16,15 +16,20 @@ cat /path/to/agent-skills/skills/code-review-and-quality/SKILL.md > .github/skil
 
 For more details, refer [Creating agent skills for GitHub Copilot](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/create-skills).
 
-### Agent Personas (agents.md)
+### Agent Personas (*.agent.md)
 
 Copilot supports specialized agent personas. Use the agent-skills agents:
 
+> **Important:** GitHub Copilot requires custom agent files to be named `*.agent.md`.
+> Files named `*.md` are silently ignored by Copilot.
+> See [VS Code custom agents docs](https://code.visualstudio.com/docs/copilot/customization/custom-agents#_custom-agent-file-structure) for details.
+
 ```bash
-# Copy agent definitions
-cp /path/to/agent-skills/agents/code-reviewer.md .github/agents/code-reviewer.md
-cp /path/to/agent-skills/agents/test-engineer.md .github/agents/test-engineer.md
-cp /path/to/agent-skills/agents/security-auditor.md .github/agents/security-auditor.md
+# Create the agents directory and copy agent definitions
+mkdir -p .github/agents
+cp /path/to/agent-skills/agents/code-reviewer.md .github/agents/code-reviewer.agent.md
+cp /path/to/agent-skills/agents/test-engineer.md .github/agents/test-engineer.agent.md
+cp /path/to/agent-skills/agents/security-auditor.md .github/agents/security-auditor.agent.md
 ```
 
 Invoke agents in Copilot Chat:

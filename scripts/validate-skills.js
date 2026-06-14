@@ -195,7 +195,13 @@ function validateSkill(dirName, knownSkills) {
     return { errors, warnings, exempt };
   }
 
-  const content = fs.readFileSync(skillPath, 'utf8');
+  let content;
+  try {
+    content = fs.readFileSync(skillPath, 'utf8');
+  } catch (err) {
+    errors.push(`Unreadable SKILL.md: ${err.message}`);
+    return { errors, warnings, exempt };
+  }
 
   // ── Frontmatter ──────────────────────────────────────────────────────────
   const fm = parseFrontmatter(content);
@@ -300,4 +306,11 @@ function main() {
   if (totalErrors > 0) process.exit(1);
 }
 
-main();
+// Surface unexpected failures (fs errors, bad symlinks, …) as a structured
+// one-line CI error instead of an uncaught stack trace.
+try {
+  main();
+} catch (err) {
+  console.error(`\nERROR: validate-skills failed unexpectedly: ${err.message}`);
+  process.exit(1);
+}
