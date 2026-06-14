@@ -4,6 +4,7 @@ Quick reference for web application security. Use alongside the `security-and-ha
 
 ## Table of Contents
 
+- [Threat Modeling (Start Here)](#threat-modeling-start-here)
 - [Pre-Commit Checks](#pre-commit-checks)
 - [Authentication](#authentication)
 - [Authorization](#authorization)
@@ -12,8 +13,19 @@ Quick reference for web application security. Use alongside the `security-and-ha
 - [CORS Configuration](#cors-configuration)
 - [Data Protection](#data-protection)
 - [Dependency Security](#dependency-security)
+- [AI / LLM Security](#ai--llm-security)
 - [Error Handling](#error-handling)
 - [OWASP Top 10 Quick Reference](#owasp-top-10-quick-reference)
+- [OWASP Top 10 for LLMs Quick Reference](#owasp-top-10-for-llms-quick-reference)
+
+## Threat Modeling (Start Here)
+
+Before reaching for controls, spend five minutes thinking like an attacker:
+
+- [ ] Trust boundaries mapped (requests, uploads, webhooks, third-party APIs, LLM output)
+- [ ] Assets named (credentials, PII, payment data, admin actions, money movement)
+- [ ] STRIDE run per boundary (Spoofing, Tampering, Repudiation, Info disclosure, DoS, Elevation)
+- [ ] Abuse cases written next to use cases ("how would I misuse this?")
 
 ## Pre-Commit Checks
 
@@ -50,6 +62,7 @@ Quick reference for web application security. Use alongside the `security-and-ha
 - [ ] SQL queries parameterized (no string concatenation)
 - [ ] HTML output encoded (use framework auto-escaping)
 - [ ] URLs validated before redirect (prevent open redirect)
+- [ ] Server-side URL fetches allowlisted; private/reserved IPs blocked (prevent SSRF)
 
 ## Security Headers
 
@@ -102,6 +115,21 @@ npm audit --audit-level=critical
 npx npm-check-updates
 ```
 
+**Supply-chain hygiene** (`npm audit` won't catch malicious packages):
+- [ ] Lockfile committed; CI installs with `npm ci` (not `npm install`)
+- [ ] New dependencies reviewed (maintenance, downloads, `postinstall` scripts)
+- [ ] No typosquats (`cross-env` vs `crossenv`, `react-dom` vs `reactdom`)
+
+## AI / LLM Security
+
+For any feature that calls an LLM (chatbots, summarizers, agents, RAG):
+
+- [ ] Model output treated as untrusted — never into `eval`/SQL/shell/`innerHTML`/file paths
+- [ ] Prompt injection assumed; permissions enforced in code, not in the system prompt
+- [ ] Secrets, cross-tenant data, and full system prompts kept out of the context window
+- [ ] Tool/agent permissions scoped; destructive or irreversible actions require confirmation
+- [ ] Token, rate, and recursion/loop limits set (bound consumption)
+
 ## Error Handling
 
 ```typescript
@@ -132,3 +160,20 @@ res.status(500).json({
 | 8 | Data Integrity Failures | Verify updates/dependencies, signed artifacts |
 | 9 | Logging Failures | Log security events, don't log secrets |
 | 10 | SSRF | Validate/allowlist URLs, restrict outbound requests |
+
+## OWASP Top 10 for LLMs Quick Reference
+
+For apps with LLM features. See the [OWASP GenAI Security Project](https://genai.owasp.org/llm-top-10/).
+
+| ID | Risk | Prevention |
+|---|---|---|
+| LLM01 | Prompt Injection | Don't trust the system prompt as a boundary; enforce permissions in code |
+| LLM02 | Sensitive Information Disclosure | Keep secrets/PII out of prompts; filter outputs |
+| LLM03 | Supply Chain | Vet models, datasets, and plugins like any dependency |
+| LLM04 | Data and Model Poisoning | Use trusted model sources, verify integrity; vet fine-tuning and RAG data |
+| LLM05 | Improper Output Handling | Treat model output as untrusted; validate, parameterize, encode |
+| LLM06 | Excessive Agency | Scope tool permissions; confirm destructive actions |
+| LLM07 | System Prompt Leakage | Assume the system prompt can leak; put no secrets in it |
+| LLM08 | Vector and Embedding Weaknesses | Partition RAG embeddings per tenant; validate documents before indexing |
+| LLM09 | Misinformation | Ground answers with citations; validate critical claims; keep a human in the loop |
+| LLM10 | Unbounded Consumption | Cap tokens, request rate, and loop/recursion depth |

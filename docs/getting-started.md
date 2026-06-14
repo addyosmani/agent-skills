@@ -102,6 +102,7 @@ The `agents/` directory contains pre-configured agent personas:
 | `code-reviewer.md` | Five-axis code review |
 | `test-engineer.md` | Test strategy and writing |
 | `security-auditor.md` | Vulnerability detection |
+| `web-performance-auditor.md` | Core Web Vitals & performance audit (via `/webperf`) |
 
 Load an agent definition when you need specialized review. For example, ask your coding agent to "review this change using the code-reviewer agent persona" and provide the agent definition.
 
@@ -114,9 +115,11 @@ The `.claude/commands/` directory contains slash commands for Claude Code. These
 | `/spec` | spec-driven-development |
 | `/plan` | planning-and-task-breakdown |
 | `/build` | incremental-implementation + test-driven-development |
+| `/build auto` | planning-and-task-breakdown → incremental-implementation + test-driven-development (whole plan, one approval) |
 | `/test` | test-driven-development |
 | `/review` | code-review-and-quality |
 | `/ship` | shipping-and-launch |
+| `/webperf` | web-performance-auditor (specialist agent, web apps only) |
 | `/discover` *(planned)* | design-sprint |
 
 `/discover` (and optional alias `/sprint`) is planned as a future wrapper. Until it exists, invoke discovery in natural language and let intent mapping select `design-sprint`.

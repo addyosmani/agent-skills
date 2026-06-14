@@ -6,8 +6,23 @@ on:
   workflow_dispatch:
 
 jobs:
+  validate-skills:
+    name: Validate skill content
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate all skills
+        run: node scripts/validate-skills.js
+
   validate:
     name: Validate plugin structure
+    needs: validate-skills
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
