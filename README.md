@@ -1,5 +1,15 @@
 # Agent Skills
 
+<!-- Keep these links, translations synced daily. -->
+[Deutsch](https://zdoc.app/de/addyosmani/agent-skills) |
+[Español](https://zdoc.app/es/addyosmani/agent-skills) |
+[français](https://zdoc.app/fr/addyosmani/agent-skills) |
+[日本語](https://zdoc.app/ja/addyosmani/agent-skills) |
+[한국어](https://zdoc.app/ko/addyosmani/agent-skills) |
+[Português](https://zdoc.app/pt/addyosmani/agent-skills) |
+[Русский](https://zdoc.app/ru/addyosmani/agent-skills) |
+[中文](https://zdoc.app/zh/addyosmani/agent-skills)
+
 **Production-grade engineering skills for AI coding agents.**
 
 Skills encode the workflows, quality gates, and best practices that senior engineers use when building software. These ones are packaged so AI agents follow them consistently across every phase of development.
