@@ -1,0 +1,29 @@
+{
+  "skill_name": "accomplish",
+  "evals": [
+    {
+      "id": 0,
+      "name": "goal-loop-flaky-tests",
+      "prompt": "The auth module's tests are flaky and I keep getting random CI failures. Can you just get them stable?",
+      "expected_output": "Agent upgrades the vague ask into a six-field goal (outcome, verification surface, constraints, boundaries, iteration policy, stop conditions) via a one-question-at-a-time interview, proposes a guarded goal-loop execution mode with an iteration cap / budget / no-progress detection, and waits for explicit confirmation before executing. Does NOT start blindly editing tests.",
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 1,
+      "name": "periodic-deploy-watch",
+      "prompt": "We're deploying the new pricing service this afternoon. Keep an eye on it and let me know if error rates spike.",
+      "expected_output": "Agent recognizes this as recurring/time-based work and lands on periodic mode (/loop with a cadence and a status command), pins a verification surface (what 'error rates spike' means, threshold), sets a checkpoint discipline, and confirms before starting. Does NOT treat it as a one-shot task.",
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 2,
+      "name": "vague-make-codebase-better",
+      "prompt": "I want to accomplish making our codebase better.",
+      "expected_output": "Agent refuses to overshoot. It interviews hard to extract a concrete, verifiable outcome before doing anything, insists on a measurable verification surface, and does NOT fire off a large lifecycle/delegation chain or start refactoring on a guess.",
+      "files": [],
+      "assertions": []
+    }
+  ]
+}
