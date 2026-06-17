@@ -63,6 +63,30 @@ if [ -z "$CONTENT" ]; then
 fi
 dbg "extracted content bytes=${#CONTENT}"
 
+# Reject non-https URLs and internal/metadata hosts before any curl runs.
+# Mirror of the pre hook's guard. Conservative: only public https hosts pass.
+url_is_safe() {
+  local u="$1" host
+  case "$u" in
+    https://*) ;;
+    *) return 1 ;;
+  esac
+  host="${u#https://}"
+  host="${host%%/*}"; host="${host%%\?*}"; host="${host%%#*}"
+  host="${host##*@}"; host="${host%%:*}"
+  host=$(printf '%s' "$host" | tr '[:upper:]' '[:lower:]')
+  case "$host" in
+    localhost|localhost.*|*.localhost) return 1 ;;
+    127.*|0.*|10.*|169.254.*|192.168.*) return 1 ;;
+    172.1[6-9].*|172.2[0-9].*|172.3[0-1].*) return 1 ;;
+    100.6[4-9].*|100.[7-9][0-9].*|100.1[0-1][0-9].*|100.12[0-7].*) return 1 ;;
+    \[*) return 1 ;;
+    metadata|metadata.*|*.internal|*.local) return 1 ;;
+    "") return 1 ;;
+  esac
+  return 0
+}
+
 # Must match the pre hook: sha256(URL), first 32 hex chars.
 hash_key() {
   if command -v shasum >/dev/null 2>&1; then
@@ -72,14 +96,24 @@ hash_key() {
   fi
 }
 
+# SSRF guard: do not issue the validator HEAD request to non-public hosts.
+if ! url_is_safe "$URL"; then
+  dbg "url failed safety check (scheme/host), not caching"
+  exit 0
+fi
+
 CACHE_DIR="${CLAUDE_PROJECT_DIR:-$PWD}/.claude/sdd-cache"
-mkdir -p "$CACHE_DIR"
+# Restrictive perms: cache may hold fetched response bodies. Dir 0700, and
+# files written below inherit 0600 via the umask set here.
+( umask 077; mkdir -p "$CACHE_DIR" )
+chmod 700 "$CACHE_DIR" 2>/dev/null || true
+umask 077
 CACHE_FILE="$CACHE_DIR/$(hash_key "$URL").json"
 
-# Capture validators from the origin. Follow redirects so they match the
-# URL the agent actually talked to. Strip CR so awk's paragraph mode
-# recognises blank separators between response blocks on a redirect chain.
-HEAD_OUT=$(curl -sI -L --max-time 5 "$URL" 2>/dev/null | tr -d '\r' || true)
+# Capture validators from the origin. Redirects are NOT followed (a redirect
+# could point the validator request at an internal host). Strip CR so awk's
+# paragraph mode recognises blank separators between response blocks.
+HEAD_OUT=$(curl -sI --proto '=https' --max-redirs 0 --max-time 5 "$URL" 2>/dev/null | tr -d '\r' || true)
 
 # Take only the final response's headers (last paragraph) to avoid picking
 # up validators from intermediate 301/302 hops.
