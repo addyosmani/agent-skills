@@ -60,7 +60,7 @@ tools:
   * `subagent`: The skill instantiates a new isolated subagent in the background. Good for complex tasks to keep the parent conversation clean.
   * `workflow`: Indicates the skill defines a multi-step structured flow.
 * **`model`**: Overrides the session's default LLM for this skill.
-  * Use `gemini-2.5-flash` for deterministic, lightweight, or formatting tasks (e.g., git commits, markdown documentation).
+  * Use `gemini-3.5-flash` for deterministic, lightweight, or formatting tasks (e.g., git commits, markdown documentation).
   * Use `gemini-2.5-pro` for high-reasoning, complex logic, or auditing tasks (e.g., debugging, security audits, database migrations).
 * **`temperature`**: Sets model response randomness (`0.0` to `2.0`).
   * Low (`0.0` - `0.3`): Deterministic tasks like debugging, refactoring, and code migration.

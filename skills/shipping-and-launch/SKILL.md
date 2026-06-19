@@ -2,7 +2,7 @@
 name: shipping-and-launch
 description: Prepares production launches. Use when preparing to deploy to production. Use when you need a pre-launch checklist, when setting up monitoring, when planning a staged rollout, or when you need a rollback strategy.
 kind: workflow
-model: gemini-2.5-flash
+model: gemini-3.5-flash
 temperature: 0.2
 max_turns: 15
 tools:

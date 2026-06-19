@@ -2,7 +2,7 @@
 name: context-engineering
 description: Optimizes agent context setup. Use when starting a new session, when agent output quality degrades, when switching between tasks, or when you need to configure rules files and context for a project.
 kind: inline
-model: gemini-2.5-flash
+model: gemini-3.5-flash
 temperature: 0.3
 max_turns: 10
 tools:

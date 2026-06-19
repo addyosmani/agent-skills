@@ -104,7 +104,7 @@ You can invoke these personas directly within your session or when delegating ta
 
 Each skill is optimized for Antigravity CLI using advanced properties in its frontmatter:
 - **`kind`**: Declares whether the skill runs `inline` or spawns a background `subagent` (ideal for heavy processes to keep the parent conversation clean).
-- **`model`**: Automatically routes the skill to `gemini-2.5-flash` (saving tokens and latency) or `gemini-2.5-pro` (maximizing reasoning power).
+- **`model`**: Automatically routes the skill to `gemini-3.5-flash` (saving tokens and latency) or `gemini-2.5-pro` (maximizing reasoning power).
 - **`temperature`**: Sets model determinism (`0.0`-`0.3` for refactoring/debugging) or creativity (`0.7`-`1.0` for ideation/interviews).
 - **`max_turns`**: Halts executing agent to prevent infinite loops.
 - **`tools`**: Lists only the allowed tools (e.g. read-only tools for review/security checks), saving context window and preventing unauthorized writes.
