@@ -163,6 +163,31 @@ Instrumentation is code; it can be wrong. Before calling the work done, trigger 
 - Follow one request across services in the tracing UI → no broken spans
 - Fire each new alert once (lower the threshold temporarily) → confirm it reaches the right channel and the runbook link works
 
+### 8. Feedback loops: learn from production runs
+
+Telemetry that's only read during an incident is a sunk cost. For LLM and agent features the highest-value use of it is the opposite direction: feeding what production reveals back into the system so the same failure doesn't recur. Steps 1–7 make each run *visible*; this step makes the system *improve across runs*. It's the operate-and-learn arc the forward lifecycle (spec → ship) leaves open.
+
+The structured failure logs and per-run traces you already emit are the raw material. Close the loop on a regular cadence, not just when paged:
+
+```
+   ┌─────────────────────────────────────────────────────────────┐
+   │                                                               │
+   ▼                                                               │
+ CAPTURE          TRIAGE            DISTILL              RE-EVAL    │
+ traces &    ──▶  cluster     ──▶   into durable   ──▶   confirm ──┘
+ failures         recurring        artifacts:            the score
+ (already         failure          • new eval cases      actually
+  logged)         modes            • prompt/tool fixes    rose, then
+                                   • few-shot / memory     ship
+```
+
+1. **Capture.** Sample real runs and route every failure (errors, low judge scores, user thumbs-down) into one reviewable place, keyed by `requestId` so the full trace is one click away. You built this in steps 3 and 5 — point it at a triage queue.
+2. **Triage.** Cluster failures by mode (wrong tool, hallucinated policy, format drift) rather than fixing one-offs. A mode that recurs is worth a durable fix; a true one-off usually isn't.
+3. **Distill into durable artifacts.** Each recurring mode becomes (a) a new **eval case** so it's caught automatically from now on — see the Evals section of `test-driven-development`; and (b) a fix to the prompt, tool, or a few-shot/memory example. A lesson that lives only in a postmortem doc decays; one that lives in an eval case is enforced.
+4. **Re-evaluate, then ship.** Run the eval set against the change and confirm the score actually rose before shipping. "The new model fixed it" is a hypothesis until the suite agrees. Then ship and watch the same telemetry — the loop repeats.
+
+This closes the loop on top of two adjacent concerns without duplicating them: per-run reliability (bounding, retries, resumable side effects) is loop *control*, not loop *learning*; and the eval mechanics themselves live with `test-driven-development`. This step is only the across-runs improvement arc that connects them.
+
 ## Common Rationalizations
 
 | Rationalization | Reality |
@@ -174,6 +199,8 @@ Instrumentation is code; it can be wrong. Before calling the work done, trigger 
 | "Alert on everything important, we'll tune later" | A noisy pager trains people to ignore it. The tuning never happens; the missed real page does. |
 | "User ID as a metric label makes debugging easier" | It also makes your metrics backend fall over. High-cardinality lookups belong in logs and traces. |
 | "Tracing is overkill for our two services" | Two services already means cross-service latency questions logs can't answer. Auto-instrumentation makes the cost trivial. |
+| "We'll review the failures eventually" | Without a standing loop, "eventually" never arrives and the same failure mode reships every week. Triage on a cadence, not on outrage. |
+| "We already log the errors, so we're covered" | Logging a failure makes it visible once. It's only learned from once it becomes an eval case and a fix. Visibility is step one, not the finish line. |
 
 ## Red Flags
 
@@ -186,6 +213,9 @@ Instrumentation is code; it can be wrong. Before calling the work done, trigger 
 - Alerts on causes (CPU, memory) paging humans while user-facing error rate is unmonitored
 - Secrets, tokens, or full request bodies appearing in logs
 - "It works on my machine" as the only evidence a production feature is healthy
+- A recurring production failure mode that has triggered no new eval case or fix
+- LLM/agent failures logged but never routed anywhere a human reviews them
+- "The new model/prompt is better" shipped with no before/after on the eval set
 
 ## Verification
 
@@ -199,5 +229,6 @@ After instrumenting a feature, confirm:
 - [ ] A single request can be followed end-to-end in the tracing UI without broken spans
 - [ ] Every new alert is symptom-based, has a runbook link, and was test-fired once
 - [ ] An induced failure in staging was located via telemetry alone, without reading the source
+- [ ] For LLM/agent features: failures are routed to a triage queue keyed by `requestId`, recurring modes become eval cases, and improvements are confirmed by re-eval before shipping
 
 For the at-a-glance version of this list, including the pre-launch instrumentation gate, see `references/observability-checklist.md`.
