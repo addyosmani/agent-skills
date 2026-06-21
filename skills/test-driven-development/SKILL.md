@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: Drives development with tests. Use when implementing any logic, fixing any bug, or changing any behavior. Use when you need to prove that code works, when a bug report arrives, or when you're about to modify existing functionality.
+description: Drives development with tests. Use when implementing any logic, fixing any bug, or changing any behavior. Use when you need to prove that code works, when a bug report arrives, or when you're about to modify existing functionality. Use when testing LLM-backed or other non-deterministic output, where evals replace exact assertions.
 ---
 
 # Test-Driven Development
@@ -356,9 +356,30 @@ then verifies the test passes.
 
 This separation ensures the test is written without knowledge of the fix, making it more robust.
 
+## Evals: Testing Non-Deterministic (LLM-Backed) Behavior
+
+Deterministic tests assert on exact values. They can't pin down the free-form output of a prompt, model, or agent — the same input yields different text each run, so there's nothing stable to assert. The counterpart to a unit test here is an **eval**: a versioned set of representative inputs you re-grade on every prompt, model, or tool change, so a quality drop shows up in CI instead of in user reports. Use TDD for the deterministic code around the model; use evals for the part that returns natural language.
+
+Keep the eval set small and graded by the cheapest method that works:
+
+```ts
+// Structured output → assert directly (fast, exact)
+expect(out.toolCalls[0].name).toBe("issueRefund");
+
+// Open-ended text → grade against a rubric with an LLM judge
+const verdict = await judge({ rubric: "On topic? Invents no policy? yes/no + reason", input, output: out.text });
+expect(verdict.pass).toBe(true);
+```
+
+For agents, assert on the **trajectory** — which tool ran, with what arguments, whether the run recovered from an injected failure — not just the final text. The costly failures are wrong-tool and wrong-argument, and the final text often looks fine anyway.
+
+**Grow the suite from incidents.** A happy-path eval set gives false confidence; the inputs that reach users are the ones nobody wrote a case for. Every production failure becomes a new case, the same way a bug fix gets a reproduction test (the Prove-It Pattern, applied to model behavior). That turns the eval set into a ratchet that only tightens. To capture those production failures systematically and feed them back, see the **Feedback Loops** section of `observability-and-instrumentation`.
+
 ## See Also
 
 For JavaScript/TypeScript testing patterns illustrating these principles — Jest, React Testing Library, Supertest, Playwright — see `references/testing-patterns.md`. The principles transfer to any ecosystem; the syntax and tools there are JS/TS-specific.
+
+For closing the loop on LLM/agent failures found in production — turning them into new eval cases and shipping confirmed improvements — see the Feedback Loops section of `observability-and-instrumentation`.
 
 ## Common Rationalizations
 
@@ -371,6 +392,8 @@ For JavaScript/TypeScript testing patterns illustrating these principles — Jes
 | "The code is self-explanatory" | Tests ARE the specification. They document what the code should do, not what it does. |
 | "It's just a prototype" | Prototypes become production code. Tests from day one prevent the "test debt" crisis. |
 | "Let me run the tests again just to be extra sure" | After a clean test run, repeating the same command adds nothing unless the code has changed since. Run again after subsequent edits, not as reassurance. |
+| "The LLM output is too open-ended to test" | Rubric-based grading scores open-ended text against criteria instead of an exact string. Open-endedness is a reason to use evals, not to skip them. |
+| "I tried the prompt a few times and it looked fine" | By hand you check the cases you happen to think of, once. A versioned eval set checks all of them on every prompt, model, or tool change. |
 
 ## Red Flags
 
@@ -383,6 +406,8 @@ For JavaScript/TypeScript testing patterns illustrating these principles — Jes
 - Test names that don't describe the expected behavior
 - Skipping tests to make the suite pass
 - Running the same test command twice in a row without any intervening code change
+- A prompt, model, or tool change merged with no eval run to catch quality regressions
+- An LLM/agent feature whose only QA is "I ran it a few times by hand"
 
 ## Verification
 
@@ -394,5 +419,7 @@ After completing any implementation:
 - [ ] Test names describe the behavior being verified
 - [ ] No tests were skipped or disabled
 - [ ] Coverage hasn't decreased (if tracked)
+- [ ] LLM/agent behavior is covered by a versioned eval set, not by manual spot-checks
+- [ ] Each known production failure of that behavior has been added as an eval case
 
 **Note:** Run each test command after a change that could affect the result. After a clean run, don't repeat the same command unless the code has changed since — re-running on unchanged code adds no confidence.
