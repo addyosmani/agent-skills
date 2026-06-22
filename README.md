@@ -124,9 +124,9 @@ Skills are plain Markdown - they work with any agent that accepts system prompts
 
 ---
 
-## All 20 Skills
+## All 22 Skills
 
-The commands above are the entry points. Under the hood, they activate these 20 skills — each one a structured workflow with steps, verification gates, and anti-rationalization tables. You can also reference any skill directly.
+The commands above are the entry points. Under the hood, they activate these 22 skills — each one a structured workflow with steps, verification gates, and anti-rationalization tables. You can also reference any skill directly.
 
 ### Define - Clarify what to build
 
@@ -140,6 +140,14 @@ The commands above are the entry points. Under the hood, they activate these 20 
 | Skill | What It Does | Use When |
 |-------|-------------|----------|
 | [planning-and-task-breakdown](skills/planning-and-task-breakdown/SKILL.md) | Decompose specs into small, verifiable tasks with acceptance criteria and dependency ordering | You have a spec and need implementable units |
+
+### Orchestrate - Build reusable skills and bounded dispatches
+
+| Skill | What It Does | Use When |
+|-------|-------------|----------|
+| [skill-builder-specialized-agents](skills/skill-builder-specialized-agents/SKILL.md) | Generates and validates skills, specialist definitions, and Bob dispatch contracts | A reusable workflow or specialized agent needs deterministic creation and routing gates |
+
+Its executable entrypoints are Bash wrappers with fail-closed Python assets. Generation and packaging reject paths outside the assigned Git worktree.
 
 ### Build - Write the code
 
@@ -189,6 +197,7 @@ Pre-configured specialist personas for targeted reviews:
 | [code-reviewer](agents/code-reviewer.md) | Senior Staff Engineer | Five-axis code review with "would a staff engineer approve this?" standard |
 | [test-engineer](agents/test-engineer.md) | QA Specialist | Test strategy, coverage analysis, and the Prove-It pattern |
 | [security-auditor](agents/security-auditor.md) | Security Engineer | Vulnerability detection, threat modeling, OWASP assessment |
+| [skill-agent-builder](agents/skill-agent-builder.md) | Skill Systems Engineer | Source-only skill, specialist, and dispatch-contract creation with safety gates |
 
 ---
 
@@ -240,10 +249,11 @@ Every skill follows a consistent anatomy:
 
 ```
 agent-skills/
-├── skills/                            # 20 core skills (SKILL.md per directory)
+├── skills/                            # 22 skills (SKILL.md per directory)
 │   ├── idea-refine/                   #   Define
 │   ├── spec-driven-development/       #   Define
 │   ├── planning-and-task-breakdown/   #   Plan
+│   ├── skill-builder-specialized-agents/ # Orchestrate
 │   ├── incremental-implementation/    #   Build
 │   ├── context-engineering/           #   Build
 │   ├── source-driven-development/     #   Build
@@ -262,8 +272,8 @@ agent-skills/
 │   ├── documentation-and-adrs/        #   Ship
 │   ├── shipping-and-launch/           #   Ship
 │   └── using-agent-skills/            #   Meta: how to use this pack
-├── agents/                            # 3 specialist personas
-├── references/                        # 4 supplementary checklists
+├── agents/                            # 4 specialist personas
+├── references/                        # 5 supplementary references
 ├── hooks/                             # Session lifecycle hooks
 ├── .claude/commands/                  # 7 slash commands
 └── docs/                              # Setup guides per tool
