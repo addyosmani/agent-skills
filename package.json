@@ -1,0 +1,17 @@
+{
+  "name": "agent-skills",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Production-grade engineering skills for AI coding agents.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.js\"",
+    "validate:skills": "node scripts/validate-skills.js",
+    "validate:commands": "node scripts/validate-commands.js",
+    "validate": "npm run validate:skills && npm run validate:commands",
+    "metrics": "node scripts/skill-metrics.js"
+  }
+}
