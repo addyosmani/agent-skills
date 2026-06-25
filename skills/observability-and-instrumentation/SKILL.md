@@ -88,6 +88,8 @@ app.use((req, res, next) => {
 });
 ```
 
+These correlation IDs are what make a postmortem possible: the blameless incident timeline in the Production Incident Response section of the `debugging-and-error-recovery` skill is reconstructed from this telemetry, keyed by request ID.
+
 **Never log secrets, tokens, passwords, or full PII.** This is a hard rule from the `security-and-hardening` skill — telemetry pipelines are a classic data-leak path. Allowlist fields; don't log whole request bodies.
 
 ### 4. Metrics

@@ -159,6 +159,8 @@ Roll back immediately if:
 - Data integrity issues detected
 - Security vulnerability discovered
 
+When the rollback is part of a live incident, roll back to stabilize *first* and root-cause afterward — see "Stabilize before you diagnose" in the Production Incident Response section of the `debugging-and-error-recovery` skill.
+
 ## Monitoring and Observability
 
 ### What to Monitor
