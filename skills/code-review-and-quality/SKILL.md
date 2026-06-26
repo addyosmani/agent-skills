@@ -341,6 +341,12 @@ Part of code review is dependency review:
 - For detailed security review guidance, see `references/security-checklist.md`
 - For performance review checks, see `references/performance-checklist.md`
 
+### Integrations
+
+For large changesets (10+ files) where prompt-only review may skip files or drift on line positions, consider tool-augmented reviewers that combine deterministic engineering with an LLM agent:
+
+- **[Open Code Review](https://github.com/alibaba/open-code-review)** (`ocr`) — open-source CLI that uses deterministic file selection, smart bundling, and external positioning modules so the LLM handles only dynamic decisions. Installs via `npm install -g @alibaba-group/open-code-review`. Also available as a [Claude Code skill](https://github.com/anthropics/claude-code-installed-skills/tree/main/open-code-review) for direct integration.
+
 ## Common Rationalizations
 
 | Rationalization | Reality |
