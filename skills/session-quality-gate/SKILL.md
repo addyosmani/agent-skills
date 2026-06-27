@@ -21,7 +21,7 @@ Done. One directory. Add other libraries as the habit builds.
 
 ## Why
 
-Code passes tests. Thinking doesn't. `shipping-and-launch` checks production. `code-review-and-quality` checks correctness. This checks **whether you learned**. As AI generates code faster than humans can read it, the bottleneck in software engineering is shifting from creation to verification — this skill is a verification gate at session end.
+Code passes tests. Thinking doesn't. `shipping-and-launch` checks production. `code-review-and-quality` checks correctness. This checks **whether you learned**. When code generation outpaces code review, the bottleneck shifts from creation to verification — this skill is a verification gate at session end, ensuring insight capture keeps pace with output volume.
 
 ## When to Use
 
