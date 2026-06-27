@@ -69,6 +69,16 @@ Patterns (English; extend): "pre-existing issue", "skipping tests for now", "tes
 
 False positive rate: ~1 in 20. Tune if higher.
 
+## Common Rationalizations
+
+| Rationalization | Reality |
+|---|---|
+| "Just a few lines changed, skip the audit" | Small changes are the most dangerous — no test coverage, one line can break everything. 30s now saves hours later. |
+| "Too tired, I'll write growth-log next session" | Every session that says this → zero sessions that actually do. If you learned something, capture it now. |
+| "I'll remember what I learned" | No, you won't. Knowledge not written down is knowledge lost. Same mistake next week proves it. |
+| "Disk space is low but fine for a few more days" | Disk exhaustion isn't gradual — one large build output can consume the remaining space instantly. |
+| "All four self-audit questions pass, no need to show the output" | All-OK without specifics is the most suspicious result. Complex tasks always find at least one thing. Show the pass explicitly. |
+
 ## Rules
 
 - Never block without concrete reason (all 5 stale + complex)
