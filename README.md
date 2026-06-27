@@ -142,7 +142,26 @@ Use agent definitions from `agents/` as Copilot personas and skill content in `.
 </details>
 
 <details>
-<summary><b>Codex / Other Agents</b></summary>
+<summary><b>Codex</b></summary>
+
+Install from the Codex plugin marketplace:
+
+```bash
+codex plugin marketplace add addyosmani/agent-skills
+```
+
+Then open `/plugins` in Codex and install **Agent Skills** from the `addy-agent-skills` marketplace.
+
+For a specific branch or ref:
+
+```bash
+codex plugin marketplace add addyosmani/agent-skills --ref main
+```
+
+</details>
+
+<details>
+<summary><b>Other Agents</b></summary>
 
 Skills are plain Markdown - they work with any agent that accepts system prompts or instruction files. See [docs/getting-started.md](docs/getting-started.md).
 

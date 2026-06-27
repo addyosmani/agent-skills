@@ -1,0 +1,25 @@
+{
+  "name": "agent-skills",
+  "version": "1.0.0",
+  "description": "Production-grade engineering skills for AI coding agents.",
+  "author": {
+    "name": "Addy Osmani"
+  },
+  "homepage": "https://github.com/addyosmani/agent-skills",
+  "repository": "https://github.com/addyosmani/agent-skills",
+  "license": "MIT",
+  "skills": "./skills",
+  "interface": {
+    "displayName": "Agent Skills",
+    "shortDescription": "Production-grade engineering skills",
+    "longDescription": "Production-grade engineering skills covering every phase of software development: spec, plan, build, verify, review, and ship.",
+    "developerName": "Addy Osmani",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive"
+    ],
+    "defaultPrompt": [
+      "Use the Agent Skills plugin when the task matches one of its engineering workflows."
+    ]
+  }
+}
