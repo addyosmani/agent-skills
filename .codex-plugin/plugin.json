@@ -8,7 +8,7 @@
   "homepage": "https://github.com/addyosmani/agent-skills",
   "repository": "https://github.com/addyosmani/agent-skills",
   "license": "MIT",
-  "skills": "skills",
+  "skills": "./skills/",
   "interface": {
     "displayName": "Agent Skills",
     "shortDescription": "Production-grade engineering skills",

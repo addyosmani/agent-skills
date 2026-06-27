@@ -7,8 +7,9 @@
     {
       "name": "agent-skills",
       "source": {
-        "source": "local",
-        "path": "./plugins/agent-skills"
+        "source": "url",
+        "url": "https://github.com/addyosmani/agent-skills.git",
+        "ref": "main"
       },
       "policy": {
         "installation": "AVAILABLE",

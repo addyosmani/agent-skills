@@ -153,13 +153,6 @@ codex plugin add agent-skills@addy-agent-skills
 
 Alternatively, after adding the marketplace, open `/plugins` in Codex and install **Agent Skills** from the `addy-agent-skills` marketplace.
 
-For a specific branch or ref:
-
-```bash
-codex plugin marketplace add addyosmani/agent-skills --ref main
-codex plugin add agent-skills@addy-agent-skills
-```
-
 </details>
 
 <details>
