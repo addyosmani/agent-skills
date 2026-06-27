@@ -9,17 +9,19 @@ Before you close the terminal: **did I learn something, or did I just ship and f
 
 ## Quick Start
 
+Create one directory to begin capturing session insights:
+
 ```bash
-mkdir -p ~/.claude/projects/$(echo $PWD | sed 's/[\\/:]/\\-/g')/memory/growth-log
+# Replace <project> with a safe name for your project
+PROJECT=$(echo "$PWD" | sed 's/[\\/:]/-/g')
+mkdir -p ~/.claude/projects/$PROJECT/memory/growth-log
 ```
 
 Done. One directory. Add other libraries as the habit builds.
 
 ## Why
 
-Code passes tests. Thinking doesn't. `shipping-and-launch` checks production. `code-review-and-quality` checks correctness. This checks **whether you learned**.
-
-Addy Osmani on the verification bottleneck: "As AI generates code faster than humans can read it, the primary bottleneck in software engineering is shifting from creation to code review and verification." This skill is a verification gate at session end.
+Code passes tests. Thinking doesn't. `shipping-and-launch` checks production. `code-review-and-quality` checks correctness. This checks **whether you learned**. As AI generates code faster than humans can read it, the bottleneck in software engineering is shifting from creation to verification — this skill is a verification gate at session end.
 
 ## When to Use
 
@@ -55,13 +57,15 @@ Fail any → fix → re-ask. See `self-audit` (anthropics/skills).
 └── tooling_capabilities.md  # Optional
 ```
 
-No memory directory → pass. Directory exists, nothing updated → flag. Addy's principle: "First do it, then do it right, then do it better." Start with one. Iterate.
+No memory directory → pass. Directory exists, nothing updated → flag. Start with one. Iterate.
 
 ### 3. Disk Check
 
-- <15GB: Block (dev machine). CI/headless: 5GB.
-- <50GB: Warn
-- 50GB+: Pass
+Thresholds based on typical developer workstation profiles:
+- **<15GB block**: Below this, a single Docker image pull, `node_modules` install, or large build artifact can exhaust the remaining space. Same threshold used by VS Code and IntelliJ for low-disk warnings.
+- **<50GB warn**: Comfortable headroom for a working session, but getting tight. Proactive cleanup recommended.
+- **≥50GB**: Adequate for development workloads.
+- **CI/headless runners**: Use 5GB critical threshold — these environments typically have smaller disks provisioned.
 
 ### 4. Rationalization Detection
 
