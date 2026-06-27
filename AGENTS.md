@@ -187,3 +187,17 @@ cp -r skills/{skill-name} ~/.claude/skills/
 Add the skill to project knowledge or paste SKILL.md contents into the conversation.
 
 If the skill requires network access, instruct users to add required domains at `claude.ai/settings/capabilities`.
+
+## Knowledge Base
+
+This repo is consumed inside `atl-repo-workspace`, where it sits beside `../riva-wiki/`. The wiki is the canonical source of facts about this workspace: ADRs, entities, concepts, and decision history.
+
+When you need a fact you don't have:
+
+1. Read `../riva-wiki/wiki/index.md` to locate the relevant section.
+2. Follow `[[wikilinks]]` to the specific page.
+3. Cite the source page in your output (e.g., `Source: [[sources/0027-riva-wiki-knowledge-base]]`).
+
+For synthesis questions that span multiple pages, switch into `../riva-wiki/` and follow that repo's Query workflow (see `../riva-wiki/AGENTS.md`).
+
+This `AGENTS.md` is one section longer than upstream `addyosmani/agent-skills`; do not propagate that change to upstream forks. The divergence is documented in `../REPO-MAP.md`.
