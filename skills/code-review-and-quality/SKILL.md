@@ -61,6 +61,19 @@ Does the change fit the system's design?
 - **Is feature-specific logic leaking into a shared or general-purpose module?** Keep logic in its owning layer, reuse the existing canonical helper instead of a near-duplicate, and don't normalize architectural drift.
 - **Are type boundaries explicit?** Question gratuitous `any`/`unknown`/optional/casts and silent fallbacks that paper over an unclear invariant — making the boundary explicit often makes the surrounding control flow simpler.
 
+## Design Review Augmentation
+
+When a review includes design quality, refactoring safety, or architectural drift, invoke `lightweight-design-analysis` on the touched module before finalizing findings.
+
+Use `software-design-principles` as the design rubric for Architecture and Readability findings:
+
+- prefer intention-revealing names over generic helper or manager naming
+- prefer fail-fast behavior over silent fallbacks
+- prefer explicit type boundaries over `any`, casts, and vague optional states
+- prefer extraction or relocation when deep nesting, feature envy, or mixed responsibilities appear
+
+Keep this additive. Design analysis should strengthen the existing review, not replace correctness, security, or performance checks.
+
 ### 4. Security
 
 For detailed security guidance, see `security-and-hardening`. Does the change introduce vulnerabilities?
@@ -173,6 +186,8 @@ For each file changed:
 4. Security: Any vulnerabilities?
 5. Performance: Any bottlenecks?
 ```
+
+If the change has non-trivial design tradeoffs, code smells, or refactoring risk, run `lightweight-design-analysis` on the changed module(s) and fold the results into the Architecture and Readability findings. Use `software-design-principles` to separate substantive design issues from style preferences.
 
 ### Step 4: Categorize Findings
 
