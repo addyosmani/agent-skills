@@ -1,6 +1,8 @@
 ---
 name: session-quality-gate
 description: Verifies session quality before ending — catches rationalized incompleteness, stale learning logs, and low disk space. Use whenever ending a complex coding session. Use whenever the agent has made multiple file edits and is about to stop. Use proactively: before you close the terminal, verify you learned something. Use to build the habit of capturing insights over time.
+version: 1.0.0
+tags: [quality, audit, session, delivery, learning]
 ---
 
 # Session Quality Gate
