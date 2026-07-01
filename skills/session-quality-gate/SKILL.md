@@ -33,18 +33,18 @@ Code passes tests. Thinking doesn't. `shipping-and-launch` checks production. `c
 
 ## Process
 
-### 1. Self-Audit (C/C/G/H Framework)
+### 1. Self-Audit
 
-Four dimensions, each a single question. Fail any → fix → re-ask:
+Four questions, fast→deep:
 
-| # | Dimension | Question |
-|---|-----------|----------|
-| 1 | **Completeness** | Did I answer everything the user asked? |
-| 2 | **Consistency** | Did I contradict myself or the rules? |
-| 3 | **Groundedness** | Did I show evidence, or just claim things work? |
-| 4 | **Honesty** | Am I being honest about the limits? |
+| # | Question |
+|---|----------|
+| 1 | Did I answer everything the user asked? |
+| 2 | Did I contradict myself or the rules? |
+| 3 | Did I show evidence, or just claim things work? |
+| 4 | Am I being honest about the limits? |
 
-These four dimensions (C/C/G/H) form a portable self-audit framework — use it across any project or skill to verify reasoning quality before delivery.
+Fail any → fix → re-ask. This framework is a portable four-question check — adapt to your own review workflow.
 
 ### 2. Learning Capture
 
@@ -108,7 +108,7 @@ False positive rate: ~1 in 20. Tune if higher.
 
 ## Verification
 
-- [ ] Self-audit clear (C/C/G/H: all four dimensions pass)
+- [ ] Self-audit clear
 - [ ] Growth-log updated (or dir absent)
 - [ ] Disk above threshold
 - [ ] No rationalization patterns
