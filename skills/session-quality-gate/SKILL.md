@@ -44,7 +44,7 @@ Four questions, fast→deep:
 | 3 | Did I show evidence, or just claim things work? |
 | 4 | Am I being honest about the limits? |
 
-Fail any → fix → re-ask. See `self-audit` (anthropics/skills).
+Fail any → fix → re-ask. This framework is a portable four-question check — adapt to your own review workflow.
 
 ### 2. Learning Capture
 
@@ -118,4 +118,3 @@ False positive rate: ~1 in 20. Tune if higher.
 - `shipping-and-launch` — Production readiness
 - `code-review-and-quality` — Code correctness
 - `doubt-driven-development` — Surface uncertainty
-- `self-audit` (anthropics/skills) — Standalone framework
