@@ -137,6 +137,32 @@ Use agent definitions from `agents/` as Copilot personas and skill content in `.
 </details>
 
 <details>
+<summary><b>Autohand Code</b></summary>
+
+Autohand Code discovers `SKILL.md` files from user and project skill directories.
+
+**User-level install:**
+
+```bash
+git clone https://github.com/addyosmani/agent-skills.git
+mkdir -p ~/.autohand/skills
+cp -R agent-skills/skills/* ~/.autohand/skills/
+```
+
+**Project-level install:**
+
+```bash
+git clone https://github.com/addyosmani/agent-skills.git
+mkdir -p .autohand/skills
+cp -R agent-skills/skills/* .autohand/skills/
+```
+
+Autohand Code can also browse and install catalog skills with `autohand --skill-install`, or install at project scope with `autohand --skill-install <skill-name> --project`.
+See the [Autohand Code CLI](https://github.com/autohandai/code-cli/) docs for current skill installation details.
+
+</details>
+
+<details>
   <summary><b>Kiro IDE & CLI </b></summary>
   Skills for Kiro reside under ".kiro/skills/" and can be stored under Project or Global level. Kiro also supports Agents.md. See Kiro docs at https://kiro.dev/docs/skills/
 </details>
