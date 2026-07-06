@@ -65,6 +65,30 @@ Correct behavior:
 
 This ensures OpenCode behaves similarly to Claude Code with full workflow enforcement.
 
+## Pi Integration
+
+Pi implements the [Agent Skills standard](https://agentskills.io) natively. Skills auto-discover from `~/.agents/skills/`, installed packages, and project directories.
+
+The **intent mapping, lifecycle mapping, and anti-rationalization rules** from the OpenCode section above apply identically. The only operational difference is how skills are loaded.
+
+### Skill Loading
+
+Pi does **not** have a dedicated `skill` tool. Skills are advertised in the system prompt at startup. To execute a skill, use the `read` tool to load its `SKILL.md`:
+
+```
+read skills/<skill-name>/SKILL.md
+```
+
+The `/skill:<name>` command provides explicit invocation:
+
+```
+/skill:spec-driven-development
+```
+
+### Persona Loading
+
+The agents in `agents/` can be used directly via `read`, or copied to `~/.pi/agent/prompts/` for `/code-reviewer`-style commands.
+
 ## Orchestration: Personas, Skills, and Commands
 
 This repo has three composable layers. They have different jobs and should not be confused:

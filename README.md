@@ -168,6 +168,15 @@ codex plugin marketplace add addyosmani/agent-skills
 ```
 
 Codex reads the root `skills/` directory directly through `.codex-plugin/plugin.json`. Once installed, invoke skills in chat using `@` (e.g., `@spec-driven-development`). See [docs/codex-setup.md](docs/codex-setup.md) for local installation and troubleshooting.
+</details>
+
+<details>
+<summary><b>Pi</b></summary>
+
+Native skill discovery via the Agent Skills standard. Skills auto-discover from `~/.agents/skills/` or install with `pi install git:github.com/addyosmani/agent-skills`.
+
+See [docs/pi-setup.md](docs/pi-setup.md).
+</details>
 
 </details>
 
