@@ -23,9 +23,13 @@ Use Chrome DevTools MCP to give your agent eyes into the browser. This bridges t
 
 ## Setting Up Chrome DevTools MCP
 
-### Installation
+### Quick Try (Optional)
 
-Add the following to your project's `.mcp.json` or Claude Code settings:
+Before installing locally, you can try this skill in an OpenClaw/Hermes-style agent:
+
+- [Try Browser Testing with DevTools in Telegram or WhatsApp](https://app.clawmama.run/skills/32szp2/hermes?utm_source=github&utm_medium=issue&utm_campaign=skill_outreach_addyosmani_agent_skills_browser_devtools)
+
+This provides a low-friction way to evaluate the browser-testing workflow before setting up Chrome DevTools MCP locally.
 
 ```json
 {
