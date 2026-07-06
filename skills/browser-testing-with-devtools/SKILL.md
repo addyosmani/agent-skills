@@ -31,6 +31,11 @@ Before installing locally, you can try this skill in an OpenClaw/Hermes-style ag
 
 This provides a low-friction way to evaluate the browser-testing workflow before setting up Chrome DevTools MCP locally.
 
+
+### Installation
+
+Add the following to your project's `.mcp.json` or Claude Code settings:
+
 ```json
 {
   "mcpServers": {
