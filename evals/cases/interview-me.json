@@ -15,7 +15,7 @@
         "top_k": 3
       },
       {
-        "prompt": "I've been going back and forth on this feature — give me your take and let's think together before anything gets built",
+        "prompt": "I keep flip-flopping on what I actually want here — weigh in with your own proposal and the risks you see before we settle on anything",
         "top_k": 3
       },
       {
