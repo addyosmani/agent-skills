@@ -68,9 +68,21 @@ jobs:
 
             if (collisions.length > 0) {
               if (!hasLabel) {
-                await github.rest.issues.addLabels({
-                  owner, repo, issue_number: prNumber, labels: [LABEL],
-                });
+                // Self-heal if the default 'duplicate' label was deleted:
+                // create it (ignoring already-exists races), then retry once.
+                try {
+                  await github.rest.issues.addLabels({
+                    owner, repo, issue_number: prNumber, labels: [LABEL],
+                  });
+                } catch (e) {
+                  await github.rest.issues.createLabel({
+                    owner, repo, name: LABEL, color: 'cfd3d7',
+                    description: 'This issue or pull request already exists',
+                  }).catch((err) => { if (err.status !== 422) throw err; });
+                  await github.rest.issues.addLabels({
+                    owner, repo, issue_number: prNumber, labels: [LABEL],
+                  });
+                }
               }
               core.summary.addHeading('Duplicate skill detected', 3);
               core.summary.addRaw(
@@ -78,11 +90,12 @@ jobs:
                 `Per the [contributing pre-flight checks](https://github.com/${owner}/${repo}/blob/main/CONTRIBUTING.md#before-proposing-a-new-skill), ` +
                 `coordinate with the colliding PR instead of duplicating it.\n\n`
               );
+              const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
               core.summary.addTable([
                 [{ data: 'Colliding PR', header: true }, { data: 'Skill(s)', header: true }],
                 ...collisions.map((c) => [
-                  `<a href="${c.url}">#${c.number} — ${c.title}</a>`,
-                  c.skills.map((s) => `<code>${s}</code>`).join(', '),
+                  `<a href="${c.url}">#${c.number} — ${esc(c.title)}</a>`,
+                  c.skills.map((s) => `<code>${esc(s)}</code>`).join(', '),
                 ]),
               ]);
               await core.summary.write();
