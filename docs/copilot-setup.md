@@ -2,6 +2,30 @@
 
 ## Setup
 
+### Slash Commands (GitHub Copilot CLI)
+
+After installing the plugin, all 8 lifecycle slash commands are available natively in the GitHub Copilot CLI:
+
+| Command | What it does |
+| --- | --- |
+| `/spec` | Write a structured spec before coding |
+| `/plan` | Break work into small, ordered tasks |
+| `/build` | Implement the next task incrementally (add `auto` for full plan in one pass) |
+| `/test` | TDD workflow — red, green, refactor |
+| `/review` | Five-axis code review before merge |
+| `/webperf` | Web performance audit |
+| `/code-simplify` | Simplify code for clarity |
+| `/ship` | Pre-launch checklist and go/no-go |
+
+Install the plugin if you haven't already:
+
+```bash
+/plugin marketplace add addyosmani/agent-skills
+/plugin install agent-skills@addy-agent-skills
+```
+
+Then type `/spec`, `/plan`, and the other commands directly in any session. Type `/clear` to reload if you installed the plugin in a running session.
+
 ### Copilot Instructions
 
 Copilot supports creating agent skills using a `.github/skills`, `.claude/skills`, or `.agents/skills` directory in your repository.
