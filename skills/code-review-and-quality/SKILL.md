@@ -338,8 +338,8 @@ Part of code review is dependency review:
 ```
 ## See Also
 
-- For detailed security review guidance, see `references/security-checklist.md`
-- For performance review checks, see `references/performance-checklist.md`
+- For detailed security review guidance, see [references/security-checklist.md](https://github.com/addyosmani/agent-skills/blob/main/references/security-checklist.md)
+- For performance review checks, see [references/performance-checklist.md](https://github.com/addyosmani/agent-skills/blob/main/references/performance-checklist.md)
 
 ## Common Rationalizations
 

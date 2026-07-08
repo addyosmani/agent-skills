@@ -143,6 +143,7 @@ When a skill ships runnable helpers under `scripts/`, each script follows these 
 - Skill files: `SKILL.md` (always uppercase)
 - Supporting files: `lowercase-hyphen-separated.md`
 - References: stored in `references/` at the project root, not inside skill directories
+- Links from a skill to a shared checklist should use the canonical GitHub URL (`https://github.com/addyosmani/agent-skills/blob/main/references/<file>.md`), not a bare relative path — per-skill installs do not include the repo-root `references/` folder
 
 ## Cross-Skill References
 

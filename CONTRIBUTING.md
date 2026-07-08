@@ -57,6 +57,7 @@ The frontmatter fields above are required. The section anatomy is a recommended 
 - Don't create supporting files unless content exceeds 100 lines
 - Don't create an empty `scripts/` directory just to match another skill — add `scripts/` only when the skill includes runnable helpers
 - Don't put reference material inside skill directories — use `references/` instead
+- When a skill links to a shared checklist in `references/`, use the canonical GitHub URL (`https://github.com/addyosmani/agent-skills/blob/main/references/<file>.md`), not a bare relative path — per-skill `npx` installs do not include the repo-root `references/` folder ([#361](https://github.com/addyosmani/agent-skills/issues/361))
 
 ## Modifying Existing Skills
 

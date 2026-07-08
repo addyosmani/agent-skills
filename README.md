@@ -57,6 +57,8 @@ npx skills add addyosmani/agent-skills --skill interview-me              # requi
 npx skills add addyosmani/agent-skills --skill test-driven-development   # red-green-refactor, enforced
 ```
 
+> **Per-skill installs and shared checklists:** `npx skills add … --skill <name>` copies only that skill directory. Shared checklists live in the repo-root [`references/`](references/) folder and are not included. Skills link to those checklists via their GitHub URLs so the links still resolve; for offline/local copies of the checklists, install the full pack or clone the repo.
+
 Prefer a native integration? Pick your tool below.
 
 <details>
