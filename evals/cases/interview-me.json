@@ -13,6 +13,14 @@
       {
         "prompt": "Ask me one question at a time until you understand the feature",
         "top_k": 3
+      },
+      {
+        "prompt": "I've been going back and forth on this feature — give me your take and let's think together before anything gets built",
+        "top_k": 3
+      },
+      {
+        "prompt": "What would you do here? Propose something for this requirement and tell me where you'd push back",
+        "top_k": 3
       }
     ],
     "negative": [
@@ -37,6 +45,18 @@
         "The agent does not propose solutions before understanding the need",
         "The interview surfaces the underlying goal behind the stated ask"
       ]
+    },
+    {
+      "id": 2,
+      "prompt": "I need a caching layer for our API but I'm torn on the approach. Interview me, and give me your take as we go — I want your proposals, not just questions.",
+      "expected_output": "An interview that enters collaborative mode on the user's explicit invitation: proposals carry an explicit lean and risk, the restate tags each line's origin, and the agent checks it hasn't anchored the user",
+      "expectations": [
+        "The agent does not propose on turn 1; at least one round of user signal comes first",
+        "Each proposal states a lean and a risk, with at most 3 options in a single turn",
+        "The final restate marks which lines came from the user's answers and which from accepted proposals",
+        "Before stopping, the agent runs an anti-anchoring check on accepted proposals"
+      ],
+      "trust_level": "provisional"
     }
   ]
 }
