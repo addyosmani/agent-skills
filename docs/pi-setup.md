@@ -130,8 +130,6 @@ The existing `AGENTS.md` in this repository works with pi. It encodes:
 - **Lifecycle Mapping**  DEFINE → BUILD → VERIFY → REVIEW → SHIP phases
 - **Anti-Rationalization**  Rules preventing the agent from skipping skills
 
-**Tip:** Copy `AGENTS.md` to `~/.pi/agent/AGENTS.md` for global enforcement across all projects.
-
 ### 5. Personas as Context
 
 The 4 agent personas in `agents/` (`code-reviewer`, `security-auditor`, `test-engineer`, `web-performance-auditor`) can be loaded as system prompt additions:
@@ -198,11 +196,8 @@ This endpoint is returning 500 errors
 ### Global Setup (Once)
 
 ```bash
-# 1. Clone the skills globally
+# Clone the skills globally
 git clone https://github.com/addyosmani/agent-skills.git ~/.agents/skills/addyosmani-agent-skills
-
-# 2. Copy AGENTS.md to global config for project-agnostic enforcement
-cp ~/.agents/skills/addyosmani-agent-skills/AGENTS.md ~/.pi/agent/AGENTS.md
 ```
 
 ### Project Setup
