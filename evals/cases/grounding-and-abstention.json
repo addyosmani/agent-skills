@@ -1,0 +1,47 @@
+{
+  "skill_name": "grounding-and-abstention",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Build a support assistant that answers from our help-center docs and never makes things up",
+        "top_k": 3
+      },
+      {
+        "prompt": "Our RAG bot invents answers when the docs don't cover a question. How should it behave instead?",
+        "top_k": 3
+      },
+      {
+        "prompt": "Design an AI feature that cites its sources and says 'I don't know' or escalates to a human when it's unsure",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Write a failing test for this rounding bug before I fix it",
+        "owner": "test-driven-development"
+      },
+      {
+        "prompt": "Which React 19 hook should I use for form state, per the official docs?",
+        "owner": "source-driven-development"
+      },
+      {
+        "prompt": "Set up CI to run our LLM evals and gate the PR on a pass-rate threshold",
+        "owner": "evaluating-llm-output"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Build a RAG assistant over our internal policy docs. Users will sometimes ask things the docs don't cover.",
+      "expected_output": "A design that grounds answers in retrieved policy chunks with per-claim citations, abstains (states it doesn't have the information) when retrieval is weak or out of scope, escalates high-stakes cases to a human, and an eval set that includes unanswerable / out-of-scope questions.",
+      "expectations": [
+        "Answers are constrained to retrieved evidence, with each non-trivial claim citing a source",
+        "A relevance floor triggers abstention instead of answering from the model's general knowledge",
+        "Abstention is a designed, gracefully-rendered response rather than an error",
+        "The proposed eval set includes unanswerable / out-of-scope inputs and measures abstention accuracy, over-refusal rate, and hallucination-on-unanswerable"
+      ],
+      "trust_level": "provisional"
+    }
+  ]
+}
