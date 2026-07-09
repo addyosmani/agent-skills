@@ -65,3 +65,7 @@ Tailor the list to the project once, then reuse it unchanged. A Definition of Do
 - A different bar applied depending on deadline pressure.
 - Acceptance criteria treated as the whole bar, with no standing quality floor.
 - "Done" declared before human review on changes that need it.
+
+## Additional Folders
+
+Consider modifying the npx installation process to include additional folders such as 'references' alongside the 'skills' folder.
