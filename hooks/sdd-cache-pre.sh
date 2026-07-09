@@ -13,14 +13,19 @@
 # so the key is URL-only and the original prompt is surfaced in the hit
 # message so the next agent can tell if the earlier reading still applies.
 #
-# Dependencies: jq, curl, shasum (or sha256sum).
+# Dependencies: curl, shasum (or sha256sum), and one JSON tool (jq preferred,
+# falling back to python3, then node — see lib/jsonutil.sh).
 
 set -euo pipefail
 
 # Graceful degradation: if any dependency is missing, let the fetch through.
-command -v jq   >/dev/null 2>&1 || exit 0
 command -v curl >/dev/null 2>&1 || exit 0
 command -v shasum >/dev/null 2>&1 || command -v sha256sum >/dev/null 2>&1 || exit 0
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/jsonutil.sh
+source "$SCRIPT_DIR/lib/jsonutil.sh"
+[ "$JSON_TOOL" != "none" ] || exit 0
 
 if [ -t 0 ]; then INPUT="{}"; else INPUT=$(cat); fi
 
@@ -34,7 +39,7 @@ dbg() {
 }
 dbg "fired"
 
-URL=$(printf '%s' "$INPUT" | jq -r '.tool_input.url // empty' 2>/dev/null || true)
+URL=$(jf_get_input_field "$INPUT" "tool_input.url" "")
 if [ -z "$URL" ]; then dbg "no url in tool_input, exit"; exit 0; fi
 dbg "url=$URL"
 
@@ -53,10 +58,10 @@ CACHE_FILE="$CACHE_DIR/$(hash_key "$URL").json"
 if [ ! -f "$CACHE_FILE" ]; then dbg "no cache file at $CACHE_FILE, exit"; exit 0; fi
 dbg "cache file exists: $CACHE_FILE"
 
-FETCHED_AT=$(jq -r '.fetched_at // 0' "$CACHE_FILE" 2>/dev/null || echo 0)
-ORIGINAL_PROMPT=$(jq -r '.prompt // empty' "$CACHE_FILE" 2>/dev/null || true)
-ETAG=$(jq -r '.etag // empty' "$CACHE_FILE" 2>/dev/null || true)
-LAST_MOD=$(jq -r '.last_modified // empty' "$CACHE_FILE" 2>/dev/null || true)
+FETCHED_AT=$(jf_get_file "$CACHE_FILE" "fetched_at" "0")
+ORIGINAL_PROMPT=$(jf_get_file "$CACHE_FILE" "prompt" "")
+ETAG=$(jf_get_file "$CACHE_FILE" "etag" "")
+LAST_MOD=$(jf_get_file "$CACHE_FILE" "last_modified" "")
 
 # No validator means we cannot verify freshness — never serve from cache.
 if [ -z "$ETAG" ] && [ -z "$LAST_MOD" ]; then
@@ -80,9 +85,24 @@ if [ "$STATUS" != "304" ]; then
 fi
 
 # Server confirmed content unchanged. Serve cached copy to the agent.
-CONTENT=$(jq -r '.content // empty' "$CACHE_FILE" 2>/dev/null || true)
+CONTENT=$(jf_get_file "$CACHE_FILE" "content" "")
 if [ -z "$CONTENT" ]; then dbg "cache file has empty content field, bypass"; exit 0; fi
 dbg "cache HIT, blocking WebFetch with ${#CONTENT} bytes of cached content"
+
+# Record savings: a hit means WebFetch's fetch+model-postprocess round trip
+# was skipped entirely. Bytes served from cache approximate the input tokens
+# that avoided re-processing (~4 bytes/token for English prose). Best-effort:
+# a failed stats update never blocks serving the cached content.
+record_stat() {
+  local stats_file="$CACHE_DIR/.stats.json" bytes="${#CONTENT}" now hits bytes_saved since
+  now=$(date +%s)
+  hits=$(jf_get_file "$stats_file" "hits" "0")
+  bytes_saved=$(jf_get_file "$stats_file" "bytes_saved" "0")
+  since=$(jf_get_file "$stats_file" "since" "")
+  [ -n "$since" ] || since="$now"
+  jf_write_stats_file "$stats_file" "$((hits + 1))" "$((bytes_saved + bytes))" "$since" "$now"
+}
+record_stat 2>/dev/null || true
 
 VERIFIED_AT_ISO=$(date -u -r "$FETCHED_AT" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null \
               || date -u -d "@$FETCHED_AT" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null \

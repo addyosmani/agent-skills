@@ -151,6 +151,16 @@ mkdir -p .claude/sdd-cache && touch .claude/sdd-cache/.debug
 
 The log captures URL, detected `tool_response` shape, HEAD status, and why each invocation hit or missed. Useful when a cache miss looks unexpected (typically: the origin stopped emitting validators).
 
+## Savings tracking
+
+Every cache hit appends to `.claude/sdd-cache/.stats.json` — `{hits, bytes_saved, since, last_hit}`. View a summary with:
+
+```bash
+bash hooks/sdd-cache-stats.sh
+```
+
+`bytes_saved` is the size of cached content served in place of a fresh `WebFetch`; the script estimates tokens saved at ~4 bytes/token. This only counts hits this hook intercepted — it says nothing about Anthropic's own server-side prompt cache, which isn't visible to a hook.
+
 ## Known limitations
 
 - **Body is prompt-shaped.** A hit returns the earlier agent's reading of the page, with the original prompt surfaced so the current agent can decide whether it applies. If it doesn't, delete the file under `.claude/sdd-cache/` to force a re-fetch.
@@ -161,7 +171,9 @@ The log captures URL, detected `tool_response` shape, HEAD status, and why each 
 
 ## Requirements
 
-- `jq`
+- One of `jq`, `python3`, or `node` (auto-detected, in that preference order — see `hooks/lib/jsonutil.sh`)
 - `curl`
 - `shasum` or `sha256sum` (auto-detected)
 - Bash 3.2+
+
+If none of `jq`/`python3`/`node` is on `PATH`, both hooks bypass silently and `WebFetch` runs uncached — the same graceful-degradation behavior as a missing `curl`.

@@ -9,13 +9,18 @@
 # key) so a future cache hit can show what question produced the cached
 # reading. Entries without ETag or Last-Modified are not cached.
 #
-# Dependencies: jq, curl, shasum (or sha256sum).
+# Dependencies: curl, shasum (or sha256sum), and one JSON tool (jq preferred,
+# falling back to python3, then node — see lib/jsonutil.sh).
 
 set -euo pipefail
 
-command -v jq   >/dev/null 2>&1 || exit 0
 command -v curl >/dev/null 2>&1 || exit 0
 command -v shasum >/dev/null 2>&1 || command -v sha256sum >/dev/null 2>&1 || exit 0
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/jsonutil.sh
+source "$SCRIPT_DIR/lib/jsonutil.sh"
+[ "$JSON_TOOL" != "none" ] || exit 0
 
 if [ -t 0 ]; then INPUT="{}"; else INPUT=$(cat); fi
 
@@ -29,33 +34,20 @@ dbg() {
 }
 dbg "fired, input=$(printf '%s' "$INPUT" | head -c 400)"
 
-URL=$(printf '%s'    "$INPUT" | jq -r '.tool_input.url    // empty' 2>/dev/null || true)
-PROMPT=$(printf '%s' "$INPUT" | jq -r '.tool_input.prompt // empty' 2>/dev/null || true)
+URL=$(jf_get_input_field "$INPUT" "tool_input.url" "")
+PROMPT=$(jf_get_input_field "$INPUT" "tool_input.prompt" "")
 if [ -z "$URL" ]; then dbg "no url in tool_input, exit"; exit 0; fi
 dbg "url=$URL prompt=$(printf '%s' "$PROMPT" | head -c 80)"
 
 # WebFetch tool_response shape (Claude Code as of 2026-04): an object with
 # keys bytes, code, codeText, durationMs, result, url — content lives at
 # .result. The other keys (.output / .text / .content / .body) are kept as
-# defensive fallbacks in case the shape changes; jq returns empty if none
-# match. The string branch handles older/custom integrations.
-TOOL_RESPONSE_TYPE=$(printf '%s' "$INPUT" | jq -r '.tool_response | type' 2>/dev/null || echo "unknown")
-dbg "tool_response type=$TOOL_RESPONSE_TYPE keys=$(printf '%s' "$INPUT" | jq -r 'try (.tool_response | keys | join(",")) catch "n/a"' 2>/dev/null)"
+# defensive fallbacks in case the shape changes; the extractor returns empty
+# if none match. The string branch handles older/custom integrations.
+TOOL_RESPONSE_TYPE=$(jf_response_type "$INPUT")
+dbg "tool_response type=$TOOL_RESPONSE_TYPE"
 
-CONTENT=$(printf '%s' "$INPUT" | jq -r '
-  if (.tool_response | type) == "object" then
-    (.tool_response.result
-     // .tool_response.output
-     // .tool_response.text
-     // .tool_response.content
-     // .tool_response.body
-     // empty)
-  elif (.tool_response | type) == "string" then
-    .tool_response
-  else
-    empty
-  end
-' 2>/dev/null || true)
+CONTENT=$(jf_extract_response_content "$INPUT")
 
 if [ -z "$CONTENT" ]; then
   dbg "could not extract content from tool_response, exit (shape unknown)"
@@ -114,22 +106,10 @@ fi
 
 NOW=$(date +%s)
 
-TMP="${CACHE_FILE}.$$.tmp"
-if jq -n \
-  --arg url           "$URL" \
-  --arg prompt        "$PROMPT" \
-  --arg etag          "$ETAG" \
-  --arg last_modified "$LAST_MOD" \
-  --arg content       "$CONTENT" \
-  --argjson fetched_at "$NOW" \
-  '{url: $url, prompt: $prompt, etag: $etag, last_modified: $last_modified, content: $content, fetched_at: $fetched_at}' \
-  > "$TMP"
-then
-  mv "$TMP" "$CACHE_FILE"
+if jf_write_cache_file "$CACHE_FILE" "$URL" "$PROMPT" "$ETAG" "$LAST_MOD" "$CONTENT" "$NOW"; then
   dbg "wrote cache file $CACHE_FILE"
 else
-  rm -f "$TMP"
-  dbg "jq failed, temp cleaned"
+  dbg "$JSON_TOOL failed to write cache file"
 fi
 
 exit 0
