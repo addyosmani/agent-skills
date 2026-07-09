@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "addy-agent-skills",
+  "description": "Production-grade engineering skills for AI coding agents — covering the full software development lifecycle from spec to ship.",
+  "owner": {
+    "name": "Addy Osmani",
+    "url": "https://github.com/addyosmani"
+  },
+  "plugins": [
+    {
+      "name": "agent-skills",
+      "source": {
+        "source": "github",
+        "repo": "addyosmani/agent-skills"
+      },
+      "description": "Production-grade engineering skills covering every phase of software development: spec, plan, build, verify, review, and ship.",
+      "homepage": "https://github.com/addyosmani/agent-skills",
+      "license": "MIT",
+      "keywords": ["skills", "agents", "engineering", "spec", "tdd", "review", "ship"]
+    }
+  ]
+}

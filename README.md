@@ -10,14 +10,19 @@ Skills encode the workflows, quality gates, and best practices that senior engin
 
 ```
   DEFINE          PLAN           BUILD          VERIFY         REVIEW          SHIP
- ┌──────┐      ┌──────┐      ┌──────┐      ┌──────┐      ┌──────┐      ┌──────┐
- │ Idea │ ───▶ │ Spec │ ───▶ │ Code │ ───▶ │ Test │ ───▶ │  QA  │ ───▶ │  Go  │
- │Refine│      │  PRD │      │ Impl │      │Debug │      │ Gate │      │ Live │
- └──────┘      └──────┘      └──────┘      └──────┘      └──────┘      └──────┘
+  ┌──────┐      ┌──────┐      ┌──────┐      ┌──────┐      ┌──────┐      ┌──────┐
+  │ Idea │ ───▶ │ Spec │ ───▶ │ Code │ ───▶ │ Test │ ───▶ │  QA  │ ───▶ │  Go  │
+  │Refine│      │  PRD │      │ Impl │      │Debug │      │ Gate │      │ Live │
+  └──────┘      └──────┘      └──────┘      └──────┘      └──────┘      └──────┘
   /spec          /plan          /build        /test         /review       /ship
 ```
 
 ---
+
+![Open Source](https://img.shields.io/badge/License-MIT-blue.svg)
+![Platform](https://img.shields.io/badge/Platform-AI%20Agents-green)
+![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)
+![Skills Count](https://img.shields.io/badge/skills-24%2F24-purple)
 
 ## Commands
 
@@ -79,7 +84,7 @@ Prefer a native integration? Pick your tool below.
 
 ```bash
 git clone https://github.com/addyosmani/agent-skills.git
-claude --plugin-dir /path/to/agent-skills
+claude --plugin-dir /path/to/.ai_agent_hidden  # renamed from .claude for anonymity
 ```
 
 </details>
