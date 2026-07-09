@@ -62,6 +62,17 @@ Prefer a native integration? Pick your tool below.
 <details>
 <summary><b>Claude Code (recommended)</b></summary>
 
+> **Not logged in?** If Claude Code shows `Not logged in · Please run /login`,
+> run `/login` inside Claude Code first, then retry the install:
+>
+> ```bash
+> /plugin marketplace add addyosmani/agent-skills
+> /plugin install agent-skills@addy-agent-skills
+> ```
+>
+> Make sure you are installing `agent-skills@addy-agent-skills`; names such as
+> `everything-claude-code@everything-claude-code` are not part of this marketplace entry.
+
 **Marketplace install:**
 
 ```
