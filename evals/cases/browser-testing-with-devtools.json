@@ -1,0 +1,42 @@
+{
+  "skill_name": "browser-testing-with-devtools",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Use Chrome DevTools to figure out why the checkout button click does nothing",
+        "top_k": 3
+      },
+      {
+        "prompt": "Inspect the network requests the dashboard makes when it first loads",
+        "top_k": 3
+      },
+      {
+        "prompt": "Verify in a real browser that the form submits and the data persists in localStorage",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Write a spec for the new billing feature before we start",
+        "owner": "spec-driven-development"
+      },
+      {
+        "prompt": "Break this PRD into ordered implementation tasks",
+        "owner": "planning-and-task-breakdown"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The signup form renders but submitting it appears to do nothing. Verify the real behavior in the browser and report findings.",
+      "expected_output": "Runtime evidence from the browser: console errors, network activity, DOM state, and a diagnosis",
+      "expectations": [
+        "Findings are grounded in observed runtime data (console, network, DOM), not static code reading alone",
+        "The report distinguishes what was observed from what is inferred",
+        "A concrete next step or fix hypothesis is provided"
+      ],
+      "trust_level": "provisional"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "skill_name": "documentation-and-adrs",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Write an ADR for choosing Postgres over MongoDB",
+        "top_k": 3
+      },
+      {
+        "prompt": "Document the architecture decision behind the queue design",
+        "top_k": 3
+      },
+      {
+        "prompt": "Update the documentation for the new setup flow and record why it changed",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Find the root cause of the memory leak in the worker",
+        "owner": "debugging-and-error-recovery"
+      },
+      {
+        "prompt": "Harden the login endpoint against brute force attacks",
+        "owner": "security-and-hardening"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Record the decision to adopt event sourcing for the orders service as an ADR.",
+      "expected_output": "An ADR capturing context, decision, alternatives considered, and consequences",
+      "expectations": [
+        "The ADR states context, decision, alternatives, and consequences distinctly",
+        "Trade-offs and rejected options are recorded, not just the winning choice",
+        "The document is written in timeless language describing current state"
+      ],
+      "trust_level": "provisional"
+    }
+  ]
+}

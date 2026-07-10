@@ -1,0 +1,43 @@
+{
+  "skill_name": "debugging-and-error-recovery",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "The app crashes with a TypeError when I click save, help me find the root cause",
+        "top_k": 3
+      },
+      {
+        "prompt": "The API is throwing intermittent 500 errors in production, help me find the root cause",
+        "top_k": 3
+      },
+      {
+        "prompt": "This test passed yesterday and fails today, figure out what broke",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Write the API documentation for the orders service",
+        "owner": "documentation-and-adrs"
+      },
+      {
+        "prompt": "Simplify this working function for readability",
+        "owner": "code-simplification"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "A test that passed yesterday now fails with an off-by-one error in pagination. Find and fix the root cause.",
+      "expected_output": "A reproduced failure, an identified root cause, a minimal fix, and a guard against regression",
+      "expectations": [
+        "The failure is reproduced before any fix is attempted",
+        "The root cause is identified and stated, not just the symptom patched",
+        "A regression test exists after the fix",
+        "The fix is minimal and scoped to the cause"
+      ],
+      "trust_level": "provisional"
+    }
+  ]
+}

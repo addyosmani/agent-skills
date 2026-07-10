@@ -96,6 +96,7 @@ The `agents/` directory contains pre-configured agent personas:
 | `code-reviewer.md` | Five-axis code review |
 | `test-engineer.md` | Test strategy and writing |
 | `security-auditor.md` | Vulnerability detection |
+| `web-performance-auditor.md` | Core Web Vitals & performance audit (via `/webperf`) |
 
 Load an agent definition when you need specialized review. For example, ask your coding agent to "review this change using the code-reviewer agent persona" and provide the agent definition.
 
@@ -108,9 +109,18 @@ The `.claude/commands/` directory contains slash commands for Claude Code:
 | `/spec` | spec-driven-development |
 | `/plan` | planning-and-task-breakdown |
 | `/build` | incremental-implementation + test-driven-development |
+| `/build auto` | planning-and-task-breakdown → incremental-implementation + test-driven-development (whole plan, one approval) |
 | `/test` | test-driven-development |
 | `/review` | code-review-and-quality |
+| `/code-simplify` | code-simplification |
 | `/ship` | shipping-and-launch |
+| `/webperf` | web-performance-auditor (specialist agent, web apps only) |
+
+> **Note:** When installed as a Claude Code plugin you may see a warning like
+> _"Default commands/ folder is ignored because the manifest sets 'commands'"_.
+> This is expected. The root `commands/` directory belongs to the Antigravity CLI
+> and is intentionally separate from `.claude/commands/`. All Claude Code slash
+> commands load correctly from `.claude/commands/`; the warning is cosmetic.
 
 ## Using References
 
@@ -122,6 +132,9 @@ The `references/` directory contains supplementary checklists:
 | `performance-checklist.md` | performance-optimization |
 | `security-checklist.md` | security-and-hardening |
 | `accessibility-checklist.md` | frontend-ui-engineering |
+| `definition-of-done.md` | all skills / every change |
+| `observability-checklist.md` | observability-and-instrumentation |
+| `orchestration-patterns.md` | context-engineering |
 
 Load a reference when you need detailed patterns beyond what the skill covers.
 
