@@ -1,6 +1,6 @@
 ---
 name: spec-driven-development
-description: Creates specs before coding. Use when starting a new project, feature, or significant change and no specification exists yet. Use when requirements are unclear, ambiguous, or only exist as a vague idea.
+description: Creates specs before coding. Use when starting a new project, feature, or significant change and no specification exists yet. Use when requirements are unclear, ambiguous, or only exist as a vague idea. Use when evolving a shipped spec — scoping a V1, deferring ideas to a V2 backlog, or writing a follow-up spec for a change to an existing feature.
 ---
 
 # Spec-Driven Development
@@ -110,6 +110,9 @@ Don't silently fill in ambiguous requirements. The spec's entire purpose is to s
 ## Success Criteria
 [How we'll know this is done — specific, testable conditions]
 
+## Out of Scope (Deferred)
+[Ideas explicitly excluded from this version — the V2 backlog. One line each: what, and why it's deferred.]
+
 ## Open Questions
 [Anything unresolved that needs human input]
 ```
@@ -177,6 +180,41 @@ The spec is a living document, not a one-time artifact:
 - **Commit the spec** — The spec belongs in version control alongside the code.
 - **Reference the spec in PRs** — Link back to the spec section that each PR implements.
 
+## Spec Evolution: V1 Scoping and Follow-Up Changes
+
+A spec describes one version of the work. New ideas and post-ship changes don't expand it — they queue behind it.
+
+### Scope each version explicitly
+
+During Specify, ideas that won't make this version go under **Out of Scope (Deferred)** — captured, not lost. This makes the V1 boundary enforceable: during implementation, anything not in the spec's requirements is out, even if it's written in the same file under Deferred. When an idea arrives mid-build, park it in the Deferred list and keep going; re-scoping happens between versions, not during one.
+
+### Follow-up changes get a delta spec
+
+Once a spec has shipped, a new requirement — swapping the storage engine, replacing a manual step with OCR, promoting a deferred V2 item — gets its own small spec rather than a hand-edit of the shipped one. A delta spec covers only what changes:
+
+```markdown
+# Spec Delta: [Change Name]
+
+## Objective
+[The change and why. Which deferred item or new requirement this implements.]
+
+## Current Behavior
+[What exists today — link the relevant section of the original spec.]
+
+## New Behavior
+[What will be true after the change.]
+
+## Success Criteria
+[Specific, testable conditions — including what must NOT change.]
+
+## Boundaries
+[Only deltas from the original spec's boundaries; everything else inherits.]
+```
+
+Save it alongside the original (e.g. `SPEC-postgres-migration.md` next to `SPEC.md`) and run it through the same gated workflow: human review, then plan, tasks, implement. Keep one change per delta spec — that keeps each plan/build cycle small and reviewable.
+
+After the change ships, fold the outcome into the original spec (per Keeping the Spec Alive) so it stays the source of truth for what exists, and mark the delta implemented. The original spec always describes the current system; delta specs describe transitions.
+
 ## Common Rationalizations
 
 | Rationalization | Reality |
@@ -186,6 +224,8 @@ The spec is a living document, not a one-time artifact:
 | "The spec will slow us down" | A 15-minute spec prevents hours of rework. Waterfall in 15 minutes beats debugging in 15 hours. |
 | "Requirements will change anyway" | That's why the spec is a living document. An outdated spec is still better than no spec. |
 | "The user knows what they want" | Even clear requests have implicit assumptions. The spec surfaces those assumptions. |
+| "This idea is good, I'll fold it into the current spec" | Mid-build scope growth is how V1 slips. Park it under Out of Scope (Deferred) — captured without expanding the current cycle. |
+| "The feature already has a spec, I'll just edit it for the change" | A shipped spec describes what exists. A delta spec keeps the change reviewable on its own; the original gets updated after the change ships, not before. |
 
 ## Red Flags
 
@@ -194,6 +234,8 @@ The spec is a living document, not a one-time artifact:
 - Implementing features not mentioned in any spec or task list
 - Making architectural decisions without documenting them
 - Skipping the spec because "it's obvious what to build"
+- V1 requirements growing mid-implementation as new ideas get written straight into the spec
+- Changing a shipped feature with no spec for the change because "the feature already has one"
 
 ## Verification
 
@@ -204,3 +246,5 @@ Before proceeding to implementation, confirm:
 - [ ] Success criteria are specific and testable
 - [ ] Boundaries (Always/Ask First/Never) are defined
 - [ ] The spec is saved to a file in the repository
+- [ ] Ideas cut from this version are captured under Out of Scope (Deferred), not silently dropped or silently included
+- [ ] If this is a change to a shipped spec, it is a delta spec referencing the original, not a rewrite of it
