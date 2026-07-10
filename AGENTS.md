@@ -81,7 +81,7 @@ The only multi-persona orchestration pattern this repo endorses is **parallel fa
 
 See [docs/agents.md](docs/agents.md) for the decision matrix and [references/orchestration-patterns.md](references/orchestration-patterns.md) for the full pattern catalog.
 
-**Claude Code interop:** the personas in `agents/` work as Claude Code subagents (auto-discovered from this plugin's `agents/` directory) and as Agent Teams teammates (referenced by name when spawning). Two platform constraints align with our rules: subagents cannot spawn other subagents, and teams cannot nest. Plugin agents silently ignore the `hooks`, `mcpServers`, and `permissionMode` frontmatter fields.
+**Claude Code interop:** the personas in `agents/` work as Claude Code subagents (auto-discovered from this plugin's `agents/` directory) and as Agent Teams teammates (referenced by name when spawning). **Repo convention (not a platform hard-limit for subagents):** personas still must not invoke other personas — composition stays with slash commands or the user. On Claude Code, nested subagent spawn is possible as of v2.1.172 (depth capped at 5); prevent it for a persona by omitting `Agent` from its `tools` allowlist or adding `Agent` to `disallowedTools`. **Still platform-enforced for Agent Teams:** teammates cannot spawn their own teammates (no nested teams). Plugin agents silently ignore the `hooks`, `mcpServers`, and `permissionMode` frontmatter fields.
 
 ## Creating a New Skill
 

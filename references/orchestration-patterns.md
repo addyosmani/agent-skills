@@ -138,14 +138,23 @@ Claude Code has two parallelism primitives. Pattern 3 (parallel fan-out with mer
 
 One subtlety: the `skills` and `mcpServers` frontmatter fields in a persona are honored when it runs as a subagent but **ignored when it runs as a teammate** — teammates load skills and MCP servers from your project and user settings, the same as a regular session. If a persona depends on a specific skill or MCP server being loaded, configure it at the session level so it's available in both modes.
 
-### Platform-enforced rules
+### Repo convention vs Claude Code platform rules
 
-Two rules in this catalog aren't just convention — Claude Code enforces them:
+Keep the distinction clear so agents following [source-driven-development](../skills/source-driven-development/SKILL.md) do not treat this catalog as a substitute for current Claude Code docs.
 
-- **"Subagents cannot spawn other subagents"** (verbatim from the docs). Anti-pattern B (persona-calls-persona) and Anti-pattern D (deep persona trees) cannot exist on Claude Code by construction.
-- **"No nested teams"** — teammates cannot spawn their own teams. Same anti-patterns blocked at the team level.
+**Repo convention (this pack still requires):**
 
-This means you can adopt the patterns in this catalog without worrying about contributors accidentally building the anti-patterns. They'll just fail to load.
+- Personas do not invoke other personas (anti-pattern B).
+- Do not build deep persona trees (anti-pattern D).
+- Composition stays with slash commands or the user; Agent Teams are the only endorsed multi-persona pattern when teammates must message each other.
+
+**Claude Code platform (verify against official docs; as of v2.1.172+):**
+
+- **Nested subagents are allowed** — a subagent may spawn its own subagents, up to 5 levels deep. This is *not* a platform hard-block of anti-patterns B/D. Enforce the repo convention in persona design: omit `Agent` from `tools`, or add `Agent` to `disallowedTools`, so a specialist cannot fan out further.
+- **No nested Agent Teams** — teammates still cannot spawn their own teammates. Only the lead manages the team. This part remains platform-enforced.
+- **Optional depth controls** — projects can still prevent nested spawn per agent via explicit tool allowlists/`disallowedTools` (see [Create custom subagents](https://code.claude.com/docs/en/sub-agents#spawn-nested-subagents)).
+
+Do not document the persona composition rule as "impossible on Claude Code." Document it as intentional pack policy, then map how to enforce it on Claude Code when needed.
 
 ### Built-in subagents to know about
 
@@ -222,8 +231,8 @@ Type into the lead session, in natural language:
 Users report checkout hangs for ~30 seconds intermittently after last
 week's release. No errors in logs.
 
-Create an agent team to debug this with competing hypotheses. Spawn
-three teammates using the existing agent types:
+Debug this with competing hypotheses. Spawn three teammates using
+the existing agent types (Agent Teams is already enabled for this session):
 
   - code-reviewer  — investigate race conditions and blocking calls
                      in the checkout code path
@@ -250,15 +259,14 @@ The lead spawns three teammates referencing the existing persona names. The pers
 
 You can interrupt at any teammate by cycling with `Shift+Down` and typing — useful for redirecting an investigator who's gone down a wrong path.
 
-### When to clean up
+### When the investigation is done
 
-When the investigation lands on a root cause, tell the lead:
+When the investigation lands on a root cause, finish through the **lead** (not a teammate):
 
-```
-Clean up the team
-```
+- Ask individual teammates to shut down by name when you no longer need them (e.g. "Ask the researcher teammate to shut down"). The teammate can approve and exit gracefully, or reject with an explanation.
+- Prefer graceful teammate shutdown over abandoning live workers mid-tool-call.
 
-Always cleanup through the lead, not a teammate (per the docs: teammates lack full team context for cleanup).
+As of Claude Code v2.1.178, Agent Teams no longer use separate `TeamCreate` / `TeamDelete` steps: with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`, each session has one implicit team, teammates are spawned directly with the Agent tool, and shared team directories are cleaned up when the session ends. There is no separate "delete the team" tool. If you used split-pane/`tmux` display and a session pane is left behind, clean orphaned `tmux` sessions manually (`tmux ls`, then `tmux kill-session -t <name>`) — see [Agent Teams limitations](https://code.claude.com/docs/en/agent-teams#limitations).
 
 ### Cost expectation
 
