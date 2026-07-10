@@ -112,8 +112,15 @@ The `.claude/commands/` directory contains slash commands for Claude Code:
 | `/build auto` | planning-and-task-breakdown → incremental-implementation + test-driven-development (whole plan, one approval) |
 | `/test` | test-driven-development |
 | `/review` | code-review-and-quality |
+| `/code-simplify` | code-simplification |
 | `/ship` | shipping-and-launch |
 | `/webperf` | web-performance-auditor (specialist agent, web apps only) |
+
+> **Note:** When installed as a Claude Code plugin you may see a warning like
+> _"Default commands/ folder is ignored because the manifest sets 'commands'"_.
+> This is expected. The root `commands/` directory belongs to the Antigravity CLI
+> and is intentionally separate from `.claude/commands/`. All Claude Code slash
+> commands load correctly from `.claude/commands/`; the warning is cosmetic.
 
 ## Using References
 
@@ -125,6 +132,9 @@ The `references/` directory contains supplementary checklists:
 | `performance-checklist.md` | performance-optimization |
 | `security-checklist.md` | security-and-hardening |
 | `accessibility-checklist.md` | frontend-ui-engineering |
+| `definition-of-done.md` | all skills / every change |
+| `observability-checklist.md` | observability-and-instrumentation |
+| `orchestration-patterns.md` | context-engineering |
 
 Load a reference when you need detailed patterns beyond what the skill covers.
 

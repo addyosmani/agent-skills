@@ -1,0 +1,42 @@
+{
+  "skill_name": "context-engineering",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "What context should I load into the agent before starting this refactor?",
+        "top_k": 3
+      },
+      {
+        "prompt": "The model's output quality dropped mid-session, how do I fix its context?",
+        "top_k": 3
+      },
+      {
+        "prompt": "Set up rules files and context packing for my repository",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Write unit tests for the date parser",
+        "owner": "test-driven-development"
+      },
+      {
+        "prompt": "Harden this endpoint against SQL injection",
+        "owner": "security-and-hardening"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "An agent session has degraded: responses are generic and it keeps forgetting project conventions. Fix the context setup.",
+      "expected_output": "A diagnosis of the context problem and a concrete loading strategy (rules files, packing, task-scoped context)",
+      "expectations": [
+        "The response diagnoses probable context causes rather than blaming the model generally",
+        "A specific context-loading plan is produced (what to load, when, and why)",
+        "Context is scoped to the task instead of loading everything"
+      ],
+      "trust_level": "provisional"
+    }
+  ]
+}

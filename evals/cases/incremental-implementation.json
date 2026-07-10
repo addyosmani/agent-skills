@@ -1,0 +1,42 @@
+{
+  "skill_name": "incremental-implementation",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Implement the next task from the plan as a small verifiable slice",
+        "top_k": 3
+      },
+      {
+        "prompt": "Build this feature step by step, committing after each working increment",
+        "top_k": 3
+      },
+      {
+        "prompt": "Ship this change behind a feature flag in thin slices",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "What alerts should we page on for the new service?",
+        "owner": "observability-and-instrumentation"
+      },
+      {
+        "prompt": "Interview me to figure out the real requirements",
+        "owner": "interview-me"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Implement CSV export for the reports page, working from the existing task plan.",
+      "expected_output": "The feature delivered in small verified increments with a commit per slice",
+      "expectations": [
+        "Work proceeds in thin vertical slices rather than one large change",
+        "Each slice is verified (tests or build) before the next begins",
+        "Each slice is committed separately"
+      ],
+      "trust_level": "provisional"
+    }
+  ]
+}

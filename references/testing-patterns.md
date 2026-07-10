@@ -202,23 +202,22 @@ import { test, expect } from '@playwright/test';
 test('user can create and complete a task', async ({ page }) => {
   // Navigate and authenticate
   await page.goto('/');
-  await page.fill('[name="email"]', 'test@example.com');
-  await page.fill('[name="password"]', 'testpass123');
-  await page.click('button:has-text("Log in")');
+  await page.getByRole('textbox', { name: /email/i }).fill('test@example.com');
+  await page.getByLabel(/password/i).fill('testpass123');
+  await page.getByRole('button', { name: /log in/i }).click();
 
   // Create a task
-  await page.click('button:has-text("New Task")');
-  await page.fill('[name="title"]', 'Buy groceries');
-  await page.click('button:has-text("Create")');
+  await page.getByRole('button', { name: /new task/i }).click();
+  await page.getByRole('textbox', { name: /title/i }).fill('Buy groceries');
+  await page.getByRole('button', { name: /create/i }).click();
 
   // Verify task appears
-  await expect(page.locator('text=Buy groceries')).toBeVisible();
+  const task = page.getByRole('listitem', { name: /buy groceries/i });
+  await expect(task).toBeVisible();
 
   // Complete the task
-  await page.click('[aria-label="Complete Buy groceries"]');
-  await expect(page.locator('text=Buy groceries')).toHaveCSS(
-    'text-decoration-line', 'line-through'
-  );
+  await task.getByRole('checkbox', { name: /complete buy groceries/i }).check();
+  await expect(task).toHaveCSS('text-decoration-line', 'line-through');
 });
 ```
 

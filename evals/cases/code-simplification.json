@@ -1,0 +1,42 @@
+{
+  "skill_name": "code-simplification",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "This function works but it is way too clever, simplify it without changing behavior",
+        "top_k": 3
+      },
+      {
+        "prompt": "Reduce the complexity of this module so juniors can maintain it",
+        "top_k": 3
+      },
+      {
+        "prompt": "Clean up this working code, it has grown hard to follow",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Add a feature flag system to the app"
+      },
+      {
+        "prompt": "Diagnose why the build broke overnight",
+        "owner": "debugging-and-error-recovery"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Simplify the provided 80-line function that parses config files, preserving exact behavior.",
+      "expected_output": "A simpler implementation with identical behavior and a summary of what was removed and why",
+      "expectations": [
+        "Behavior is preserved (tests unchanged and passing, or equivalence argued concretely)",
+        "Complexity is reduced rather than relocated",
+        "The response explains what was removed and why it was safe",
+        "No new features are added during the simplification"
+      ],
+      "trust_level": "provisional"
+    }
+  ]
+}

@@ -107,6 +107,27 @@ Keep patterns and principles inline when under 50 lines.
 
 If a skill does not need runnable helpers, do not create an empty `scripts/` directory just to mirror other skills. Empty directories add noise without changing how the skill works.
 
+## Context Efficiency
+
+Skills load on demand: only the skill name and description sit in context at startup. The full `SKILL.md` loads only when an agent decides the skill is relevant. To keep that load cheap:
+
+- **Keep `SKILL.md` under 500 lines.** Move detailed reference material into supporting files.
+- **Write specific descriptions.** A precise description helps the agent activate the skill at the right moment and skip it otherwise.
+- **Use progressive disclosure.** Reference supporting files that are read only when the workflow reaches them.
+- **Prefer scripts over inline code.** Executing a script consumes no context; only its output does. Inline code blocks are paid for on every load.
+- **Keep file references one level deep.** Link directly from `SKILL.md` to supporting files rather than chaining through intermediate documents.
+
+## Script Requirements
+
+When a skill ships runnable helpers under `scripts/`, each script follows these conventions:
+
+- Use a `#!/bin/bash` shebang.
+- Use `set -e` for fail-fast behavior.
+- Write status messages to stderr: `echo "Message" >&2`.
+- Write machine-readable output (JSON) to stdout.
+- Include a cleanup trap for temporary files.
+- Reference the script path as `skills/<skill-name>/scripts/<script>.sh` (repo-relative).
+
 ## Writing Principles
 
 1. **Process over knowledge.** Skills are workflows, not reference docs. Steps, not facts.

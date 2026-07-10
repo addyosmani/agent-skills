@@ -4,6 +4,19 @@ Thanks for your interest in contributing! This project is a collection of produc
 
 ## Adding a New Skill
 
+### Before proposing a new skill
+
+This pack already covers most of the development lifecycle, and many proposals overlap with an existing skill or another open PR. Before opening one, do these checks so reviewers aren't triaging duplicates:
+
+1. **Search the catalog.** Browse [the skill list in the README](README.md) and skim `skills/` for an existing skill that covers your idea, whole or in part.
+2. **Check open PRs.** Run `gh pr list --state open` (or browse the PRs tab) and look for proposals on the same topic. Clusters of near-duplicate skills already exist; don't add to them.
+3. **Read the anatomy.** Confirm your idea fits the format in [docs/skill-anatomy.md](docs/skill-anatomy.md), an actionable workflow with verification, not vague advice.
+4. **Justify the gap in your PR description.** State explicitly why this isn't covered by an existing skill or open PR. If it overlaps, propose extending the existing skill instead of adding a new one.
+
+If your idea is a refinement of an existing skill, prefer a focused edit to that skill over a new directory.
+
+### Creating the skill
+
 1. Create a directory under `skills/` with a kebab-case name
 2. Add a `SKILL.md` following the format in [docs/skill-anatomy.md](docs/skill-anatomy.md)
 3. Include YAML frontmatter with `name` and `description` fields
@@ -24,6 +37,7 @@ Every new skill must have:
 
 - `SKILL.md` in the skill directory
 - YAML frontmatter with valid `name` and `description`
+- An eval case file at `evals/cases/<skill-name>.json` — at least 3 positive triggers, 2 negative triggers (with `owner` where possible), and 1 behavioral eval (see [evals/README.md](evals/README.md); warning-level until promoted via [#352](https://github.com/addyosmani/agent-skills/issues/352))
 
 New skills should generally follow the standard anatomy:
 
@@ -49,6 +63,14 @@ The frontmatter fields above are required. The section anatomy is a recommended 
 - Keep changes focused and minimal
 - Preserve the existing structure and tone
 - Test that YAML frontmatter remains valid after edits
+
+## Repo-scoped files
+
+`AGENTS.md` and `CLAUDE.md` at the repo root configure agents working on the [`addyosmani/agent-skills`](https://github.com/addyosmani/agent-skills) repository itself. When writing setup guides or docs, do not instruct users to copy these files into their own projects or into a global agent configuration; the reusable assets are the skills in `skills/`.
+
+## Translations
+
+We don't accept translations of the documentation (README, `docs/`) or of skills and their content. Translated copies drift out of sync as skills and docs evolve, and we have no way to maintain them long-term without leaning on agent translations plus community corrections, which adds maintenance cost for limited value. Keep all skills, docs, and contributions in English.
 
 ## Testing Hooks
 

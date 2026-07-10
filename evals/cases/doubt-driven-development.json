@@ -1,0 +1,40 @@
+{
+  "skill_name": "doubt-driven-development",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "This change touches production auth, cross-examine every assumption before we proceed",
+        "top_k": 3
+      },
+      {
+        "prompt": "I am not confident in this approach, adversarially review my reasoning in a fresh context",
+        "top_k": 3
+      },
+      {
+        "prompt": "High-stakes migration tomorrow, stress the plan for hidden failure modes",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Format this file with prettier"
+      },
+      {
+        "prompt": "Write the changelog entry for the release"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Before running an irreversible data migration, subject the migration plan to adversarial review.",
+      "expected_output": "Claims extracted, doubts raised against each, reconciliation, and a go or stop verdict",
+      "expectations": [
+        "Non-trivial claims in the plan are extracted and challenged individually",
+        "At least one assumption is tested rather than accepted",
+        "The verdict distinguishes verified claims from surviving doubts"
+      ],
+      "trust_level": "provisional"
+    }
+  ]
+}

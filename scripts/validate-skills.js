@@ -8,7 +8,9 @@
  *   - SKILL.md exists in every skill directory
  *   - YAML frontmatter present with 'name' and 'description' fields
  *   - frontmatter 'name' matches the directory name
+ *   - directory name is lowercase-hyphen-separated (skill-anatomy.md: Naming Conventions)
  *   - description does not exceed 1024 characters
+ *   - description includes a 'when to use' trigger (skill-anatomy.md: Required)
  *   - required sections are present
  *
  * Checks (warnings, do not block CI):
@@ -27,6 +29,15 @@ const path = require('path');
 const SKILLS_DIR = path.resolve(__dirname, '..', 'skills');
 
 const MAX_DESCRIPTION_LENGTH = 1024;
+
+// A skill directory name must be lowercase-hyphen-separated
+// (docs/skill-anatomy.md → Naming Conventions).
+const KEBAB_CASE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
+// A description must state WHEN to use the skill, not just what it does
+// (docs/skill-anatomy.md → Required). Accept the canonical "Use when …"
+// plus the equivalent "Use before/after/during …" phrasings in use today.
+const DESCRIPTION_TRIGGER = /\buse (this )?when\b|\buse (before|after|during)\b/i;
 
 // Sections every standard SKILL.md must contain.
 // Each entry is an array of acceptable heading strings — the first
@@ -117,7 +128,13 @@ function validateSkill(dirName, knownSkills) {
     return { errors, warnings, exempt };
   }
 
-  const content = fs.readFileSync(skillPath, 'utf8');
+  let content;
+  try {
+    content = fs.readFileSync(skillPath, 'utf8');
+  } catch (err) {
+    errors.push(`Unreadable SKILL.md: ${err.message}`);
+    return { errors, warnings, exempt };
+  }
 
   // ── Frontmatter ──────────────────────────────────────────────────────────
   const fm = parseFrontmatter(content);
@@ -132,13 +149,25 @@ function validateSkill(dirName, knownSkills) {
     errors.push(`Frontmatter name '${fm.name}' does not match directory name '${dirName}'`);
   }
 
+  if (!KEBAB_CASE.test(dirName)) {
+    errors.push(`Directory name '${dirName}' is not lowercase-hyphen-separated (skill-anatomy.md: Naming Conventions)`);
+  }
+
   if (!fm.description) {
     errors.push("Frontmatter missing required field: 'description'");
-  } else if (fm.description.length > MAX_DESCRIPTION_LENGTH) {
-    errors.push(
-      `Description is ${fm.description.length} chars — exceeds the ${MAX_DESCRIPTION_LENGTH}-char limit` +
-      ` (agents inject this into the system prompt)`
-    );
+  } else {
+    if (fm.description.length > MAX_DESCRIPTION_LENGTH) {
+      errors.push(
+        `Description is ${fm.description.length} chars — exceeds the ${MAX_DESCRIPTION_LENGTH}-char limit` +
+        ` (agents inject this into the system prompt)`
+      );
+    }
+    if (!DESCRIPTION_TRIGGER.test(fm.description)) {
+      errors.push(
+        `Description has no 'when to use' trigger — add a "Use when …" clause ` +
+        `(skill-anatomy.md: Required — the description must say both what the skill does and when to use it)`
+      );
+    }
   }
 
   // ── Exemption guard ──────────────────────────────────────────────────────
@@ -217,4 +246,11 @@ function main() {
   if (totalErrors > 0) process.exit(1);
 }
 
-main();
+// Surface unexpected failures (fs errors, bad symlinks, …) as a structured
+// one-line CI error instead of an uncaught stack trace.
+try {
+  main();
+} catch (err) {
+  console.error(`\nERROR: validate-skills failed unexpectedly: ${err.message}`);
+  process.exit(1);
+}

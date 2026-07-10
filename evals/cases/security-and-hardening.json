@@ -1,0 +1,43 @@
+{
+  "skill_name": "security-and-hardening",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Audit this file upload handler for vulnerabilities",
+        "top_k": 3
+      },
+      {
+        "prompt": "Is this login flow safe against the OWASP top ten?",
+        "top_k": 3
+      },
+      {
+        "prompt": "Harden the webhook endpoint that fetches user-supplied URLs",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Rename these variables for clarity",
+        "owner": "code-simplification"
+      },
+      {
+        "prompt": "Set up the release tagging workflow",
+        "owner": "git-workflow-and-versioning"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Harden an endpoint that accepts a user-supplied webhook URL and fetches it server-side.",
+      "expected_output": "Threat-modeled hardening: allowlisting, private-IP blocking, and validated input with tests",
+      "expectations": [
+        "Trust boundaries are identified before controls are proposed",
+        "SSRF protections cover private and reserved addresses, not just scheme checks",
+        "Input validation is enforced at the boundary",
+        "No secrets are logged or exposed in errors"
+      ],
+      "trust_level": "provisional"
+    }
+  ]
+}

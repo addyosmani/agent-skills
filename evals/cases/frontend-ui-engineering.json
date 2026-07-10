@@ -1,0 +1,49 @@
+{
+  "skill_name": "frontend-ui-engineering",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Make this page responsive and WCAG compliant",
+        "top_k": 1
+      },
+      {
+        "prompt": "Build an accessible modal component with keyboard support",
+        "top_k": 3
+      },
+      {
+        "prompt": "Make the pricing page accessible and responsive on mobile",
+        "top_k": 1
+      },
+      {
+        "prompt": "Refactor the dashboard into reusable components with sane state management",
+        "top_k": 3
+      },
+      {
+        "prompt": "Rework the profile page into reusable components with proper state management",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Optimize the slow database indexes",
+        "owner": "performance-optimization"
+      },
+      {
+        "prompt": "Tag and publish the release"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Build a dropdown menu component for the design system.",
+      "expected_output": "An accessible, keyboard-navigable component following project conventions",
+      "expectations": [
+        "Keyboard interaction and focus management are implemented, not just mouse clicks",
+        "ARIA roles or semantic elements are used correctly",
+        "Component state is managed deliberately rather than ad hoc"
+      ],
+      "trust_level": "provisional"
+    }
+  ]
+}

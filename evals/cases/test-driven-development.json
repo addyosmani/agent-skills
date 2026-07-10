@@ -1,0 +1,42 @@
+{
+  "skill_name": "test-driven-development",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Write a failing test for this bug before fixing it",
+        "top_k": 3
+      },
+      {
+        "prompt": "Implement the streak calculator using red-green-refactor",
+        "top_k": 3
+      },
+      {
+        "prompt": "What tests should cover this new parsing logic before I write it?",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Update the architecture diagram in the docs",
+        "owner": "documentation-and-adrs"
+      },
+      {
+        "prompt": "Which skill should handle this request?",
+        "owner": "using-agent-skills"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Fix the reported rounding bug in the invoice totals, test-first.",
+      "expected_output": "A failing test demonstrating the bug, a minimal fix turning it green, full suite passing",
+      "expectations": [
+        "A failing test is written and shown failing before the fix",
+        "The implementation is the minimum needed to pass",
+        "The full suite is run after the fix to catch regressions"
+      ],
+      "trust_level": "provisional"
+    }
+  ]
+}
