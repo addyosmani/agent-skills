@@ -39,6 +39,27 @@ NOT to capture anything.
   pattern. eval-learn-loop is the natural home for "what was learned."
 - **Disk check**: Hardware-specific, not generally applicable.
 
+## Overview
+
+This skill has been consolidated into handoff. See [handoff SKILL.md](https://github.com/YuhaoLin2005/claude-skills/blob/dev/engineering/handoff/skills/handoff/SKILL.md) for the active implementation.
+
+## When to Use
+
+Use handoff instead. Rationalization detection now runs as a pre-write sanity check.
+
+## Common Rationalizations
+
+Now in [handoff references/rationalization_detection.md](https://github.com/YuhaoLin2005/claude-skills/blob/dev/engineering/handoff/skills/handoff/references/rationalization_detection.md).
+
+## Red Flags
+
+- Using this deprecated skill instead of handoff
+
+## Verification
+
+- [ ] Migration complete: using handoff
+- [ ] Rationalization detection active in handoff pre-write flow
+
 ## See Also
 
 - [handoff SKILL.md](https://github.com/YuhaoLin2005/claude-code-skills/blob/main/engineering/handoff/skills/handoff/SKILL.md)
