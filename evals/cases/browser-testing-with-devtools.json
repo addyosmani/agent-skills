@@ -13,6 +13,10 @@
       {
         "prompt": "Verify in a real browser that the form submits and the data persists in localStorage",
         "top_k": 3
+      },
+      {
+        "prompt": "Use the browser accessibility tree to verify the modal labels and keyboard focus behavior",
+        "top_k": 3
       }
     ],
     "negative": [
@@ -35,6 +39,17 @@
         "Findings are grounded in observed runtime data (console, network, DOM), not static code reading alone",
         "The report distinguishes what was observed from what is inferred",
         "A concrete next step or fix hypothesis is provided"
+      ],
+      "trust_level": "provisional"
+    },
+    {
+      "id": 2,
+      "prompt": "Verify a settings modal in the browser for accessible labels, focus order, and focus restoration after close.",
+      "expected_output": "Runtime evidence from DevTools or browser automation showing accessibility tree labels and keyboard focus behavior",
+      "expectations": [
+        "The accessibility tree or role/name information is inspected rather than inferred from code alone",
+        "Keyboard focus order and focus restoration are verified with browser runtime evidence",
+        "Findings distinguish observed browser data from inferred causes"
       ],
       "trust_level": "provisional"
     }

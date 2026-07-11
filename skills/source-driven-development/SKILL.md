@@ -1,6 +1,6 @@
 ---
 name: source-driven-development
-description: Grounds every implementation decision in official documentation. Use when you want authoritative, source-cited code free from outdated patterns. Use when building with any framework or library where correctness matters.
+description: Grounds implementation decisions in official documentation. Use when verifying against official framework docs before implementing, wanting source-cited code, integrating libraries such as Next.js or Stripe, or when current authoritative sources matter.
 ---
 
 # Source-Driven Development

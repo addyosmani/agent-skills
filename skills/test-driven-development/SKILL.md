@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: Drives development with tests. Use when implementing any logic, fixing any bug, or changing any behavior. Use when you need to prove that code works, when a bug report arrives, or when you're about to modify existing functionality.
+description: Drives test-first development. Use when implementing logic, fixing bugs, using red-green-refactor, adding regression coverage, or choosing unit/component/integration/E2E tests, including accessibility tests for UI behavior such as keyboard, focus, labels, and announcements.
 ---
 
 # Test-Driven Development
@@ -169,7 +169,23 @@ Does it cross a boundary (API, database, file system)?
 
 Is it a critical user flow that must work end-to-end?
   → E2E test (large) — limit these to critical paths
+
+Does it verify UI semantics, keyboard access, focus, or screen reader announcements?
+  → Component accessibility test first; add browser/E2E accessibility checks for page-level flows
 ```
+
+### Accessibility Test Planning
+
+Treat accessibility as user-facing behavior, not visual polish. Test it at the lowest reliable layer:
+
+| Concern | Best First Test | Add Browser/E2E When |
+|---|---|---|
+| Accessible name, role, required state, form error text | Component test with role/label queries | The rendered page composes multiple components |
+| Keyboard path, focus trap, focus restoration | Component or browser test | Real tab order, modals, menus, or routing are involved |
+| ARIA live regions and dynamic announcements | Component test plus DOM assertion | Timing or async updates affect announcements |
+| Color contrast, zoom, responsive reflow | Browser/DevTools/axe/pa11y audit | CSS, theming, or layout changed |
+
+Automated axe/pa11y checks catch broad violations, but they do not replace keyboard traversal, focus verification, or reading the accessibility tree for critical flows. For the detailed checklist, use `references/accessibility-checklist.md`.
 
 ## Writing Good Tests
 
@@ -316,6 +332,7 @@ For anything that runs in a browser, unit tests alone aren't enough — you need
 | **Console** | Always | Zero errors and warnings in production-quality code |
 | **Network** | API issues | Status codes, payload shape, timing, CORS errors |
 | **DOM** | UI bugs | Element structure, attributes, accessibility tree |
+| **Accessibility** | Browser-facing UI changes | Accessible names, tab order, focus state, contrast, live regions |
 | **Styles** | Layout issues | Computed styles vs expected, specificity conflicts |
 | **Performance** | Slow pages | LCP, CLS, INP, long tasks (>50ms) |
 | **Screenshots** | Visual changes | Before/after comparison for CSS and layout changes |
@@ -344,7 +361,7 @@ This separation ensures the test is written without knowledge of the fix, making
 
 ## See Also
 
-For detailed testing patterns, examples, and anti-patterns across frameworks, see `references/testing-patterns.md`.
+For detailed testing patterns, examples, and anti-patterns across frameworks, see `references/testing-patterns.md`. For accessibility-specific checks, see `references/accessibility-checklist.md`.
 
 ## Common Rationalizations
 

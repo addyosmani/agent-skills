@@ -13,6 +13,10 @@
       {
         "prompt": "What tests should cover this new parsing logic before I write it?",
         "top_k": 3
+      },
+      {
+        "prompt": "Add accessibility regression tests for keyboard focus in the settings modal",
+        "top_k": 3
       }
     ],
     "negative": [
@@ -35,6 +39,17 @@
         "A failing test is written and shown failing before the fix",
         "The implementation is the minimum needed to pass",
         "The full suite is run after the fix to catch regressions"
+      ],
+      "trust_level": "provisional"
+    },
+    {
+      "id": 2,
+      "prompt": "Plan tests for a modal that previously trapped keyboard users and hid its validation error from screen readers.",
+      "expected_output": "A test plan that covers keyboard focus, accessible names or announcements, and the right mix of component and browser checks",
+      "expectations": [
+        "Keyboard focus and focus restoration are explicitly tested",
+        "Screen-reader-visible validation behavior is checked through role, label, alert, or live-region assertions",
+        "Automated accessibility scans are treated as helpful but not sufficient by themselves"
       ],
       "trust_level": "provisional"
     }

@@ -1,6 +1,6 @@
 ---
 name: debugging-and-error-recovery
-description: Guides systematic root-cause debugging. Use when tests fail, builds break, behavior doesn't match expectations, or you encounter any unexpected error. Use when you need a systematic approach to finding and fixing the root cause rather than guessing.
+description: Guides systematic root-cause debugging. Use when tests fail, a test passed yesterday and fails today, builds break, behavior does not match expectations, something broke unexpectedly, or you need to find and fix the root cause rather than guessing.
 ---
 
 # Debugging and Error Recovery

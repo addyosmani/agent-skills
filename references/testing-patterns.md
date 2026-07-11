@@ -9,6 +9,7 @@ Quick reference for common testing patterns across the stack. Use alongside the 
 - [Common Assertions](#common-assertions)
 - [Mocking Patterns](#mocking-patterns)
 - [React/Component Testing](#reactcomponent-testing)
+- [Accessibility Testing](#accessibility-testing)
 - [API / Integration Testing](#api--integration-testing)
 - [E2E Testing (Playwright)](#e2e-testing-playwright)
 - [Test Anti-Patterns](#test-anti-patterns)
@@ -153,6 +154,64 @@ describe('TaskForm', () => {
   });
 });
 ```
+
+## Accessibility Testing
+
+Accessibility is testable behavior. Prefer the lowest layer that catches the regression, then add browser evidence when real rendering, tab order, focus trapping, or contrast matters.
+
+### Component Semantics
+
+```tsx
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+
+it('exposes the email field and validation error to assistive tech', async () => {
+  render(<SettingsForm />);
+
+  expect(screen.getByRole('textbox', { name: /email/i })).toBeRequired();
+  expect(screen.getByRole('button', { name: /save settings/i })).toBeEnabled();
+
+  await userEvent.click(screen.getByRole('button', { name: /save settings/i }));
+
+  expect(await screen.findByRole('alert')).toHaveTextContent(/email is required/i);
+});
+```
+
+### Automated Violation Scan
+
+```tsx
+import { axe, toHaveNoViolations } from 'jest-axe';
+
+expect.extend(toHaveNoViolations);
+
+it('has no obvious accessibility violations', async () => {
+  const { container } = render(<SettingsForm />);
+
+  expect(await axe(container)).toHaveNoViolations();
+});
+```
+
+### Browser Keyboard Flow
+
+```typescript
+import { test, expect } from '@playwright/test';
+
+test('settings modal keeps keyboard focus predictable', async ({ page }) => {
+  await page.goto('/settings');
+  await page.getByRole('button', { name: /open settings/i }).click();
+
+  await expect(page.getByRole('dialog', { name: /settings/i })).toBeVisible();
+  await expect(page.getByRole('textbox', { name: /email/i })).toBeFocused();
+
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: /save settings/i })).toBeFocused();
+
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('button', { name: /open settings/i })).toBeFocused();
+});
+```
+
+Use axe, pa11y, or Lighthouse to catch broad violations, but do not rely on automated scans alone. Critical UI flows still need keyboard traversal, focus-state checks, accessible names, and the browser accessibility tree. See `references/accessibility-checklist.md` for the full checklist.
 
 ## API / Integration Testing
 
