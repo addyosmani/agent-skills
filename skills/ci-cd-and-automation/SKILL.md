@@ -36,9 +36,11 @@ Pull Request Opened
 │   ↓ pass         │
 │   UNIT TESTS     │  jest/vitest
 │   ↓ pass         │
+│   COMPONENT/API  │  UI components + HTTP contracts
+│   ↓ pass         │
 │   BUILD          │  npm run build
 │   ↓ pass         │
-│   INTEGRATION    │  API/DB tests
+│   INTEGRATION    │  frontend integration + backend DB/cache/queue tests
 │   ↓ pass         │
 │   E2E (optional) │  Playwright/Cypress
 │   ↓ pass         │
@@ -52,6 +54,22 @@ Pull Request Opened
 ```
 
 **No gate can be skipped.** If lint fails, fix lint — don't disable the rule. If a test fails, fix the code — don't skip the test.
+
+### Layered Test Jobs
+
+Use explicit test layers so CI failures point to the right boundary:
+
+| Script | What it covers | Typical PR policy |
+|---|---|---|
+| `test:unit` | Pure logic, reducers, validators, domain rules | Always run |
+| `test:component` | Single UI components and hooks | Always run for frontend changes |
+| `test:frontend-integration` | Page + router/store + mocked API | Run for frontend feature paths |
+| `test:api` | Backend HTTP endpoint behavior: status, auth, validation, response body | Always run for API changes |
+| `test:contract` | Consumer/provider compatibility: OpenAPI, Pact, generated clients | Run when public API shapes or clients change |
+| `test:backend-integration` | Service + DB/cache/queue/filesystem | Run for backend paths; shard if slow |
+| `test:e2e` | Critical user journeys through the real app | Required for high-risk flows; otherwise nightly or pre-release |
+
+Do not hide API tests, contract tests, and backend integration tests inside one generic `test:integration` job. Separate names make failures faster to route.
 
 ## GitHub Actions Configuration
 

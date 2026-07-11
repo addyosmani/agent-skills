@@ -13,6 +13,26 @@
       {
         "prompt": "What tests should cover this new parsing logic before I write it?",
         "top_k": 3
+      },
+      {
+        "prompt": "Add frontend integration tests for this React page with the API mocked by MSW",
+        "top_k": 3
+      },
+      {
+        "prompt": "Write backend API tests for POST /checkout status codes, auth, and validation before changing the endpoint",
+        "top_k": 3
+      },
+      {
+        "prompt": "Add contract tests so the frontend checkout client and backend checkout API agree on request and response shapes",
+        "top_k": 3
+      },
+      {
+        "prompt": "Add backend integration tests for the order service using a real test database",
+        "top_k": 3
+      },
+      {
+        "prompt": "Add a Playwright E2E regression test for signup and first project creation",
+        "top_k": 3
       }
     ],
     "negative": [
@@ -33,6 +53,9 @@
       "expected_output": "A failing test demonstrating the bug, a minimal fix turning it green, full suite passing",
       "expectations": [
         "A failing test is written and shown failing before the fix",
+        "A Test Planner decision names changed surfaces, primary layer, adjacent layers, and intentionally skipped layers when test coverage must be chosen",
+        "The selected test layer is named precisely rather than using generic integration terminology",
+        "API tests and contract tests are distinguished when the scenario involves backend endpoint behavior versus consumer/provider compatibility",
         "The implementation is the minimum needed to pass",
         "The full suite is run after the fix to catch regressions"
       ],
