@@ -29,15 +29,19 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "A test that passed yesterday now fails with an off-by-one error in pagination. Find and fix the root cause.",
+      "prompt": "A pagination test is failing with an off-by-one error. Run npm test to reproduce it, identify the root cause in the pagination logic, make the minimal fix, and rerun the full suite.",
       "expected_output": "A reproduced failure, an identified root cause, a minimal fix, and a guard against regression",
+      "files": [
+        "debugging-and-error-recovery/package.json",
+        "debugging-and-error-recovery/src/pagination.js",
+        "debugging-and-error-recovery/test/pagination.test.js"
+      ],
       "expectations": [
         "The failure is reproduced before any fix is attempted",
         "The root cause is identified and stated, not just the symptom patched",
         "A regression test exists after the fix",
         "The fix is minimal and scoped to the cause"
-      ],
-      "trust_level": "provisional"
+      ]
     }
   ]
 }

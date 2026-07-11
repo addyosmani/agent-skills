@@ -28,15 +28,19 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Simplify the provided 80-line function that parses config files, preserving exact behavior.",
+      "prompt": "Simplify the provided config parser while preserving exact behavior. Run the existing npm test suite before and after the refactor, reduce the nesting in src/config-parser.js, and do not add new features.",
       "expected_output": "A simpler implementation with identical behavior and a summary of what was removed and why",
+      "files": [
+        "code-simplification/package.json",
+        "code-simplification/src/config-parser.js",
+        "code-simplification/test/config-parser.test.js"
+      ],
       "expectations": [
         "Behavior is preserved (tests unchanged and passing, or equivalence argued concretely)",
         "Complexity is reduced rather than relocated",
         "The response explains what was removed and why it was safe",
         "No new features are added during the simplification"
-      ],
-      "trust_level": "provisional"
+      ]
     }
   ]
 }

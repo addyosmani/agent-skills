@@ -29,14 +29,18 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Fix the reported rounding bug in the invoice totals, test-first.",
+      "prompt": "Fix the reported rounding bug in invoice totals. Use npm test, write a failing test that exposes fractional-cent floating point output first, then make the minimal code change and run the full suite.",
       "expected_output": "A failing test demonstrating the bug, a minimal fix turning it green, full suite passing",
+      "files": [
+        "test-driven-development/package.json",
+        "test-driven-development/src/invoice.js",
+        "test-driven-development/test/invoice.test.js"
+      ],
       "expectations": [
         "A failing test is written and shown failing before the fix",
         "The implementation is the minimum needed to pass",
         "The full suite is run after the fix to catch regressions"
-      ],
-      "trust_level": "provisional"
+      ]
     }
   ]
 }
