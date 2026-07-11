@@ -5,7 +5,7 @@ description: Guides stable API and interface design. Use when designing APIs, mo
 
 # API and Interface Design
 
-> The HTTP semantics guidance (error formats, idempotency, rate limiting, caching, evolution) was expanded with patterns shared by [Paul Hammond (@citypaul)](https://github.com/citypaul/.dotfiles) in [#16](https://github.com/addyosmani/agent-skills/issues/16).
+> The HTTP semantics guidance (error formats, idempotency, rate limiting, caching, evolution) was expanded with patterns shared by Paul Hammond (@citypaul) in [#16](https://github.com/addyosmani/agent-skills/issues/16).
 
 ## Overview
 
