@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: Drives development with tests. Use when implementing any logic, fixing any bug, or changing any behavior. Use when you need to prove that code works, when a bug report arrives, or when you're about to modify existing functionality.
+description: Drives development with tests. Use when implementing logic, fixing bugs, changing behavior, choosing test coverage, working test-first or red-green-refactor, or writing unit, component, frontend integration, API, contract, backend integration, E2E, or regression tests.
 ---
 
 # Test-Driven Development
@@ -158,18 +158,39 @@ Beyond the pyramid levels, classify tests by what resources they consume:
 
 Small tests should make up the vast majority of your suite. They're fast, reliable, and easy to debug when they fail.
 
-### Decision Guide
+### Test Layer Selection
 
+Use the lowest layer that proves the behavior. "Integration test" is not one bucket: frontend integration, API tests, contract tests, and backend integration tests protect different seams.
+
+### Test Planner
+
+Before writing tests, plan the affected surfaces and layers:
+
+1. **Discover project surfaces** — frontend UI, backend endpoints, shared types/schemas, persistence/infrastructure, public contracts, and critical user flows.
+2. **Identify changed surfaces** — files changed, public APIs touched, generated clients affected, and consumers that may break.
+3. **Select layers** — name the primary layer, adjacent layers to consider, and layers intentionally skipped with reasons.
+4. **Use existing commands** — discover the project's test scripts before inventing new command names.
+
+```markdown
+Test Planner:
+- Changed surfaces:
+- Primary layer:
+- Adjacent layers:
+- Skipped layers and why:
+- Commands to run:
 ```
-Is it pure logic with no side effects?
-  → Unit test (small)
 
-Does it cross a boundary (API, database, file system)?
-  → Integration test (medium)
+| What must be proven | Prefer this layer | Examples |
+|---|---|---|
+| Pure logic with no side effects | Unit test (small) | parsers, formatters, validators, reducers, domain rules |
+| A single rendered UI unit behaves correctly | Component test (small/medium) | form validation, disabled states, emitted events, accessible labels |
+| Frontend modules work together without a real backend | Frontend integration test (medium) | page + router + store + mocked API with loading/error/empty states |
+| A backend HTTP endpoint behaves correctly | API test (medium) | status codes, auth, validation, response body, error shape |
+| Consumers and providers agree on request/response shapes | Contract test (medium) | OpenAPI schema, Pact consumer/provider checks, generated client compatibility |
+| Backend dependencies cooperate | Backend integration test (medium) | service + database, repository + transaction, worker + queue, cache invalidation |
+| A critical user path works through the real app | E2E / system test (large) | signup, checkout, onboarding, core create/update/delete flows |
 
-Is it a critical user flow that must work end-to-end?
-  → E2E test (large) — limit these to critical paths
-```
+**Decision rule:** if a unit test can prove the behavior, stop there. If the behavior crosses a boundary, pick the boundary-specific layer. API tests are backend-owned endpoint behavior; contract tests are cross-consumer compatibility. Use E2E only when the value is the whole user journey, not when a lower layer can catch the same regression.
 
 ## Writing Good Tests
 
@@ -344,7 +365,7 @@ This separation ensures the test is written without knowledge of the fix, making
 
 ## See Also
 
-For detailed testing patterns, examples, and anti-patterns across frameworks, see `references/testing-patterns.md`.
+For detailed unit, component, frontend integration, API, contract, backend integration, and E2E examples, see `references/testing-patterns.md`.
 
 ## Common Rationalizations
 

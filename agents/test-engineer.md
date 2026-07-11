@@ -20,12 +20,18 @@ Before writing any test:
 ### 2. Test at the Right Level
 
 ```
-Pure logic, no I/O          → Unit test
-Crosses a boundary          → Integration test
-Critical user flow          → E2E test
+Pure logic, no I/O                    → Unit test
+Single rendered UI unit               → Component test
+Page + store/router + mocked API      → Frontend integration test
+Backend HTTP endpoint behavior        → API test
+Consumer/provider API compatibility   → Contract test
+Service + DB/cache/queue/filesystem   → Backend integration test
+Critical user flow through the app    → E2E / system test
 ```
 
 Test at the lowest level that captures the behavior. Don't write E2E tests for things unit tests can cover.
+
+Do not label all boundary tests as generic "integration tests." API tests, contract tests, frontend integration tests, and backend integration tests catch different regressions and should be named separately.
 
 ### 3. Follow the Prove-It Pattern for Bugs
 
@@ -67,9 +73,18 @@ When analyzing test coverage:
 - [X] tests covering [Y] functions/components
 - Coverage gaps identified: [list]
 
+### Test Planner
+- Changed surfaces: [frontend/backend/shared/persistence/contract/E2E]
+- Primary layer: [lowest layer that proves the main behavior]
+- Adjacent layers: [other boundaries that may break]
+- Skipped layers and why: [layers intentionally not used]
+- Commands to run: [existing project scripts]
+
 ### Recommended Tests
-1. **[Test name]** — [What it verifies, why it matters]
-2. **[Test name]** — [What it verifies, why it matters]
+1. **[Layer: Unit] [Test name]** — [What it verifies, why it matters]
+2. **[Layer: API] [Test name]** — [What backend endpoint behavior it verifies]
+3. **[Layer: Contract] [Test name]** — [What consumer/provider compatibility it verifies]
+4. **[Layer: Backend Integration] [Test name]** — [What dependency cooperation it verifies]
 
 ### Priority
 - Critical: [Tests that catch potential data loss or security issues]
@@ -87,6 +102,7 @@ When analyzing test coverage:
 5. Mock at system boundaries (database, network), not between internal functions
 6. Every test name should read like a specification
 7. A test that never fails is as useless as a test that always fails
+8. Name the layer precisely: Unit, Component, Frontend Integration, API, Contract, Backend Integration, or E2E / System
 
 ## Composition
 

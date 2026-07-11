@@ -7,10 +7,17 @@ Quick reference for common testing patterns across the stack. Use alongside the 
 - [Test Structure (Arrange-Act-Assert)](#test-structure-arrange-act-assert)
 - [Test Naming Conventions](#test-naming-conventions)
 - [Common Assertions](#common-assertions)
+- [Layer Map](#layer-map)
+- [Unit Testing](#unit-testing)
 - [Mocking Patterns](#mocking-patterns)
-- [React/Component Testing](#reactcomponent-testing)
-- [API / Integration Testing](#api--integration-testing)
-- [E2E Testing (Playwright)](#e2e-testing-playwright)
+- [Component Testing](#component-testing)
+- [Frontend Integration Testing](#frontend-integration-testing)
+- [API Testing](#api-testing)
+- [Contract Testing](#contract-testing)
+- [Backend Integration Testing](#backend-integration-testing)
+- [E2E / System Testing (Playwright)](#e2e--system-testing-playwright)
+- [Test Data and Fixtures](#test-data-and-fixtures)
+- [Flaky Test Triage](#flaky-test-triage)
 - [Test Anti-Patterns](#test-anti-patterns)
 
 ## Test Structure (Arrange-Act-Assert)
@@ -81,6 +88,46 @@ await expect(asyncFn()).resolves.toBe(value);
 await expect(asyncFn()).rejects.toThrow(Error);
 ```
 
+## Layer Map
+
+Use the lowest layer that proves the behavior.
+
+| Layer | Proves | Typical tools |
+|---|---|---|
+| Unit | Pure behavior in one function/module | Jest, Vitest, pytest, go test |
+| Component | One UI unit renders and reacts correctly | Testing Library, Vue Test Utils |
+| Frontend Integration | UI modules cooperate without a real backend | Testing Library + router/store + MSW |
+| API | Backend HTTP endpoint behavior | supertest, httpx, requests |
+| Contract | Consumer/provider compatibility | Pact, OpenAPI validators, generated client checks |
+| Backend Integration | Service dependencies cooperate | test database, testcontainers, local queues |
+| E2E / System | Critical user journey works through the app | Playwright, Cypress |
+
+## Unit Testing
+
+Keep unit tests small, deterministic, and focused on behavior:
+
+```typescript
+describe('calculateInvoiceTotal', () => {
+  it('rounds line items before summing tax-inclusive total', () => {
+    const invoice = {
+      taxRate: 0.0825,
+      items: [
+        { quantity: 2, unitPrice: 10.005 },
+        { quantity: 1, unitPrice: 4.335 },
+      ],
+    };
+
+    expect(calculateInvoiceTotal(invoice)).toBe(26.55);
+  });
+
+  it('returns zero for an invoice with no items', () => {
+    expect(calculateInvoiceTotal({ taxRate: 0.0825, items: [] })).toBe(0);
+  });
+});
+```
+
+Good unit tests cover happy paths, empty input, boundaries, and error paths. They should not require network, disk, database, wall-clock timing, or a real browser.
+
 ## Mocking Patterns
 
 ### Mock Functions
@@ -122,7 +169,7 @@ Mock these:                    Don't mock these:
 └── Time/Date (when needed)    └── Pure functions
 ```
 
-## React/Component Testing
+## Component Testing
 
 ```tsx
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
@@ -154,7 +201,43 @@ describe('TaskForm', () => {
 });
 ```
 
-## API / Integration Testing
+## Frontend Integration Testing
+
+Use frontend integration tests when multiple frontend modules must cooperate: page components, routing, stores, and API boundaries. Mock the network at the boundary; do not mock internal components just to make assertions easier.
+
+```tsx
+import { http, HttpResponse } from 'msw';
+import { setupServer } from 'msw/node';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+
+const server = setupServer(
+  http.get('/api/tasks', () => HttpResponse.json([{ id: '1', title: 'Ship it' }])),
+  http.post('/api/tasks', async ({ request }) => {
+    const body = (await request.json()) as { title: string };
+    return HttpResponse.json({ id: '2', title: body.title }, { status: 201 });
+  }),
+);
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
+it('loads tasks and adds a new task from the page', async () => {
+  render(<TaskPage />);
+
+  expect(await screen.findByText('Ship it')).toBeInTheDocument();
+
+  await userEvent.type(screen.getByRole('textbox', { name: /title/i }), 'Write tests');
+  await userEvent.click(screen.getByRole('button', { name: /create/i }));
+
+  expect(await screen.findByText('Write tests')).toBeInTheDocument();
+});
+```
+
+Cover loading, empty, error, retry, and optimistic-update states here. Save real browser rendering and full authentication flows for E2E.
+
+## API Testing
 
 ```typescript
 import request from 'supertest';
@@ -194,7 +277,71 @@ describe('POST /api/tasks', () => {
 });
 ```
 
-## E2E Testing (Playwright)
+API tests are pure backend interface tests. They run against the backend app or service and prove endpoint behavior: method, route, auth, status codes, validation, response body, and stable error shapes. They do not prove frontend/backend compatibility unless a shared contract is also verified.
+
+## Contract Testing
+
+Contract tests prove that consumers and providers agree on the API shape. Use them when frontend and backend evolve independently, when generated clients depend on OpenAPI, or when multiple consumers share one backend.
+
+```typescript
+import { PactV3, MatchersV3 } from '@pact-foundation/pact';
+import { TaskClient } from '../src/task-client';
+
+const provider = new PactV3({ consumer: 'web-app', provider: 'tasks-api' });
+
+it('web app can fetch a task from the tasks API contract', async () => {
+  provider
+    .given('a task exists')
+    .uponReceiving('a request for a task')
+    .withRequest({ method: 'GET', path: '/api/tasks/1' })
+    .willRespondWith({
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+      body: {
+        id: MatchersV3.string('1'),
+        title: MatchersV3.string('Ship it'),
+        status: MatchersV3.string('pending'),
+      },
+    });
+
+  await provider.executeTest(async (mockServer) => {
+    const client = new TaskClient(mockServer.url);
+    await expect(client.getTask('1')).resolves.toMatchObject({
+      id: '1',
+      title: 'Ship it',
+    });
+  });
+});
+```
+
+Keep contract tests about compatibility, not backend implementation. Backend API tests can pass while a frontend contract still breaks because a field was renamed, made optional, or changed type.
+
+## Backend Integration Testing
+
+Use backend integration tests for service boundaries that must cooperate with real infrastructure substitutes: database, cache, queue, filesystem, or a local service emulator.
+
+```typescript
+describe('TaskService.completeTask', () => {
+  beforeEach(async () => {
+    await db.migrate.latest();
+    await db('tasks').truncate();
+  });
+
+  it('marks a task completed and persists the completion timestamp', async () => {
+    const task = await taskRepository.create({ title: 'Test integration' });
+
+    const completed = await taskService.completeTask(task.id);
+    const persisted = await taskRepository.findById(task.id);
+
+    expect(completed.status).toBe('completed');
+    expect(persisted?.completedAt).toBeInstanceOf(Date);
+  });
+});
+```
+
+Keep these tests isolated: reset state per test, use deterministic fixtures, run migrations explicitly, and avoid sharing mutable test data between tests.
+
+## E2E / System Testing (Playwright)
 
 ```typescript
 import { test, expect } from '@playwright/test';
@@ -220,6 +367,28 @@ test('user can create and complete a task', async ({ page }) => {
   await expect(task).toHaveCSS('text-decoration-line', 'line-through');
 });
 ```
+
+E2E tests should cover only the user journeys that must not break. Use stable test accounts or seeded data, prefer role/label locators, and upload trace, screenshot, and video artifacts on failure.
+
+## Test Data and Fixtures
+
+- Prefer explicit per-test setup over shared global fixtures.
+- Use builders for verbose objects, but keep important values visible in the test.
+- Reset databases, queues, caches, and mocked network handlers between tests.
+- Seed only the data required for the behavior under test.
+- Keep credentials, tokens, and production data out of fixtures.
+
+## Flaky Test Triage
+
+When a test is flaky, fix the uncertainty instead of re-running until it passes:
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Passes alone, fails in suite | Shared state or order dependence | Reset state, remove globals, run in isolation |
+| Fails on CI only | Environment or timing difference | Pin versions, inspect logs, remove timing assumptions |
+| Random timeout | Race condition or missing wait condition | Wait on observable state, not arbitrary sleeps |
+| E2E click misses target | Layout shift or unstable locator | Use role/label locators, wait for stable UI state |
+| API test sometimes sees old data | Transaction/cache leakage | Isolate DB state and clear caches per test |
 
 ## Test Anti-Patterns
 
