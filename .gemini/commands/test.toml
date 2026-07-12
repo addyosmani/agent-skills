@@ -3,6 +3,9 @@ description = "Run TDD workflow — write failing tests, implement, verify. For 
 prompt = """
 Invoke the test-driven-development skill.
 
+Before writing tests:
+0. Produce a Test Planner with changed surfaces, affected contracts, primary layer, adjacent layers, quality concerns, skipped layers with reasons, and existing commands to run.
+
 For new features:
 1. Write tests that describe the expected behavior (they should FAIL)
 2. Implement the code to make them pass

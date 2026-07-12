@@ -129,20 +129,22 @@ export async function completeTask(id: string): Promise<Task> {
 
 ## The Test Pyramid
 
-Invest testing effort according to the pyramid — most tests should be small and fast, with progressively fewer tests at higher levels:
+Use the familiar ~80/15/5 pyramid as a cost and confidence guideline, not a universal quota. Most tests should be small and fast, with fewer boundary tests and only a small number of broad system tests.
 
 ```
           ╱╲
-         ╱  ╲         E2E Tests (~5%)
-        ╱    ╲        Full user flows, real browser
+         ╱  ╲         E2E / System Tests (~5%)
+        ╱    ╲        Full user journeys, real app
        ╱──────╲
-      ╱        ╲      Integration Tests (~15%)
-     ╱          ╲     Component interactions, API boundaries
+      ╱        ╲      Boundary / Collaboration Tests (~15%)
+     ╱          ╲     Component, Frontend Integration, API, Contract, Backend Integration
     ╱────────────╲
    ╱              ╲   Unit Tests (~80%)
-  ╱                ╲  Pure logic, isolated, milliseconds each
+  ╱                ╲  Pure logic, isolated modules
  ╱──────────────────╲
 ```
+
+The pyramid tells you how much of each cost level to keep. The Test Planner below tells you which exact layer to choose. Do not treat "integration test" as one bucket: frontend integration, API tests, contract tests, and backend integration tests protect different seams.
 
 **The Beyonce Rule:** If you liked it, you should have put a test on it. Infrastructure changes, refactoring, and migrations are not responsible for catching your bugs — your tests are. If a change breaks your code and you didn't have a test for it, that's on you.
 
@@ -156,29 +158,34 @@ Beyond the pyramid levels, classify tests by what resources they consume:
 | **Medium** | Multi-process OK, localhost only, no external services | Seconds | API tests with test DB, component tests |
 | **Large** | Multi-machine OK, external services allowed | Minutes | E2E tests, performance benchmarks, staging integration |
 
-Small tests should make up the vast majority of your suite. They're fast, reliable, and easy to debug when they fail.
+Small tests should make up the vast majority of your suite. They're fast, reliable, and easy to debug when they fail. Size is execution cost, not a test layer.
 
 ### Test Layer Selection
 
-Use the lowest layer that proves the behavior. "Integration test" is not one bucket: frontend integration, API tests, contract tests, and backend integration tests protect different seams.
+Use the lowest layer that proves the behavior. The layer map below defines the exact names to use.
 
 ### Test Planner
 
-Before writing tests, plan the affected surfaces and layers:
+Before writing tests, separate these planning dimensions:
 
-1. **Discover project surfaces** — frontend UI, backend endpoints, shared types/schemas, persistence/infrastructure, public contracts, and critical user flows.
-2. **Identify changed surfaces** — files changed, public APIs touched, generated clients affected, and consumers that may break.
-3. **Select layers** — name the primary layer, adjacent layers to consider, and layers intentionally skipped with reasons.
-4. **Use existing commands** — discover the project's test scripts before inventing new command names.
+1. **Identify changed surfaces** — files changed, public APIs touched, shared schemas/types, persistence/infrastructure, and consumers that may break.
+2. **Name affected contracts** — request/response schemas, generated clients, public APIs, events, or "none".
+3. **Select layers** — primary layer, adjacent layers to consider, and layers intentionally skipped with reasons.
+4. **Add quality concerns** — accessibility, security, performance, visual regression, observability, migration safety, or "none".
+5. **Use existing commands** — discover the project's test scripts before inventing new command names.
 
 ```markdown
 Test Planner:
 - Changed surfaces:
+- Affected contracts:
 - Primary layer:
 - Adjacent layers:
+- Quality concerns:
 - Skipped layers and why:
 - Commands to run:
 ```
+
+Scale the planner to the change. For a one-line fix, it may collapse to one or two sentences; retain a field only when it affects the test decision.
 
 | What must be proven | Prefer this layer | Examples |
 |---|---|---|
@@ -190,7 +197,7 @@ Test Planner:
 | Backend dependencies cooperate | Backend integration test (medium) | service + database, repository + transaction, worker + queue, cache invalidation |
 | A critical user path works through the real app | E2E / system test (large) | signup, checkout, onboarding, core create/update/delete flows |
 
-**Decision rule:** if a unit test can prove the behavior, stop there. If the behavior crosses a boundary, pick the boundary-specific layer. API tests are backend-owned endpoint behavior; contract tests are cross-consumer compatibility. Use E2E only when the value is the whole user journey, not when a lower layer can catch the same regression.
+**Decision rule:** if a unit test can prove the behavior, stop there. If the behavior crosses a boundary, pick the boundary-specific layer. API tests are backend-owned endpoint behavior; contract tests are cross-consumer compatibility. Use E2E only when the value is the whole user journey, not when a lower layer can catch the same regression. Apply quality concerns at the chosen layer first, then add a broader layer only when the risk cannot be proven lower down.
 
 ## Writing Good Tests
 

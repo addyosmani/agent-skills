@@ -7,6 +7,7 @@ Quick reference for common testing patterns across the stack. Use alongside the 
 - [Test Structure (Arrange-Act-Assert)](#test-structure-arrange-act-assert)
 - [Test Naming Conventions](#test-naming-conventions)
 - [Common Assertions](#common-assertions)
+- [Test Planner](#test-planner)
 - [Layer Map](#layer-map)
 - [Unit Testing](#unit-testing)
 - [Mocking Patterns](#mocking-patterns)
@@ -88,9 +89,47 @@ await expect(asyncFn()).resolves.toBe(value);
 await expect(asyncFn()).rejects.toThrow(Error);
 ```
 
+## Test Planner
+
+Before writing tests, keep planning dimensions separate:
+
+| Dimension | Use For | Do Not Put Here |
+|---|---|---|
+| Changed surfaces | Code/data areas touched by the change | Test layer names like E2E |
+| Affected contracts | Public schemas, generated clients, events, API compatibility | Backend implementation details |
+| Test layer | Where behavior should be proven | Quality concerns like accessibility or security |
+| Quality concerns | Extra risk dimensions to verify | Surface names like frontend/backend |
+| Execution size | Runtime cost and CI placement | User-visible behavior categories |
+
+### Changed Surfaces
+
+| Surface | Examples |
+|---|---|
+| Frontend UI | components, pages, forms, modals |
+| Frontend state/router | stores, route loaders, client-side caching |
+| Backend endpoint | route handler, controller, middleware |
+| Backend service/domain | business rules, orchestration, domain services |
+| Shared schema/types/generated client | OpenAPI, GraphQL schema, protobuf, typed SDK |
+| Persistence | database, cache, filesystem, migrations |
+| Async infrastructure | queue, worker, cron, scheduler |
+| External integration | payment provider, email service, third-party API |
+
+### Quality Concerns
+
+Quality concerns cross layers. Verify them at the lowest layer that proves the risk, then add broader tests only when needed.
+
+| Concern | First places to check |
+|---|---|
+| Accessibility | component role/name/focus, frontend integration state, E2E keyboard journey |
+| Security | unit validation, API auth/authorization, integration with secrets or storage |
+| Performance | unit algorithm cost, API/query timing, browser performance trace |
+| Visual regression | component screenshot, page screenshot, browser comparison |
+| Observability | structured logs, metrics, traces, alert behavior |
+| Migration safety | unit transforms, migration dry run, backend integration with test data |
+
 ## Layer Map
 
-Use the lowest layer that proves the behavior.
+Use the lowest layer that proves the behavior. This table is only the test-layer axis.
 
 | Layer | Proves | Typical tools |
 |---|---|---|
