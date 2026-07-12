@@ -13,7 +13,7 @@ Dispatch each persona by tool name:
 
 1. **`code-reviewer`** — Run a five-axis review (correctness, readability, architecture, security, performance) on the staged changes or recent commits. Output the standard review template.
 2. **`security-auditor`** — Run a vulnerability and threat-model pass. Check OWASP Top 10, secrets handling, auth/authz, dependency CVEs. Output the standard audit report.
-3. **`test-engineer`** — Analyze test coverage for the change. Identify gaps in happy path, edge cases, error paths, and concurrency scenarios. Output the standard coverage analysis.
+3. **`test-engineer`** — Analyze test coverage for the change. Identify changed surfaces, affected contracts, missing cases, lowest sufficient layers, and test design techniques. Output the standard coverage analysis with recommended tests and execution notes.
 
 If subagents are unavailable in the current CLI version, invoke each persona's system prompt sequentially in the main context and treat their outputs as if returned in parallel — the merge phase still works.
 

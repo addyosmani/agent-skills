@@ -1,0 +1,48 @@
+{
+  "skill_name": "tests",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Run the relevant tests for this project and tell me which commands passed or failed",
+        "top_k": 3
+      },
+      {
+        "prompt": "Execute API and contract tests separately, then summarize the failures",
+        "top_k": 3
+      },
+      {
+        "prompt": "Figure out the test commands in this repo and run the smallest stable set for my change",
+        "top_k": 3
+      },
+      {
+        "prompt": "The CI test job failed; rerun the failing test command locally and report the output",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Write a failing test before implementing the checkout validator",
+        "owner": "test-driven-development"
+      },
+      {
+        "prompt": "Configure GitHub Actions to run unit and API tests on pull requests",
+        "owner": "ci-cd-and-automation"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Run the relevant tests for a backend-only change that touched POST /checkout validation. The repo has npm scripts for test:unit, test:api, test:contract, and test:e2e.",
+      "expected_output": "A test execution plan that discovers existing commands, runs unit and API tests first, treats contract tests as adjacent only if the public schema changed, skips E2E with a reason, and reports command outcomes with evidence.",
+      "expectations": [
+        "Existing project test commands are discovered before inventing command names",
+        "API tests are selected for backend endpoint behavior and kept distinct from contract tests",
+        "The smallest relevant stable command set is run before broader suites",
+        "Skipped layers such as contract or E2E are named with reasons",
+        "The final report includes commands, pass/fail status, and next action for failures"
+      ],
+      "trust_level": "provisional"
+    }
+  ]
+}
