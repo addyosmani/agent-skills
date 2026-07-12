@@ -370,7 +370,7 @@ This separation ensures the test is written without knowledge of the fix, making
 
 ## See Also
 
-For detailed unit, component, frontend integration, API, contract, backend integration, and E2E examples, see `references/testing-patterns.md`.
+For choosing what cases to test, see `references/test-design-techniques.md`. For detailed unit, component, frontend integration, API, contract, backend integration, and E2E examples, see `references/testing-patterns.md`.
 
 ## Common Rationalizations
 
