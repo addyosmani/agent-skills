@@ -183,7 +183,28 @@ Skills are plain Markdown - they work with any agent that accepts system prompts
 
 </details>
 
+---
 
+## Repository Structure
+
+The repo keeps shared skill content separate from native tool adapters:
+
+| Path | Purpose |
+|------|---------|
+| `skills/` | Shared `SKILL.md` workflows used across agents |
+| `commands/` | Antigravity slash-command definitions |
+| `.claude/commands/` | Claude Code slash-command definitions |
+| `.gemini/commands/` | Gemini CLI slash-command definitions |
+| `.claude-plugin/` | Claude Code marketplace and plugin metadata |
+| `.codex-plugin/` | Codex plugin metadata |
+| `.agents/` | Agent/marketplace metadata for tools that read the shared agent format |
+| `.github/workflows/` | GitHub Actions validation for skills, commands, and plugin installs |
+| `agents/` | Reusable persona definitions for review, security, testing, and performance |
+| `docs/` | Tool-specific setup guides |
+| `references/` | Supporting checklists and engineering references |
+| `scripts/` | Validation and evaluation scripts used by CI |
+
+Some directory names are tool-native discovery conventions rather than branding. For example, Claude Code discovers plugin metadata from `.claude-plugin/`, Gemini CLI reads commands from `.gemini/commands/`, Codex reads `.codex-plugin/`, and GitHub Actions requires `.github/workflows/`. The shared workflows live in `skills/`; the tool-specific folders adapt that shared content to each agent.
 
 ---
 
