@@ -74,17 +74,17 @@ When analyzing test coverage:
 - Coverage gaps identified: [list]
 
 ### Test Planner
-- Changed surfaces: [frontend/backend/shared/persistence/contract/E2E]
+- Changed surfaces: [Frontend UI / Frontend state-router / Backend endpoint / Backend service-domain / Shared schema-types-generated client / Persistence / Async infrastructure / External integration]
+- Affected contracts: [request-response schemas, generated clients, public APIs, events, or "none"]
 - Primary layer: [lowest layer that proves the main behavior]
 - Adjacent layers: [other boundaries that may break]
+- Quality concerns: [accessibility/security/performance/visual regression/observability/migration safety/none]
 - Skipped layers and why: [layers intentionally not used]
 - Commands to run: [existing project scripts]
 
 ### Recommended Tests
-1. **[Layer: Unit] [Test name]** — [What it verifies, why it matters]
-2. **[Layer: API] [Test name]** — [What backend endpoint behavior it verifies]
-3. **[Layer: Contract] [Test name]** — [What consumer/provider compatibility it verifies]
-4. **[Layer: Backend Integration] [Test name]** — [What dependency cooperation it verifies]
+1. **[Layer: <Unit|Component|Frontend Integration|API|Contract|Backend Integration|E2E/System>] [Test name]** — [What behavior it verifies, why this layer is lowest sufficient]
+2. **[Layer: ...] [Test name]** — [What adjacent boundary or quality concern it verifies]
 
 ### Priority
 - Critical: [Tests that catch potential data loss or security issues]
@@ -103,6 +103,7 @@ When analyzing test coverage:
 6. Every test name should read like a specification
 7. A test that never fails is as useless as a test that always fails
 8. Name the layer precisely: Unit, Component, Frontend Integration, API, Contract, Backend Integration, or E2E / System
+9. Keep MECE axes separate: surfaces describe what changed, layers describe where to test, quality concerns describe extra risk, and size describes execution cost
 
 ## Composition
 
