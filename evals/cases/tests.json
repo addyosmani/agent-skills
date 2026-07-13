@@ -4,19 +4,19 @@
     "positive": [
       {
         "prompt": "Run the relevant tests for this project and tell me which commands passed or failed",
-        "top_k": 3
+        "top_k": 1
       },
       {
         "prompt": "Execute API and contract tests separately, then summarize the failures",
-        "top_k": 3
+        "top_k": 1
       },
       {
         "prompt": "Figure out the test commands in this repo and run the smallest stable set for my change",
-        "top_k": 3
+        "top_k": 1
       },
       {
         "prompt": "The CI test job failed; rerun the failing test command locally and report the output",
-        "top_k": 3
+        "top_k": 1
       }
     ],
     "negative": [
@@ -27,22 +27,72 @@
       {
         "prompt": "Configure GitHub Actions to run unit and API tests on pull requests",
         "owner": "ci-cd-and-automation"
+      },
+      {
+        "prompt": "The API test is failing intermittently; find the root cause and fix it",
+        "owner": "debugging-and-error-recovery"
       }
     ]
   },
   "evals": [
     {
       "id": 1,
-      "prompt": "Run the relevant tests for a backend-only change that touched POST /checkout validation. The repo has npm scripts for test:unit, test:api, test:contract, and test:e2e.",
-      "expected_output": "A test execution plan that discovers existing commands, runs unit and API tests first, treats contract tests as adjacent only if the public schema changed, skips E2E with a reason, and reports command outcomes with evidence.",
+      "prompt": "Work in the tests-backend project. Run the relevant tests for a backend-only change that touched POST /checkout validation without changing its request or response contract.",
+      "expected_output": "A Test Planner that discovers existing commands, runs unit and API tests, skips unchanged contract and out-of-scope E2E suites with reasons, and reports per-command outcomes with evidence.",
+      "files": [
+        "tests-backend"
+      ],
       "expectations": [
         "Existing project test commands are discovered before inventing command names",
+        "The Test Planner records verify-change mode, backend changed surfaces, unchanged affected contracts, API as the primary layer, and security as a quality concern",
+        "npm run test:unit and npm run test:api are actually executed and pass",
         "API tests are selected for backend endpoint behavior and kept distinct from contract tests",
-        "The smallest relevant stable command set is run before broader suites",
-        "Skipped layers such as contract or E2E are named with reasons",
-        "The final report includes commands, pass/fail status, and next action for failures"
+        "npm run test:contract and npm run test:e2e are not executed, and both skipped layers are named with reasons",
+        "The final report includes working directory, exact commands, exit codes, test counts, durations, and outcomes"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Work in the tests-backend project and run npm run test:empty. Report the result accurately.",
+      "expected_output": "The command is executed, but its zero-test result is reported as NO_TESTS rather than PASS.",
+      "files": [
+        "tests-backend"
       ],
-      "trust_level": "provisional"
+      "expectations": [
+        "npm run test:empty is actually executed",
+        "The zero exit code is recorded",
+        "The zero-test output is classified as NO_TESTS rather than PASS",
+        "The report identifies a coverage or command-selection gap and does not claim the requested behavior was verified"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Work in the tests-backend project. Diagnose npm run test:failure and report the evidence without fixing code.",
+      "expected_output": "The failing command is executed once, classified as FAIL, and reported with actionable evidence while fake credentials from raw output are redacted.",
+      "files": [
+        "tests-backend"
+      ],
+      "expectations": [
+        "npm run test:failure is actually executed and its nonzero exit is recorded",
+        "The outcome is classified as FAIL and the checkout status assertion is preserved as the first actionable evidence",
+        "The user-facing report redacts the fake bearer token and database password even though they appear in raw tool output",
+        "Duration comes from execution evidence or is reported as unknown rather than estimated",
+        "No broader test suite is run after the focused failure"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Work in the tests-backend project. Run all documented required test gates for a release and report release test readiness.",
+      "expected_output": "Release-gate mode runs every test suite required by the fixture release policy without taking ownership of lint, build, or optional E2E commands.",
+      "files": [
+        "tests-backend"
+      ],
+      "expectations": [
+        "The Test Planner selects Release gate mode and discovers the documented release test policy",
+        "npm run test:unit, npm run test:api, and npm run test:contract are all actually executed",
+        "npm run lint, npm run build, and npm run test:e2e are not executed because they are not required test gates",
+        "The final report includes per-command evidence and only claims release test readiness, not overall release readiness"
+      ]
     }
   ]
 }
