@@ -1,0 +1,44 @@
+{
+  "skill_name": "dependency-management",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Should I bump React from 17 to 18, and how do I do it safely?",
+        "top_k": 3
+      },
+      {
+        "prompt": "Help me batch these outdated npm packages into reviewable PRs",
+        "top_k": 3
+      },
+      {
+        "prompt": "Review the lockfile diff on this dependency bump before we merge",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Audit this file upload handler for vulnerabilities",
+        "owner": "security-and-hardening"
+      },
+      {
+        "prompt": "Sunset the v1 API and move users over to v2",
+        "owner": "deprecation-and-migration"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Upgrade a Node service from Express 4 to Express 5, keeping the test suite green and shipping the change in reviewable increments.",
+      "expected_output": "An assessment of the 4→5 breaking changes from the changelog, a one-major-per-PR batching plan, the lockfile diff inspected, the suite green, runtime smoke verified, and a regression test added for any behavior change",
+      "expectations": [
+        "The Express 4→5 changelog is read and breaking changes are named before the bump is applied",
+        "The major upgrade is shipped in its own PR/commit, not bundled with other dependency changes",
+        "The lockfile diff is inspected for unexpected transitive changes",
+        "Verification goes beyond the test suite: the build succeeds and a runtime smoke check is performed",
+        "Any behavior change introduced by the bump is covered by a regression test before re-bumping"
+      ],
+      "trust_level": "provisional"
+    }
+  ]
+}
