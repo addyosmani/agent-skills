@@ -1,0 +1,15 @@
+{
+  "name": "tests-skill-backend-fixture",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test:unit": "node scripts/run-suite.js unit",
+    "test:api": "node scripts/run-suite.js api",
+    "test:contract": "node scripts/run-suite.js contract",
+    "test:e2e": "node scripts/run-suite.js e2e",
+    "test:empty": "node scripts/run-suite.js empty",
+    "test:failure": "node scripts/run-suite.js failure",
+    "lint": "node scripts/run-suite.js lint",
+    "build": "node scripts/run-suite.js build"
+  }
+}

@@ -4,6 +4,16 @@ Operational reference for choosing test cases when coverage matters. This is a c
 
 Use this reference when writing new tests, reviewing coverage gaps, or deciding which behaviors deserve tests. It complements `testing-patterns.md`: this file chooses *what cases to test*; `testing-patterns.md` shows *how to write the tests* in common frameworks.
 
+## Contents
+
+- [Technique Selector](#technique-selector)
+- [Black Box Techniques](#black-box-techniques)
+- [White Box Techniques](#white-box-techniques)
+- [Testing Paradigms](#testing-paradigms)
+- [Defect Taxonomies](#defect-taxonomies)
+- [When to Stop Testing](#when-to-stop-testing)
+- [Applying This To Test Planner](#applying-this-to-test-planner)
+
 ## Technique Selector
 
 | Testing need | Prefer | Good fit |
