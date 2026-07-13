@@ -48,6 +48,7 @@
     },
     {
       "id": 2,
+      "kind": "dialogue",
       "prompt": "I need a caching layer for our API but I'm torn on the approach. Interview me, and give me your take as we go — I want your proposals, not just questions.",
       "expected_output": "An interview that enters collaborative mode on the user's explicit invitation: proposals carry an explicit lean and risk, the restate tags each line's origin, and the agent checks it hasn't anchored the user",
       "expectations": [
@@ -55,8 +56,7 @@
         "Each proposal states a lean and a risk, with at most 3 options in a single turn",
         "The final restate marks which lines came from the user's answers and which from accepted proposals",
         "Before stopping, the agent runs an anti-anchoring check on accepted proposals"
-      ],
-      "trust_level": "provisional"
+      ]
     }
   ]
 }
