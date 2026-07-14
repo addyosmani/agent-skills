@@ -37,6 +37,10 @@
       {
         "prompt": "Review this change and tell me the smallest set of tests that gives confidence without running every layer",
         "top_k": 3
+      },
+      {
+        "prompt": "Add accessibility regression tests for keyboard focus in the settings modal",
+        "top_k": 3
       }
     ],
     "negative": [
@@ -101,6 +105,18 @@
         "The API is mocked at the network boundary rather than exercising a real backend",
         "E2E is skipped unless the full user journey is the behavior under test",
         "Quality concerns are listed separately from the layer decision"
+      ],
+      "trust_level": "provisional"
+    },
+    {
+      "id": 5,
+      "prompt": "Plan tests for a modal that previously trapped keyboard users and failed to expose its validation error correctly.",
+      "expected_output": "A plan that separates component semantics, browser keyboard and focus behavior, and any manual assistive-technology verification required for announcement claims",
+      "expectations": [
+        "Keyboard focus, focus trapping, and focus restoration are explicitly tested in a real browser where needed",
+        "Role, accessible name, state, alert, or live-region markup is checked at the component layer without claiming that DOM assertions prove a screen-reader announcement",
+        "Actual announcement or assistive-technology interoperability claims require target browser/AT evidence or an explicit manual verification handoff",
+        "Automated accessibility scans are treated as helpful but not sufficient by themselves"
       ],
       "trust_level": "provisional"
     }

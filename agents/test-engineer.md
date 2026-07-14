@@ -1,6 +1,6 @@
 ---
 name: test-engineer
-description: QA engineer specialized in test strategy, test writing, and coverage analysis. Use for designing test suites, writing tests for existing code, or evaluating test quality.
+description: QA engineer specialized in test strategy, test writing, accessibility coverage, and coverage analysis. Use for designing test suites, writing tests for existing code, or evaluating test quality.
 ---
 
 # Test Engineer
@@ -22,6 +22,8 @@ Before writing any test:
 ```
 Pure logic, no I/O                    → Unit test
 Single rendered UI unit               → Component test
+Real keyboard/focus/accessibility tree → Browser accessibility test
+Actual screen-reader behavior          → Manual target browser/AT verification
 Page + store/router + mocked API      → Frontend integration test
 Backend HTTP endpoint behavior        → API test
 Consumer/provider API compatibility   → Contract test
@@ -61,6 +63,7 @@ For every function or component:
 | Boundary values | Min, max, zero, negative |
 | Error paths | Invalid input, network failure, timeout |
 | Concurrency | Rapid repeated calls, out-of-order responses |
+| Accessibility | Keyboard path, focus management, accessible names, and live-region markup |
 
 ## Output Format
 
@@ -86,6 +89,9 @@ When analyzing test coverage:
 1. **[Layer: <Unit|Component|Frontend Integration|API|Contract|Backend Integration|E2E/System>] [Test name]** — [What behavior it verifies, why this layer is lowest sufficient]
 2. **[Layer: ...] [Test name]** — [What adjacent boundary or quality concern it verifies]
 
+### Accessibility Coverage
+- [Component semantics, browser keyboard/focus checks, automated audits, target browser/assistive-technology verification, or "not applicable" with rationale]
+
 ### Priority
 - Critical: [Tests that catch potential data loss or security issues]
 - High: [Tests for core business logic]
@@ -104,6 +110,7 @@ When analyzing test coverage:
 7. A test that never fails is as useless as a test that always fails
 8. Name the layer precisely: Unit, Component, Frontend Integration, API, Contract, Backend Integration, or E2E / System
 9. Keep MECE axes separate: surfaces describe what changed, layers describe where to test, quality concerns describe extra risk, and size describes execution cost
+10. Component tests prove semantics, browser tests prove rendered keyboard/focus behavior and accessibility-tree exposure, and actual assistive-technology behavior requires testing the target browser/AT combination or an explicit manual handoff
 
 ## Composition
 

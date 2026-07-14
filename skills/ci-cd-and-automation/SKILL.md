@@ -1,6 +1,6 @@
 ---
 name: ci-cd-and-automation
-description: Automates CI/CD pipeline setup. Use when setting up or modifying build and deployment pipelines. Use when you need to automate quality gates, configure test runners in CI, or establish deployment strategies.
+description: Automates CI/CD pipeline setup. Use when setting up or modifying build and deployment pipelines. Use when automating quality gates, configuring test runners, axe or pa11y accessibility audits for browser UI, CI checks, or deployment strategies.
 ---
 
 # CI/CD and Automation
@@ -43,6 +43,8 @@ Pull Request Opened
 │   INTEGRATION    │  frontend integration + backend DB/cache/queue tests
 │   ↓ pass         │
 │   E2E (optional) │  Playwright/Cypress
+│   ↓ pass         │
+│   ACCESSIBILITY  │  axe/pa11y/Lighthouse for UI changes
 │   ↓ pass         │
 │   SECURITY AUDIT │  npm audit
 │   ↓ pass         │
@@ -178,6 +180,39 @@ jobs:
           name: playwright-report
           path: playwright-report/
 ```
+
+### Accessibility Audits for UI Projects
+
+Run accessibility audits when the project renders browser UI or the change touches user-facing flows. Keep this gate path-aware for backend-only services so pure API changes do not pay for browser work they cannot affect.
+
+```yaml
+# .github/workflows/accessibility.yml
+name: Accessibility
+
+on:
+  pull_request:
+    paths:
+      - 'src/**/*.{js,jsx,ts,tsx,css}'
+      - 'app/**/*.{js,jsx,ts,tsx,css}'
+      - 'pages/**/*.{js,jsx,ts,tsx,css}'
+      - 'package*.json'
+
+jobs:
+  accessibility:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      - name: Run accessibility audit
+        run: npm run test:a11y
+```
+
+Common commands include Playwright accessibility specs, `npx pa11y http://localhost:3000`, Lighthouse accessibility audits, or axe-based component/page tests. Treat these as smoke coverage; critical flows still need keyboard and focus assertions in tests.
 
 ## Feeding CI Failures Back to Agents
 
@@ -400,6 +435,7 @@ jobs:
 After setting up or modifying CI:
 
 - [ ] All quality gates are present (lint, types, tests, build, audit)
+- [ ] UI pipelines include accessibility checks when browser-facing flows are in scope
 - [ ] Pipeline runs on every PR and push to main
 - [ ] Failures block merge (branch protection configured)
 - [ ] CI results feed back into the development loop

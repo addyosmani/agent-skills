@@ -6,6 +6,7 @@ Quick reference for WCAG 2.1 AA compliance. Use alongside the `frontend-ui-engin
 
 - [Essential Checks](#essential-checks)
 - [Common HTML Patterns](#common-html-patterns)
+- [Testing Layer Map](#testing-layer-map)
 - [Testing Tools](#testing-tools)
 - [Quick Reference: ARIA Live Regions](#quick-reference-aria-live-regions)
 - [Common Anti-Patterns](#common-anti-patterns)
@@ -120,12 +121,24 @@ Quick reference for WCAG 2.1 AA compliance. Use alongside the `frontend-ui-engin
 </ul>
 ```
 
+## Testing Layer Map
+
+| Layer | Use For | Example Checks |
+|---|---|---|
+| Component test | Semantics and state exposed by one component | role/name queries, required state, alert text, `aria-live` content |
+| Browser test | Real focus, layout, and composed UI behavior | tab order, focus trap, focus restoration, contrast, accessibility tree |
+| E2E test | Critical user journeys that must remain accessible | login, checkout, onboarding, form submission with keyboard only |
+| CI audit | Broad regression smoke checks | axe, pa11y, Lighthouse accessibility score |
+
+Component tests prove semantic markup and state. Browser tests prove rendered keyboard/focus behavior and accessibility-tree exposure. Actual announcements and interoperability require evidence from the target browser/assistive-technology combination; add a manual verification handoff when that evidence cannot be automated.
+
 ## Testing Tools
 
 ```bash
 # Automated audit
-npx axe-core          # Programmatic accessibility testing
-npx pa11y             # CLI accessibility checker
+npm install --save-dev jest-axe @axe-core/playwright
+npx pa11y http://localhost:3000
+npx lighthouse http://localhost:3000 --only-categories=accessibility
 
 # In browser
 # Chrome DevTools → Lighthouse → Accessibility

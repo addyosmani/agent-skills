@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: Drives development with tests. Use when implementing logic, fixing bugs, changing behavior, choosing test coverage, working test-first or red-green-refactor, or writing unit, component, frontend integration, API, contract, backend integration, E2E, or regression tests.
+description: Drives development with tests. Use when implementing logic, fixing bugs, changing behavior, choosing test coverage, working test-first or red-green-refactor, or writing unit, component, frontend integration, API, contract, backend integration, E2E, regression, or accessibility tests.
 ---
 
 # Test-Driven Development
@@ -199,6 +199,22 @@ Scale the planner to the change. For a one-line fix, it may collapse to one or t
 
 **Decision rule:** if a unit test can prove the behavior, stop there. If the behavior crosses a boundary, pick the boundary-specific layer. API tests are backend-owned endpoint behavior; contract tests are cross-consumer compatibility. Use E2E only when the value is the whole user journey, not when a lower layer can catch the same regression. Apply quality concerns at the chosen layer first, then add a broader layer only when the risk cannot be proven lower down.
 
+### Accessibility Test Planning
+
+Treat accessibility as user-facing behavior, not visual polish. Test it at the lowest reliable layer, and match every claim to the evidence the test can produce:
+
+| Concern | Best First Test | Add Broader Evidence When |
+|---|---|---|
+| Accessible name, role, required state, form error text | Component test with role/label queries | The rendered page composes multiple components |
+| Keyboard path, focus trap, focus restoration | Component or browser test | Real tab order, modals, menus, routing, or layout are involved |
+| ARIA live-region markup and content updates | Component test with DOM assertions | Browser timing or async rendering affects accessibility-tree exposure |
+| Actual screen-reader announcement or interoperability | Manual verification with the target browser/assistive-technology combination | Always when real announcement behavior is a release requirement |
+| Color contrast, zoom, responsive reflow | Browser/DevTools/axe/pa11y audit | CSS, theming, or layout changed |
+
+Component tests can prove semantics and state, but they cannot prove what VoiceOver, NVDA, JAWS, or another assistive technology announces. Browser tests can prove keyboard/focus behavior and accessibility-tree exposure. Record a manual verification step and expected result when actual browser/assistive-technology behavior is required and no automated integration supplies that evidence.
+
+Automated axe/pa11y checks catch broad violations, but they do not replace keyboard traversal, focus verification, accessibility-tree inspection, or target assistive-technology checks for critical flows. For the detailed checklist, use `references/accessibility-checklist.md`.
+
 ## Writing Good Tests
 
 ### Test State, Not Interactions
@@ -372,7 +388,7 @@ This separation ensures the test is written without knowledge of the fix, making
 
 ## See Also
 
-For detailed unit, component, frontend integration, API, contract, backend integration, and E2E examples, see `references/testing-patterns.md`.
+For detailed unit, component, frontend integration, API, contract, backend integration, E2E, and accessibility examples, see `references/testing-patterns.md`. For accessibility-specific checks, see `references/accessibility-checklist.md`.
 
 ## Common Rationalizations
 
