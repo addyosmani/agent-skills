@@ -6,18 +6,35 @@ Use this reference when writing new tests, reviewing coverage gaps, or deciding 
 
 ## Contents
 
-- [Technique Selector](#technique-selector)
+- [Planning Decision Model](#planning-decision-model)
+- [Case-Design Technique Selector](#case-design-technique-selector)
+- [Basic Selection Patterns](#basic-selection-patterns)
 - [Black Box Techniques](#black-box-techniques)
 - [White Box Techniques](#white-box-techniques)
-- [Testing Paradigms](#testing-paradigms)
-- [Defect Taxonomies](#defect-taxonomies)
-- [When to Stop Testing](#when-to-stop-testing)
+- [Operating Mode](#operating-mode)
+- [Risk Heuristics](#risk-heuristics)
+- [Exit Criteria](#exit-criteria)
 - [Applying This To Test Planner](#applying-this-to-test-planner)
 
-## Technique Selector
+## Planning Decision Model
+
+Keep four decisions separate:
+
+| Decision | Question | Examples |
+|---|---|---|
+| Case-design technique | How will representative cases be derived? | boundary values, decision table, pairwise |
+| Operating mode | How will learning and execution proceed? | scripted, exploratory, adaptive |
+| Risk heuristic | What defect ideas might be missing? | taxonomy, historical defects, production incidents |
+| Exit criteria | What evidence is enough to stop, and who accepts residual risk? | required gates, risk coverage, explicit owner acceptance |
+
+These dimensions are MECE; individual case-design techniques are not. Combine techniques when each exposes a distinct risk, and record the artifact produced by each one.
+
+## Case-Design Technique Selector
 
 | Testing need | Prefer | Good fit |
 |---|---|---|
+| One concrete behavior has no meaningful partitions or combinations | Direct example | a focused example, simple mapping, one invariant |
+| A known defect must never recur | Regression reproduction | bug fixes, incident follow-up, escaped defects |
 | Inputs can be grouped by expected behavior | Equivalence class testing | validators, parsers, form fields, API inputs |
 | Defects likely near thresholds | Boundary value testing | min/max, dates, pagination, limits, feature flags |
 | Many business rules combine conditions and outcomes | Decision table testing | pricing, eligibility, routing, permissions |
@@ -27,10 +44,34 @@ Use this reference when writing new tests, reviewing coverage gaps, or deciding 
 | A user or actor completes a goal | Use case testing | checkout, signup, onboarding, CRUD transaction paths |
 | Code paths are complex | Control flow testing | branch-heavy logic, loops, exception paths |
 | Variable lifecycle matters | Data flow testing | initialization, mutation, cleanup, cached values |
-| Requirements are stable and traceability matters | Scripted testing | regulated releases, acceptance suites, handoff-heavy teams |
-| Product knowledge is still emerging | Exploratory testing | new UI, unclear requirements, bug hunts, risk discovery |
-| Need ideas for missing tests | Defect taxonomy | coverage review, postmortems, risk workshops |
-| Need a stopping decision | Stop criteria | release readiness, risk acceptance, test exit review |
+
+### Required Technique Artifacts
+
+| Technique | Evidence that the technique was actually applied |
+|---|---|
+| Direct example | Concrete input/precondition, action, and expected result |
+| Regression reproduction | Minimal reproducer and the expected RED failure reason |
+| Equivalence classes | Named valid/invalid partitions and a representative from each |
+| Boundary values | Named boundaries with below/at/above cases where meaningful |
+| Decision table | Conditions, outcomes, reachable rules, and one case per rule |
+| Pairwise | Factor/value model, generated case set, and pair-coverage evidence |
+| State transition | States, events, transitions, actions, and important invalid transitions |
+| Domain analysis | Dimensions, boundaries, inside/outside points, and intersections |
+| Use case | Actor, goal, main path, and selected alternate/error paths |
+| Control flow | Decisions/loops covered and observable outcomes asserted |
+| Data flow | Important define-use paths and stale/uninitialized/cleanup risks |
+
+Naming a technique without its artifact is not evidence that the technique shaped the tests.
+
+## Basic Selection Patterns
+
+### Direct Example
+
+Use for one concrete behavior that has no useful partition, threshold, combination, or state model. Record the precondition or input, action, and expected observable result. Do not apply a more formal label merely to fill a planner field.
+
+### Regression Reproduction
+
+Use for a known defect. Preserve the smallest input and setup that reproduce it, state why the test must fail before the fix, then keep the case as permanent regression coverage. Add another technique only when it reveals additional cases beyond the reported defect.
 
 ## Black Box Techniques
 
@@ -106,6 +147,8 @@ Steps:
 3. Generate a set that covers every pair of factor values.
 4. Add extra high-risk triples or known-bad combinations manually.
 5. Keep the factor/value model with the tests so future changes can update it.
+
+Use a project-approved pairwise generator when available, or mechanically enumerate expected pairs and verify the proposed set covers them. Do not claim pair coverage from visual inspection alone; report an unverified proposal when no generator or coverage check was run.
 
 Watch for:
 - Pairwise is not enough when defects require three or more interacting factors.
@@ -211,7 +254,15 @@ Watch for:
 - Cache invalidation and cleanup paths.
 - Variables that are set in one branch and read in another.
 
-## Testing Paradigms
+## Operating Mode
+
+Operating mode describes how testing proceeds; it is not a case-design technique.
+
+| Mode | Required artifact |
+|---|---|
+| Scripted | Repeatable cases, expected results, and traceability required by the project |
+| Exploratory | Time-boxed charter, observations, defects, coverage notes, and follow-up candidates |
+| Adaptive | Initial scripted scope plus recorded changes made from evidence discovered during testing |
 
 ### Scripted Testing
 
@@ -246,7 +297,11 @@ Practical split:
 - Exploratory sessions discover unknown risks.
 - Automated regression tests preserve important findings.
 
-## Defect Taxonomies
+## Risk Heuristics
+
+Risk heuristics suggest missing defect ideas; they do not select representative cases by themselves.
+
+### Defect Taxonomies
 
 Use taxonomies as idea generators and coverage audits, not as paperwork.
 
@@ -267,19 +322,20 @@ Typical categories:
 - Performance and resource use
 - Observability and diagnosability
 
-## When to Stop Testing
+## Exit Criteria
 
-There is no universal stopping rule. Use explicit exit criteria and risk judgment.
+There is no universal stopping rule. Define required evidence and the owner who can accept residual risk before testing starts.
 
-Common stopping signals:
+Evidence-based exit criteria can include:
 - Required coverage goals are met.
 - Critical and high-risk scenarios have passed.
-- Defect discovery rate has dropped below the agreed threshold.
+- Defect discovery rate has dropped below an agreed threshold across comparable, sufficiently broad sessions.
 - Remaining known risks are accepted by the right owner.
 - The cost of more testing exceeds the likely value for this release.
-- Time or budget is exhausted and the residual risk is documented.
 
-Never use "we ran a lot of tests" as a stopping criterion. Name what was covered, what was not covered, and what risk remains.
+Time or budget exhaustion is a forced stop, not a satisfied exit criterion. Report the result as `INCOMPLETE`, name what was not covered, document residual risk, and do not claim release readiness.
+
+Never use "we ran a lot of tests" as an exit criterion. Name what was covered, what was not covered, and what risk remains.
 
 ## Applying This To Test Planner
 
@@ -287,11 +343,17 @@ Use the Test Planner to separate decisions:
 
 - Changed surfaces: what code/data/API/UI changed.
 - Affected contracts: public schemas, clients, events, or none.
-- Primary layer: where the behavior can be proven cheapest.
-- Design technique: equivalence, boundary, decision table, pairwise, state-transition, domain, use case, control flow, data flow, exploratory, or taxonomy.
+- Primary layer: the lowest layer that provides sufficient evidence for the behavior.
+- Case design technique: direct example, regression reproduction, equivalence, boundary, decision table, pairwise, state-transition, domain, use case, control flow, or data flow.
 - Quality concerns: accessibility, security, performance, visual regression, observability, migration safety, or none.
 - Skipped layers and why: explicit risk tradeoff.
 - Commands to run: existing project scripts.
+
+For larger or release-oriented plans, add these only when they affect the decision:
+
+- Operating mode: scripted, exploratory, or adaptive.
+- Risk heuristics: defect taxonomy, historical defects, incidents, or none.
+- Exit criteria: required evidence, forced-stop behavior, and residual-risk owner.
 
 Example:
 
@@ -300,7 +362,7 @@ Test Planner:
 - Changed surfaces: Backend endpoint POST /checkout validation
 - Affected contracts: Request schema unchanged
 - Primary layer: API
-- Design technique: Equivalence classes + boundary values
+- Case design technique: Equivalence classes + boundary values
 - Quality concerns: Security/authorization
 - Skipped layers and why: Contract unchanged; E2E too broad for validation rules
 - Commands to run: npm run test:api -- checkout

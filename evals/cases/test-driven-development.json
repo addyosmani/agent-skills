@@ -41,6 +41,14 @@
       {
         "prompt": "Add accessibility regression tests for keyboard focus in the settings modal",
         "top_k": 3
+      },
+      {
+        "prompt": "Choose boundary and equivalence-class cases for this quantity validator",
+        "top_k": 3
+      },
+      {
+        "prompt": "Turn these discount conditions into a decision-table test plan",
+        "top_k": 3
       }
     ],
     "negative": [
@@ -61,7 +69,8 @@
       "expected_output": "A failing test demonstrating the bug, a minimal fix turning it green, full suite passing",
       "expectations": [
         "A failing test is written and shown failing before the fix",
-        "A Test Planner decision separates changed surfaces, affected contracts, primary layer, adjacent layers, quality concerns, skipped layers, and commands",
+        "A Test Planner decision separates changed surfaces, affected contracts, primary layer, adjacent layers, case-design technique, quality concerns, skipped layers, and commands",
+        "The known defect is classified as Regression reproduction with a minimal reproducer and expected RED failure reason",
         "The selected test layer is named precisely rather than using generic integration terminology",
         "API tests and contract tests are distinguished when the scenario involves backend endpoint behavior versus consumer/provider compatibility",
         "The implementation is the minimum needed to pass",
@@ -77,6 +86,7 @@
         "Changed surfaces identify the backend endpoint and validation/auth logic",
         "Affected contracts are marked as none or unchanged with rationale",
         "The primary layer is API, not generic integration or contract",
+        "Equivalence classes and boundary values derive concrete valid, invalid, below, at, and above cases",
         "Quality concerns include security or authorization risk",
         "Contract and E2E layers are skipped or adjacent with reasons"
       ],
@@ -90,6 +100,7 @@
         "Changed surfaces include shared schema, generated client, or public API shape",
         "Affected contracts name the frontend/backend request or response schema",
         "The primary layer is Contract, not API",
+        "A case-design technique is named without conflating it with the Contract layer",
         "API tests are treated as adjacent backend behavior checks rather than proof of consumer compatibility",
         "Quality concerns are listed separately from test layers"
       ],
@@ -102,6 +113,7 @@
       "expectations": [
         "Changed surfaces include frontend UI and frontend state or routing",
         "The primary layer is Frontend Integration",
+        "The case-design technique explains how loading, error, empty, and state-transition cases are selected",
         "The API is mocked at the network boundary rather than exercising a real backend",
         "E2E is skipped unless the full user journey is the behavior under test",
         "Quality concerns are listed separately from the layer decision"
@@ -115,10 +127,71 @@
       "expectations": [
         "Keyboard focus, focus trapping, and focus restoration are explicitly tested in a real browser where needed",
         "Role, accessible name, state, alert, or live-region markup is checked at the component layer without claiming that DOM assertions prove a screen-reader announcement",
+        "Regression reproduction is named separately from the accessibility quality concern and browser evidence layer",
         "Actual announcement or assistive-technology interoperability claims require target browser/AT evidence or an explicit manual verification handoff",
         "Automated accessibility scans are treated as helpful but not sufficient by themselves"
       ],
       "trust_level": "provisional"
+    },
+    {
+      "id": 6,
+      "prompt": "Use the Inventory Reservation API requirements in the fixture. Produce only a Test Planner and concrete test-case model that efficiently covers quantity validation; do not implement anything.",
+      "expected_output": "An API-layer plan whose equivalence partitions and boundary model derive explicit representatives, including values below, at, and above both inclusive limits",
+      "files": [
+        "test-design-methods"
+      ],
+      "expectations": [
+        "API is selected as the primary layer while the unchanged contract is kept separate",
+        "Valid and invalid equivalence classes are named, including missing, null, wrong type, fractional, and out-of-range inputs",
+        "Boundary cases include 0, 1, 2, 99, 100, and 101 with expected outcomes",
+        "The output shows how each concrete case derives from a named partition or boundary rather than merely naming techniques",
+        "Security remains a quality concern rather than being mislabeled as a test layer or case-design technique"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Use the Discount Rules in the fixture. Produce only a Test Planner and decision-table test model; do not implement anything.",
+      "expected_output": "A unit-layer decision table that represents the three conditions, discount precedence, non-stacking behavior, and every reachable outcome",
+      "files": [
+        "test-design-methods"
+      ],
+      "expectations": [
+        "Unit is selected as the lowest sufficient layer for pure discount-selection rules",
+        "The decision table explicitly models membership, subtotal threshold, valid coupon, and the resulting discount",
+        "The loyalty-over-coupon precedence and no-stacking rule are represented",
+        "Each reachable rule has a corresponding concrete test case or a justified collapsed condition",
+        "Boundary values around the $100 threshold may supplement but do not replace the decision table"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Use the Order State Machine in the fixture. Produce only a Test Planner and state-transition test model; do not implement anything.",
+      "expected_output": "A state-transition model covering valid transitions, important invalid transitions, and idempotent repeated payment without duplicate side effects",
+      "files": [
+        "test-design-methods"
+      ],
+      "expectations": [
+        "The output names states, events, next states, and charge or rejection outcomes",
+        "Draft-to-Paid, Paid-to-Shipped, and Draft-to-Cancelled valid transitions are covered",
+        "Shipping Draft, paying Cancelled, and cancelling Shipped are covered as invalid transitions",
+        "Repeated payment in Paid is tested for idempotency and no duplicate charge",
+        "The chosen layer is justified independently from the state-transition case-design technique"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Use the Deployment Matrix in the fixture. Produce only a Test Planner and pairwise case model; do not implement anything.",
+      "expected_output": "A bounded pairwise plan with an explicit factor/value model, a generated case set, pair-coverage evidence, and the known high-risk four-factor combination",
+      "files": [
+        "test-design-methods"
+      ],
+      "expectations": [
+        "Browser, locale, plan, and authentication are listed as factors with all documented values",
+        "A concrete reduced case set is provided rather than only recommending pairwise testing",
+        "The output states how pair coverage will be generated or verified",
+        "Safari + ja-JP + Enterprise + SSO is added explicitly as a high-risk combination",
+        "The plan does not claim pairwise coverage handles all three-way or four-way interaction defects"
+      ]
     }
   ]
 }

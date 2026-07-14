@@ -57,10 +57,12 @@ Use `references/test-design-techniques.md` when choosing cases or reviewing cove
 | Actor completes a goal | Use case |
 | Branch-heavy code | Control flow |
 | Value lifecycle, cache, init, cleanup | Data flow |
+| One concrete behavior needs a focused example | Direct example |
+| A known defect must never recur | Regression reproduction |
 | Unknown risks or weak requirements | Exploratory charter |
 | Coverage audit needs idea generation | Defect taxonomy |
 
-Every recommended test should name both its layer and design technique.
+Name the layer for every recommended test. Name a case-design technique when it materially shapes case selection; use `Direct example` or `Regression reproduction` instead of forcing a more formal label that did not drive the cases.
 
 ### 4. Review Existing Tests First
 
@@ -102,10 +104,15 @@ APPROVE | NEEDS TESTS | BLOCKED
 - Affected contracts:
 - Primary layer:
 - Adjacent layers:
-- Design technique:
+- Case design technique:
 - Quality concerns:
 - Skipped layers and why:
 - Commands to run:
+
+### Planning Extensions (only when relevant)
+- Operating mode: [scripted/exploratory/adaptive]
+- Risk heuristics: [defect taxonomy or historical defect classes]
+- Exit criteria: [required evidence and residual-risk owner]
 
 ### Recommended Tests
 1. **[Priority: Critical|High|Medium|Low] [Layer] [Technique] [Test name]** — [behavior proven, why this is the lowest sufficient layer]
@@ -132,7 +139,7 @@ When writing tests, include the test file path, the failing/passing command to r
 6. Every test name should read like a specification.
 7. A test that never fails is as useless as a test that always fails.
 8. API tests prove backend endpoint behavior; contract tests prove consumer/provider compatibility.
-9. Keep MECE axes separate: surfaces describe what changed, layers describe where to test, design techniques describe case selection, quality concerns describe extra risk, and size describes execution cost.
+9. Keep MECE axes separate: surfaces describe what changed, layers describe where to test, case-design techniques describe case selection, operating mode describes how learning and execution proceed, risk heuristics suggest what may be missing, exit criteria govern stopping, quality concerns describe extra risk, and size describes execution cost.
 10. Recommend the smallest useful suite first; broader suites are for regression confidence after focused tests pass.
 11. Component tests prove semantics, browser tests prove rendered keyboard/focus behavior and accessibility-tree exposure, and actual assistive-technology behavior requires testing the target browser/AT combination or an explicit manual handoff.
 

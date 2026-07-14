@@ -48,7 +48,7 @@ Do not invent a script because its name looks conventional. Use a direct runner 
 
 ### 3. Write the Test Planner
 
-Reuse the same core Test Planner fields as `test-driven-development`, then add execution details:
+Reuse the scope and layer fields from `test-driven-development`, then add execution details. This skill runs existing suites, so it does not retroactively assign case-design techniques. Route missing-case analysis or technique selection to `test-engineer` or `test-driven-development`.
 
 ```markdown
 Test Planner:

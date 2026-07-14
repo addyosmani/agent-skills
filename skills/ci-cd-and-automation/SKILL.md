@@ -1,6 +1,6 @@
 ---
 name: ci-cd-and-automation
-description: Automates CI/CD pipeline setup. Use when setting up or modifying build and deployment pipelines. Use when automating quality gates, configuring test runners, axe or pa11y accessibility audits for browser UI, CI checks, or deployment strategies.
+description: Automates CI/CD pipelines, GitHub Actions, and pull-request workflows. Use when configuring CI jobs, build and deployment automation, quality gates, test runners, axe or pa11y accessibility audits for browser UI, or deployment strategies.
 ---
 
 # CI/CD and Automation

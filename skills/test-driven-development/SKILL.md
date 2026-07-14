@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: Drives development with tests. Use when implementing logic, fixing bugs, changing behavior, choosing test coverage, working test-first or red-green-refactor, or writing unit, component, frontend integration, API, contract, backend integration, E2E, regression, or accessibility tests.
+description: Drives development with tests. Use when implementing logic, fixing bugs, changing behavior, choosing test coverage, designing test cases, working test-first or red-green-refactor, or writing unit, component, frontend integration, API, contract, backend integration, E2E, regression, or accessibility tests.
 ---
 
 # Test-Driven Development
@@ -171,8 +171,9 @@ Before writing tests, separate these planning dimensions:
 1. **Identify changed surfaces** — files changed, public APIs touched, shared schemas/types, persistence/infrastructure, and consumers that may break.
 2. **Name affected contracts** — request/response schemas, generated clients, public APIs, events, or "none".
 3. **Select layers** — primary layer, adjacent layers to consider, and layers intentionally skipped with reasons.
-4. **Add quality concerns** — accessibility, security, performance, visual regression, observability, migration safety, or "none".
-5. **Use existing commands** — discover the project's test scripts before inventing new command names.
+4. **Choose case-design techniques** — name how cases are derived, such as boundary values, a decision table, state transitions, regression reproduction, or a direct example.
+5. **Add quality concerns** — accessibility, security, performance, visual regression, observability, migration safety, or "none".
+6. **Use existing commands** — discover the project's test scripts before inventing new command names.
 
 ```markdown
 Test Planner:
@@ -180,12 +181,26 @@ Test Planner:
 - Affected contracts:
 - Primary layer:
 - Adjacent layers:
+- Case design technique:
 - Quality concerns:
 - Skipped layers and why:
 - Commands to run:
 ```
 
 Scale the planner to the change. For a one-line fix, it may collapse to one or two sentences; retain a field only when it affects the test decision.
+
+Case design answers **which cases** provide evidence; the test layer answers **where** to run them. Use the lightest technique that exposes the risk:
+
+| Behavior shape | Prefer | Required artifact |
+|---|---|---|
+| One concrete behavior with no meaningful partition | Direct example | Named input, action, and expected result |
+| A known defect must never recur | Regression reproduction | Minimal input and expected failing reason before the fix |
+| Inputs form valid and invalid groups or cross thresholds | Equivalence classes and boundary values | Named partitions, representatives, and below/at/above cases |
+| Outcomes depend on condition combinations | Decision table | Conditions, outcomes, and one test per reachable rule |
+| Behavior depends on state and event order | State-transition testing | States, events, valid transitions, and important invalid transitions |
+| A configuration matrix is too large | Pairwise testing | Factor/value model, generated cases, and pair-coverage evidence |
+
+Techniques may be combined when each exposes a distinct risk. Do not invent a formal label after choosing cases; use `Direct example` or `Regression reproduction` when those honestly describe the design. Read `references/test-design-techniques.md` for domain analysis, use cases, white-box techniques, exploratory work, risk heuristics, and exit criteria.
 
 | What must be proven | Prefer this layer | Examples |
 |---|---|---|

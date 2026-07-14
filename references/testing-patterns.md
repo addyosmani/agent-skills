@@ -99,8 +99,11 @@ Before writing tests, keep planning dimensions separate:
 | Changed surfaces | Code/data areas touched by the change | Test layer names like E2E |
 | Affected contracts | Public schemas, generated clients, events, API compatibility | Backend implementation details |
 | Test layer | Where behavior should be proven | Quality concerns like accessibility or security |
+| Case design technique | How representative cases are derived | Test layer names or execution commands |
 | Quality concerns | Extra risk dimensions to verify | Surface names like frontend/backend |
 | Execution size | Runtime cost and CI placement | User-visible behavior categories |
+
+Case-design techniques may combine, but they remain separate from operating mode, risk heuristics, and exit criteria. Use `Direct example` for a single concrete behavior and `Regression reproduction` for a known defect instead of inventing a formal technique. See `references/test-design-techniques.md` for selectors and required artifacts.
 
 ### Changed Surfaces
 

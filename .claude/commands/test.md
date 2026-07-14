@@ -5,7 +5,7 @@ description: Run TDD workflow — write failing tests, implement, verify. For bu
 Invoke the agent-skills:test-driven-development skill.
 
 Before writing tests:
-0. Produce a Test Planner with changed surfaces, affected contracts, primary layer, adjacent layers, quality concerns, skipped layers with reasons, and existing commands to run.
+0. Produce a Test Planner with changed surfaces, affected contracts, primary layer, adjacent layers, case-design technique, quality concerns, skipped layers with reasons, and existing commands to run.
 
 For new features:
 1. Write tests that describe the expected behavior (they should FAIL)

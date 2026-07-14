@@ -281,7 +281,7 @@ Quick-reference material that skills pull in when needed:
 | Reference | Covers |
 |-----------|--------|
 | [definition-of-done.md](references/definition-of-done.md) | Project-wide standing bar every change clears, contrasted with per-task acceptance criteria |
-| [test-design-techniques.md](references/test-design-techniques.md) | Case selection techniques: equivalence classes, boundaries, decision tables, pairwise, state transitions, use cases, white-box design, exploratory testing |
+| [test-design-techniques.md](references/test-design-techniques.md) | Test-planning methods: case-design techniques, scripted/exploratory modes, defect heuristics, and evidence-based exit criteria |
 | [testing-patterns.md](references/testing-patterns.md) | Test structure, naming, mocking, React/API/E2E examples, anti-patterns |
 | [security-checklist.md](references/security-checklist.md) | Pre-commit checks, auth, input validation, headers, CORS, OWASP Top 10 |
 | [performance-checklist.md](references/performance-checklist.md) | Core Web Vitals targets, frontend/backend checklists, measurement commands |
