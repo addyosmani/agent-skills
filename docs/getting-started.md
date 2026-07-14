@@ -59,6 +59,7 @@ For comprehensive coverage, load skills by phase:
 
 ```
 Starting a project:  spec-driven-development → planning-and-task-breakdown
+Before development:  test-case-design (for non-trivial or uncertain coverage)
 During development:  incremental-implementation + test-driven-development
 Before merge:        code-review-and-quality + security-and-hardening
 Before deploy:       shipping-and-launch
@@ -110,9 +111,9 @@ The `.claude/commands/` directory contains slash commands for Claude Code:
 |---------|---------------|
 | `/spec` | spec-driven-development |
 | `/plan` | planning-and-task-breakdown |
-| `/build` | incremental-implementation + test-driven-development |
-| `/build auto` | planning-and-task-breakdown → incremental-implementation + test-driven-development (whole plan, one approval) |
-| `/test` | test-driven-development |
+| `/build` | incremental-implementation + test-case-design (when needed) + test-driven-development |
+| `/build auto` | planning-and-task-breakdown → incremental-implementation + test-case-design (when needed) + test-driven-development (whole plan, one approval) |
+| `/test` | test-case-design (when needed) → test-driven-development |
 | `/review` | code-review-and-quality |
 | `/code-simplify` | code-simplification |
 | `/ship` | shipping-and-launch |
@@ -131,9 +132,10 @@ The `references/` directory contains supplementary checklists:
 | Reference | Use With |
 |-----------|----------|
 | `testing-patterns.md` | test-driven-development |
+| `test-design-techniques.md` | test-case-design |
 | `performance-checklist.md` | performance-optimization |
 | `security-checklist.md` | security-and-hardening |
-| `accessibility-checklist.md` | frontend-ui-engineering |
+| `accessibility-checklist.md` | frontend-ui-engineering, test-case-design |
 | `definition-of-done.md` | all skills / every change |
 | `observability-checklist.md` | observability-and-instrumentation |
 | `orchestration-patterns.md` | context-engineering |

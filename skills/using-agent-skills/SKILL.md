@@ -20,6 +20,7 @@ Task arrives
     ├── Have a rough concept, need variants? → idea-refine
     ├── New project/feature/change? ──→ spec-driven-development
     ├── Have a spec, need tasks? ──────→ planning-and-task-breakdown
+    ├── Designing test cases? ─────────→ test-case-design
     ├── Implementing code? ────────────→ incremental-implementation
     │   ├── UI work? ─────────────────→ frontend-ui-engineering
     │   ├── API work? ────────────────→ api-and-interface-design
@@ -134,7 +135,7 @@ These are the subtle errors that look like productivity but create problems:
 
 2. **Skills are workflows, not suggestions.** Follow the steps in order. Don't skip verification steps.
 
-3. **Multiple skills can apply.** A feature implementation might involve `idea-refine` → `spec-driven-development` → `planning-and-task-breakdown` → `incremental-implementation` → `test-driven-development` → `code-review-and-quality` → `code-simplification` → `shipping-and-launch` in sequence.
+3. **Multiple skills can apply.** A feature implementation might involve `idea-refine` → `spec-driven-development` → `planning-and-task-breakdown` → `test-case-design` → `incremental-implementation` → `test-driven-development` → `tests` → `code-review-and-quality` → `code-simplification` → `shipping-and-launch` in sequence.
 
 4. **When in doubt, start with a spec.** If the task is non-trivial and there's no spec, begin with `spec-driven-development`.
 
@@ -149,17 +150,18 @@ For a complete feature, the typical skill sequence is:
 4.  planning-and-task-breakdown → Break into verifiable chunks
 5.  context-engineering         → Load the right context
 6.  source-driven-development   → Verify against official docs
-7.  incremental-implementation  → Build slice by slice
-8.  observability-and-instrumentation → Instrument as you build (runs parallel with 7-9, not after)
-9.  doubt-driven-development    → Cross-examine non-trivial decisions in-flight
-10. test-driven-development     → Write proving tests for each slice
-11. tests                       → Run existing suites and report evidence
-12. code-review-and-quality     → Review before merge
-13. code-simplification         → Reduce unnecessary complexity while preserving behavior
-14. git-workflow-and-versioning → Clean commit history
-15. documentation-and-adrs      → Document decisions
-16. deprecation-and-migration   → Retire old systems and move users safely when needed
-17. shipping-and-launch         → Deploy safely
+7.  test-case-design            → Produce a ready Test Planner when explicit design is needed
+8.  incremental-implementation  → Build slice by slice
+9.  observability-and-instrumentation → Instrument as you build (runs parallel with 8-10, not after)
+10. doubt-driven-development    → Cross-examine non-trivial decisions in-flight
+11. test-driven-development     → Implement planned cases with RED-GREEN-REFACTOR
+12. tests                       → Run existing suites and report evidence
+13. code-review-and-quality     → Review before merge
+14. code-simplification         → Reduce unnecessary complexity while preserving behavior
+15. git-workflow-and-versioning → Clean commit history
+16. documentation-and-adrs      → Document decisions
+17. deprecation-and-migration   → Retire old systems and move users safely when needed
+18. shipping-and-launch         → Deploy safely
 ```
 
 Not every task needs every skill. A bug fix might only need: `debugging-and-error-recovery` → `test-driven-development` → `code-review-and-quality`.
@@ -172,13 +174,14 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 | Define | idea-refine | Refine ideas through structured divergent and convergent thinking |
 | Define | spec-driven-development | Requirements and acceptance criteria before code |
 | Plan | planning-and-task-breakdown | Decompose into small, verifiable tasks |
+| Plan | test-case-design | Test Analysis and Test Design produce a ready Test Planner |
 | Build | incremental-implementation | Thin vertical slices, test each before expanding |
 | Build | source-driven-development | Verify against official docs before implementing |
 | Build | doubt-driven-development | Adversarial fresh-context review of every non-trivial decision |
 | Build | context-engineering | Right context at the right time |
 | Build | frontend-ui-engineering | Production-quality UI with accessibility |
 | Build | api-and-interface-design | Stable interfaces with clear contracts |
-| Verify | test-driven-development | Failing test first, then make it pass |
+| Verify | test-driven-development | Consume planned cases, fail first, then make them pass |
 | Verify | tests | Run existing test commands and report evidence |
 | Verify | browser-testing-with-devtools | Chrome DevTools MCP for runtime verification |
 | Verify | debugging-and-error-recovery | Reproduce → localize → fix → guard |

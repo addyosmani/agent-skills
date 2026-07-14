@@ -7,7 +7,7 @@ description: Delivers changes incrementally in thin verified slices. Use when im
 
 ## Overview
 
-Build in thin vertical slices — implement one piece, test it, verify it, then expand. Avoid implementing an entire feature in one pass. Each increment should leave the system in a working, testable state. This is the execution discipline that makes large features manageable.
+Build in thin vertical slices, prove one piece, verify it, then expand. Avoid implementing an entire feature in one pass. Each increment should leave the system in a working, testable state. This skill owns slice size and order; `test-case-design` owns non-trivial case selection, and `test-driven-development` consumes those cases through RED-GREEN-REFACTOR.
 
 ## When to Use
 
@@ -23,23 +23,25 @@ Build in thin vertical slices — implement one piece, test it, verify it, then 
 ```
 ┌──────────────────────────────────────┐
 │                                      │
-│   Implement ──→ Test ──→ Verify ──┐  │
-│       ▲                           │  │
-│       └───── Commit ◄─────────────┘  │
-│              │                       │
-│              ▼                       │
-│          Next slice                  │
+│   Scope ──→ Plan proof ──→ RED       │
+│                           │          │
+│                           ▼          │
+│   Next slice ◄── Commit ◄── GREEN    │
+│                    ▲          │      │
+│                    └── Verify ◄┘      │
 │                                      │
 └──────────────────────────────────────┘
 ```
 
 For each slice:
 
-1. **Implement** the smallest complete piece of functionality
-2. **Test** — run the test suite (or write a test if none exists)
-3. **Verify** — confirm the slice works as expected (tests pass, build succeeds, manual check)
-4. **Commit** -- save your progress with a descriptive message (see `git-workflow-and-versioning` for atomic commit guidance)
-5. **Move to the next slice** — carry forward, don't restart
+1. **Scope** the smallest complete piece of functionality.
+2. **Plan proof** — for a behavior change, consume a READY Test Planner, invoke `test-case-design` when coverage is non-trivial or uncertain, or use the TDD mini planner for one obvious behavior or confirmed defect. For a non-behavioral slice, name the applicable verification instead.
+3. **RED** — when TDD applies, write and run the selected case before production code.
+4. **GREEN** — implement only enough functionality to pass the selected case.
+5. **Verify** — confirm the slice works as expected with affected tests, required regression gates, build, or a relevant manual check.
+6. **Commit** -- save your progress with a descriptive message (see `git-workflow-and-versioning` for atomic commit guidance).
+7. **Move to the next slice** — carry forward; do not silently broaden the current planner or slice.
 
 ## Slicing Strategies
 
@@ -215,6 +217,7 @@ After each increment, verify:
 | Rationalization | Reality |
 |---|---|
 | "I'll test it all at the end" | Bugs compound. A bug in Slice 1 makes Slices 2-5 wrong. Test each slice. |
+| "I'll decide the important cases while implementing" | Use a reviewed Test Planner for non-trivial coverage so implementation does not invent its own oracle. |
 | "It's faster to do it all at once" | It *feels* faster until something breaks and you can't find which of 500 changed lines caused it. |
 | "These changes are too small to commit separately" | Small commits are free. Large commits hide bugs and make rollbacks painful. |
 | "I'll add the feature flag later" | If the feature isn't complete, it shouldn't be user-visible. Add the flag now. |
@@ -224,6 +227,7 @@ After each increment, verify:
 ## Red Flags
 
 - More than 100 lines of code written without running tests
+- A non-trivial behavior reaches implementation without a READY Test Planner
 - Multiple unrelated changes in a single increment
 - "Let me just quickly add this too" scope expansion
 - Skipping the test/verify step to move faster
@@ -239,6 +243,7 @@ After each increment, verify:
 After completing all increments for a task:
 
 - [ ] Each increment was individually tested and committed
+- [ ] Each behavior-changing increment consumed a READY Test Planner or an explicit mini planner
 - [ ] The full test suite passes
 - [ ] The build is clean
 - [ ] The feature works end-to-end as specified

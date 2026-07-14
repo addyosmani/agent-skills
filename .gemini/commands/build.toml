@@ -2,6 +2,7 @@ description = "Implement tasks incrementally — build, test, verify, commit. Ad
 
 prompt = """
 Invoke the incremental-implementation skill alongside test-driven-development.
+Use test-case-design before TDD when the selected slice has non-trivial or uncertain coverage.
 
 ## Modes
 
@@ -16,12 +17,13 @@ Pick the next pending task from the plan. Then:
 
 1. Read the task's acceptance criteria
 2. Load relevant context (existing code, patterns, types)
-3. Write a failing test for the expected behavior (RED)
-4. Implement the minimum code to pass the test (GREEN)
-5. Run the full test suite to check for regressions
-6. Run the build to verify compilation
-7. Commit with a descriptive message
-8. Mark the task complete and stop
+3. Validate an existing READY Test Planner, invoke test-case-design when coverage is non-trivial or uncertain, or use the TDD mini planner for one obvious behavior or confirmed defect
+4. Select the highest-priority READY case and write its failing test (RED)
+5. Implement the minimum code to pass the test (GREEN)
+6. Run the full test suite to check for regressions
+7. Run the build to verify compilation
+8. Commit with a descriptive message
+9. Mark the task complete and stop
 
 ## Autonomous: the whole plan (`/build auto`)
 
@@ -31,7 +33,7 @@ Use this once a spec exists and you want to collapse plan + build into one run. 
 2. Establish a clean baseline. Run `git status --porcelain`. If there are uncommitted changes outside the expected planning artifacts (SPEC.md, docs/SPEC.md, spec/*, tasks/plan.md, tasks/todo.md), stop and ask the user to commit, stash, or confirm how to handle them. Autonomous per-task commits must not absorb unrelated local work, or the clean-rollback guarantee breaks.
 3. Plan if needed. If there is no tasks/plan.md, invoke the planning-and-task-breakdown skill to generate one.
 4. Single checkpoint. Present the full plan and wait for an unambiguous affirmative (e.g. "approve", "go", "yes"). Treat hedged responses ("looks reasonable", "I guess") as NOT approved. This is the only human gate — after approval, run autonomously. If you generated tasks/plan.md, commit it as a single preparatory commit now so it doesn't bleed into the first task's commit.
-5. Execute every task in dependency order. Use each task's declared dependencies; if they aren't explicit, execute in the order the plan lists them. For each task, run the full default loop above (RED → GREEN → regression → build → commit → mark complete). Stage only the files that task touched plus its task-status update — never `git add -A` blindly — and make one commit per task so any point is a clean rollback.
+5. Execute every task in dependency order. Use each task's declared dependencies; if they aren't explicit, execute in the order the plan lists them. For each task, run the full default loop above (Test Planner → RED → GREEN → regression → build → commit → mark complete). Stage only the files that task touched plus its task-status update — never `git add -A` blindly — and make one commit per task so any point is a clean rollback.
 6. Stop and ask the user (do not push through) when:
    - a test can't be made to pass or the build breaks without an obvious fix → follow the debugging-and-error-recovery skill
    - the spec is ambiguous, or a task needs a decision the spec doesn't cover

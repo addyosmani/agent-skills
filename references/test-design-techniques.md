@@ -2,7 +2,7 @@
 
 Operational reference for choosing test cases when coverage matters. This is a compact, paraphrased field guide inspired by Lee Copeland's *A Practitioner's Guide to Software Test Design*.
 
-Use this reference when writing new tests, reviewing coverage gaps, or deciding which behaviors deserve tests. It complements `testing-patterns.md`: this file chooses *what cases to test*; `testing-patterns.md` shows *how to write the tests* in common frameworks.
+Use this reference from `test-case-design` when reviewing coverage gaps or deciding which behaviors deserve tests. It complements `testing-patterns.md`: this file chooses *what cases to test*; `testing-patterns.md` shows *how to write the tests* in common frameworks.
 
 ## Contents
 

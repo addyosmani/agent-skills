@@ -7,7 +7,7 @@ description: Runs existing project test commands with bounded, non-interactive e
 
 ## Overview
 
-Run the right existing tests for the requested goal and report what actually ran. Discover the project before choosing commands, apply the Test Planner, execute with finite bounds, and distinguish a passing test run from a command that selected no tests.
+Run the right existing tests for the requested goal and report what actually ran. Discover the project before choosing commands, consume an existing Test Planner when available, add a bounded Test Execution Plan, and distinguish a passing test run from a command that selected no tests.
 
 ## When to Use
 
@@ -46,12 +46,12 @@ Search broadly enough for the project's ecosystem. Common evidence includes `pac
 
 Do not invent a script because its name looks conventional. Use a direct runner command only when project configuration or existing tests establish that convention.
 
-### 3. Write the Test Planner
+### 3. Write the Test Execution Plan
 
-Reuse the scope and layer fields from `test-driven-development`, then add execution details. This skill runs existing suites, so it does not retroactively assign case-design techniques. Route missing-case analysis or technique selection to `test-engineer` or `test-driven-development`.
+Reuse the scope, layer, and quality fields from a Test Planner produced by `test-case-design` when one exists, then add execution details. Do not alter its oracle, case model, or skipped-layer rationale silently. This skill runs existing suites, so it does not retroactively assign case-design techniques. Route missing-case analysis or technique selection to `test-case-design` or `test-engineer`.
 
 ```markdown
-Test Planner:
+Test Execution Plan:
 - Execution mode: Reproduce failure | Verify change | Release gate
 - Test basis / oracle:
 - Changed surfaces:
@@ -65,6 +65,8 @@ Test Planner:
 - Commands to run, in order:
 - Safety checks and time budget:
 ```
+
+When no Test Planner exists, infer only the execution scope needed for the user's run request. Do not claim that command selection proves case completeness.
 
 Keep the planning dimensions distinct. They answer different questions and may refer to the same artifact from different perspectives:
 

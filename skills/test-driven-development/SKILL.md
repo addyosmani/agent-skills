@@ -1,13 +1,15 @@
 ---
 name: test-driven-development
-description: Drives development with tests. Use when implementing logic, fixing bugs, changing behavior, choosing the smallest sufficient test set, designing boundary or equivalence-class cases for validators, working test-first or red-green-refactor, or writing unit, component, frontend integration, API, contract, backend integration, or E2E tests, including accessibility regression tests for keyboard focus.
+description: Implements behavior through Red-Green-Refactor. Use when writing or adding automated unit, component, frontend integration, API, contract, backend integration, E2E, regression, or keyboard-focus accessibility tests and then changing implementation code, or when fixing a reproduced bug test-first.
 ---
 
 # Test-Driven Development
 
 ## Overview
 
-Write a failing test before writing the code that makes it pass. For bug fixes, reproduce the bug with a test before attempting a fix. Tests are proof — "seems right" is not done. A codebase with good tests is an AI agent's superpower; a codebase without tests is a liability.
+Consume a reviewed Test Planner, write its next case as a failing test, then write the minimum code that makes it pass. For bug fixes, reproduce the bug with a test before attempting a fix. Tests are proof — "seems right" is not done.
+
+**The Beyonce Rule:** If you liked a behavior, you should have put a test on it. Infrastructure changes, refactoring, and migrations are not responsible for catching untested behavior.
 
 ## When to Use
 
@@ -17,9 +19,31 @@ Write a failing test before writing the code that makes it pass. For bug fixes, 
 - Adding edge case handling
 - Any change that could break existing behavior
 
-**When NOT to use:** Pure configuration changes, documentation updates, or static content changes that have no behavioral impact.
+**When NOT to use:** Use `test-case-design` when the request is only to decide what to test, choose layers, or derive cases. Use `tests` when the request is only to execute existing suites. Pure configuration, documentation, and static content changes with no behavioral impact do not require TDD.
 
 **Related:** For browser-based changes, combine TDD with runtime verification using Chrome DevTools MCP — see the Browser Testing section below. When the task is only to execute existing suites and report evidence, use the `tests` skill instead.
+
+## Consume the Test Planner
+
+Before RED:
+
+1. Read the Test Planner produced by `test-case-design` when one exists.
+2. Validate its basis and oracle against current requirements, contracts, incidents, or approved references. Return stale, conflicting, or unsupported expectations to design instead of encoding them.
+3. Select the highest-priority unimplemented case and keep its planned layer, expected result, and coverage traceability.
+4. Discover the repository's real focused test command when the planner does not already name one.
+5. Stop when the selected case is `BLOCKED`; implementation must not decide an unresolved product rule.
+
+For a single obvious behavior or confirmed defect, create a mini planner inline rather than requiring a separate document:
+
+```markdown
+Mini Test Planner:
+- Test basis / oracle:
+- Layer:
+- First case and expected RED reason:
+- Existing command:
+```
+
+Use the full `test-case-design` workflow when coverage is uncertain, multiple layers or rules are involved, the oracle conflicts, or a matrix must be reduced. TDD may propose a planner revision when implementation reveals new evidence, but it must not silently redesign cases or broaden layers.
 
 ## The TDD Cycle
 
@@ -126,111 +150,6 @@ export async function completeTask(id: string): Promise<Task> {
 
 // Step 3: Test passes → bug fixed, regression guarded
 ```
-
-## The Test Pyramid
-
-Use the familiar ~80/15/5 pyramid as a cost and confidence guideline, not a universal quota. Most tests should be small and fast, with fewer boundary tests and only a small number of broad system tests.
-
-```
-          ╱╲
-         ╱  ╲         E2E / System Tests (~5%)
-        ╱    ╲        Full user journeys, real app
-       ╱──────╲
-      ╱        ╲      Boundary / Collaboration Tests (~15%)
-     ╱          ╲     Component, Frontend Integration, API, Contract, Backend Integration
-    ╱────────────╲
-   ╱              ╲   Unit Tests (~80%)
-  ╱                ╲  Pure logic, isolated modules
- ╱──────────────────╲
-```
-
-The pyramid tells you how much of each cost level to keep. The Test Planner below tells you which exact layer to choose. Do not treat "integration test" as one bucket: frontend integration, API tests, contract tests, and backend integration tests protect different seams.
-
-**The Beyonce Rule:** If you liked it, you should have put a test on it. Infrastructure changes, refactoring, and migrations are not responsible for catching your bugs — your tests are. If a change breaks your code and you didn't have a test for it, that's on you.
-
-### Test Sizes (Resource Model)
-
-Beyond the pyramid levels, classify tests by what resources they consume:
-
-| Size | Constraints | Speed | Example |
-|------|------------|-------|---------|
-| **Small** | Single process, no I/O, no network, no database | Milliseconds | Pure function tests, data transforms |
-| **Medium** | Multi-process OK, localhost only, no external services | Seconds | API tests with test DB, component tests |
-| **Large** | Multi-machine OK, external services allowed | Minutes | E2E tests, performance benchmarks, staging integration |
-
-Small tests should make up the vast majority of your suite. They're fast, reliable, and easy to debug when they fail. Size is execution cost, not a test layer.
-
-### Test Layer Selection
-
-Use the lowest layer that proves the behavior. The layer map below defines the exact names to use.
-
-### Test Planner
-
-Before writing tests, separate these planning dimensions:
-
-1. **Establish the test basis and oracle** — name the requirement, contract, incident evidence, invariant, or approved reference that determines the expected result. Surface conflicting sources instead of choosing one silently.
-2. **Identify changed surfaces** — files changed, public APIs touched, shared schemas/types, persistence/infrastructure, and consumers that may break.
-3. **Name affected contracts** — request/response schemas, generated clients, public APIs, events, or "none".
-4. **Select layers** — primary layer, adjacent layers to consider, and layers intentionally skipped with reasons.
-5. **Choose case-design techniques** — name how cases are derived, such as boundary values, a decision table, state transitions, regression reproduction, or a direct example.
-6. **Add quality concerns** — accessibility, security, performance, visual regression, observability, migration safety, or "none".
-7. **Use existing commands** — discover the project's test scripts before inventing new command names.
-
-```markdown
-Test Planner:
-- Test basis / oracle:
-- Changed surfaces:
-- Affected contracts:
-- Primary layer:
-- Adjacent layers:
-- Case design technique:
-- Quality concerns:
-- Skipped layers and why:
-- Commands to run:
-```
-
-Scale the planner to the change. For a one-line fix, it may collapse to one or two sentences; retain a field only when it affects the test decision. If the expected result is disputed or unsupported, do not write a test that turns an assumption into an executable requirement.
-
-Case design answers **which cases** provide evidence; the test layer answers **where** to run them. Use the lightest technique that exposes the risk:
-
-| Behavior shape | Prefer | Required artifact |
-|---|---|---|
-| One concrete behavior with no meaningful partition | Direct example | Named input, action, and expected result |
-| A known defect must never recur | Regression reproduction | Minimal input and expected failing reason before the fix |
-| Inputs form valid and invalid groups or cross thresholds | Equivalence classes and boundary values | Named partitions, representatives, and below/at/above cases |
-| Outcomes depend on condition combinations | Decision table | Conditions, outcomes, and one test per reachable rule |
-| Behavior depends on state and event order | State-transition testing | States, events, valid transitions, and important invalid transitions |
-| A configuration matrix is too large | Pairwise testing | Factor/value model, generated cases, and pair-coverage evidence |
-
-Techniques may be combined when each exposes a distinct risk. Do not invent a formal label after choosing cases; use `Direct example` or `Regression reproduction` when those honestly describe the design. Read `references/test-design-techniques.md` for domain analysis, use cases, white-box techniques, exploratory work, risk heuristics, and exit criteria.
-
-| What must be proven | Prefer this layer | Examples |
-|---|---|---|
-| Pure logic with no side effects | Unit test (small) | parsers, formatters, validators, reducers, domain rules |
-| A single rendered UI unit behaves correctly | Component test (small/medium) | form validation, disabled states, emitted events, accessible labels |
-| Frontend modules work together without a real backend | Frontend integration test (medium) | page + router + store + mocked API with loading/error/empty states |
-| A backend HTTP endpoint behaves correctly | API test (medium) | status codes, auth, validation, response body, error shape |
-| Consumers and providers agree on request/response shapes | Contract test (medium) | OpenAPI schema, Pact consumer/provider checks, generated client compatibility |
-| Backend dependencies cooperate | Backend integration test (medium) | service + database, repository + transaction, worker + queue, cache invalidation |
-| A critical user path works through the real app | E2E / system test (large) | signup, checkout, onboarding, core create/update/delete flows |
-
-**Decision rule:** if a unit test can prove the behavior, stop there. If the behavior crosses a boundary, pick the boundary-specific layer. API tests are backend-owned endpoint behavior; contract tests are cross-consumer compatibility. Use E2E only when the value is the whole user journey, not when a lower layer can catch the same regression. Apply quality concerns at the chosen layer first, then add a broader layer only when the risk cannot be proven lower down.
-
-### Accessibility Test Planning
-
-Treat accessibility as user-facing behavior, not visual polish. Test it at the lowest reliable layer, and match every claim to the evidence the test can produce:
-
-| Concern | Best First Test | Add Broader Evidence When |
-|---|---|---|
-| Accessible name, role, required state, form error text | Component test with role/label queries | The rendered page composes multiple components |
-| Keyboard path, focus trap, focus restoration | Component or browser test | Real tab order, modals, menus, routing, or layout are involved |
-| ARIA live-region markup and content updates | Component test with DOM assertions | Browser timing or async rendering affects accessibility-tree exposure |
-| Actual screen-reader announcement or interoperability | Manual verification with the target browser/assistive-technology combination | Always when real announcement behavior is a release requirement |
-| Color contrast, zoom, responsive reflow | Browser/DevTools/axe/pa11y audit | CSS, theming, or layout changed |
-
-Component tests can prove semantics and state, but they cannot prove what VoiceOver, NVDA, JAWS, or another assistive technology announces. Browser tests can prove keyboard/focus behavior and accessibility-tree exposure. Record a manual verification step and expected result when actual browser/assistive-technology behavior is required and no automated integration supplies that evidence.
-
-Automated axe/pa11y checks catch broad violations, but they do not replace keyboard traversal, focus verification, accessibility-tree inspection, or target assistive-technology checks for critical flows. For the detailed checklist, use `references/accessibility-checklist.md`.
 
 ## Writing Good Tests
 
@@ -405,7 +324,7 @@ This separation ensures the test is written without knowledge of the fix, making
 
 ## See Also
 
-For choosing what cases to test, see `references/test-design-techniques.md`. For detailed unit, component, frontend integration, API, contract, backend integration, E2E, and accessibility examples, see `references/testing-patterns.md`. For accessibility-specific checks, see `references/accessibility-checklist.md`.
+Use the `test-case-design` skill to choose layers and cases. For detailed unit, component, frontend integration, API, contract, backend integration, E2E, and accessibility examples, see `references/testing-patterns.md`. For accessibility-specific checks, see `references/accessibility-checklist.md`.
 
 ## Common Rationalizations
 
@@ -417,6 +336,8 @@ For choosing what cases to test, see `references/test-design-techniques.md`. For
 | "I tested it manually" | Manual testing doesn't persist. Tomorrow's change might break it with no way to know. |
 | "The code is self-explanatory" | Tests ARE the specification. They document what the code should do, not what it does. |
 | "It's just a prototype" | Prototypes become production code. Tests from day one prevent the "test debt" crisis. |
+| "The planner already proves the case" | A plan is intent, not execution evidence. The selected test must fail for the expected reason before implementation. |
+| "I found a better case while coding, so I changed the oracle" | Return new evidence to Test Design; do not silently encode a different requirement. |
 | "Let me run the tests again just to be extra sure" | After a clean test run, repeating the same command adds nothing unless the code has changed since. Run again after subsequent edits, not as reassurance. |
 
 ## Red Flags
@@ -425,6 +346,8 @@ For choosing what cases to test, see `references/test-design-techniques.md`. For
 - Tests that pass on the first run (they may not be testing what you think)
 - "All tests pass" but no tests were actually run
 - Bug fixes without reproduction tests
+- Non-trivial implementation without a Test Planner
+- Silently changing the planned oracle, case, or layer during implementation
 - Tests that test framework behavior instead of application behavior
 - Test names that don't describe the expected behavior
 - Skipping tests to make the suite pass
@@ -435,6 +358,8 @@ For choosing what cases to test, see `references/test-design-techniques.md`. For
 After completing any implementation:
 
 - [ ] Every new behavior has a corresponding test
+- [ ] Every implemented case traces to a ready Test Planner or explicit mini planner
+- [ ] Planner oracles, layers, and expected results were not silently changed during implementation
 - [ ] The focused RED command failed for the expected reason before the implementation changed
 - [ ] The focused command, affected suites, and project-required regression gates pass using discovered project commands
 - [ ] Bug fixes include a reproduction test that failed before the fix
