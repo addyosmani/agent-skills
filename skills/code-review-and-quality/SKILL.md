@@ -63,7 +63,7 @@ Does the change fit the system's design?
 
 ### 4. Security
 
-The checks below are the self-contained baseline; for security-sensitive changes, use the `security-and-hardening` skill when available.
+The checks below are the self-contained baseline. For security-sensitive changes, use the `security-and-hardening` skill when available. If the change is security-sensitive and the skill is unavailable, state that only the baseline security review was performed.
 
 Does the change introduce vulnerabilities?
 
@@ -78,7 +78,7 @@ Does the change introduce vulnerabilities?
 
 ### 5. Performance
 
-The checks below are the self-contained baseline. If the change has performance requirements or these checks reveal a plausible regression, use the `performance-optimization` skill when available.
+The checks below are the self-contained baseline. If the change has performance requirements or these checks reveal a plausible regression, use the `performance-optimization` skill when available. If deeper investigation is warranted and the skill is unavailable, state that measurement-driven performance investigation was not performed.
 
 Does the change introduce performance problems?
 
