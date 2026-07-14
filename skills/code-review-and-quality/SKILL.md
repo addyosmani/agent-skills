@@ -60,19 +60,8 @@ Does the change fit the system's design?
 - **Does this refactor reduce complexity or just relocate it?** Count the concepts a reader must hold to follow the change. If a "cleaner" version leaves that count unchanged, it isn't cleaner — prefer the restructuring that makes whole branches, modes, or layers disappear over one that re-centralizes the same logic. Prefer deleting an abstraction to polishing it.
 - **Is feature-specific logic leaking into a shared or general-purpose module?** Keep logic in its owning layer, reuse the existing canonical helper instead of a near-duplicate, and don't normalize architectural drift.
 - **Are type boundaries explicit?** Question gratuitous `any`/`unknown`/optional/casts and silent fallbacks that paper over an unclear invariant — making the boundary explicit often makes the surrounding control flow simpler.
-
-## Design Review Augmentation
-
-When a review includes design quality, refactoring safety, or architectural drift, invoke `lightweight-design-analysis` on the touched module before finalizing findings.
-
-Use `software-design-principles` as the design rubric for Architecture and Readability findings:
-
-- prefer intention-revealing names over generic helper or manager naming
-- prefer fail-fast behavior over silent fallbacks
-- prefer explicit type boundaries over `any`, casts, and vague optional states
-- prefer extraction or relocation when deep nesting, feature envy, or mixed responsibilities appear
-
-Keep this additive. Design analysis should strengthen the existing review, not replace correctness, security, or performance checks.
+- **Are dependencies explicit?** A method that constructs its own collaborators inline (`new X()` inside business logic) or reaches for a hidden static helper is harder to test and swap than one with injected dependencies.
+- **Is mutation necessary?** Values mutated in place where a new value would be clearer add a class of bugs (aliasing, stale reads) that immutable data doesn't have.
 
 ### 4. Security
 
@@ -187,8 +176,6 @@ For each file changed:
 5. Performance: Any bottlenecks?
 ```
 
-If the change has non-trivial design tradeoffs, code smells, or refactoring risk, run `lightweight-design-analysis` on the changed module(s) and fold the results into the Architecture and Readability findings. Use `software-design-principles` to separate substantive design issues from style preferences.
-
 ### Step 4: Categorize Findings
 
 Label every comment with its severity so the author knows what's required vs optional:
@@ -202,6 +189,14 @@ Label every comment with its severity so the author knows what's required vs opt
 | **FYI** | Informational only | No action needed — context for future reference |
 
 This prevents authors from treating all feedback as mandatory and wasting time on optional suggestions.
+
+Give each finding a file:line reference and a concrete structural move, not just commentary:
+
+```text
+Critical: Feature envy at src/order/OrderService.ts:34
+The method reaches through Customer for formatting and pricing details it does not own.
+Move that logic onto Customer or a domain formatter so the service orchestrates instead of interpreting internals.
+```
 
 **Lead with what matters.** Order findings by leverage: correctness and security first, then structural regressions and missed simplifications, then everything else. Don't bury a real issue under cosmetic nits — a few high-conviction comments beat a long list. If you have one structural problem and ten nits, the structural problem *is* the review.
 
