@@ -63,7 +63,7 @@ Does the change fit the system's design?
 
 ### 4. Security
 
-The checks below are self-contained. Use `security-and-hardening` for deeper analysis when it is available.
+The checks below are the self-contained baseline; for security-sensitive changes, use the `security-and-hardening` skill when available.
 
 Does the change introduce vulnerabilities?
 
@@ -78,7 +78,7 @@ Does the change introduce vulnerabilities?
 
 ### 5. Performance
 
-The checks below are self-contained. Use `performance-optimization` for measurement-driven investigation when it is available.
+The checks below are the self-contained baseline. If the change has performance requirements or these checks reveal a plausible regression, use the `performance-optimization` skill when available.
 
 Does the change introduce performance problems?
 
@@ -301,7 +301,7 @@ Part of code review is dependency review:
 4. **Mind the transitive graph.** Most installed packages are ones nobody chose directly. Review the lockfile diff, not just `package.json`; a single direct bump can pull in dozens of indirect changes.
 5. **Keep the lockfile honest.** Commit it, review its diff, and never hand-edit it. The lockfile is the thing that actually pins what ships.
 
-For triaging `npm audit` findings and supply-chain risk (typosquatting, compromised maintainers), follow the `security-and-hardening` skill — this section covers the upgrade *workflow*, that one covers the security verdict.
+For `npm audit` findings and supply-chain risk (typosquatting, compromised maintainers), apply the checks in this section as the baseline. When available, use the `security-and-hardening` skill for a dedicated security verdict; otherwise report that deeper supply-chain analysis was not performed.
 
 ## The Review Checklist
 
