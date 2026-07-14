@@ -64,7 +64,7 @@
       ],
       "expectations": [
         "The project README and package.json are inspected so the approved rounding rule is the test oracle and the existing test command is discovered rather than invented",
-        "A mini Test Planner records the approved oracle, Unit layer, regression case with expected RED reason, and discovered command without performing broad case design",
+        "Before the first file edit, a visible mini Test Planner records the approved oracle, Unit layer, a compact READY Case Specification with ID, name and objective, setup and input, action, expected result and RED reason, Regression reproduction coverage, priority, and the discovered command without performing broad case design",
         "A regression test for two 0.335 line totals expecting 0.68 is added before production code changes and is actually run",
         "The known defect is classified as Regression reproduction with a minimal reproducer and expected RED failure reason",
         "Execution evidence shows the new regression test failing because the implementation returns 0.67 before the fix",
@@ -82,7 +82,7 @@
       ],
       "expectations": [
         "The supplied Test Planner, project README, package.json, implementation, and existing tests are inspected before editing",
-        "The planner's approved oracle, Unit layer, Regression reproduction technique, INV-ROUND-001 input, and skipped broader layers are preserved rather than redesigned",
+        "The planner's complete INV-ROUND-001 Case Specification, approved oracle, Unit layer, Regression reproduction technique, input, ordered action and expected result, and skipped broader layers are preserved rather than redesigned",
         "A regression test for calculateInvoiceTotal([0.335, 0.335]) expecting 0.68 is added before production code changes",
         "The focused or project-owned command is run in RED and fails because the current implementation returns 0.67",
         "The implementation change is the minimum needed to round each line before summing while preserving the CommonJS API",

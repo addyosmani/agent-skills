@@ -1,6 +1,6 @@
 ---
 name: test-case-design
-description: Designs a traceable Test Planner before implementation. Use when creating a test plan, deciding what to test, choosing the smallest sufficient test layer, deriving or reviewing concrete cases and coverage models, planning accessibility coverage, applying boundary values, equivalence classes, decision tables, state transitions, or pairwise reduction, resolving test oracles, reducing a test matrix, or reviewing coverage gaps.
+description: Designs a traceable Test Planner and concrete Case Specifications without writing or running tests. Use when planning or reviewing what to test, choosing the smallest sufficient layer, turning coverage models into named cases with preconditions, test data, steps, and expected results, planning accessibility coverage for keyboard focus and error semantics, applying boundary values, equivalence classes, decision tables, state transitions, or pairwise reduction, resolving test oracles, reducing a test matrix, or reviewing coverage gaps.
 ---
 
 # Test Case Design
@@ -11,6 +11,7 @@ Perform **Test Analysis** and **Test Design** before test implementation:
 
 - Test Analysis decides **what must be proven** from requirements, contracts, risks, changed surfaces, and authoritative oracles.
 - Test Design decides **how to prove it** by selecting layers, techniques, coverage models, data, and concrete cases.
+- Case Specification makes each selected case **implementable without inventing intent** by naming its purpose, setup, actions, and observable expected results.
 
 The output is a `Test Planner` that `test-driven-development` can consume case by case. This skill may inspect code, requirements, tests, and project commands, but it does not write test code, change product code, or execute tests.
 
@@ -140,7 +141,65 @@ Apply quality concerns at the selected layer first. Add broader evidence only wh
 
 Automated accessibility scans are useful but do not prove keyboard traversal, focus behavior, or screen-reader announcements. Use `references/accessibility-checklist.md` for the detailed checklist.
 
-### 6. Write the Test Planner Handoff
+### 6. Specify Concrete Cases
+
+A coverage model or list of test ideas is not yet a Case Specification. Every case must provide enough information for TDD to implement it without choosing a new oracle, action, or scope.
+
+| Field | Required content |
+|---|---|
+| ID | Stable unique identifier used by the planner and implementation handoff |
+| Name | Short behavior statement that distinguishes the case |
+| Description / objective | The single behavior or risk this case proves |
+| Source / risk | Requirement, contract, incident, invariant, or risk that justifies the case |
+| Layer | Unit, Component, Frontend Integration, API, Contract, Backend Integration, or E2E / System |
+| Preconditions | Required state, actor, environment, or `None` |
+| Test data | Exact values, fixtures, identities, or generated-data constraints |
+| Action / steps | One action for an atomic case or an ordered sequence for a workflow |
+| Expected result / oracle | Observable result paired with the action or relevant step, plus its authoritative source |
+| Technique / coverage | The partition, boundary, rule, transition, pair, path, or risk represented |
+| Priority | Critical, High, Medium, or Low based on risk and implementation order |
+| Status | `READY` when executable, or `BLOCKED` with the unresolved owner and question |
+
+Add postconditions or cleanup when a case changes persistent or shared state. Do not add `Actual Result`, pass/fail execution status, duration, or evidence during design; the `tests` skill records those after execution.
+
+Use an expanded specification for workflows, E2E journeys, retries, state transitions, or any case with multiple observation points:
+
+```markdown
+#### CASE-ID — Case name
+- Description / objective:
+- Source / risk:
+- Layer:
+- Preconditions:
+- Test data:
+
+| Step | Action | Expected observation / oracle |
+|---:|---|---|
+| 1 | | |
+
+- Technique / coverage:
+- Priority:
+- Status: READY | BLOCKED — owner / question
+- Postconditions / cleanup: # when stateful
+```
+
+For equivalent data-driven cases, define setup and actions once, then use a case matrix. Never emit a matrix without an explicit shared action or steps: preconditions and test data do not say what the test performs. Every row still needs a stable ID and name, exact data, expected result/oracle, coverage point, priority, and status. Shared fields plus the shared steps plus one row must reconstruct a complete Case Specification.
+
+```markdown
+#### Shared Case Specification — Parameterized behavior
+- Description / objective:
+- Source / risk:
+- Layer:
+- Preconditions:
+
+| Step | Shared action | Expected observation |
+|---:|---|---|
+| 1 | Perform the operation using the row's test data | Use the row-specific expected result / oracle |
+
+| ID | Name | Test data | Expected result / oracle | Technique / coverage | Priority | Status |
+|---|---|---|---|---|---|---|
+```
+
+### 7. Write the Test Planner Handoff
 
 Use the repository's established format when one exists; otherwise produce:
 
@@ -161,9 +220,22 @@ Use the repository's established format when one exists; otherwise produce:
 - Coverage model / required artifacts:
 - Skipped layers and why:
 
-### Cases
-| ID | Title | Source / risk | Preconditions | Input / event | Expected result / oracle | Technique | Priority |
-|---|---|---|---|---|---|---|---|
+### Case Specifications
+#### CASE-ID — Case name
+- Description / objective:
+- Source / risk:
+- Layer:
+- Preconditions:
+- Test data:
+
+| Step | Action | Expected observation / oracle |
+|---:|---|---|
+| 1 | | |
+
+- Technique / coverage:
+- Priority:
+- Status: READY | BLOCKED — owner / question
+- Postconditions / cleanup: # when stateful
 
 ### Implementation Handoff
 - First RED case:
@@ -172,9 +244,9 @@ Use the repository's established format when one exists; otherwise produce:
 - Residual risk / owner:
 ```
 
-A planner is `READY` only when the first case has an authoritative oracle, a concrete input or event, an observable expected result, a selected layer, and a real project command or a clearly identified command-discovery step.
+A planner is `READY` only when its first case has a complete Case Specification with an authoritative oracle and the handoff has a real project command or a clearly identified command-discovery step.
 
-For a single obvious behavior or confirmed bug, the handoff may collapse to a mini planner containing only basis/oracle, layer, first case, and command. Do not require a large document for a one-case change.
+For a single obvious behavior or confirmed bug, the handoff may collapse to a four-field mini planner: basis/oracle, layer, command, and one compact Case Specification containing ID/name/objective, setup/data, action, expected result and RED reason, technique/coverage, priority, and `READY` status. The basis/oracle supplies its source/risk. Do not require a large document for a one-case change.
 
 ## TDD Handoff Contract
 
@@ -194,7 +266,8 @@ After design:
 4. No test-layer label used as a case-design technique.
 5. No full Cartesian matrix when constraints or combinatorial coverage can reduce it.
 6. No duplicate cases that add no distinct coverage.
-7. No test or product implementation during the design activity.
+7. No case handed to TDD without a concrete action and observable expected result.
+8. No test or product implementation during the design activity.
 
 ## Common Rationalizations
 
@@ -207,12 +280,16 @@ After design:
 | "We should test every combination" | Apply constraints, pairwise reduction, and explicit high-risk combinations. |
 | "Calling it E2E makes it comprehensive" | An execution layer does not prove systematic case coverage. |
 | "A one-line fix does not need planning" | Use a four-field mini planner; small does not mean oracle-free. |
+| "The test name explains the case" | A name cannot replace setup, data, action, and an authoritative expected result. |
 
 ## Red Flags
 
 - TDD begins a non-trivial change without a planner or explicit mini planner
 - The planner mixes unit, API, contract, integration, and E2E into one generic bucket
 - Expected results use phrases such as "works" or "fails correctly"
+- Recommended tests are only names or one-line ideas rather than Case Specifications
+- A multi-step case has no expected observation at the step where behavior should be visible
+- A data matrix provides values and expected results but no explicit shared action or steps
 - A range boundary model omits a just-inside or just-outside point without explaining why
 - A decision table ignores precedence or impossible combinations
 - A state model covers only valid transitions
@@ -230,6 +307,9 @@ Before handing the planner to TDD, verify:
 - [ ] Every technique has its required coverage artifact
 - [ ] Boundary models include just-outside, at, and just-inside points where meaningful
 - [ ] Every case adds distinct, traceable coverage
+- [ ] Every case has ID, name, objective, source/risk, layer, setup/data, action, expected result/oracle, technique/coverage, priority, and status
+- [ ] Multi-step cases pair actions with expected observations; stateful cases define cleanup when needed
+- [ ] Every data-driven matrix defines explicit shared steps before its row-specific data and expected results
 - [ ] API, Contract, Frontend Integration, Backend Integration, and E2E are named precisely
 - [ ] Assumptions, blocked cases, skipped layers, and residual risks are visible
 - [ ] The first RED case and command handoff are actionable

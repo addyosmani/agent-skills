@@ -350,6 +350,8 @@ Use the Test Planner to separate decisions:
 - Skipped layers and why: explicit risk tradeoff.
 - Commands to run: existing project scripts.
 
+The coverage model selects cases; a **Case Specification** makes each selected case implementable. Record a stable ID and name, description/objective, source/risk, layer, preconditions, exact test data, action or ordered steps, expected result/oracle, technique/coverage point, priority, and `READY` or `BLOCKED` status. Pair each meaningful step with its expected observation. Add cleanup for stateful cases. For equivalent data rows, share setup and actions once rather than duplicating prose, but ensure the shared procedure plus each row reconstructs a complete case.
+
 For larger or release-oriented plans, add these only when they affect the decision:
 
 - Operating mode: scripted, exploratory, or adaptive.
@@ -368,4 +370,16 @@ Test Planner:
 - Quality concerns: Security/authorization
 - Skipped layers and why: Contract unchanged; E2E too broad for validation rules
 - Commands to run: npm run test:api -- checkout
+
+Case Specification:
+- ID / name: CHECKOUT-QTY-001 — Reject quantity below the minimum
+- Description / objective: Prove the API rejects the first invalid lower-boundary value
+- Source / risk: Checkout quantity requirement; off-by-one validation risk
+- Layer: API
+- Preconditions: Authenticated checkout request
+- Test data: quantity = 0
+- Action: POST /checkout with quantity 0
+- Expected result / oracle: 422 validation response required by the checkout contract
+- Technique / coverage: Boundary value, min - 1
+- Priority / status: High / READY
 ```

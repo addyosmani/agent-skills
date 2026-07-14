@@ -11,6 +11,10 @@
         "top_k": 1
       },
       {
+        "prompt": "Turn this coverage model into concrete Case Specifications with IDs, names, preconditions, steps, and expected results",
+        "top_k": 1
+      },
+      {
         "prompt": "Choose boundary and equivalence-class cases for this quantity validator",
         "top_k": 1
       },
@@ -122,7 +126,8 @@
         "Valid and invalid equivalence classes are named, including missing, null, wrong type, fractional, and out-of-range inputs",
         "Boundary cases include 0, 1, 2, 99, 100, and 101 with expected outcomes",
         "The output shows how each concrete case derives from a named partition or boundary rather than merely naming techniques",
-        "Security remains a quality concern rather than being mislabeled as a test layer or case-design technique"
+        "Security remains a quality concern rather than being mislabeled as a test layer or case-design technique",
+        "Each quantity case is reconstructable from a complete Case Specification or a shared procedure plus data row, including stable ID and name, objective, layer, setup and data, action, expected result and oracle, coverage point, priority, and READY or BLOCKED status"
       ]
     },
     {
@@ -152,7 +157,8 @@
         "Draft-to-Paid, Paid-to-Shipped, and Draft-to-Cancelled valid transitions are covered",
         "Shipping Draft, paying Cancelled, and cancelling Shipped are covered as invalid transitions",
         "Repeated payment in Paid is tested for idempotency and no duplicate charge",
-        "The chosen layer is justified independently from the state-transition case-design technique"
+        "The chosen layer is justified independently from the state-transition case-design technique",
+        "Every multi-step or retry Case Specification pairs each ordered action with its expected state, charge, rejection, or no-duplicate-side-effect observation"
       ]
     },
     {

@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: Implements behavior through Red-Green-Refactor. Use when writing or adding automated unit, component, frontend integration, API, contract, backend integration, E2E, regression, or keyboard-focus accessibility tests and then changing implementation code, or when fixing a reproduced bug test-first.
+description: Consumes READY Test Planner Case Specifications and implements behavior through Red-Green-Refactor. Use when writing or adding automated unit, component, frontend integration, API, contract, backend integration, E2E, regression, or keyboard-focus accessibility regression tests and then changing implementation code, or when fixing a reproduced bug test-first.
 ---
 
 # Test-Driven Development
@@ -29,9 +29,10 @@ Before RED:
 
 1. Read the Test Planner produced by `test-case-design` when one exists.
 2. Validate its basis and oracle against current requirements, contracts, incidents, or approved references. Return stale, conflicting, or unsupported expectations to design instead of encoding them.
-3. Select the highest-priority unimplemented case and keep its planned layer, expected result, and coverage traceability.
-4. Discover the repository's real focused test command when the planner does not already name one.
-5. Stop when the selected case is `BLOCKED`; implementation must not decide an unresolved product rule.
+3. Select the highest-priority unimplemented case and verify that its Case Specification, together with shared planner fields in the mini format, provides an ID, name, objective, source/risk, layer, preconditions, test data, action or ordered steps, expected result/oracle, coverage traceability, priority, and `READY` status. Return an incomplete case to design instead of filling its gaps during implementation.
+4. Keep the planned Case Specification intact; test code may translate its setup, actions, and expected observations into framework syntax but must not change their meaning.
+5. Discover the repository's real focused test command when the planner does not already name one.
+6. Stop when the selected case is `BLOCKED`; implementation must not decide an unresolved product rule.
 
 For a single obvious behavior or confirmed defect, create a mini planner inline rather than requiring a separate document:
 
@@ -39,9 +40,11 @@ For a single obvious behavior or confirmed defect, create a mini planner inline 
 Mini Test Planner:
 - Test basis / oracle:
 - Layer:
-- First case and expected RED reason:
+- Case specification: ID/name/objective; preconditions/data; action; expected result and RED reason; technique/coverage; priority; READY
 - Existing command:
 ```
+
+Record this mini planner as a visible checkpoint before the first test or production-code edit. Do not leave it implicit in reasoning. If any required field cannot be supported by repository evidence, mark the case `BLOCKED` and return it to Test Design instead of guessing.
 
 Use the full `test-case-design` workflow when coverage is uncertain, multiple layers or rules are involved, the oracle conflicts, or a matrix must be reduced. TDD may propose a planner revision when implementation reveals new evidence, but it must not silently redesign cases or broaden layers.
 
@@ -347,6 +350,7 @@ Use the `test-case-design` skill to choose layers and cases. For detailed unit, 
 - "All tests pass" but no tests were actually run
 - Bug fixes without reproduction tests
 - Non-trivial implementation without a Test Planner
+- Starting the first file edit before recording the selected Test Planner case or visible mini planner
 - Silently changing the planned oracle, case, or layer during implementation
 - Tests that test framework behavior instead of application behavior
 - Test names that don't describe the expected behavior
@@ -359,6 +363,7 @@ After completing any implementation:
 
 - [ ] Every new behavior has a corresponding test
 - [ ] Every implemented case traces to a ready Test Planner or explicit mini planner
+- [ ] The selected case or mini planner was recorded before the first test or production-code edit
 - [ ] Planner oracles, layers, and expected results were not silently changed during implementation
 - [ ] The focused RED command failed for the expected reason before the implementation changed
 - [ ] The focused command, affected suites, and project-required regression gates pass using discovered project commands
