@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: Drives development with tests. Use when implementing logic, fixing bugs, changing behavior, choosing test coverage, designing test cases, working test-first or red-green-refactor, or writing unit, component, frontend integration, API, contract, backend integration, or E2E tests with regression or accessibility concerns.
+description: Drives development with tests. Use when implementing logic, fixing bugs, changing behavior, choosing the smallest sufficient test set, designing boundary or equivalence-class cases for validators, working test-first or red-green-refactor, or writing unit, component, frontend integration, API, contract, backend integration, or E2E tests, including accessibility regression tests for keyboard focus.
 ---
 
 # Test-Driven Development
