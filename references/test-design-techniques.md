@@ -27,7 +27,7 @@ Keep four decisions separate:
 | Risk heuristic | What defect ideas might be missing? | taxonomy, historical defects, production incidents |
 | Exit criteria | What evidence is enough to stop, and who accepts residual risk? | required gates, risk coverage, explicit owner acceptance |
 
-These dimensions are MECE; individual case-design techniques are not. Combine techniques when each exposes a distinct risk, and record the artifact produced by each one.
+These are orthogonal planning dimensions: they answer different questions, and a plan may use several of them together. Individual case-design techniques can also combine when each exposes a distinct risk; record the artifact produced by each one.
 
 ## Case-Design Technique Selector
 
@@ -216,7 +216,7 @@ Steps:
 Watch for:
 - Only testing the happy path.
 - Ignoring test data setup cost.
-- Putting every alternate path into E2E when API or integration tests would prove it faster.
+- Putting every alternate path into E2E when API, frontend integration, or backend integration tests would prove it faster.
 
 Layer mapping:
 - Frontend integration for UI flow with mocked backend.
@@ -341,6 +341,7 @@ Never use "we ran a lot of tests" as an exit criterion. Name what was covered, w
 
 Use the Test Planner to separate decisions:
 
+- Test basis / oracle: the requirement, contract, incident evidence, invariant, or approved reference that determines the expected result; unresolved conflicts stay explicit.
 - Changed surfaces: what code/data/API/UI changed.
 - Affected contracts: public schemas, clients, events, or none.
 - Primary layer: the lowest layer that provides sufficient evidence for the behavior.
@@ -359,6 +360,7 @@ Example:
 
 ```markdown
 Test Planner:
+- Test basis / oracle: Checkout validation requirements and the unchanged public request contract
 - Changed surfaces: Backend endpoint POST /checkout validation
 - Affected contracts: Request schema unchanged
 - Primary layer: API

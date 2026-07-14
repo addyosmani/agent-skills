@@ -12,7 +12,7 @@ Run the right existing tests for the requested goal and report what actually ran
 ## When to Use
 
 - Run existing tests for a change, PR, branch, CI failure, or release gate.
-- Select existing commands for frontend, backend, API, contract, integration, E2E, accessibility, or regression verification.
+- Select existing commands for unit, component, frontend integration, API, contract, backend integration, E2E, accessibility, or regression verification.
 - Reproduce a test failure and preserve command evidence.
 - Summarize test outcomes without writing or weakening tests.
 
@@ -26,11 +26,11 @@ Choose one mode before selecting commands:
 
 | Mode | Goal | Progression |
 |---|---|---|
-| **Diagnose** | Reproduce a known local or CI failure | Exact failing command or test, then one narrower reproduction |
+| **Reproduce failure** | Capture a known local or CI failure | Exact failing command or test, then at most one narrower reproduction |
 | **Verify change** | Check an implementation change | Focused tests, affected package/layer suite, then required regression gates |
 | **Release gate** | Establish release test readiness | Run every documented required test gate; do not replace it with a smaller sample |
 
-Honor an exact user-requested command after safety checks. Do not silently turn a release gate into diagnose mode or claim release test readiness from a focused test alone. Leave lint, build, security, deployment, and overall release readiness to their owning workflows.
+Honor an exact user-requested command after safety checks. Do not silently turn a release gate into failure-reproduction mode or claim release test readiness from a focused test alone. Leave root-cause diagnosis, lint, build, security, deployment, and overall release readiness to their owning workflows.
 
 ### 2. Discover Scope and Commands
 
@@ -52,7 +52,8 @@ Reuse the scope and layer fields from `test-driven-development`, then add execut
 
 ```markdown
 Test Planner:
-- Execution mode: Diagnose | Verify change | Release gate
+- Execution mode: Reproduce failure | Verify change | Release gate
+- Test basis / oracle:
 - Changed surfaces:
 - Affected contracts:
 - Primary layer:
@@ -65,8 +66,9 @@ Test Planner:
 - Safety checks and time budget:
 ```
 
-Keep the dimensions MECE:
+Keep the planning dimensions distinct. They answer different questions and may refer to the same artifact from different perspectives:
 
+- **Test basis / oracle** describes why an expected result is authoritative: requirement, contract, incident evidence, invariant, approved reference, or unresolved conflict.
 - **Surfaces** describe what changed: frontend UI/state, backend endpoint/service, shared schema/client, persistence, async infrastructure, or external integration.
 - **Contracts** describe compatibility boundaries: request/response schema, generated client, public API, event, or none.
 - **Layers** describe where behavior is proven: Unit, Component, Frontend Integration, API, Contract, Backend Integration, or E2E/System.
@@ -128,7 +130,7 @@ Do not rerun an unchanged command for reassurance. Rerun after a relevant edit, 
 
 ### 7. Handle Failures Without Hiding Them
 
-Preserve the first actionable assertion, stack trace, failing test, timeout, or setup error. In Diagnose mode, run at most one useful narrower reproduction before switching to root-cause work. In Verify change mode, stop dependent broadening but run independent planned checks when they add useful evidence. Never skip, delete, weaken, or update expected outputs merely to make a suite green.
+Preserve the first actionable assertion, stack trace, failing test, timeout, or setup error. In Reproduce failure mode, run at most one useful narrower reproduction before switching to root-cause work. In Verify change mode, stop dependent broadening but run independent planned checks when they add useful evidence. Never skip, delete, weaken, or update expected outputs merely to make a suite green.
 
 ## Result Format
 
@@ -179,7 +181,7 @@ Use `PASS` overall only when every command required by the selected execution mo
 
 Before finishing:
 
-- [ ] Select and report Diagnose, Verify change, or Release gate mode.
+- [ ] Select and report Reproduce failure, Verify change, or Release gate mode.
 - [ ] Discover changed surfaces, affected contracts, project roots, and real commands.
 - [ ] Keep layers, quality concerns, commands, and execution cost separate.
 - [ ] Use non-interactive commands with finite time budgets.

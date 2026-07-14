@@ -35,7 +35,7 @@ Pick this when you want one perspective on the current change and the user is in
 Pick this when there's a repeatable workflow you'd otherwise re-explain every time.
 
 - `/review` → wraps `code-reviewer` with the project's review skill
-- `/test` → wraps `test-engineer` with TDD skill
+- `/test` → runs the TDD skill in the main context and uses `test-engineer` for non-trivial or uncertain coverage planning
 - `/webperf` → wraps `web-performance-auditor` for performance-focused audits on web apps
 
 ### Slash command (orchestrator — fan-out)

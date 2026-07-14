@@ -96,6 +96,7 @@ Before writing tests, keep planning dimensions separate:
 
 | Dimension | Use For | Do Not Put Here |
 |---|---|---|
+| Test basis / oracle | Authoritative source for intended behavior and expected results | Guesses inferred only from the current implementation |
 | Changed surfaces | Code/data areas touched by the change | Test layer names like E2E |
 | Affected contracts | Public schemas, generated clients, events, API compatibility | Backend implementation details |
 | Test layer | Where behavior should be proven | Quality concerns like accessibility or security |
@@ -104,6 +105,8 @@ Before writing tests, keep planning dimensions separate:
 | Execution size | Runtime cost and CI placement | User-visible behavior categories |
 
 Case-design techniques may combine, but they remain separate from operating mode, risk heuristics, and exit criteria. Use `Direct example` for a single concrete behavior and `Regression reproduction` for a known defect instead of inventing a formal technique. See `references/test-design-techniques.md` for selectors and required artifacts.
+
+When requirements, contracts, existing tests, and production behavior disagree, record the conflict under `Test basis / oracle`. Do not silently promote the current implementation or an AI-generated expectation into the source of truth. Resolve the conflict with the owning product or engineering authority, or mark the affected expectation as blocked while continuing with undisputed coverage.
 
 ### Changed Surfaces
 

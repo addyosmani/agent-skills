@@ -19,11 +19,13 @@ Automate quality gates so that no change reaches production without passing test
 - Adding or modifying automated checks
 - Configuring deployment pipelines
 - When a change should trigger automated verification
-- Debugging CI failures
+- Changing CI definitions or runner configuration to diagnose a pipeline-only failure
+
+**When NOT to use:** Use `tests` to rerun an existing CI test command locally. Use `debugging-and-error-recovery` after the failure is reproduced and the goal is to find or fix its root cause.
 
 ## The Quality Gate Pipeline
 
-Every change goes through these gates before merge:
+Every change goes through its applicable required gates before merge:
 
 ```
 Pull Request Opened
@@ -36,15 +38,13 @@ Pull Request Opened
 │   ↓ pass         │
 │   UNIT TESTS     │  jest/vitest
 │   ↓ pass         │
-│   COMPONENT/API  │  UI components + HTTP contracts
-│   ↓ pass         │
+│   LAYER JOBS      │  selected Component/Frontend Integration/API/
+│   ↓ pass         │  Contract/Backend Integration suites
 │   BUILD          │  npm run build
 │   ↓ pass         │
-│   INTEGRATION    │  frontend integration + backend DB/cache/queue tests
+│   E2E (policy)   │  critical journeys when risk or policy requires
 │   ↓ pass         │
-│   E2E (optional) │  Playwright/Cypress
-│   ↓ pass         │
-│   ACCESSIBILITY  │  axe/pa11y/Lighthouse for UI changes
+│   ACCESSIBILITY  │  axe/pa11y/Lighthouse for browser UI scope
 │   ↓ pass         │
 │   SECURITY AUDIT │  npm audit
 │   ↓ pass         │
@@ -55,7 +55,7 @@ Pull Request Opened
   Ready for review
 ```
 
-**No gate can be skipped.** If lint fails, fix lint — don't disable the rule. If a test fails, fix the code — don't skip the test.
+**No required gate can be silently skipped.** Select gates from changed surfaces, affected contracts, risk, and project policy. If lint fails, fix lint rather than disabling the rule. If a test fails, preserve the evidence and fix the root cause rather than skipping the test.
 
 ### Layered Test Jobs
 
@@ -148,8 +148,8 @@ jobs:
         run: npx prisma migrate deploy
         env:
           DATABASE_URL: postgresql://ci_user:${{ secrets.CI_DB_PASSWORD }}@localhost:5432/testdb
-      - name: Integration tests
-        run: npm run test:integration
+      - name: Backend integration tests
+        run: npm run test:backend-integration
         env:
           DATABASE_URL: postgresql://ci_user:${{ secrets.CI_DB_PASSWORD }}@localhost:5432/testdb
 ```

@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: Drives development with tests. Use when implementing logic, fixing bugs, changing behavior, choosing test coverage, designing test cases, working test-first or red-green-refactor, or writing unit, component, frontend integration, API, contract, backend integration, E2E, regression, or accessibility tests.
+description: Drives development with tests. Use when implementing logic, fixing bugs, changing behavior, choosing test coverage, designing test cases, working test-first or red-green-refactor, or writing unit, component, frontend integration, API, contract, backend integration, or E2E tests with regression or accessibility concerns.
 ---
 
 # Test-Driven Development
@@ -19,7 +19,7 @@ Write a failing test before writing the code that makes it pass. For bug fixes, 
 
 **When NOT to use:** Pure configuration changes, documentation updates, or static content changes that have no behavioral impact.
 
-**Related:** For browser-based changes, combine TDD with runtime verification using Chrome DevTools MCP — see the Browser Testing section below.
+**Related:** For browser-based changes, combine TDD with runtime verification using Chrome DevTools MCP — see the Browser Testing section below. When the task is only to execute existing suites and report evidence, use the `tests` skill instead.
 
 ## The TDD Cycle
 
@@ -99,7 +99,7 @@ Bug report arrives
   Test PASSES (proving the fix works)
        │
        ▼
-  Run full test suite (no regressions)
+  Run affected suites and required regression gates
 ```
 
 **Example:**
@@ -168,15 +168,17 @@ Use the lowest layer that proves the behavior. The layer map below defines the e
 
 Before writing tests, separate these planning dimensions:
 
-1. **Identify changed surfaces** — files changed, public APIs touched, shared schemas/types, persistence/infrastructure, and consumers that may break.
-2. **Name affected contracts** — request/response schemas, generated clients, public APIs, events, or "none".
-3. **Select layers** — primary layer, adjacent layers to consider, and layers intentionally skipped with reasons.
-4. **Choose case-design techniques** — name how cases are derived, such as boundary values, a decision table, state transitions, regression reproduction, or a direct example.
-5. **Add quality concerns** — accessibility, security, performance, visual regression, observability, migration safety, or "none".
-6. **Use existing commands** — discover the project's test scripts before inventing new command names.
+1. **Establish the test basis and oracle** — name the requirement, contract, incident evidence, invariant, or approved reference that determines the expected result. Surface conflicting sources instead of choosing one silently.
+2. **Identify changed surfaces** — files changed, public APIs touched, shared schemas/types, persistence/infrastructure, and consumers that may break.
+3. **Name affected contracts** — request/response schemas, generated clients, public APIs, events, or "none".
+4. **Select layers** — primary layer, adjacent layers to consider, and layers intentionally skipped with reasons.
+5. **Choose case-design techniques** — name how cases are derived, such as boundary values, a decision table, state transitions, regression reproduction, or a direct example.
+6. **Add quality concerns** — accessibility, security, performance, visual regression, observability, migration safety, or "none".
+7. **Use existing commands** — discover the project's test scripts before inventing new command names.
 
 ```markdown
 Test Planner:
+- Test basis / oracle:
 - Changed surfaces:
 - Affected contracts:
 - Primary layer:
@@ -187,7 +189,7 @@ Test Planner:
 - Commands to run:
 ```
 
-Scale the planner to the change. For a one-line fix, it may collapse to one or two sentences; retain a field only when it affects the test decision.
+Scale the planner to the change. For a one-line fix, it may collapse to one or two sentences; retain a field only when it affects the test decision. If the expected result is disputed or unsupported, do not write a test that turns an assumption into an executable requirement.
 
 Case design answers **which cases** provide evidence; the test layer answers **where** to run them. Use the lightest technique that exposes the risk:
 
@@ -433,7 +435,8 @@ For choosing what cases to test, see `references/test-design-techniques.md`. For
 After completing any implementation:
 
 - [ ] Every new behavior has a corresponding test
-- [ ] All tests pass: `npm test`
+- [ ] The focused RED command failed for the expected reason before the implementation changed
+- [ ] The focused command, affected suites, and project-required regression gates pass using discovered project commands
 - [ ] Bug fixes include a reproduction test that failed before the fix
 - [ ] Test names describe the behavior being verified
 - [ ] No tests were skipped or disabled
