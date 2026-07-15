@@ -1,0 +1,7 @@
+{
+  "name": "tdd-invoice-rounding-fixture",
+  "private": true,
+  "scripts": {
+    "test": "node --test"
+  }
+}

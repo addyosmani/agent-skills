@@ -13,6 +13,10 @@
       {
         "prompt": "What tests should cover this new parsing logic before I write it?",
         "top_k": 3
+      },
+      {
+        "prompt": "The invoice rounding Test Planner is reviewed and READY; implement its case test-first without changing the oracle.",
+        "top_k": 3
       }
     ],
     "negative": [
@@ -29,14 +33,37 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Fix the reported rounding bug in the invoice totals, test-first.",
-      "expected_output": "A failing test demonstrating the bug, a minimal fix turning it green, full suite passing",
-      "expectations": [
-        "A failing test is written and shown failing before the fix",
-        "The implementation is the minimum needed to pass",
-        "The full suite is run after the fix to catch regressions"
+      "prompt": "Work in tdd-invoice-rounding. Fix the reported invoice rounding bug test-first. This is one obvious defect and no Test Planner is supplied.",
+      "expected_output": "A visible READY mini planner before any edit, followed by fixture-backed RED-GREEN evidence for the approved invoice rounding rule and the minimal fix",
+      "files": [
+        "tdd-invoice-rounding"
       ],
-      "trust_level": "provisional"
+      "expectations": [
+        "The README, package.json, implementation, and existing test are inspected before editing so the approved rounding rule is validated as the oracle and the project-owned test command is discovered",
+        "Before the first file edit, a visible compact mini planner records the oracle, one READY regression case with setup and input, action, expected result, expected RED reason, test location, and discovered command",
+        "A regression test for two 0.335 line totals expecting 0.68 is added before production code changes and is actually run",
+        "RED evidence shows the project-owned command failing because the implementation returns 0.67 instead of 0.68",
+        "The production change is limited to rounding each line before summing while preserving the CommonJS API",
+        "GREEN evidence shows the project-owned test suite passing after the fix"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Read tdd-planner-handoff/TEST-PLANNER.md from the workspace root, then work in tdd-invoice-rounding and implement only its reviewed READY case test-first. Preserve RED-GREEN evidence.",
+      "expected_output": "The reviewed planner and oracle are validated, its single READY case is implemented without changing meaning, and observed RED-GREEN command evidence is preserved",
+      "files": [
+        "tdd-invoice-rounding",
+        "tdd-planner-handoff"
+      ],
+      "expectations": [
+        "The supplied Test Planner, project README, package.json, implementation, and existing test are inspected before any file edit",
+        "Before editing, the planner and INV-ROUND-001 are confirmed READY, the README is confirmed as support for the oracle, and the absence of unresolved requirements is checked",
+        "Only INV-ROUND-001 is selected and its input, action, expected result, test level, and CommonJS boundary retain their planned meaning",
+        "A regression test for calculateInvoiceTotal([0.335, 0.335]) expecting 0.68 is added before production code changes",
+        "RED evidence shows the project-owned command failing because the current implementation returns 0.67 instead of 0.68",
+        "The implementation change is the minimum needed to round each line before summing while preserving the CommonJS API",
+        "GREEN evidence shows the project-owned test suite passing after the fix, with no unrelated cases or files added"
+      ]
     }
   ]
 }

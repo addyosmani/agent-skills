@@ -21,6 +21,31 @@ Write a failing test before writing the code that makes it pass. For bug fixes, 
 
 **Related:** For browser-based changes, combine TDD with runtime verification using Chrome DevTools MCP — see the Browser Testing section below.
 
+## Planner Handoff Before RED
+
+When a reviewed Test Planner or Case Specification is supplied, consume it before editing any file:
+
+1. Read the planner and the requirement, contract, incident, or approved reference named as its oracle.
+2. Confirm that both the planner and selected case are explicitly `READY`, and that the oracle still supports the expected result.
+3. If review or `READY` status is missing, the oracle is stale, unsupported, or conflicting, or an unresolved requirement affects the expected behavior, mark the case `BLOCKED` and return it to the design workflow or user. Do not encode a guess in a test.
+4. Select one ready case and preserve its meaning. Translate its preconditions, data, action, and expected result into the repository's test syntax without silently changing the case or oracle.
+5. State which case and project-owned test command will be used before the first edit. If implementation evidence suggests the case must change, propose a planner revision rather than redesigning it in place.
+
+For a single obvious bug with no supplied planner, record this compact checkpoint in the visible response before the first file edit; do not leave it only in private reasoning:
+
+```markdown
+Mini Test Planner:
+- Oracle: [source and expected rule]
+- Case: [ID/name; preconditions and input; action; expected result]
+- Test location / command: [planned test file; discovered focused command]
+- Expected RED: [current behavior and why the assertion should fail]
+- Status: READY | BLOCKED
+```
+
+Validate the mini planner exactly as a supplied planner. If the expected result lacks an authoritative oracle or any requirement remains unresolved, use `BLOCKED` and stop before editing.
+
+For either path, preserve execution evidence through the cycle: record the focused command and observed failure that matches the planned RED reason, then the passing focused command after the minimum implementation change and the required regression run. A failure for an unexpected reason is not valid RED evidence; investigate it before proceeding to GREEN.
+
 ## The TDD Cycle
 
 ```
@@ -356,6 +381,8 @@ For detailed testing patterns, examples, and anti-patterns across frameworks, se
 | "I tested it manually" | Manual testing doesn't persist. Tomorrow's change might break it with no way to know. |
 | "The code is self-explanatory" | Tests ARE the specification. They document what the code should do, not what it does. |
 | "It's just a prototype" | Prototypes become production code. Tests from day one prevent the "test debt" crisis. |
+| "The planner already proves the behavior" | A planner records intent. RED-GREEN command evidence proves the implementation. |
+| "The bug is obvious, so I can skip planning" | Record the compact mini planner before editing so the oracle, reproducer, and expected failure stay explicit. |
 | "Let me run the tests again just to be extra sure" | After a clean test run, repeating the same command adds nothing unless the code has changed since. Run again after subsequent edits, not as reassurance. |
 
 ## Red Flags
@@ -367,6 +394,9 @@ For detailed testing patterns, examples, and anti-patterns across frameworks, se
 - Tests that test framework behavior instead of application behavior
 - Test names that don't describe the expected behavior
 - Skipping tests to make the suite pass
+- Editing before validating a supplied ready case or recording the visible mini planner
+- Silently changing a planned case or oracle during implementation
+- Turning an unresolved requirement into a test expectation instead of blocking
 - Running the same test command twice in a row without any intervening code change
 
 ## Verification
@@ -379,5 +409,8 @@ After completing any implementation:
 - [ ] Test names describe the behavior being verified
 - [ ] No tests were skipped or disabled
 - [ ] Coverage hasn't decreased (if tracked)
+- [ ] A supplied planner and selected case were reviewed, `READY`, and oracle-validated, or a visible mini planner was recorded before the first edit
+- [ ] Planned case meaning and oracle were preserved; unresolved requirements blocked implementation
+- [ ] Focused RED and GREEN commands and their observed outcomes were recorded, followed by the required regression run
 
 **Note:** Run each test command after a change that could affect the result. After a clean run, don't repeat the same command unless the code has changed since — re-running on unchanged code adds no confidence.
