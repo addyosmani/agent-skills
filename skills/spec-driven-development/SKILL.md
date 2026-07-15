@@ -82,7 +82,7 @@ Don't silently fill in ambiguous requirements. The spec's entire purpose is to s
 **Spec template:**
 
 ```markdown
-# Spec: [Project/Feature Name]
+# Spec: [Project/Feature Name] — V[N]
 
 ## Objective
 [What we're building and why. User stories or acceptance criteria.]
@@ -186,6 +186,8 @@ A spec describes one version of the work. New ideas and post-ship changes don't 
 
 ### Scope each version explicitly
 
+Label the spec with the version it describes, in the title (`# Spec: Invoice Pipeline — V1`). When a shipped delta is folded back in, bump the version — the label always states which version of the system the spec describes, and makes "that's a V2 idea" an objective call rather than a judgment made mid-build.
+
 During Specify, ideas that won't make this version go under **Out of Scope (Deferred)** — captured, not lost. This makes the V1 boundary enforceable: during implementation, anything not in the spec's requirements is out, even if it's written in the same file under Deferred. When an idea arrives mid-build, park it in the Deferred list and keep going; re-scoping happens between versions, not during one.
 
 ### Follow-up changes get a delta spec
@@ -211,7 +213,7 @@ Once a spec has shipped, a new requirement — swapping the storage engine, repl
 [Only deltas from the original spec's boundaries; everything else inherits.]
 ```
 
-Save it alongside the original (e.g. `SPEC-postgres-migration.md` next to `SPEC.md`) and run it through the same gated workflow: human review, then plan, tasks, implement. Keep one change per delta spec — that keeps each plan/build cycle small and reviewable.
+Save it alongside the original (e.g. `SPEC-postgres-migration.md` next to `SPEC.md`) and run it through the same gated workflow: human review, then plan, tasks, implement. Downstream commands know this convention — `/build auto` accepts a root-level `SPEC-<change>.md` as the spec for a follow-up change and treats it as a planning artifact in its clean-baseline check. Keep one change per delta spec — that keeps each plan/build cycle small and reviewable.
 
 After the change ships, fold the outcome into the original spec (per Keeping the Spec Alive) so it stays the source of truth for what exists, and mark the delta implemented. The original spec always describes the current system; delta specs describe transitions.
 
@@ -241,7 +243,7 @@ After the change ships, fold the outcome into the original spec (per Keeping the
 
 Before proceeding to implementation, confirm:
 
-- [ ] The spec covers all six core areas
+- [ ] The spec covers all six core areas (a full spec; a delta spec covers only the areas the change affects — at minimum objective, success criteria, and boundary deltas — and inherits the rest from the original)
 - [ ] The human has reviewed and approved the spec
 - [ ] Success criteria are specific and testable
 - [ ] Boundaries (Always/Ask First/Never) are defined
