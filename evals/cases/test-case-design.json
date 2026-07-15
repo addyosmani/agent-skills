@@ -1,0 +1,159 @@
+{
+  "skill_name": "test-case-design",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Before we change checkout, tell me which tests are actually necessary and which layers would just duplicate coverage",
+        "top_k": 1
+      },
+      {
+        "prompt": "I have requirements for a quantity field but no test list. Give me implementable cases with setup, input, action, and exact expected results",
+        "top_k": 1
+      },
+      {
+        "prompt": "What values should we test around the minimum and maximum for this quantity validator?",
+        "top_k": 1
+      },
+      {
+        "prompt": "Map these discount conditions and precedence rules to the smallest set of tests that covers every outcome",
+        "top_k": 1
+      },
+      {
+        "prompt": "Which test cases cover the legal and illegal event sequences for this order workflow, including retries?",
+        "top_k": 1
+      },
+      {
+        "prompt": "We cannot run every browser, locale, plan, and login combination. Give me a defensible reduced test matrix",
+        "top_k": 2
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Write a failing test for this bug and then implement the fix",
+        "owner": "test-driven-development"
+      },
+      {
+        "prompt": "This previously passing test now fails intermittently; diagnose and fix the root cause",
+        "owner": "debugging-and-error-recovery"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Use the Inventory Reservation API requirements in the fixture. Produce only a Test Planner and concrete test-case model that efficiently covers quantity validation; do not implement anything.",
+      "expected_output": "An API-layer plan whose equivalence partitions and boundary model derive explicit representatives below, at, and above both inclusive limits",
+      "files": [
+        "test-design-methods"
+      ],
+      "expectations": [
+        "The fixture requirements are the test basis; API is primary while the unchanged contract is kept separate",
+        "Valid and invalid partitions include missing, null, wrong-type, fractional, and out-of-range inputs",
+        "Boundary cases include 0, 1, 2, 99, 100, and 101 with exact expected outcomes",
+        "Each concrete case is derived from a named partition or boundary rather than merely naming a technique",
+        "Each case is reconstructable from a complete Case Specification or shared procedure plus data row, including stable ID and name, objective, layer, setup and data, action, expected result and oracle, coverage point, priority, and READY or BLOCKED status"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Use the Discount Rules in the fixture. Produce only a Test Planner and a compact concrete case model covering every reachable outcome and precedence rule; do not implement anything.",
+      "expected_output": "A unit-layer decision table that represents the conditions, discount precedence, non-stacking behavior, and every reachable outcome",
+      "files": [
+        "test-design-methods"
+      ],
+      "expectations": [
+        "Unit is selected as the lowest sufficient layer for the pure discount-selection rules",
+        "The decision table models membership, subtotal threshold, valid coupon, and resulting discount",
+        "Loyalty-over-coupon precedence and the no-stacking rule are explicit",
+        "Every reachable rule has a concrete case or justified collapse; boundary values around $100 may supplement but do not replace the table"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Use the Order State Machine in the fixture. Produce only a Test Planner and a concrete case model for valid and invalid event sequences, retries, and side effects; do not implement anything.",
+      "expected_output": "A state-transition model covering valid transitions, important invalid transitions, and idempotent repeated payment without duplicate side effects",
+      "files": [
+        "test-design-methods"
+      ],
+      "expectations": [
+        "The model names states, events, next states, and charge or rejection outcomes",
+        "Draft-to-Paid, Paid-to-Shipped, and Draft-to-Cancelled transitions are covered",
+        "Shipping Draft, paying Cancelled, and cancelling Shipped are covered as invalid transitions",
+        "Repeated payment in Paid proves idempotency and no duplicate charge",
+        "The layer choice is separate from the technique, and every multi-step case pairs each action with its expected observation"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Use the Deployment Matrix in the fixture. Produce only a Test Planner and a reduced concrete case model that covers the documented combinations efficiently; do not implement anything.",
+      "expected_output": "A bounded pairwise plan with a factor/value model, generated case set, pair-coverage evidence, and the known high-risk four-factor combination",
+      "files": [
+        "test-design-methods"
+      ],
+      "expectations": [
+        "Browser, locale, plan, and authentication are listed with all documented values",
+        "A concrete reduced case set and a way to generate or verify pair coverage are provided",
+        "Safari + ja-JP + Enterprise + SSO is included explicitly as a high-risk combination",
+        "The plan does not claim pairwise coverage handles every three-way or four-way interaction"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Use the Refund Eligibility Sources in the test-planner-advanced fixture. Produce only a Test Planner and the cases that can be specified responsibly; do not implement anything.",
+      "expected_output": "A plan that exposes the unresolved oracle conflict, avoids inventing deadline behavior, and separates blocked boundary expectations from undisputed coverage",
+      "files": [
+        "test-planner-advanced"
+      ],
+      "expectations": [
+        "The calendar-day criterion and 720-hour API example are both named as conflicting test-basis sources",
+        "The plan does not choose an oracle or encode current implementation behavior as the expected result",
+        "Timezone and daylight-saving boundary cases are BLOCKED while undisputed cases may remain READY with explicit expected results",
+        "The next action names the product or API owner needed to resolve the conflict"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Use the Checkout Client Migration in the test-planner-advanced fixture. Produce only the smallest sufficient Test Planner for the release; do not implement anything.",
+      "expected_output": "A cross-stack plan led by consumer/provider contract evidence, with adjacent frontend and API checks plus one bounded critical E2E journey",
+      "files": [
+        "test-planner-advanced"
+      ],
+      "expectations": [
+        "The approved OpenAPI migration and one-release mobile compatibility requirement form the test basis",
+        "Contract is primary for old and regenerated consumer/provider compatibility rather than being conflated with API behavior",
+        "API checks cover provider endpoint behavior without claiming to prove both consumers remain compatible",
+        "Frontend Integration covers the generated web client and confirmation page with a mocked backend",
+        "One critical real checkout journey is justified at E2E while alternate compatibility and error cases stay lower"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Use the Order Commit Workflow in the test-planner-advanced fixture. Produce only a Test Planner and focused case model; do not implement anything.",
+      "expected_output": "A backend-integration-led plan for transaction atomicity, retry idempotency, and duplicate delivery without unnecessary contract or browser coverage",
+      "files": [
+        "test-planner-advanced"
+      ],
+      "expectations": [
+        "The transaction, rollback, idempotency, and duplicate-delivery requirements form the test basis",
+        "Backend Integration is primary because the behavior depends on the real database transaction and outbox persistence",
+        "Focused Unit cases may cover pure rules, while API is adjacent only when endpoint orchestration needs evidence",
+        "Contract is skipped because request and response schemas are unchanged",
+        "Failure, retry, and duplicate-delivery cases assert observable stock, order, and outbox outcomes rather than internal calls"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Use the Bulk Import Discovery scenario in the test-planner-advanced fixture. Produce only a risk-aware Test Planner for the two-hour session and release decision; do not implement anything.",
+      "expected_output": "An adaptive plan combining stable scripted evidence with a time-boxed exploratory charter, historical defect heuristics, explicit exit criteria, and residual-risk ownership",
+      "files": [
+        "test-planner-advanced"
+      ],
+      "expectations": [
+        "Settled UTF-8 examples are separated from unresolved duplicate, encoding, partial-failure, cancellation, and retry oracles",
+        "Stable scripted checks are combined with a time-boxed exploratory charter, while historical incidents remain risk heuristics rather than case-design techniques",
+        "The two-hour limit is a forced stop rather than proof that exit criteria were satisfied",
+        "The report names coverage, discoveries, blocked areas, residual risk, and acceptance by the customer-data product lead"
+      ]
+    }
+  ]
+}
