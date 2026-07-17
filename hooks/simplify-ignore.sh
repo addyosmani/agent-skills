@@ -119,14 +119,20 @@ if [ "$TOOL_NAME" = "Edit" ] || [ "$TOOL_NAME" = "Write" ]; then
   [ -f "$CACHE/${ID}.bak" ] || exit 0
   ls "$CACHE/${ID}".block.* >/dev/null 2>&1 || exit 0
 
+  # Pre-compute block files to avoid directory globbing on every matched line
+  # We construct the array manually to safely handle no matches
+  block_files=()
+  for f in "$CACHE/${ID}".block.*; do
+    [ -f "$f" ] && block_files+=("$f")
+  done
+
   # Expand placeholders, preserving any inline code the model added around them
   EXPANDED="$CACHE/${ID}.$$.expanded"
   rm -f "$EXPANDED"
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in *BLOCK_*)
       # Expand all placeholders on this line (supports multiple per line)
-      for bf in "$CACHE/${ID}".block.*; do
-        [ -f "$bf" ] || continue
+      for bf in "${block_files[@]}"; do
         h="${bf##*.}"
         case "$line" in *"BLOCK_${h}"*)
           # Reconstruct the exact placeholder pattern
@@ -168,8 +174,7 @@ if [ "$TOOL_NAME" = "Edit" ] || [ "$TOOL_NAME" = "Write" ]; then
       cat "${EXPANDED}.nnl" > "$EXPANDED" && rm -f "${EXPANDED}.nnl"
   fi
   # Warn if model deleted a protected block entirely
-  for bf in "$CACHE/${ID}".block.*; do
-    [ -f "$bf" ] || continue
+  for bf in "${block_files[@]}"; do
     bh="${bf##*.}"
     # After expansion, blocks appear as original code (simplify-ignore-start).
     # If neither the expanded code nor the placeholder is in EXPANDED, it was deleted.
