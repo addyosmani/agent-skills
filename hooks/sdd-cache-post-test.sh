@@ -5,6 +5,10 @@
 
 set -euo pipefail
 
+# Source shared library
+# shellcheck source=hooks/sdd-cache-lib.sh
+. "$(dirname "$0")/sdd-cache-lib.sh"
+
 PASS=0 FAIL=0
 
 assert_eq() {
@@ -19,19 +23,6 @@ assert_eq() {
     printf '    actual:   %s\n' "$(printf '%s' "$actual" | cat -v)" >&2
   fi
 }
-
-# Logic to extract FINAL_HEADERS (from line 87 in sdd-cache-post.sh)
-get_final_headers() {
-  local head_out="$1"
-  printf '%s' "$head_out" | awk '
-    BEGIN { RS = ""; last = "" }
-    { last = $0 }
-    END { print last }
-  '
-}
-
-# Extract extract_header from the hook script
-eval "$(sed -n '/^extract_header()/,/^}/p' hooks/sdd-cache-post.sh)"
 
 # ── Test 1: get_final_headers ─────────────────────────────────────────────
 printf 'Test 1: get_final_headers\n'
@@ -57,7 +48,7 @@ assert_eq "multiple blocks (redirect)" "$EXPECTED" "$(get_final_headers "$MULTI_
 # ── Test 2: extract_header ────────────────────────────────────────────────
 printf '\nTest 2: extract_header\n'
 
-# We need to set FINAL_HEADERS for extract_header to work
+# We need to pass FINAL_HEADERS to extract_header
 FINAL_HEADERS="HTTP/1.1 200 OK
 Content-Type: text/html; charset=UTF-8
 ETag: \"12345\"
@@ -65,13 +56,13 @@ Last-Modified: Wed, 21 Oct 2015 07:28:00 GMT
 X-Multi-Colon: value:with:colons
 Whitespace:   leading and trailing   "
 
-assert_eq "extract ETag" "\"12345\"" "$(extract_header "ETag")"
-assert_eq "case insensitivity (lower)" "\"12345\"" "$(extract_header "etag")"
-assert_eq "case insensitivity (upper)" "\"12345\"" "$(extract_header "ETAG")"
-assert_eq "handle colons in value" "Wed, 21 Oct 2015 07:28:00 GMT" "$(extract_header "Last-Modified")"
-assert_eq "handle multiple colons in value" "value:with:colons" "$(extract_header "X-Multi-Colon")"
-assert_eq "strip whitespace" "leading and trailing" "$(extract_header "Whitespace")"
-assert_eq "non-existent header" "" "$(extract_header "X-Missing")"
+assert_eq "extract ETag" "\"12345\"" "$(extract_header "$FINAL_HEADERS" "ETag")"
+assert_eq "case insensitivity (lower)" "\"12345\"" "$(extract_header "$FINAL_HEADERS" "etag")"
+assert_eq "case insensitivity (upper)" "\"12345\"" "$(extract_header "$FINAL_HEADERS" "ETAG")"
+assert_eq "handle colons in value" "Wed, 21 Oct 2015 07:28:00 GMT" "$(extract_header "$FINAL_HEADERS" "Last-Modified")"
+assert_eq "handle multiple colons in value" "value:with:colons" "$(extract_header "$FINAL_HEADERS" "X-Multi-Colon")"
+assert_eq "strip whitespace" "leading and trailing" "$(extract_header "$FINAL_HEADERS" "Whitespace")"
+assert_eq "non-existent header" "" "$(extract_header "$FINAL_HEADERS" "X-Missing")"
 
 # ── Summary ──────────────────────────────────────────────────────────────
 printf '\n══════════════════════════════════════════\n'
