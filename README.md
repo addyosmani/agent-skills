@@ -200,6 +200,7 @@ The commands above are entry points. The pack includes 24 skills total — 23 li
 | Skill | What It Does | Use When |
 |-------|-------------|----------|
 | [code-review-and-quality](skills/code-review-and-quality/SKILL.md) | Five-axis review, change sizing (~100 lines), severity labels (Nit/Optional/FYI), review speed norms, splitting strategies | Before merging any change |
+| [open-code-review-delegate](skills/open-code-review-delegate/SKILL.md) | Delegation-mode review using OCR for deterministic file selection and rule resolution while the agent drives the actual review | Reviewing PRs with 10+ changed files where prompt-only review risks skipping files |
 | [code-simplification](skills/code-simplification/SKILL.md) | Chesterton's Fence, Rule of 500, reduce complexity while preserving exact behavior | Code works but is harder to read or maintain than it should be |
 | [security-and-hardening](skills/security-and-hardening/SKILL.md) | OWASP Top 10 prevention, auth patterns, secrets management, dependency auditing, three-tier boundary system | Handling user input, auth, data storage, or external integrations |
 | [performance-optimization](skills/performance-optimization/SKILL.md) | Measure-first approach - Core Web Vitals targets, profiling workflows, bundle analysis, anti-pattern detection | Performance requirements exist or you suspect regressions |
@@ -298,6 +299,7 @@ agent-skills/
 │   ├── browser-testing-with-devtools/ #   Verify
 │   ├── debugging-and-error-recovery/  #   Verify
 │   ├── code-review-and-quality/       #   Review
+│   ├── open-code-review-delegate/    #   Review
 │   ├── code-simplification/          #   Review
 │   ├── security-and-hardening/        #   Review
 │   ├── performance-optimization/      #   Review
