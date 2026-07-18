@@ -256,6 +256,79 @@ Special consideration for AI agent context:
 - **ADRs** — Help agents understand why past decisions were made (prevents re-deciding)
 - **Inline gotchas** — Prevent agents from falling into known traps
 
+## Runbooks
+
+Runbooks are operational documentation: step-by-step guides for known failure modes and recurring on-call tasks. Where an ADR records *why* a decision was made, a runbook records *what to do when something goes wrong*. They exist so an engineer can act at 3am without reconstructing knowledge from first principles.
+
+The `observability-and-instrumentation` skill requires every alert to link to a runbook. This is where you write it.
+
+### When to Write a Runbook
+
+- Any alert that has fired, or is expected to fire, in production
+- Any recurring operational task with a non-obvious sequence of steps
+- Any failure mode whose recovery path isn't self-evident from the alert text
+- Any escalation path that engineers shouldn't have to remember under pressure
+
+### The Three-Line Minimum
+
+A runbook doesn't have to be comprehensive to be useful. The minimum viable runbook answers three questions:
+
+1. **What does this mean?** — the likely cause in plain language
+2. **What is the first thing to check?** — one command or dashboard link
+3. **Who to escalate to if that doesn't resolve it?** — team, channel, or rotation
+
+A three-line runbook linked from the alert beats a detailed document nobody can find.
+
+### Runbook Template
+
+Store runbooks in `docs/runbooks/` named after the alert or operation:
+
+```markdown
+# Runbook: High Error Rate on /api/tasks
+
+## Trigger
+Alert fires when 5xx responses exceed 1% of requests over 5 minutes.
+
+## Likely Causes
+- Database connection pool exhausted (most common)
+- Downstream service unavailable
+- Deployment introduced a breaking change
+
+## Immediate Actions
+1. Check the error dashboard: [link]
+2. `kubectl logs -n prod -l app=task-api --tail=100 | grep ERROR`
+3. Check DB connections: `SELECT count(*) FROM pg_stat_activity;`
+
+## If DB Connections Are Exhausted
+1. Find long-running queries:
+   `SELECT pid, query, now() - query_start AS duration FROM pg_stat_activity WHERE state = 'active' ORDER BY duration DESC;`
+2. Kill blocking queries if safe: `SELECT pg_terminate_backend(pid);`
+3. If persistent, roll back the most recent deployment — see `shipping-and-launch`
+
+## Escalation
+- Engineering on-call: [PagerDuty link]
+- Database team: #db-oncall
+- If data loss is suspected: page the on-call lead directly
+
+## Related
+- Alert: DB Connection Count High → `docs/runbooks/db-connections.md`
+- ADR-007: Database connection pool sizing
+```
+
+### Keep Runbooks Current
+
+A stale runbook is actively dangerous — it builds false confidence and wastes time at the worst moment. Update the runbook as part of closing every incident it was used in.
+
+```
+Runbook used during incident
+       │
+       ├── Steps matched reality → confirm last-reviewed date at the top
+       └── Steps were wrong or incomplete → update before marking the incident closed
+```
+
+- **Update when you run it.** Every incident is a free runbook review.
+- **Link bidirectionally.** If two failure modes share a cause or recovery path, link their runbooks to each other.
+
 ## Common Rationalizations
 
 | Rationalization | Reality |
@@ -265,6 +338,8 @@ Special consideration for AI agent context:
 | "Nobody reads docs" | Agents do. Future engineers do. Your 3-months-later self does. |
 | "ADRs are overhead" | A 10-minute ADR prevents a 2-hour debate about the same decision six months later. |
 | "Comments get outdated" | Comments on *why* are stable. Comments on *what* get outdated — that's why you only write the former. |
+| "We'll write the runbook after the next incident" | By then you're exhausted and context is gone. Write it when you write the alert, while the system is fresh. |
+| "Everyone on the team knows how to handle this" | At 3am, after two engineers have left, six months of changes later — they won't. |
 
 ## Red Flags
 
@@ -275,6 +350,8 @@ Special consideration for AI agent context:
 - TODO comments that have been there for weeks
 - No ADRs in a project with significant architectural choices
 - Documentation that restates the code instead of explaining intent
+- Alerts with no linked runbook, or with a broken runbook link
+- Runbooks that haven't been updated since the service was last changed significantly
 
 ## Verification
 
@@ -286,3 +363,5 @@ After documenting:
 - [ ] Known gotchas are documented inline where they matter
 - [ ] No commented-out code remains
 - [ ] Rules files (CLAUDE.md etc.) are current and accurate
+- [ ] Every new alert links to a runbook (even a three-line one)
+- [ ] Runbooks were reviewed or updated after the last incident that triggered them
