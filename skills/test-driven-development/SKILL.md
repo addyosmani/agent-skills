@@ -360,6 +360,47 @@ This separation ensures the test is written without knowledge of the fix, making
 
 For JavaScript/TypeScript testing patterns illustrating these principles — Jest, React Testing Library, Supertest, Playwright — see `references/testing-patterns.md`. The principles transfer to any ecosystem; the syntax and tools there are JS/TS-specific.
 
+## Flaky Test Management
+
+A flaky test is one that passes and fails on the same code without any change — non-deterministic by nature. Flakiness isn't a minor inconvenience: it trains engineers to ignore red CI runs, which is how real failures get missed.
+
+### Common Causes
+
+| Cause | Example | Fix |
+|---|---|---|
+| Timing / async | `setTimeout` assumed to fire before assertion | Await the actual event or state change; never sleep |
+| Shared state | Test A leaves data that breaks test B | Each test creates and tears down its own state |
+| External dependency | Real API call succeeds sometimes | Mock or stub at the boundary |
+| Date/time sensitivity | Test assumes current year | Inject or freeze the clock |
+| Random data | Auto-generated values that occasionally collide | Use deterministic seeds or fixed fixtures |
+| Test ordering | Tests pass individually but fail together | Enforce random order in CI to surface hidden coupling |
+
+### The Quarantine Workflow
+
+Don't let a flaky test block CI indefinitely — but don't ignore it either:
+
+```
+Flaky test detected
+       │
+       ▼
+  Move to quarantine suite (separate CI job, non-blocking)
+       │
+       ▼
+  File a fix-or-delete ticket with a deadline (≤ 2 weeks)
+       │
+       ├── Root cause found → fix and restore to main suite
+       └── No fix in 2 weeks → delete the test
+```
+
+A quarantined test is a ticking clock, not a home. A flaky test that isn't actively being fixed is worse than no test — it provides false coverage while training the team to ignore failures.
+
+### Prevention
+
+- **Prefer small tests.** Small tests have no network, no disk, no shared process state — they can't flake on infrastructure.
+- **Freeze non-determinism at the boundary.** Mock the clock, random number generators, and external services — not the code under test.
+- **Assert on events, not timing.** Wait for a state change or a callback; never `await sleep(200)`.
+- **Run tests in random order in CI.** Order-dependent failures only surface when the order varies.
+
 ## Common Rationalizations
 
 | Rationalization | Reality |
@@ -371,6 +412,8 @@ For JavaScript/TypeScript testing patterns illustrating these principles — Jes
 | "The code is self-explanatory" | Tests ARE the specification. They document what the code should do, not what it does. |
 | "It's just a prototype" | Prototypes become production code. Tests from day one prevent the "test debt" crisis. |
 | "Let me run the tests again just to be extra sure" | After a clean test run, repeating the same command adds nothing unless the code has changed since. Run again after subsequent edits, not as reassurance. |
+| "It's probably a timing issue, just add a sleep" | Sleep-based fixes make tests slower and mask the root cause. Fix the async contract — await the event, not the clock. |
+| "We'll fix the flaky tests later" | Quarantine is not a home. A flaky test with no active fix should be deleted; it provides false coverage while training the team to ignore red runs. |
 
 ## Red Flags
 
@@ -383,6 +426,8 @@ For JavaScript/TypeScript testing patterns illustrating these principles — Jes
 - Test names that don't describe the expected behavior
 - Skipping tests to make the suite pass
 - Running the same test command twice in a row without any intervening code change
+- CI configured to auto-retry on failure as standard workflow (masking flakiness rather than fixing it)
+- Tests annotated `skip` or `xit` with no owner, no ticket, and no deadline
 
 ## Verification
 
@@ -394,5 +439,7 @@ After completing any implementation:
 - [ ] Test names describe the behavior being verified
 - [ ] No tests were skipped or disabled
 - [ ] Coverage hasn't decreased (if tracked)
+- [ ] No flaky tests in the main suite (any found are quarantined with a fix-or-delete deadline)
+- [ ] No `sleep()` or arbitrary timeouts used to resolve timing issues
 
 **Note:** Run each test command after a change that could affect the result. After a clean run, don't repeat the same command unless the code has changed since — re-running on unchanged code adds no confidence.
