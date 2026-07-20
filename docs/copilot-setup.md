@@ -18,6 +18,8 @@ This installs the skills in `.agents/skills/`, one of Copilot's supported projec
 npx skills add addyosmani/agent-skills --agent github-copilot --skill spec-driven-development --skill test-driven-development --skill code-review-and-quality --copy --yes
 ```
 
+Agent skills work in Copilot cloud agent, code review, Copilot CLI, the Copilot app, and VS Code agent mode.
+
 > **Skills and agents are separate.** The skills CLI installs the workflows in `skills/`; it does not install the personas in `agents/`. Follow the next section if you also want selectable custom agents.
 
 For more details, refer [Adding agent skills for GitHub Copilot](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills).
@@ -26,23 +28,29 @@ For more details, refer [Adding agent skills for GitHub Copilot](https://docs.gi
 
 Copilot supports specialized agent personas. Use the agent-skills agents:
 
-> **Important:** GitHub Copilot requires custom agent files to be named `*.agent.md`.
-> Files named `*.md` are silently ignored by Copilot.
+> **Important:** Use the `*.agent.md` extension for compatibility across VS Code and GitHub Copilot coding agent.
+> VS Code also detects plain `*.md` files in `.github/agents`, but other Copilot surfaces may not.
 > See [VS Code custom agents docs](https://code.visualstudio.com/docs/agent-customization/custom-agents#_custom-agent-file-structure) for details.
+
+If you installed only the skills with `npx`, clone the source once outside your project so the persona files are available:
+
+```bash
+git clone --depth 1 https://github.com/addyosmani/agent-skills.git ../agent-skills-source
+```
 
 ```bash
 # Create the agents directory and copy agent definitions
 mkdir -p .github/agents
-cp /path/to/agent-skills/agents/code-reviewer.md .github/agents/code-reviewer.agent.md
-cp /path/to/agent-skills/agents/test-engineer.md .github/agents/test-engineer.agent.md
-cp /path/to/agent-skills/agents/security-auditor.md .github/agents/security-auditor.agent.md
-cp /path/to/agent-skills/agents/web-performance-auditor.md .github/agents/web-performance-auditor.agent.md
+cp ../agent-skills-source/agents/code-reviewer.md .github/agents/code-reviewer.agent.md
+cp ../agent-skills-source/agents/test-engineer.md .github/agents/test-engineer.agent.md
+cp ../agent-skills-source/agents/security-auditor.md .github/agents/security-auditor.agent.md
+cp ../agent-skills-source/agents/web-performance-auditor.md .github/agents/web-performance-auditor.agent.md
 ```
 
 PowerShell:
 
 ```powershell
-$source = "C:\path\to\agent-skills\agents"
+$source = "..\agent-skills-source\agents"
 $destination = ".github\agents"
 
 New-Item -ItemType Directory -Force -Path $destination | Out-Null
