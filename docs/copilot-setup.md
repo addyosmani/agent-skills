@@ -2,19 +2,25 @@
 
 ## Setup
 
-### Copilot Instructions
+### Agent Skills
 
 Copilot supports creating agent skills using a `.github/skills`, `.claude/skills`, or `.agents/skills` directory in your repository.
 
-```bash
-mkdir -p .github/skills/test-driven-development .github/skills/code-review-and-quality
+Install all skills from the root of the repository where you use Copilot:
 
-# Create files for essential skills
-cat /path/to/agent-skills/skills/test-driven-development/SKILL.md > .github/skills/test-driven-development/SKILL.md
-cat /path/to/agent-skills/skills/code-review-and-quality/SKILL.md > .github/skills/code-review-and-quality/SKILL.md
+```bash
+npx skills add addyosmani/agent-skills --agent github-copilot --skill '*' --copy --yes
 ```
 
-For more details, refer [Creating agent skills for GitHub Copilot](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/create-skills).
+This installs the skills in `.agents/skills/`, one of Copilot's supported project locations. To start with only the three essential skills:
+
+```bash
+npx skills add addyosmani/agent-skills --agent github-copilot --skill spec-driven-development --skill test-driven-development --skill code-review-and-quality --copy --yes
+```
+
+> **Skills and agents are separate.** The skills CLI installs the workflows in `skills/`; it does not install the personas in `agents/`. Follow the next section if you also want selectable custom agents.
+
+For more details, refer [Adding agent skills for GitHub Copilot](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills).
 
 ### Agent Personas (*.agent.md)
 
@@ -22,7 +28,7 @@ Copilot supports specialized agent personas. Use the agent-skills agents:
 
 > **Important:** GitHub Copilot requires custom agent files to be named `*.agent.md`.
 > Files named `*.md` are silently ignored by Copilot.
-> See [VS Code custom agents docs](https://code.visualstudio.com/docs/copilot/customization/custom-agents#_custom-agent-file-structure) for details.
+> See [VS Code custom agents docs](https://code.visualstudio.com/docs/agent-customization/custom-agents#_custom-agent-file-structure) for details.
 
 ```bash
 # Create the agents directory and copy agent definitions
@@ -30,12 +36,30 @@ mkdir -p .github/agents
 cp /path/to/agent-skills/agents/code-reviewer.md .github/agents/code-reviewer.agent.md
 cp /path/to/agent-skills/agents/test-engineer.md .github/agents/test-engineer.agent.md
 cp /path/to/agent-skills/agents/security-auditor.md .github/agents/security-auditor.agent.md
+cp /path/to/agent-skills/agents/web-performance-auditor.md .github/agents/web-performance-auditor.agent.md
 ```
 
-Invoke agents in Copilot Chat:
-- `@code-reviewer Review this PR`
-- `@test-engineer Analyze test coverage for this module`
-- `@security-auditor Check this endpoint for vulnerabilities`
+PowerShell:
+
+```powershell
+$source = "C:\path\to\agent-skills\agents"
+$destination = ".github\agents"
+
+New-Item -ItemType Directory -Force -Path $destination | Out-Null
+Get-ChildItem -LiteralPath $source -Filter "*.md" | ForEach-Object {
+  $name = [IO.Path]::GetFileNameWithoutExtension($_.Name)
+  Copy-Item -LiteralPath $_.FullName -Destination "$destination\$name.agent.md"
+}
+```
+
+In VS Code, select the persona from the agent picker in Copilot Chat, then enter the task:
+
+- Select `code-reviewer`, then enter `Review this PR`.
+- Select `test-engineer`, then enter `Analyze test coverage for this module`.
+- Select `security-auditor`, then enter `Check this endpoint for vulnerabilities`.
+- Select `web-performance-auditor`, then enter `Audit this web application`.
+
+Custom agents are modes in current VS Code releases, not agent skills. If they do not appear, run **Chat: Open Customizations** to inspect discovery, then run **Developer: Reload Window** after adding the files.
 
 ### Custom Instructions (User Level)
 
@@ -83,5 +107,5 @@ Use the agents for targeted review workflows in Copilot Chat.
 
 1. **Keep instructions concise** — Copilot instructions work best when focused. Summarize the key rules rather than including full skill files.
 2. **Use agents for review** — The code-reviewer, test-engineer, and security-auditor agents are designed for Copilot's agent model.
-3. **Reference in chat** — When working on a specific phase, paste the relevant skill content into Copilot Chat for context.
+3. **Reference in chat** — Skills load automatically when their descriptions match the task. You can also ask Copilot to use a skill explicitly, such as "Use the test-driven-development skill for this change."
 4. **Combine with PR reviews** — Set up Copilot to review PRs using the code-reviewer agent persona.
