@@ -60,14 +60,30 @@ Get-ChildItem -LiteralPath $source -Filter "*.md" | ForEach-Object {
 }
 ```
 
-In VS Code, select the persona from the agent picker in Copilot Chat, then enter the task:
+Open the target repository root in VS Code. In Copilot Chat, select the persona from the agent picker, then enter the task:
 
 - Select `code-reviewer`, then enter `Review this PR`.
 - Select `test-engineer`, then enter `Analyze test coverage for this module`.
 - Select `security-auditor`, then enter `Check this endpoint for vulnerabilities`.
 - Select `web-performance-auditor`, then enter `Audit this web application`.
 
-Custom agents are modes in current VS Code releases, not agent skills. If they do not appear, run **Chat: Open Customizations** to inspect discovery, then run **Developer: Reload Window** after adding the files.
+Custom agents are modes in current VS Code releases, not agent skills or `@` mentions. If they do not appear, run **Chat: Open Customizations** to inspect discovery, then run **Developer: Reload Window** after adding the files.
+
+In GitHub Copilot CLI, run from the target repository root:
+
+```bash
+copilot --agent code-reviewer
+```
+
+To target a repository without changing directories:
+
+```bash
+copilot -C "/path/to/repository" --agent code-reviewer
+```
+
+In an interactive CLI session, use `/agent` to switch personas.
+
+For Copilot cloud agent, commit the `.github/agents/*.agent.md` files and merge them into the repository's default branch. The personas then appear in the custom-agent dropdown on GitHub.
 
 ### Custom Instructions (User Level)
 
