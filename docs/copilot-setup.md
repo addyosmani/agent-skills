@@ -24,50 +24,15 @@ Copilot supports specialized agent personas. Use the agent-skills agents:
 > VS Code also detects plain `*.md` files in `.github/agents`, but other Copilot surfaces may not.
 > See [VS Code custom agents docs](https://code.visualstudio.com/docs/agent-customization/custom-agents#_custom-agent-file-structure) for details.
 
-Skills and personas are separate customizations. Installing or copying skills does not install the personas.
-
-Run this from the target repository root. The source repository is cloned to a temporary directory and removed after the four persona files are copied:
+Skills and personas are separate customizations. Installing or copying skills does not install the personas. The commands below assume this repository is already cloned; replace `/path/to/agent-skills` with the path to that clone.
 
 ```bash
-source_dir="$(mktemp -d)"
-git clone --depth 1 https://github.com/addyosmani/agent-skills.git "$source_dir"
-
+# Create the agents directory and copy agent definitions
 mkdir -p .github/agents
-for agent in code-reviewer test-engineer security-auditor web-performance-auditor; do
-  cp "$source_dir/agents/$agent.md" ".github/agents/$agent.agent.md"
-done
-
-rm -rf "$source_dir"
-```
-
-PowerShell:
-
-```powershell
-$source = Join-Path ([IO.Path]::GetTempPath()) "agent-skills-$([guid]::NewGuid())"
-
-try {
-  git clone --depth 1 https://github.com/addyosmani/agent-skills.git $source
-  if ($LASTEXITCODE -ne 0) {
-    throw "Unable to clone agent-skills."
-  }
-
-  $destination = ".github\agents"
-  New-Item -ItemType Directory -Force -Path $destination | Out-Null
-
-  foreach ($agent in @(
-    "code-reviewer",
-    "test-engineer",
-    "security-auditor",
-    "web-performance-auditor"
-  )) {
-    Copy-Item `
-      -LiteralPath (Join-Path $source "agents\$agent.md") `
-      -Destination (Join-Path $destination "$agent.agent.md")
-  }
-}
-finally {
-  Remove-Item -LiteralPath $source -Recurse -Force -ErrorAction SilentlyContinue
-}
+cp /path/to/agent-skills/agents/code-reviewer.md .github/agents/code-reviewer.agent.md
+cp /path/to/agent-skills/agents/test-engineer.md .github/agents/test-engineer.agent.md
+cp /path/to/agent-skills/agents/security-auditor.md .github/agents/security-auditor.agent.md
+cp /path/to/agent-skills/agents/web-performance-auditor.md .github/agents/web-performance-auditor.agent.md
 ```
 
 Open the target repository root in VS Code. In Copilot Chat, select the persona from the agent picker, then enter the task:
