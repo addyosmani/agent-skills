@@ -2,27 +2,19 @@
 
 ## Setup
 
-### Agent Skills
+### Copilot Instructions
 
 Copilot supports creating agent skills using a `.github/skills`, `.claude/skills`, or `.agents/skills` directory in your repository.
 
-Install all skills from the root of the repository where you use Copilot:
-
 ```bash
-npx skills add addyosmani/agent-skills --agent github-copilot --skill '*' --copy --yes
+mkdir -p .github/skills/test-driven-development .github/skills/code-review-and-quality
+
+# Create files for essential skills
+cat /path/to/agent-skills/skills/test-driven-development/SKILL.md > .github/skills/test-driven-development/SKILL.md
+cat /path/to/agent-skills/skills/code-review-and-quality/SKILL.md > .github/skills/code-review-and-quality/SKILL.md
 ```
 
-This installs the skills in `.agents/skills/`, one of Copilot's supported project locations. To start with only the three essential skills:
-
-```bash
-npx skills add addyosmani/agent-skills --agent github-copilot --skill spec-driven-development --skill test-driven-development --skill code-review-and-quality --copy --yes
-```
-
-Agent skills work in Copilot cloud agent, code review, Copilot CLI, the Copilot app, and VS Code agent mode.
-
-> **Skills and agents are separate.** The skills CLI installs the workflows in `skills/`; it does not install the personas in `agents/`. Follow the next section if you also want selectable custom agents.
-
-For more details, refer [Adding agent skills for GitHub Copilot](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills).
+For more details, refer [Creating agent skills for GitHub Copilot](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/create-skills).
 
 ### Agent Personas (*.agent.md)
 
@@ -32,31 +24,49 @@ Copilot supports specialized agent personas. Use the agent-skills agents:
 > VS Code also detects plain `*.md` files in `.github/agents`, but other Copilot surfaces may not.
 > See [VS Code custom agents docs](https://code.visualstudio.com/docs/agent-customization/custom-agents#_custom-agent-file-structure) for details.
 
-If you installed only the skills with `npx`, clone the source once outside your project so the persona files are available:
+Skills and personas are separate customizations. Installing or copying skills does not install the personas.
+
+Run this from the target repository root. The source repository is cloned to a temporary directory and removed after the four persona files are copied:
 
 ```bash
-git clone --depth 1 https://github.com/addyosmani/agent-skills.git ../agent-skills-source
-```
+source_dir="$(mktemp -d)"
+git clone --depth 1 https://github.com/addyosmani/agent-skills.git "$source_dir"
 
-```bash
-# Create the agents directory and copy agent definitions
 mkdir -p .github/agents
-cp ../agent-skills-source/agents/code-reviewer.md .github/agents/code-reviewer.agent.md
-cp ../agent-skills-source/agents/test-engineer.md .github/agents/test-engineer.agent.md
-cp ../agent-skills-source/agents/security-auditor.md .github/agents/security-auditor.agent.md
-cp ../agent-skills-source/agents/web-performance-auditor.md .github/agents/web-performance-auditor.agent.md
+for agent in code-reviewer test-engineer security-auditor web-performance-auditor; do
+  cp "$source_dir/agents/$agent.md" ".github/agents/$agent.agent.md"
+done
+
+rm -rf "$source_dir"
 ```
 
 PowerShell:
 
 ```powershell
-$source = "..\agent-skills-source\agents"
-$destination = ".github\agents"
+$source = Join-Path ([IO.Path]::GetTempPath()) "agent-skills-$([guid]::NewGuid())"
 
-New-Item -ItemType Directory -Force -Path $destination | Out-Null
-Get-ChildItem -LiteralPath $source -Filter "*.md" | ForEach-Object {
-  $name = [IO.Path]::GetFileNameWithoutExtension($_.Name)
-  Copy-Item -LiteralPath $_.FullName -Destination "$destination\$name.agent.md"
+try {
+  git clone --depth 1 https://github.com/addyosmani/agent-skills.git $source
+  if ($LASTEXITCODE -ne 0) {
+    throw "Unable to clone agent-skills."
+  }
+
+  $destination = ".github\agents"
+  New-Item -ItemType Directory -Force -Path $destination | Out-Null
+
+  foreach ($agent in @(
+    "code-reviewer",
+    "test-engineer",
+    "security-auditor",
+    "web-performance-auditor"
+  )) {
+    Copy-Item `
+      -LiteralPath (Join-Path $source "agents\$agent.md") `
+      -Destination (Join-Path $destination "$agent.agent.md")
+  }
+}
+finally {
+  Remove-Item -LiteralPath $source -Recurse -Force -ErrorAction SilentlyContinue
 }
 ```
 
@@ -131,5 +141,5 @@ Use the agents for targeted review workflows in Copilot Chat.
 
 1. **Keep instructions concise** — Copilot instructions work best when focused. Summarize the key rules rather than including full skill files.
 2. **Use agents for review** — The code-reviewer, test-engineer, and security-auditor agents are designed for Copilot's agent model.
-3. **Reference in chat** — Skills load automatically when their descriptions match the task. You can also ask Copilot to use a skill explicitly, such as "Use the test-driven-development skill for this change."
+3. **Reference in chat** — When working on a specific phase, paste the relevant skill content into Copilot Chat for context.
 4. **Combine with PR reviews** — Set up Copilot to review PRs using the code-reviewer agent persona.
