@@ -208,97 +208,32 @@ PATCH /api/tasks/123
 
 ## Webhook Design
 
-Webhooks are the outbound side of an API: instead of consumers polling for changes, you push events to a URL they provide. The design challenges are different from inbound REST — delivery is inherently unreliable, consumers must be idempotent, and a slow consumer should never block others.
+Webhooks are the outbound side of an API: instead of consumers polling for changes, you push events to a URL they provide. Four decisions determine whether your webhook API is reliable and safe to build on:
 
-### Event Envelope
-
-Every webhook event should follow a consistent envelope so consumers can handle all events with the same code:
+**1. Give every event a stable, unique ID.** Delivery is at-least-once — retries happen. Without a stable `id` field, consumers have no way to de-duplicate:
 
 ```typescript
 interface WebhookEvent {
-  id: string;           // Unique, stable event ID — consumers use this for idempotency
-  type: string;         // e.g. "task.created", "task.completed"
-  timestamp: string;    // ISO 8601
-  version: string;      // Payload schema version — lets you evolve the shape
-  data: unknown;        // Event-specific payload
-}
-
-// Example
-{
-  "id": "evt_01HX9K3MNPQ7RSTUVWXYZ",
-  "type": "task.completed",
-  "timestamp": "2025-06-12T14:32:00Z",
-  "version": "1",
-  "data": { "taskId": "task_abc", "completedBy": "user_123" }
+  id: string;        // Stable across retries — consumers key idempotency on this
+  type: string;      // e.g. "task.completed"
+  timestamp: string; // ISO 8601
+  version: string;   // Schema version — lets you evolve the payload shape
+  data: unknown;
 }
 ```
 
-The `id` field is the most important part: without a stable event ID, consumers cannot de-duplicate retries.
-
-### Signature Verification
-
-Sign every outbound payload so consumers can verify it came from you and wasn't tampered with:
+**2. Sign every outbound payload.** Use HMAC-SHA256; attach as a header; document consumer verification. Design this in from day one — adding required auth after consumers are live forces a coordinated migration:
 
 ```typescript
-import { createHmac } from 'node:crypto';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 
-function signPayload(body: string, secret: string): string {
-  return 'sha256=' + createHmac('sha256', secret).update(body).digest('hex');
-}
-
-// Attach as a header
-headers['X-Webhook-Signature'] = signPayload(rawBody, webhookSecret);
-
-// Consumer verification (timing-safe comparison)
-import { timingSafeEqual } from 'node:crypto';
-
-function verifySignature(body: string, signature: string, secret: string): boolean {
-  const expected = Buffer.from(signPayload(body, secret));
-  const received = Buffer.from(signature);
-  return expected.length === received.length && timingSafeEqual(expected, received);
-}
+const sig = 'sha256=' + createHmac('sha256', secret).update(rawBody).digest('hex');
+headers['X-Webhook-Signature'] = sig;
 ```
 
-Design signature verification in from day one. Adding required auth headers after consumers are live forces a coordinated migration.
+**3. Deliver asynchronously, not in the request path.** Enqueue events; fan-out per consumer. One slow or failing consumer must never block the triggering transaction or delay other consumers.
 
-### Reliable Delivery
-
-Webhook delivery fails. Design for it:
-
-```
-Trigger event
-     │
-     ▼
-Enqueue delivery job (queue-backed, not in-request)
-     │
-     ▼
-Attempt delivery → 2xx received → mark delivered
-     │
-     └── Non-2xx or timeout
-           │
-           ▼
-     Retry with exponential backoff
-     (e.g. 5s → 30s → 5m → 30m → 2h → give up)
-           │
-           └── Max attempts reached → dead-letter queue + alert
-```
-
-- **Deliver asynchronously.** Fan-out to consumers must happen outside the request that triggered the event — one slow consumer must not hold up the triggering transaction.
-- **Deliver at-least-once.** Retries mean duplicates. Consumers must be idempotent using the event `id`.
-- **Respect `Retry-After` headers** if a consumer signals backpressure.
-
-### Consumer Contract
-
-Document what consumers must implement:
-
-```markdown
-## Consuming Webhooks
-
-1. **Verify the signature** on every request before processing.
-2. **Return 2xx immediately** — do your work asynchronously. A response taking > 10s will be treated as a failure.
-3. **Handle duplicates** — use the `id` field to de-duplicate retried events.
-4. **Ignore unknown event types** — return 200 and discard. New event types will be added over time.
-```
+**4. Publish a consumer contract.** Document the four rules consumers must follow: verify the signature before processing; respond 2xx immediately and work asynchronously; de-duplicate on the event `id`; return 200 and discard unknown event types (new types will be added).
 
 ## TypeScript Interface Patterns
 
