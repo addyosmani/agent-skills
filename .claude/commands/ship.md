@@ -19,7 +19,7 @@ In Claude Code, each call passes `subagent_type` matching the persona's `name` f
 In other harnesses without an Agent tool, invoke each persona's system prompt sequentially and treat their outputs as if returned in parallel — the merge phase still works.
 
 Constraints (repo convention + Claude Code mapping):
-- **Do not let one persona delegate to another** — composition stays in this main session (repo rule). Nested subagent spawn is possible on Claude Code v2.1.172+, so enforce the rule in the orchestrator: Phase A personas report findings only; they do not spawn further specialists.
+- **Do not let one persona delegate to another** — composition stays in this main session (repo rule). Nested subagent spawn is possible on current Claude Code releases, so enforce the rule in the orchestrator: Phase A personas report findings only; they do not spawn further specialists.
 - Each subagent gets its own context window and returns only its report to this main session.
 - If you need teammates that talk to each other instead of just reporting back, use Claude Code Agent Teams and reference these personas as teammate types (see `references/orchestration-patterns.md`). Agent Teams still cannot nest.
 

@@ -148,7 +148,7 @@ Keep the distinction clear so agents following [source-driven-development](../sk
 - Do not build deep persona trees (anti-pattern D).
 - Composition stays with slash commands or the user; Agent Teams are the only endorsed multi-persona pattern when teammates must message each other.
 
-**Claude Code platform (verify against official docs; as of v2.1.172+):**
+**Claude Code platform (verify against official docs):**
 
 - **Nested subagents are allowed** — a subagent may spawn its own subagents, up to 5 levels deep. This is *not* a platform hard-block of anti-patterns B/D. Enforce the repo convention in persona design: omit `Agent` from `tools`, or add `Agent` to `disallowedTools`, so a specialist cannot fan out further.
 - **No nested Agent Teams** — teammates still cannot spawn their own teammates. Only the lead manages the team. This part remains platform-enforced.
@@ -221,7 +221,7 @@ Agent Teams is experimental. In `~/.claude/settings.json`:
 }
 ```
 
-Requires Claude Code v2.1.32 or later. The personas in this repo are picked up automatically — no team-config files to author by hand.
+Requires a current Claude Code release with Agent Teams support. The personas in this repo are picked up automatically — no team-config files to author by hand.
 
 ### The trigger prompt
 
@@ -266,7 +266,7 @@ When the investigation lands on a root cause, finish through the **lead** (not a
 - Ask individual teammates to shut down by name when you no longer need them (e.g. "Ask the researcher teammate to shut down"). The teammate can approve and exit gracefully, or reject with an explanation.
 - Prefer graceful teammate shutdown over abandoning live workers mid-tool-call.
 
-As of Claude Code v2.1.178, Agent Teams no longer use separate `TeamCreate` / `TeamDelete` steps: with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`, each session has one implicit team, teammates are spawned directly with the Agent tool, and shared team directories are cleaned up when the session ends. There is no separate "delete the team" tool. If you used split-pane/`tmux` display and a session pane is left behind, clean orphaned `tmux` sessions manually (`tmux ls`, then `tmux kill-session -t <name>`) — see [Agent Teams limitations](https://code.claude.com/docs/en/agent-teams#limitations).
+On current Claude Code releases, Agent Teams no longer use separate `TeamCreate` / `TeamDelete` steps: with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`, each session has one implicit team, teammates are spawned directly with the Agent tool, and shared team directories are cleaned up when the session ends. There is no separate "delete the team" tool. If you used split-pane/`tmux` display and a session pane is left behind, clean orphaned `tmux` sessions manually (`tmux ls`, then `tmux kill-session -t <name>`) — see [Agent Teams limitations](https://code.claude.com/docs/en/agent-teams#limitations).
 
 ### Cost expectation
 
