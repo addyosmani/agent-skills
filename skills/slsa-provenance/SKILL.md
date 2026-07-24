@@ -1,26 +1,25 @@
 ---
 name: slsa-provenance
-description: 'Implements SLSA supply chain security levels 3 and 4. Use when adding provenance attestations to build artifacts, setting up GitHub Actions SLSA workflows, verifying attestations with slsa-verifier or cosign, or auditing a build pipeline for supply chain compliance. Triggers on: SLSA, provenance, attestation, supply chain, sigstore, cosign, rekor.'
+description: "Implements SLSA v1.0 supply chain security, targeting Build Level 3 (the Build track tops out at L3 in v1.0; there is no Build L4). Use when adding provenance attestations to build artifacts, setting up GitHub Actions SLSA workflows, verifying attestations with slsa-verifier or cosign, or auditing a build pipeline for supply chain compliance. Triggers on: SLSA, provenance, attestation, supply chain, sigstore, cosign, rekor."
 ---
 
 # SLSA Provenance
 
 ## Overview
 
-SLSA (Supply-chain Levels for Software Artifacts) makes the build process tamper-evident. Level 3 is the practical target for yubiOS; Level 4 requires fully hermetic builds and two-party review.
+SLSA (Supply-chain Levels for Software Artifacts) makes the build process tamper-evident. Level 3 is the practical target for yubiOS 2014 the SLSA v1.0 Build track runs L1-L3 only. Fully hermetic, reproducible builds with two-party review are source-track-adjacent hygiene beyond L3, not a numbered Build level.
+
+> **Correction (2026-07-24):** the levels table and provenance JSON below originally used the superseded SLSA v0.2 model (combined Source+Build columns, `predicateType: slsa.dev/provenance/v0.2`, in-toto `Statement/v0.1`). **SLSA v1.0 removed the combined Source+Build levels model** — Source requirements were split out of the Build track entirely, and the Build track now runs **L1–L3 only** (there is no Build L4; "L4" language below is v0.2-era and should not be used going forward). Verified against slsa.dev/spec/v1.0/levels and slsa.dev/spec/v1.0/provenance.
 
 ## Level Requirements
 
-| Level | Source | Build | Provenance |
-|---|---|---|---|
-| L1 | any | scripted | generated |
-| L2 | versioned | CI service | authenticated |
-| **L3** | automated | isolated/ephemeral | non-falsifiable (service-signed) |
-| L4 | 2-party reviewed | hermetic + reproducible | complete deps |
+| Level | Build track requirement |
+|---|---|
+| L1 | Provenance exists, showing how the artifact was built |
+| L2 | Provenance is authenticated (signed by a service) |
+| **L3** | Provenance is non-falsifiable — build runs in a hardened, isolated environment the tenant project can't tamper with |
 
-**L3 does not require hermetic builds.** Network access is allowed; isolation is the key property.
-
-**L4 on GitHub Actions is hard** — hermetic builds require declaring all deps and blocking network. Aim for L3, document gaps toward L4.
+**Source-track requirements (versioned history, retention, two-person review) are now a separate SLSA track, not a Build level.** yubiOS's practical target remains Build L3; "hermetic + reproducible + 2-party review" is aspirational source-track-adjacent hygiene, not a numbered Build level to chase.
 
 ---
 
@@ -70,23 +69,30 @@ sha256sum artifact.uki artifact.img | base64 -w0
 
 ## Provenance Format
 
-SLSA provenance is an **in-toto v1.0 Statement** in a **DSSE envelope**, signed by the build service's OIDC identity and logged in **Rekor** (Sigstore transparency log).
+SLSA provenance is an **in-toto v1.0 Statement** (`_type: https://in-toto.io/Statement/v1`) in a **DSSE envelope**, using the **`https://slsa.dev/provenance/v1`** predicate, signed by the build service's OIDC identity and logged in **Rekor** (Sigstore transparency log). The v1.0 predicate separates `buildDefinition` (what was built: `buildType`, `externalParameters`, `internalParameters`, `resolvedDependencies`) from `runDetails` (how it was built: `builder.id` plus invocation metadata) — it no longer uses the old flat `builder`/`buildType`/`invocation`/`materials` shape from v0.2.
 
 ```json
 {
-  "_type": "https://in-toto.io/Statement/v0.1",
-  "predicateType": "https://slsa.dev/provenance/v0.2",
+  "_type": "https://in-toto.io/Statement/v1",
+  "predicateType": "https://slsa.dev/provenance/v1",
   "subject": [{ "name": "artifact.uki", "digest": { "sha256": "abc123..." } }],
   "predicate": {
-    "builder": { "id": "https://github.com/slsa-framework/slsa-github-generator/...@refs/tags/v2.1.0" },
-    "buildType": "...",
-    "invocation": {
-      "configSource": {
-        "uri": "git+https://github.com/yubi-OS/yubiOS",
-        "entryPoint": ".github/workflows/release.yml"
-      }
+    "buildDefinition": {
+      "buildType": "https://slsa-framework.github.io/slsa-github-generator/generic@v1",
+      "externalParameters": {
+        "workflow": {
+          "ref": "refs/heads/main",
+          "repository": "https://github.com/yubi-OS/yubiOS",
+          "path": ".github/workflows/release.yml"
+        }
+      },
+      "internalParameters": {},
+      "resolvedDependencies": [{ "uri": "git+https://github.com/yubi-OS/yubiOS@refs/heads/main", "digest": { "gitCommit": "..." } }]
     },
-    "materials": [{ "uri": "git+...", "digest": { "sha1": "..." } }]
+    "runDetails": {
+      "builder": { "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v2.1.0" },
+      "metadata": { "invocationId": "..." }
+    }
   }
 }
 ```

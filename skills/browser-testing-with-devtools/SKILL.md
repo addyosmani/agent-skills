@@ -21,6 +21,8 @@ Use Chrome DevTools MCP to give your agent eyes into the browser. This bridges t
 
 **When NOT to use:** Backend-only changes, CLI tools, or code that doesn't run in a browser.
 
+> **Environment note (2026-07-24):** this skill assumes a Claude-Code-style local `.mcp.json` project config running `npx chrome-devtools-mcp`. That setup doesn't exist in Sauna's actual runtime: Sauna has its own `browser_use` tool for interactive browser tasks and its own `connect_account`/`mcp` CLI flow for MCP servers, not a project-local `.mcp.json`. yubiOS itself has no browser UI in scope (it's a boot-chain/OS project), so this skill is unlikely to trigger for yubiOS work — if a future yubiOS admin UI or attestation dashboard needs browser verification, translate the workflow below to Sauna's `browser_use` tool rather than following the MCP setup steps literally.
+
 ## Setting Up Chrome DevTools MCP
 
 ### Installation

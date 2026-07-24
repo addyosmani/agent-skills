@@ -18,7 +18,7 @@ Turns a project into a story that travels. Works for technical open-source launc
 
 The current active project is **yubios** — a TPM-free, OEM-friendly bootable Linux OS that uses the YubiKey as the sole root of trust across the full stack: Secure Boot signing, disk encryption (LUKS via FIDO2), application auth (PAM-U2F), SSH (resident ed25519-sk keys), and user onboarding.
 
-Repo: https://github.com/corning-croak-cable/yubios
+Repo: https://github.com/yubi-OS/yubiOS
 
 **Lead angle:** YubiKey as the only root of trust, full stack — no TPM required.
 
@@ -110,7 +110,7 @@ Do NOT cross-post to Reddit subreddits within the same hour — spacing 30-60 mi
 ```
 Show HN: yubios – bootable Linux with YubiKey as the sole root of trust (no TPM)
 
-https://github.com/corning-croak-cable/yubios
+https://github.com/yubi-OS/yubiOS
 
 Most Linux security guides still treat TPM as the hardware anchor for disk encryption and 
 Secure Boot — but TPM is OEM-controlled, absent on a lot of ARM hardware, and a black box. 
@@ -133,7 +133,7 @@ Happy to answer questions about the FIDO2/PIV boundary or the ARM64 Surface supp
 ```
 Title: yubios: TPM-free Linux using YubiKey for boot signing, disk encryption, PAM, and SSH
 
-Full write-up: https://github.com/corning-croak-cable/yubios
+Full write-up: https://github.com/yubi-OS/yubiOS
 
 Built this as an alternative to TPM-based disk encryption for hardware where the TPM is 
 either absent (Snapdragon ARM64), vendor-locked, or not trusted (corporate MDM scenarios).
@@ -156,7 +156,7 @@ Questions welcome on the threat model or the ARM64 Surface hardware support.
 ```
 Title: I built a Linux distro where your YubiKey controls everything — boot, encryption, login, SSH
 
-https://github.com/corning-croak-cable/yubios
+https://github.com/yubi-OS/yubiOS
 
 If you have a YubiKey (even the basic Security Key), you have better hardware security than 
 most laptops trust. Most operating systems ignore it except for 2FA. yubios uses it for everything:
@@ -189,7 +189,7 @@ It's relevant now because ARM64 hardware (Surface Snapdragon Elite X, etc.) ofte
 a usable TPM, and enterprise YubiKey deployments are ubiquitous — but most distributions 
 still treat these as 2FA-only devices. yubios demonstrates the full integration.
 
-GitHub: https://github.com/corning-croak-cable/yubios
+GitHub: https://github.com/yubi-OS/yubiOS
 
 Happy to answer technical questions or provide a briefing. The repo includes architecture 
 decision records for every non-obvious security choice.

@@ -200,4 +200,4 @@ After instrumenting a feature, confirm:
 - [ ] Every new alert is symptom-based, has a runbook link, and was test-fired once
 - [ ] An induced failure in staging was located via telemetry alone, without reading the source
 
-For the at-a-glance version of this list, including the pre-launch instrumentation gate, see `references/observability-checklist.md`.
+Treat the list above, including the pre-launch instrumentation gate, as the at-a-glance checklist.
