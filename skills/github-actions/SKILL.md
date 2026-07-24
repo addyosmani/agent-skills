@@ -1,6 +1,18 @@
 ---
 name: github-actions
-description: 'GitHub Actions for the yubi-OS org: workflow file structure, event triggers, GITHUB_TOKEN permissions, yubiOS-specific pinned action SHAs, the dhi.io container pattern, triggering workflows via the GitHub REST API (workflow_dispatch), reading run status and logs via API, and the `workflow` scope requirement with all solutions (BLOCKER-001). Use when writing, debugging, or triggering GitHub Actions workflows in any yubi-OS repo. Pairs with `github-api` (REST patterns) and the docker-*-action skills (build-push, setup-buildx, login, metadata, bake). Triggers on: GitHub Actions, workflow yml, .github/workflows, workflow_dispatch, on: push, on: pull_request, GITHUB_TOKEN, workflow scope, actions/checkout, trigger workflow API, actions/runs, workflow dispatch API, yubiOS-ci.yml, ci workflow, actions run logs.'
+description: >-
+  GitHub Actions for the yubi-OS org: workflow file structure, event triggers,
+  GITHUB_TOKEN permissions, yubiOS-specific pinned action SHAs, the dhi.io
+  container pattern, triggering workflows via the GitHub REST API
+  (workflow_dispatch), reading run status and logs via API, and the `workflow`
+  scope requirement with all solutions (BLOCKER-001). Use when writing,
+  debugging, or triggering GitHub Actions workflows in any yubi-OS repo.
+  Pairs with `github-api` (REST patterns) and the docker-*-action skills
+  (build-push, setup-buildx, login, metadata, bake). Triggers on: GitHub
+  Actions, workflow yml, .github/workflows, workflow_dispatch, on: push,
+  on: pull_request, GITHUB_TOKEN, workflow scope, actions/checkout, trigger
+  workflow API, actions/runs, workflow dispatch API, yubiOS-ci.yml,
+  ci workflow, actions run logs.
 ---
 
 # GitHub Actions (yubi-OS)
@@ -17,8 +29,8 @@ Every workflow in `yubi-OS/*` must follow these rules from AGENTS.md:
 2. **Container image must use the approved dhi.io digest** (or be absent).
 3. **Only approved actions are allowed** — see the allowlist below.
 4. **Workflow files live at `<repo>/.github/workflows/*.yml`.** Edit these directly via
-   the "yubi-OS SU (fine-grained)" connection (`conn_fNLu9cx2iEZ2`, has `Workflows: Write`)
-   — see BLOCKER-001 (resolved). No more staging to `<repo>/2026/<name>.yml` or `refs/<name>.yml`; that convention is retired as of 2026-07-09.
+   the locally configured Sauna GitHub connection (fine-grained PAT with `Workflows: Write`).
+   No more staging to `<repo>/2026/<name>.yml` or `refs/<name>.yml`; that convention is retired as of 2026-07-09.
 
 ### Approved action SHAs (from AGENTS.md)
 
@@ -145,11 +157,14 @@ jobs:
 
 ---
 
-## BLOCKER-001 — `workflow` scope (writing `.github/workflows/` files) — RESOLVED 2026-07-09
+## BLOCKER-001 — `workflow` scope (writing `.github/workflows/` files) — CLOSED 2026-07-24
 
-**Resolved via Solution A below.** The "yubi-OS SU (fine-grained)" connection (`conn_fNLu9cx2iEZ2`) has `Workflows: Write` and `Contents: Read and write` — pass it in `connections` and PUT/PATCH `.github/workflows/*.yml` directly via the Contents or Git Data API. No more manual copy-paste, no more staging at `<repo>/2026/` or `<repo>/refs/`.
+**Resolution:** GitHub credentials were consolidated into a single fine-grained PAT
+(configured locally as a Sauna connection). Use it for all GitHub API work including
+workflow-file writes. If a `.github/workflows/**` write 404s, the PAT is missing
+`Workflows: Write` — escalate to the maintainer, don't work around it.
 
-**Historical context (why this was ever a problem):** The `corning-croak-cable` classic PAT (the default `github` connected account) is missing the `workflow` scope, so it 404s/403s on any `.github/workflows/*.yml` write. `GITHUB_TOKEN` inside a running workflow also can't self-modify workflow files (GitHub security hardening). That default account is still scope-limited — always use the SU fine-grained PAT for workflow file writes, not the default `github` account.
+**Historical context (why this was ever a problem):** classic PATs without the `workflow` scope 404/403 on any `.github/workflows/*.yml` write, and `GITHUB_TOKEN` inside a running workflow can't self-modify workflow files (GitHub security hardening).
 
 
 **Confirmed token scopes:**
