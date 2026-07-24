@@ -1,6 +1,16 @@
 ---
 name: github-api
-description: 'GitHub REST API patterns for the yubi-OS org. Covers the four operations used constantly: (1) Git Data API — committing files without cloning (blob→tree→commit→ref chain); (2) Contents API — reading and writing single files via base64; (3) Issues/PRs/Labels API — creating issues, draft PRs, labels, and posting comments; (4) Repos/Orgs/Forks — forking repos, listing org repos, fetching branch SHAs. Use when making any GitHub API call: pushing code, creating branches, filing issues, opening PRs, reading files, or forking repos. The `workflow` scope constraint is resolved for yubi-OS — use the SU fine-grained PAT. Triggers on: GitHub API, REST API github, git blob, git tree, git commit API, create branch, create PR, create issue, draft PR, fork repo, contents API, PUT file github, GitHub token.'
+description: >-
+  GitHub REST API patterns for the yubi-OS org. Covers the four operations used
+  constantly: (1) Git Data API — committing files without cloning (blob→tree→commit→ref
+  chain); (2) Contents API — reading and writing single files via base64; (3)
+  Issues/PRs/Labels API — creating issues, draft PRs, labels, and posting comments;
+  (4) Repos/Orgs/Forks — forking repos, listing org repos, fetching branch SHAs.
+  Use when making any GitHub API call: pushing code, creating branches, filing
+  issues, opening PRs, reading files, or forking repos. The `workflow` scope
+  constraint is resolved for yubi-OS — use the locally configured GitHub credential. Triggers on: GitHub API, REST API
+  github, git blob, git tree, git commit API, create branch, create PR, create issue,
+  draft PR, fork repo, contents API, PUT file github, GitHub token.
 ---
 
 # GitHub REST API (yubi-OS patterns)
@@ -20,10 +30,9 @@ const h = {
 const base = 'https://api.github.com/repos/yubi-OS/yubiOS';
 ```
 
-**Token scope note:** The default `github` connected account (classic PAT) lacks the
-`workflow` scope and 403s on any `.github/workflows/*.yml` write. Use the "yubi-OS SU
-(fine-grained)" connection (`conn_fNLu9cx2iEZ2`, has `Workflows: Write`) instead — it
-edits `.github/workflows/` directly via either pattern below. No staging needed.
+**Auth note:** GitHub API calls authenticate through the locally configured Sauna
+GitHub connection (a fine-grained PAT). Verify with a `GET /user` whoami at session
+start before write operations.
 
 ---
 
@@ -265,9 +274,8 @@ const OWNER = 'yubi-OS';
 const REPO  = 'yubiOS';
 const BASE  = `https://api.github.com/repos/${OWNER}/${REPO}`;
 // Default branch: main
-// Default token: personal access token for corning-croak-cable (no workflow scope)
-// For .github/workflows/*.yml writes: use conn_fNLu9cx2iEZ2 ("yubi-OS SU (fine-grained)")
-// instead — it has Workflows: Write and edits workflow files directly, no staging.
+// Auth: the locally configured Sauna GitHub connection (fine-grained PAT) — used for
+// ALL GitHub calls, including .github/workflows/*.yml writes.
 ```
 
 ---
