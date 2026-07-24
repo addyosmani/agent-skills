@@ -40,9 +40,26 @@ jobs:
       - name: Validate commands across all tool directories
         run: node scripts/validate-commands.js
 
+  validate-links:
+    name: Validate repository-local Markdown links
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Test Markdown link validator
+        run: node --test scripts/validate-links-test.js
+
+      - name: Validate repository-local Markdown links
+        run: node scripts/validate-links.js
+
   validate:
     name: Validate plugin structure
-    needs: [validate-skills, validate-commands]
+    needs: [validate-skills, validate-commands, validate-links]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
