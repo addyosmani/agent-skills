@@ -10,6 +10,8 @@
  * Checks (errors block CI):
  *   - SKILL.md exists in every skill directory
  *   - YAML frontmatter present with 'name' and 'description' fields
+ *   - frontmatter parses cleanly (block scalars and comments supported;
+ *     malformed lines and non-string name/description values are errors)
  *   - frontmatter 'name' matches the directory name
  *   - directory name is lowercase-hyphen-separated (skill-anatomy.md: Naming Conventions)
  *   - description does not exceed 1024 characters
@@ -62,15 +64,29 @@ const SECTION_EXEMPT_SKILLS = {
 // Regex patterns that indicate an explicit cross-skill reference.
 // Only these patterns trigger the dead-reference warning — generic
 // backtick strings in code blocks are intentionally excluded.
-const SKILL_REF_PATTERNS = [
-  /\buse the `([a-z][a-z0-9-]+[a-z0-9])` skill/g,
-  /\bfollow the `([a-z][a-z0-9-]+[a-z0-9])` skill/g,
-  /\binvoke the `([a-z][a-z0-9-]+[a-z0-9])` skill/g,
-  /\bcontinue with `([a-z][a-z0-9-]+[a-z0-9])`/g,
-  /\buse `([a-z][a-z0-9-]+[a-z0-9])` skill/g,
-  /`([a-z][a-z0-9-]+[a-z0-9])` skill\b/g,
+//
+// PROSE patterns are matched against fence-stripped content, so example
+// references inside code blocks never produce dead-reference warnings.
+// DIAGRAM patterns are matched against the full content because the ASCII
+// lifecycle diagrams they target live inside fenced blocks.
+//
+// The riskier prose patterns (bold bullets, paths, bare see/follow) capture
+// only hyphenated names — every skill in the catalog is multi-word, and the
+// hyphen requirement keeps single backticked words like `main` from matching.
+const PROSE_REF_PATTERNS = [
+  /\b[Uu]se the `([a-z][a-z0-9-]+[a-z0-9])` skill/g,
+  /\b[Ff]ollow the `([a-z][a-z0-9-]+[a-z0-9])` skill/g,
+  /\b[Ii]nvoke the `([a-z][a-z0-9-]+[a-z0-9])` skill/g,
+  /\b[Cc]ontinue with `([a-z][a-z0-9-]+[a-z0-9])`/g,
+  /\b[Uu]se `([a-z][a-z0-9-]+[a-z0-9])` skill/g,
+  /`([a-z][a-z0-9-]+[a-z0-9])` skills?\b/g,
   /`([a-z][a-z0-9-]+[a-z0-9])` persona\b/g,
-  /\bsee `([a-z][a-z0-9-]+[a-z0-9])`/g,
+  /\b[Ss]ee `([a-z0-9]+(?:-[a-z0-9]+)+)`/g,
+  /\b[Ff]ollow `([a-z0-9]+(?:-[a-z0-9]+)+)`/g,
+  /^\s*[-*] \*\*`([a-z0-9]+(?:-[a-z0-9]+)+)`/gm,   // relationship bullets: - **`skill-name`**: …
+  /\bskills\/([a-z0-9]+(?:-[a-z0-9]+)+)\/SKILL\.md/g,
+];
+const DIAGRAM_REF_PATTERNS = [
   /──→ ([a-z][a-z0-9-]+[a-z0-9])\b/g,          // ASCII diagram arrows
   /→ `([a-z][a-z0-9-]+[a-z0-9])`/g,
 ];
@@ -87,39 +103,132 @@ function stripFencedCodeBlocks(content) {
 
 /**
  * Parse YAML-style frontmatter from the top of a markdown file.
- * Returns a key→value object, or null if no frontmatter block found.
- * Values are stripped of surrounding quotes.
+ * Returns { fields, problems }, or null if no frontmatter block found.
+ *
+ * Supported YAML subset (the shapes docs/skill-anatomy.md sanctions):
+ *   - top-level `key: value` plain scalars
+ *   - single/double-quoted scalars (matching quotes stripped)
+ *   - literal (|) and folded (>) block scalars, with -/+ chomping
+ *   - full-line comments and trailing comments on unquoted scalars
+ *
+ * Anything else — a line that parses as none of the above, an unterminated
+ * quote, or a flow/block collection value — is reported in `problems`
+ * instead of being silently accepted or skipped. Non-scalar values are set
+ * to null so callers can distinguish "present but not a string" from absent.
  */
 function parseFrontmatter(content) {
   const match = content.match(/^---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*\r?\n/);
   if (!match) return null;
 
-  const result = {};
-  for (const line of match[1].split(/\r?\n/)) {
-    const colonIdx = line.indexOf(':');
-    if (colonIdx === -1) continue;
-    const key   = line.slice(0, colonIdx).trim();
-    const value = line.slice(colonIdx + 1).trim().replace(/^['"]|['"]$/g, '');
-    if (key) result[key] = value;
+  const fields = {};
+  const problems = [];
+  const lines = match[1].split(/\r?\n/);
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    if (trimmed === '' || trimmed.startsWith('#')) continue;
+
+    const kv = line.match(/^([A-Za-z0-9_-]+):(.*)$/);
+    if (!kv) {
+      problems.push(`Malformed frontmatter line ${i + 1}: "${trimmed}"`);
+      continue;
+    }
+    const key = kv[1];
+    let raw = kv[2].trim();
+
+    // Block scalar: | or > with optional indentation indicator and chomping
+    const block = raw.match(/^([|>])((?:[0-9]|[+-]){0,2})[ \t]*(?:#.*)?$/);
+    if (block) {
+      const folded = block[1] === '>';
+      const keep   = block[2].includes('+');
+      const strip  = block[2].includes('-');
+      const body = [];
+      let indent = null;
+      while (i + 1 < lines.length) {
+        const next = lines[i + 1];
+        if (next.trim() === '') { body.push(''); i++; continue; }
+        const lead = next.match(/^[ ]+/);
+        if (!lead || (indent !== null && lead[0].length < indent)) break;
+        if (indent === null) indent = lead[0].length;
+        body.push(next.slice(indent));
+        i++;
+      }
+      let value;
+      if (folded) {
+        value = body.reduce((acc, l) => {
+          if (l === '') return `${acc}\n`;
+          if (acc === '' || acc.endsWith('\n')) return acc + l;
+          return `${acc} ${l}`;
+        }, '');
+      } else {
+        value = body.join('\n');
+      }
+      value = value.replace(/\n+$/, '');
+      if (keep && !strip && value !== '') value += '\n';
+      fields[key] = value;
+      continue;
+    }
+
+    if (raw === '') {
+      // A bare `key:` followed by indented lines is a nested block
+      // collection — not a string. Consume it and flag the key.
+      if (i + 1 < lines.length && /^[ ]+\S/.test(lines[i + 1])) {
+        while (i + 1 < lines.length && (/^[ ]+\S/.test(lines[i + 1]) || lines[i + 1].trim() === '')) i++;
+        problems.push(`Frontmatter '${key}' is a nested collection, not a string value`);
+        fields[key] = null;
+      } else {
+        fields[key] = '';
+      }
+      continue;
+    }
+
+    if (raw[0] === '"' || raw[0] === "'") {
+      const quote = raw[0];
+      if (raw.length >= 2 && raw.endsWith(quote)) {
+        fields[key] = raw.slice(1, -1);
+      } else {
+        problems.push(`Frontmatter '${key}' has an unterminated ${quote === '"' ? 'double' : 'single'}-quoted value`);
+        fields[key] = null;
+      }
+      continue;
+    }
+
+    // Unquoted scalar: strip a trailing comment (YAML requires whitespace
+    // before the #), then reject flow collections as non-string values.
+    const hash = raw.search(/[ \t]#/);
+    if (hash !== -1) raw = raw.slice(0, hash).trimEnd();
+    if (raw[0] === '[' || raw[0] === '{') {
+      problems.push(`Frontmatter '${key}' is a flow collection, not a string value`);
+      fields[key] = null;
+      continue;
+    }
+    fields[key] = raw;
   }
-  return result;
+
+  return { fields, problems };
 }
 
 /**
  * Collect all explicit skill cross-references from content.
- * Only matches against the SKILL_REF_PATTERNS list to avoid
- * false-positives from inline code snippets.
+ * Prose patterns run against fence-stripped content so example references
+ * inside code blocks are not collected; diagram patterns run against the
+ * full content because ASCII lifecycle diagrams live inside fences.
  */
 function extractSkillReferences(content) {
   const refs = new Set();
-  for (const pattern of SKILL_REF_PATTERNS) {
-    // Reset lastIndex for global regexes
-    pattern.lastIndex = 0;
-    let m;
-    while ((m = pattern.exec(content)) !== null) {
-      refs.add(m[1]);
+  const scan = (patterns, text) => {
+    for (const pattern of patterns) {
+      // Reset lastIndex for global regexes
+      pattern.lastIndex = 0;
+      let m;
+      while ((m = pattern.exec(text)) !== null) {
+        refs.add(m[1]);
+      }
     }
-  }
+  };
+  scan(PROSE_REF_PATTERNS, stripFencedCodeBlocks(content));
+  scan(DIAGRAM_REF_PATTERNS, content);
   return refs;
 }
 
@@ -136,14 +245,20 @@ function lintSkillContent(dirName, content, knownSkills) {
   let   exempt   = false;
 
   // ── Frontmatter ──────────────────────────────────────────────────────────
-  const fm = parseFrontmatter(content);
-  if (!fm) {
+  const parsed = parseFrontmatter(content);
+  if (!parsed) {
     errors.push('Missing or malformed YAML frontmatter (expected --- block at top of file)');
     return { errors, warnings, exempt };
   }
+  const fm = parsed.fields;
+  for (const problem of parsed.problems) {
+    errors.push(`Invalid YAML frontmatter: ${problem}`);
+  }
 
-  if (!fm.name) {
-    errors.push("Frontmatter missing required field: 'name'");
+  // A null field means parseFrontmatter already reported why it isn't a
+  // usable string — don't stack a misleading "missing field" error on top.
+  if (typeof fm.name !== 'string' || fm.name === '') {
+    if (fm.name !== null) errors.push("Frontmatter missing required field: 'name'");
   } else if (fm.name !== dirName) {
     errors.push(`Frontmatter name '${fm.name}' does not match directory name '${dirName}'`);
   }
@@ -152,8 +267,8 @@ function lintSkillContent(dirName, content, knownSkills) {
     errors.push(`Directory name '${dirName}' is not lowercase-hyphen-separated (skill-anatomy.md: Naming Conventions)`);
   }
 
-  if (!fm.description) {
-    errors.push("Frontmatter missing required field: 'description'");
+  if (typeof fm.description !== 'string' || fm.description === '') {
+    if (fm.description !== null) errors.push("Frontmatter missing required field: 'description'");
   } else {
     if (fm.description.length > MAX_DESCRIPTION_LENGTH) {
       errors.push(
