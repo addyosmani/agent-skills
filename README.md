@@ -45,7 +45,7 @@ Skills also activate automatically based on what you're doing — designing an A
 **Fastest path — any agent, one command.** The open [skills CLI](https://github.com/vercel-labs/skills) installs into 70+ agents (Claude Code, Cursor, Codex, Copilot, Cline, and more):
 
 ```bash
-npx skills add addyosmani/agent-skills            # install all 24 skills
+npx skills add addyosmani/agent-skills            # install all 25 skills
 npx skills add addyosmani/agent-skills --list     # browse before installing
 ```
 
@@ -193,9 +193,9 @@ Already installed? How you roll the pack out depends on your codebase. The **[Ad
 
 ---
 
-## All 24 Skills
+## All 25 Skills
 
-The commands above are entry points. The pack includes 24 skills total — 23 lifecycle skills plus the `using-agent-skills` meta-skill. Each skill is a structured workflow with steps, verification gates, and anti-rationalization tables. You can also reference any skill directly.
+The commands above are entry points. The pack includes 25 skills total — 24 lifecycle skills plus the `using-agent-skills` meta-skill. Each skill is a structured workflow with steps, verification gates, and anti-rationalization tables. You can also reference any skill directly.
 
 ### Meta - Discover which skill applies
 
@@ -224,6 +224,7 @@ The commands above are entry points. The pack includes 24 skills total — 23 li
 | [incremental-implementation](skills/incremental-implementation/SKILL.md) | Thin vertical slices - implement, test, verify, commit. Feature flags, safe defaults, rollback-friendly changes | Any change touching more than one file |
 | [test-driven-development](skills/test-driven-development/SKILL.md) | Red-Green-Refactor, test pyramid (80/15/5), test sizes, DAMP over DRY, Beyonce Rule, browser testing | Implementing logic, fixing bugs, or changing behavior |
 | [context-engineering](skills/context-engineering/SKILL.md) | Feed agents the right information at the right time - rules files, context packing, MCP integrations | Starting a session, switching tasks, or when output quality drops |
+| [repository-memory](skills/repository-memory/SKILL.md) | Preserve durable, non-obvious codebase knowledge as tiny reviewed memory capsules colocated with the code - checked retrieval, refuse-if-uncertain | An investigation surfaces knowledge future agents will need, or an AGENT_MEMORY.md exists in code you touch |
 | [source-driven-development](skills/source-driven-development/SKILL.md) | Ground every framework decision in official documentation - verify, cite sources, flag what's unverified | You want authoritative, source-cited code for any framework or library |
 | [doubt-driven-development](skills/doubt-driven-development/SKILL.md) | Adversarial fresh-context review of every non-trivial decision in-flight - CLAIM → EXTRACT → DOUBT → RECONCILE → STOP, with optional user-authorized cross-model escalation | Stakes are high (production, security, irreversible), working in unfamiliar code, or a confident output is cheaper to verify now than to debug later |
 | [frontend-ui-engineering](skills/frontend-ui-engineering/SKILL.md) | Component architecture, design systems, state management, responsive design, WCAG 2.1 AA accessibility | Building or modifying user-facing interfaces |
@@ -324,13 +325,14 @@ Every skill follows a consistent anatomy:
 
 ```
 agent-skills/
-├── skills/                            # 24 skills (23 lifecycle + 1 meta)
+├── skills/                            # 25 skills (24 lifecycle + 1 meta)
 │   ├── interview-me/                  #   Define
 │   ├── idea-refine/                   #   Define
 │   ├── spec-driven-development/       #   Define
 │   ├── planning-and-task-breakdown/   #   Plan
 │   ├── incremental-implementation/    #   Build
 │   ├── context-engineering/           #   Build
+│   ├── repository-memory/             #   Build
 │   ├── source-driven-development/     #   Build
 │   ├── doubt-driven-development/      #   Build
 │   ├── frontend-ui-engineering/       #   Build
