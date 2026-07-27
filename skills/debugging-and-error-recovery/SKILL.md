@@ -317,11 +317,6 @@ Add logging only when it helps. Remove it when done.
 
 ## Getting Unstuck — the escalation ladder
 
-(Distilled from a real 10-hour multi-machine flake hunt that ended in an
-upstream root cause, a 20-second reproducer, and a shipped fix — public
-writeup: https://github.com/cloudflare/workers-sdk/issues/14641#issuecomment-5087174647.
-Each rung earned its place that night.)
-
 When the triage loop stalls — hypotheses keep dying, the failure won't
 reproduce, or every probe comes back ambiguous — escalate deliberately
 instead of re-walking dead paths:
