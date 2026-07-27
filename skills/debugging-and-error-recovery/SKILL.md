@@ -322,58 +322,57 @@ reproduce, or every probe comes back ambiguous — escalate deliberately
 instead of re-walking dead paths:
 
 1. **Search the issue tracker DIRECTLY, not the web.** `gh search issues
---state open --sort updated` (and `gh search prs`) surfaces reports web
-   search cannot rank yet — our root-cause issue was 25 hours old and three
-   web-search passes missed it. Read PR _diffs_, not descriptions: two open
-   PRs "for our bug" turned out to patch different components entirely.
+   --state open --sort updated` (and `gh search prs`) surfaces reports web
+   search cannot rank yet — an issue filed hours or days ago is invisible to
+   a search engine and may be exactly your bug. Read PR _diffs_, not
+   descriptions: a PR whose title sounds like your bug may patch a different
+   component entirely.
 2. **Read the source you are actually running.** Docs describe intent;
-   `node_modules` (or `opensrc`/a repo clone) is the behavior. Pin claims to
+   `node_modules` (or a pinned repo clone) is the behavior. Pin claims to
    file:line in the INSTALLED version, and before patching anything, prove
-   which file the process loads (stack-trace paths, then `grep` the patch
-   marker in that exact file).
+   which file the process loads (stack-trace paths, then `grep` a marker in
+   that exact file).
 3. **Name the error before theorizing about it.** If a tool swallows or
    blanks error detail (empty messages, generic wrappers), add one line of
-   instrumentation at the boundary to print the RAW payload — cheapest,
-   highest-yield move available. We built four wrong theories on an "empty
-   error" that upstream code provably emptied itself; one `JSON.stringify`
-   at the right `case "error":` named the trigger on the next crash.
-4. **Build a micro-reproduction from the suspected mechanism.** Collapse an
-   8-minute coin-flip repro into a seconds-scale deterministic one: extract
-   the mechanism's preconditions (for us: keep-alive sockets idling across a
-   5s boundary) and sample them densely (32 parallel lanes swept ±40ms
-   around the boundary). Iterate single-variable arms; a zero-failure arm is
-   as load-bearing as a kill — ours split "idle too long" from "sent at the
-   boundary" and killed a wrong mitigation before we shipped it.
+   instrumentation at the swallowing boundary to print the RAW payload —
+   the cheapest, highest-yield move available. It is easy to build several
+   wrong theories on an absence the tooling itself manufactured; one print
+   statement can name the trigger on its next occurrence.
+4. **Build a micro-reproduction from the suspected mechanism.** Collapse a
+   minutes-long, low-probability repro into a seconds-scale deterministic
+   one: extract the mechanism's preconditions (e.g. pooled connections
+   idling across a server's timeout boundary) and sample them densely (many
+   parallel lanes with small timing offsets). Iterate single-variable arms;
+   a zero-failure arm is as load-bearing as a failure — it can split two
+   adjacent hypotheses and kill a wrong mitigation before it ships.
 5. **A/B candidate fixes directly against the installed dist.** Back up the
    file, apply the candidate (even someone else's proposed patch),
    parse-check, run the micro-repro. Minutes per hypothesis, and a clean
-   negative ("the upstream patch does NOT stop our crash") is often the most
-   valuable result. Productionize survivors as tracked patches
-   (`pnpm patch`), never loose `node_modules` edits.
-6. **Bring fresh adversarial capacity.** A fresh-context reviewer (or a
-   stronger model — the operator upgraded models mid-session and it paid)
-   pointed at your artifacts with the brief "attack these conclusions"
-   found five wrong claims our own loop had normalized, including the
-   payload-drop in #3. The reviewer must verify against raw artifacts, not
-   your prose, and must never be anchored with your favored hypothesis.
+   negative — the proposed patch does not stop the failure — is often the
+   most valuable result. Productionize survivors as tracked patches
+   (`pnpm patch` or equivalent), never loose `node_modules` edits.
+6. **Bring fresh adversarial capacity.** A fresh-context reviewer (or
+   stronger reasoning capacity) pointed at your artifacts with the brief
+   "attack these conclusions" can surface wrong claims the primary
+   investigation has normalized. The reviewer must verify against raw
+   artifacts, not your prose, and must never be anchored with your favored
+   hypothesis.
 
 Standing instrument rules that make the ladder work:
 
 - **Validate the instrument before trusting a negative.** A probe that has
-  never returned a positive proves nothing by returning a negative (our
-  sampler reported `listen=0` for 330 samples of a passing run — silent
-  `PATH` failure). Run a positive control first.
-- **Assert postconditions, not exit codes.** `mount` with `nofail`,
-  `e2label` past 16 bytes, and a formatted-but-unactivated swap device all
-  exit 0 while doing nothing you wanted.
-- **Keep the whole log** (`tee`), never a `tail` — three replicates in a row
-  lost their failure lists to `tail -100`, reducing rare 8-minute failures
-  to a useless pass count.
+  never returned a positive proves nothing by returning a negative — a
+  sampler can report zero for every sample of a demonstrably healthy system
+  because its underlying command silently failed to run. Run a positive
+  control first.
+- **Assert postconditions, not exit codes.** A mount with `nofail`, a
+  truncated filesystem label, and a formatted-but-unactivated swap device
+  all exit 0 while doing nothing you wanted.
+- **Keep the whole log** (`tee`), never a `tail` — truncation reduces a
+  rare, expensive failure to a useless pass count.
 - **Write disconfirmed leads down** in a CLOSED-LEADS ledger with the
-  evidence that killed them. Most of the hunt's cost was re-walking paths
-  already known dead.
-
-
+  evidence that killed them. Re-walking dead paths is often the largest
+  hidden cost of a long investigation.
 ## Common Rationalizations
 
 | Rationalization | Reality |
