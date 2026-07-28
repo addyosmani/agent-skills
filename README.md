@@ -159,6 +159,25 @@ Use agent definitions from `agents/` as Copilot personas and skill content in `.
 </details>
 
 <details>
+<summary><b>GitHub Copilot CLI</b></summary>
+
+Install agent-skills globally in Copilot CLI using the marketplace commands:
+
+1. Add the marketplace:
+```bash
+/plugin marketplace add addyosmani/agent-skills
+```
+
+2. Install the plugin:
+```bash
+/plugin install agent-skills@addy-agent-skills
+```
+
+Once installed, you can use any of the 20+ skills included in this repository with Copilot CLI as well as GitHub Copilot within Visual Studio and Visual Studio Code. The skills will be automatically available for use in your sessions. See [docs/copilot-cli-setup.md](docs/copilot-cli-setup.md) for more details.
+
+</details>
+
+<details>
   <summary><b>Kiro IDE & CLI </b></summary>
   Skills for Kiro reside under ".kiro/skills/" and can be stored under Project or Global level. Kiro also supports Agents.md. See Kiro docs at https://kiro.dev/docs/skills/
 </details>
