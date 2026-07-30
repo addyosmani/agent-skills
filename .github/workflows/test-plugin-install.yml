@@ -20,6 +20,9 @@ jobs:
       - name: Validate all skills
         run: node scripts/validate-skills.js
 
+      - name: Test skill lint rules
+        run: node --test scripts/lib/skill-lint-test.js
+
       - name: Test skill eval runner
         run: node --test scripts/run-evals-test.js
 
