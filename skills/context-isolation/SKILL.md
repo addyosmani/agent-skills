@@ -30,9 +30,35 @@ Context isolation is not "use fewer tokens" (that's `token-efficiency`) — it's
 - **Scoped tool calls over broad ones.** Reading one targeted file section is a form of isolation too — it keeps unrelated file content out of context entirely.
 - **Bring back conclusions, not transcripts.** When a subagent or isolated exploration finishes, pull its distilled finding into the main thread — not its full working log.
 
+## Subagent prompt load-order
+
+Every `@tool/task` general-subagent prompt MUST begin with a skill-load directive. The prompt should literally start with:
+
+> "Read these skills first, in this order: 1) `using-agent-skills` (if not loaded) 2) `token-efficiency` 3) `context-isolation` 4) the relevant domain skill for this task (e.g. `linear`, `github-api`, `prior-art-search`). Then proceed with the task below."
+
+Why: subagents have fresh context and won't load skills proactively on their own. Without this directive, the subagent re-discovers the same discipline the hard way — 3+ wasted turns on schema/type errors before reading the right skill.
+
+When to skip: only when the task is bounded enough that no external API or skill is required (e.g. pure computation, file-system-only work). Even then, include the always-on pair.
+
 ## Anti-patterns
 
 - Spawning a subagent with the entire chat history when it only needs three specific facts.
 - Re-running the same exploration twice because an earlier isolated thread's findings were never surfaced back to the main context.
 - Asking a verification pass to review work while it can still see the original chain of reasoning that produced it.
 - Fragmenting one continuous, dependent task across multiple isolated calls purely to "save tokens," then paying more to re-establish context each time than isolation ever saved.
+
+## Interaction with Other Skills
+
+- **`token-efficiency`** — adjacent, always-on pair. `token-efficiency` minimizes *cost* (tokens per signal); `context-isolation` minimizes *contamination* (irrelevant reasoning leaking into relevant decisions). Compose: apply `token-efficiency` to keep the unit of work small, then `context-isolation` to decide where that unit lives. The subagent prompt load-order already pairs them.
+- **`negative-skill-space`** — primary pair. NSS maps an artifact's gaps; `context-isolation` runs that mapping in a fresh-context subagent so the mapper doesn't carry the artifact author's blind spots. When NSS produces actionable Extend gaps for a skill, isolate the editing cycle before closing them — and add `negative-skill-space` to the subagent load-order.
+- **`doubt-driven-development`** — orthogonal. DDD doubts a specific decision with a fresh-context reviewer; `context-isolation` is the boundary that makes DDD's "fresh context" possible. Self-mode of `recursive-self-improvement` requires both.
+- **`recursive-self-improvement`** — downstream consumer. RSI's self-mode cycles (improving a skill the agent itself authored) require `context-isolation` for every cycle, not just cycle 1, to avoid re-introducing author bias. Apply this skill at the start of every RSI self-mode cycle.
+- **`using-agent-skills`** — upstream. If `context-isolation` is consistently NOT being applied where it should be, that's a workflow-position problem (skill not in `using-agent-skills` discovery), not a body-edit problem. Hand off to `using-agent-skills` review, not another RSI cycle.
+- **`code-review-and-quality`** — downstream. After a subagent has done isolated verification, the result still flows through normal review before merge. `context-isolation` is upstream of review; review is downstream.
+
+## Changelog
+
+- 2026-07-29 cycle 1: Hypothesis "Skill lacks explicit `## Interaction with Other Skills` section, creating asymmetry with downstream skills (`negative-skill-space`, `doubt-driven-development`, `recursive-self-improvement`, `code-review-and-quality`) that already point at it." Edit: added `## Interaction with Other Skills` section naming `token-efficiency`, `negative-skill-space`, `doubt-driven-development`, `recursive-self-improvement`, `using-agent-skills`, and `code-review-and-quality` as explicit pairs; created `## Changelog` section header per RSI cycle protocol. Result: re-map shows no new substantive gaps ≥ L×S 6 introduced; primary gap #1 closed (16→0), gap #6 closed (9→0), gap #5 reduced (16→9); js-yaml frontmatter validated clean; fixpoint reached.
+
+
+
