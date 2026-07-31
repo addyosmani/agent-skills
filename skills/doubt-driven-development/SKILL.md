@@ -172,9 +172,14 @@ The reviewer's output is data, not verdict. **You are still the orchestrator.** 
 For each finding, classify in this **precedence order** (first matching class wins):
 
 1. **Contract misread** — reviewer flagged something specifically because the CONTRACT you provided was unclear or incomplete. Fix the contract first, re-classify on the next cycle.
-2. **Valid + actionable** — real issue requiring a change to the artifact. Change it, re-loop.
-3. **Valid trade-off** — issue is real but cost of fixing exceeds cost of accepting. Document the trade-off explicitly so the user sees it.
-4. **Noise** — reviewer flagged something that's actually correct under context the reviewer didn't have. Note it, move on, and ask: would adding that context to the contract have prevented the false flag?
+2. **Valid but immaterial** — the issue is real and the reviewer understood it correctly, but its triggering condition cannot occur: the artifact or contract already prevents it, or it needs a scale or configuration this system doesn't have. Document it with the condition; do not change the artifact and do not re-loop on it.
+3. **Valid + actionable** — real issue requiring a change to the artifact. Change it, re-loop.
+4. **Valid trade-off** — issue is real but cost of fixing exceeds cost of accepting. Document the trade-off explicitly so the user sees it.
+5. **Noise** — reviewer flagged something that's actually correct under context the reviewer didn't have. Note it, move on, and ask: would adding that context to the contract have prevented the false flag?
+
+**Why `immaterial` precedes `actionable`:** an adversarial reviewer is prompted to assume you are overconfident, so it will surface true-but-impossible failure modes by design. Asking "can this fire?" before "what do I change?" is what keeps Step 5 from grinding on them. It is a distinct class from the two that look adjacent: `trade-off` is about fix *cost*, `noise` is about reviewer *context* — `immaterial` is a fully-informed, correctly-understood finding whose trigger is unreachable.
+
+**This class is not an escape hatch.** To use it you must quote the invariant — from the artifact or the contract — that prevents the trigger. If you cannot point at it, the class is `actionable`, not `immaterial`. "It probably won't happen" is a guess, and a guess is not a classification. Note that laundering findings here does not evade the doubt-theater signal in Red Flags: `immaterial` is not `actionable`, so a cycle that classifies everything this way still trips it.
 
 A fresh reviewer can be wrong because it lacks context. Don't defer just because it's "fresh."
 
@@ -201,6 +206,8 @@ If 3 cycles is "obviously insufficient" because the artifact is large: the artif
 | "If I doubt every step I'll never ship" | The skill applies to non-trivial decisions, not every keystroke. Re-read "When NOT to Use." |
 | "Two opinions are always better than one" | Not when the second has less context and produces noise. Reconcile, don't defer. |
 | "The reviewer disagreed so I was wrong" | The reviewer lacks your context — disagreement is information, not verdict. Re-read the artifact, classify, then decide. |
+| "The finding is technically true, so I have to act on it" | True and reachable are different questions. If an invariant in the artifact prevents the trigger, it's `immaterial` — quote the invariant and move on. |
+| "This one feels unlikely, I'll call it immaterial" | A feeling isn't an invariant. Point at the line that prevents it or classify it `actionable`. |
 | "Cross-model is always better" | Cross-model catches blind spots a single model shares with itself, but it adds cost and tool fragility. Offer it every interactive doubt cycle — the user decides whether the artifact warrants it. The agent's job is to surface the choice, not to gate it. |
 | "User said yes once, so I can keep invoking the CLI" | Each invocation is its own authorization. The artifact, the prompt, and the flags change between calls — re-confirm the exact command with the user before every run. |
 
@@ -219,6 +226,7 @@ If 3 cycles is "obviously insufficient" because the artifact is large: the artif
 - Falling back silently when an external CLI errors or is missing — surface the failure and let the user redirect
 - Stripping the contract from the reviewer's input
 - Passing the CLAIM to the reviewer (biases toward agreement)
+- Classifying a finding `immaterial` without quoting the invariant that prevents its trigger
 
 ## Interaction with Other Skills
 
@@ -236,7 +244,8 @@ After applying doubt-driven development:
 - [ ] At least one fresh-context review per non-trivial artifact (a failing test produced by TDD's RED step satisfies this for behavioral claims, per Interaction with Other Skills)
 - [ ] The reviewer received ARTIFACT + CONTRACT — NOT the CLAIM, NOT your reasoning
 - [ ] The reviewer's prompt was adversarial ("find issues"), not validating ("is it good")
-- [ ] Findings were classified against the artifact text (not rubber-stamped) using the precedence: contract misread / actionable / trade-off / noise
+- [ ] Findings were classified against the artifact text (not rubber-stamped) using the precedence: contract misread / immaterial / actionable / trade-off / noise
+- [ ] Every finding classified `immaterial` quotes the invariant that prevents its trigger
 - [ ] A stop condition was met (trivial findings, 3 cycles, or user override)
 - [ ] In interactive mode, cross-model was **explicitly offered** to the user (regardless of artifact stakes) and the response was acknowledged in the output
 - [ ] In non-interactive mode, cross-model was skipped and the skip was announced

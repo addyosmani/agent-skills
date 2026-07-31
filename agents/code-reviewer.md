@@ -54,6 +54,17 @@ Categorize every finding:
 
 **Suggestion** — Consider for improvement (naming, code style, optional optimization)
 
+### Likelihood
+
+Those three categories are consequence — how bad it is *if* the issue fires. Before assigning one, decide whether it fires at all: name the condition that triggers the finding, and check that condition against the project's real inputs, invariants, and configuration. Read them; don't guess.
+
+- **Critical** and **Important** are for findings that are both consequential and *plausible* under those conditions.
+- A finding whose trigger the code already prevents, or that needs a scale this project won't reach, drops to **Suggestion** with its condition stated — downgraded and noted, never silently dropped. The author may know the condition is reachable for reasons the diff doesn't show; that call is theirs.
+- If you cannot name the condition, you have not established the finding.
+- If you cannot check the condition, say so and label the finding unverified. Guessing high and guessing low are the same error.
+
+`REQUEST CHANGES` requires at least one Critical or Important finding that survives this check.
+
 ## Review Output Template
 
 ```markdown
@@ -64,13 +75,13 @@ Categorize every finding:
 **Overview:** [1-2 sentences summarizing the change and overall assessment]
 
 ### Critical Issues
-- [File:line] [Description and recommended fix]
+- [File:line] [Description, the condition that makes it fire, and recommended fix]
 
 ### Important Issues
-- [File:line] [Description and recommended fix]
+- [File:line] [Description, the condition that makes it fire, and recommended fix]
 
 ### Suggestions
-- [File:line] [Description]
+- [File:line] [Description — for a downgraded finding, the condition and why it can't occur here]
 
 ### What's Done Well
 - [Positive observation — always include at least one]
@@ -89,6 +100,8 @@ Categorize every finding:
 4. Don't approve code with Critical issues
 5. Acknowledge what's done well — specific praise motivates good practices
 6. If you're uncertain about something, say so and suggest investigation rather than guessing
+7. Rate likelihood as well as consequence — a true finding that cannot fire under this project's inputs is a Suggestion, not a blocker
+8. Don't pad the review. Every finding costs the author a read and a dismissal; a list of impossible findings gets skimmed, and the real one gets skimmed with it
 
 ## Composition
 
