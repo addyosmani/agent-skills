@@ -97,6 +97,22 @@ Put workflow skills under `.cursor/skills/` (sync from `agent-skills/skills/`) a
 </details>
 
 <details>
+<summary><b>Qoder</b></summary>
+
+Install all 24 workflows as native Qoder skills for the current project:
+
+```bash
+npx skills add addyosmani/agent-skills -a qoder
+```
+
+Add `-g` for user-level installation across all projects. The repository also
+includes `.qoder-plugin/plugin.json` for local plugin import and validation.
+See [docs/qoder-setup.md](docs/qoder-setup.md) for scopes, manual setup, usage,
+and verification.
+
+</details>
+
+<details>
 <summary><b>Antigravity CLI</b></summary>
 
 Install as a native plugin for skills, subagents, and slash commands. See [docs/antigravity-setup.md](docs/antigravity-setup.md).
@@ -355,6 +371,7 @@ agent-skills/
 ├── .claude/commands/                  # 8 slash commands (Claude Code)
 ├── .gemini/commands/                  # 8 slash commands (Gemini CLI)
 ├── commands/                          # 8 slash commands (Antigravity CLI)
+├── .qoder-plugin/plugin.json           # Qoder plugin manifest
 ├── plugin.json                        # Antigravity plugin manifest
 └── docs/                              # Setup guides per tool
 ```
