@@ -1,0 +1,20 @@
+{
+  "ticketKeys": [
+    "KONE-23208",
+    "KONE-23209"
+  ],
+  "links": [
+    {
+      "direction": "commit->ticket",
+      "ticketKey": "KONE-23209",
+      "commitSha": "780a692a7370e61478c7a567bb2d596fd0c3b53b",
+      "permalink": "https://github.com/KaseyaOne/kaseya-one-productivity-tools/blob/780a692a7370e61478c7a567bb2d596fd0c3b53b/plugins/foreman-line/docs/specs/active/SCAF-P3-receipt-chain-walker.md"
+    },
+    {
+      "direction": "ticket->commit",
+      "ticketKey": "KONE-23209",
+      "commitSha": "780a692a7370e61478c7a567bb2d596fd0c3b53b",
+      "permalink": "https://github.com/KaseyaOne/kaseya-one-productivity-tools/blob/780a692a7370e61478c7a567bb2d596fd0c3b53b/plugins/foreman-line/docs/specs/active/SCAF-P3-receipt-chain-walker.md"
+    }
+  ]
+}

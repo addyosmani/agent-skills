@@ -1,0 +1,33 @@
+# Rejecting fixture (AC5d): `boilerplate` is missing `ceiling_usd` entirely.
+# Enforced structurally (required property), exercised here as an invariant
+# test per the Step 0 ruling that schema-layer enforcement is fine for this one.
+classes:
+  boilerplate:
+    allowlist: [economy]
+  standard-feature:
+    allowlist: [standard]
+    ceiling_usd: 5.00
+  architecture/risk:
+    allowlist: [frontier]
+    ceiling_usd: 25.00
+  implementation/standard:
+    allowlist: [standard]
+    ceiling_usd: 5.00
+
+data_classification:
+  public:
+    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+  internal:
+    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+  restricted:
+    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+
+roles:
+  coordinator: frontier
+  verifier: frontier
+  builder: per-class
+
+model_tiers:
+  frontier: [claude-opus-4-8]
+  standard: [claude-sonnet-5]
+  economy: [claude-haiku-4-5]

@@ -1,0 +1,38 @@
+# Rejecting fixture (AC5e / rework Finding 1): `claude-haiku-4-5` is smuggled
+# into `model_tiers.frontier` alongside the legitimate `claude-opus-4-8`.
+# Every OTHER invariant (a-d) and the schema are satisfied unchanged from the
+# shipped policy, so this fixture isolates invariant (e) alone: tier *names*
+# still check out (roles pinned to 'frontier', allowlists reference 'frontier'
+# by name), but the registry backing what 'frontier' actually resolves to has
+# been quietly widened - exactly the gutting Finding 1 identified.
+classes:
+  boilerplate:
+    allowlist: [economy]
+    ceiling_usd: 0.50
+  standard-feature:
+    allowlist: [standard]
+    ceiling_usd: 5.00
+  architecture/risk:
+    allowlist: [frontier]
+    ceiling_usd: 25.00
+  implementation/standard:
+    allowlist: [standard]
+    ceiling_usd: 5.00
+
+data_classification:
+  public:
+    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+  internal:
+    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+  restricted:
+    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+
+roles:
+  coordinator: frontier
+  verifier: frontier
+  builder: per-class
+
+model_tiers:
+  frontier: [claude-opus-4-8, claude-haiku-4-5]
+  standard: [claude-sonnet-5]
+  economy: [claude-haiku-4-5]

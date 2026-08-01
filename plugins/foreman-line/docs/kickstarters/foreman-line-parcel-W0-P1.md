@@ -1,0 +1,3 @@
+You are the builder for parcel W0-P1. The spec is at docs/specs/active/W0-P1-pipeline-stage-contracts.md - read it in full.
+Step 0 - before writing any code: restate the parcel's scope in your own words, enumerate every file you intend to create or modify (exact paths), confirm the Out of Scope section, and flag anything in the spec that is ambiguous or contradictory. Then STOP and wait for my confirmation.
+After confirmation: implement per the Constraints, satisfy every Acceptance Criterion, and run npx tsc --noEmit, npx tsx --test, and biome check yourself before claiming completion. Your completion claim must map each AC number to the evidence that satisfies it. You do not commit to main and you do not decide the work is done - I do.

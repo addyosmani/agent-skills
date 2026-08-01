@@ -1,0 +1,25 @@
+# Foreman Line — Skill Injection Matrix (v0)
+#
+# Concrete instantiation of plan §5a: which skills are injected at which
+# pipeline role. Injection is driven mechanically by a parcel's `surfaces:`
+# and task class — no per-dispatch human decision. See
+# skill-injection/README.md for the schema shape, the Surface-Glob
+# Resolution Semantics W2-P5 must implement, and the exit-code contract.
+
+builder:
+  '*': [test-coverage]
+  'ui/*': [kds-figma]
+
+verifier_harness:
+  '*': [test-coverage.check]
+  'ui/*': [kds-sweep]
+  'tenancy/*': [tenant-isolation]
+
+adversarial_reviewer:
+  '*': [code-review]
+
+coordinator:
+  rework_first: [build-fix-loop]
+
+integration:
+  jira: [jira-workflow]

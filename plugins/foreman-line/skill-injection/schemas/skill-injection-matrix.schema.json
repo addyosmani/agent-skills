@@ -1,0 +1,98 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "builder",
+    "verifier_harness",
+    "adversarial_reviewer",
+    "coordinator",
+    "integration"
+  ],
+  "properties": {
+    "builder": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^(\\*|[^*]+/\\*)$"
+      },
+      "patternProperties": {
+        "^(\\*|[^*]+/\\*)$": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "verifier_harness": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^(\\*|[^*]+/\\*)$"
+      },
+      "patternProperties": {
+        "^(\\*|[^*]+/\\*)$": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "adversarial_reviewer": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^(\\*|[^*]+/\\*)$"
+      },
+      "patternProperties": {
+        "^(\\*|[^*]+/\\*)$": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "coordinator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rework_first"
+      ],
+      "properties": {
+        "rework_first": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "integration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jira"
+      ],
+      "properties": {
+        "jira": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "minItems": 1
+        }
+      }
+    }
+  }
+}

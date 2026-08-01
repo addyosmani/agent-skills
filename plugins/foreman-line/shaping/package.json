@@ -1,0 +1,27 @@
+{
+  "name": "@foreman-line/shaping",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Stage A (Shaping Agent) for the Foreman Line (W1-P1): emits and reads the bare ShapingResult payload validated against the frozen contracts schema, and runs a two-layer advisory self-check on the parcel spec drafts it authors.",
+  "engines": {
+    "node": ">=24.11.1"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "lint": "biome check ."
+  },
+  "dependencies": {
+    "ajv": "8.20.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.3",
+    "@types/node": "26.1.1",
+    "tsx": "4.23.1",
+    "typescript": "7.0.2"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "approvedHash": "16a7c0ef44d73c7c6b17b9ce975a64a05aa59f11c128d00c83e805210a03937f",
+  "artifactRef": "plugins/foreman-line/docs/specs/active/receipt-chain-walker.projected.shaping-result.json",
+  "subject": {
+    "projectedResult": {
+      "parcelSpecRefs": [
+        "plugins/foreman-line/docs/specs/active/SCAF-P3-receipt-chain-walker.md"
+      ],
+      "epics": [
+        {
+          "key": "epic-receipt-chain-walker",
+          "title": "Foreman Line - Receipt-Chain Walker (SCAF-P3)",
+          "stories": [
+            {
+              "key": "SCAF-P3-receipt-chain-walker",
+              "title": "Foreman Line - receipt-chain walker (SCAF-P3 exit proof)"
+            }
+          ]
+        }
+      ]
+    },
+    "specSet": [
+      {
+        "ref": "plugins/foreman-line/docs/specs/active/SCAF-P3-receipt-chain-walker.md",
+        "contentHash": "5f7a6107bd4b156120466979a64980e3de29ddb7292eb251419b2457a2039c54"
+      }
+    ]
+  },
+  "decision": "approved",
+  "timestamp": "2026-07-24T19:05:05.138Z",
+  "approver": "clinton.morgan",
+  "correlation": {
+    "correlationId": "8e1eaf1d-5a89-4747-ac9e-ea6a43e1677d",
+    "sessionId": "71c6c877-bfa6-455f-b964-0998f2e18ef0",
+    "workflowId": "1912af36-9159-45b4-8c32-35ce77baacc8",
+    "runId": "513ff34c-4b52-489c-89d4-958610cbd012"
+  },
+  "receipt": {
+    "hash": "1abcf64ef20d2e649b564756d47d1b562300505cace1f40396d0d19ed7cf935a",
+    "locator": "docs/receipts/1912af36-9159-45b4-8c32-35ce77baacc8/000000-A-shaping-result.json"
+  }
+}

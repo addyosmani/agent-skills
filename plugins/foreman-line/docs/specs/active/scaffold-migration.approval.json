@@ -1,0 +1,42 @@
+{
+  "approvedHash": "6b12512e0cd612554d2e6312ca748d524cf0e9328663be7dbe5c91c06840850a",
+  "artifactRef": "plugins/foreman-line/docs/specs/active/scaffold-migration.projected.shaping-result.json",
+  "subject": {
+    "projectedResult": {
+      "parcelSpecRefs": [
+        "plugins/foreman-line/docs/specs/active/SCAF-P2-shared-test-scaffold-extraction.md"
+      ],
+      "epics": [
+        {
+          "key": "epic-scaffold-migration",
+          "title": "Foreman Line - Shared Test-Scaffold Extraction (SCAF-P2)",
+          "stories": [
+            {
+              "key": "SCAF-P2-shared-test-scaffold-extraction",
+              "title": "Foreman Line - shared test-scaffold extraction (SCAF-P2)"
+            }
+          ]
+        }
+      ]
+    },
+    "specSet": [
+      {
+        "ref": "plugins/foreman-line/docs/specs/active/SCAF-P2-shared-test-scaffold-extraction.md",
+        "contentHash": "3e56d97ccedb719096cc26314aef2237932e5efc4f79925e0271353399332c5e"
+      }
+    ]
+  },
+  "decision": "approved",
+  "timestamp": "2026-07-23T09:40:11.211Z",
+  "approver": "clinton.morgan",
+  "correlation": {
+    "correlationId": "c5f41efa-ce34-4efb-a104-a378891351c0",
+    "sessionId": "a76c45a4-0967-4b60-9af6-b395960f2432",
+    "workflowId": "bfdba601-8d48-449e-9530-2317ed931d6d",
+    "runId": "e8ff2865-9f7a-4a62-b409-a0f92ead94aa"
+  },
+  "receipt": {
+    "hash": "4b5af8f6254fecdf7c731ad596ab10c71f0fa44fc0ce642260678c4464ddec3b",
+    "locator": "docs/receipts/bfdba601-8d48-449e-9530-2317ed931d6d/000000-A-shaping-result.json"
+  }
+}

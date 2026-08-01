@@ -1,0 +1,16 @@
+# AC4d: a whitespace-only skill name is rejected, in any of the five roles'
+# skill-name arrays. Here in adversarial_reviewer's '*' list.
+builder:
+  '*': [test-coverage]
+
+verifier_harness:
+  '*': [test-coverage.check]
+
+adversarial_reviewer:
+  '*': ['code-review', '   ']
+
+coordinator:
+  rework_first: [build-fix-loop]
+
+integration:
+  jira: [jira-workflow]

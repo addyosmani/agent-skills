@@ -1,0 +1,56 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mergeSha",
+    "ticketTransition",
+    "specLifecycleMove"
+  ],
+  "properties": {
+    "mergeSha": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ticketTransition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ticketKey",
+        "fromStatus",
+        "toStatus"
+      ],
+      "properties": {
+        "ticketKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fromStatus": {
+          "type": "string",
+          "minLength": 1
+        },
+        "toStatus": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "specLifecycleMove": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to"
+      ],
+      "properties": {
+        "from": {
+          "type": "string",
+          "minLength": 1
+        },
+        "to": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

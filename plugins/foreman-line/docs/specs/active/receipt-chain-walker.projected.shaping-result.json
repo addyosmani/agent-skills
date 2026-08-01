@@ -1,0 +1,17 @@
+{
+  "parcelSpecRefs": [
+    "plugins/foreman-line/docs/specs/active/SCAF-P3-receipt-chain-walker.md"
+  ],
+  "epics": [
+    {
+      "key": "epic-receipt-chain-walker",
+      "title": "Foreman Line - Receipt-Chain Walker (SCAF-P3)",
+      "stories": [
+        {
+          "key": "SCAF-P3-receipt-chain-walker",
+          "title": "Foreman Line - receipt-chain walker (SCAF-P3 exit proof)"
+        }
+      ]
+    }
+  ]
+}

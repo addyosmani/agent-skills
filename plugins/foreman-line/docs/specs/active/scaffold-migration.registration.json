@@ -1,0 +1,20 @@
+{
+  "ticketKeys": [
+    "KONE-23194",
+    "KONE-23195"
+  ],
+  "links": [
+    {
+      "direction": "commit->ticket",
+      "ticketKey": "KONE-23195",
+      "commitSha": "86d374ab14545ebb30c996b47722b98f93efc494",
+      "permalink": "https://github.com/KaseyaOne/kaseya-one-productivity-tools/blob/86d374ab14545ebb30c996b47722b98f93efc494/plugins/foreman-line/docs/specs/active/SCAF-P2-shared-test-scaffold-extraction.md"
+    },
+    {
+      "direction": "ticket->commit",
+      "ticketKey": "KONE-23195",
+      "commitSha": "86d374ab14545ebb30c996b47722b98f93efc494",
+      "permalink": "https://github.com/KaseyaOne/kaseya-one-productivity-tools/blob/86d374ab14545ebb30c996b47722b98f93efc494/plugins/foreman-line/docs/specs/active/SCAF-P2-shared-test-scaffold-extraction.md"
+    }
+  ]
+}

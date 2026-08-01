@@ -1,0 +1,176 @@
+# Foreman Line — Permission-Profile Registry (v0)
+#
+# Six named, deny-first permission envelopes (charter D4/D9). See
+# permission-profiles/README.md for the schema shape, the deny-first ruling,
+# the five enforced invariants, the PROFILE_NAMES authority + P4 binding
+# contract, and the session-start-load bound with its failure modes.
+#
+# `deny`/`ask` are THE restriction mechanism; `allow` is documentation of
+# intent only and is never treated as satisfying any invariant (D9).
+
+profiles:
+  coordinator:
+    description: >-
+      Coordinator: broad tool access including push/PR/merge, per
+      COORDINATOR-PATTERN.md dispatch table.
+    envelope:
+      deny:
+        - Bash(git push --force*)
+        - Bash(git push -f *)
+        - PowerShell(git push --force*)
+        - PowerShell(git push -f *)
+        - Edit(.claude/**)
+        - Write(.claude/**)
+      ask: []
+      allow:
+        - Read
+        - Edit
+        - Write
+        - Bash
+        - PowerShell
+        - Glob
+        - Grep
+        - Agent
+        - Skill
+        - SendMessage
+        - ScheduleWakeup
+        - Monitor
+        - TaskCreate
+        - TaskUpdate
+        - TaskList
+        - TaskGet
+        - TaskOutput
+        - TaskStop
+
+  builder-standard:
+    description: >-
+      Standard-risk builder: broad read/write within its own worktree, no
+      network need.
+    envelope:
+      deny:
+        - Bash(git push --force*)
+        - Bash(git push -f *)
+        - PowerShell(git push --force*)
+        - PowerShell(git push -f *)
+        - Edit(.claude/**)
+        - Write(.claude/**)
+      ask: []
+      allow:
+        - Read
+        - Edit
+        - Write
+        - Bash
+        - PowerShell
+        - Glob
+        - Grep
+      network:
+        egress: denied
+
+  builder-architecture:
+    description: >-
+      Architecture/risk builder: v0 envelope identical to builder-standard -
+      the distinction is model-tier and review-depth, not capability set.
+    envelope:
+      deny:
+        - Bash(git push --force*)
+        - Bash(git push -f *)
+        - PowerShell(git push --force*)
+        - PowerShell(git push -f *)
+        - Edit(.claude/**)
+        - Write(.claude/**)
+      ask: []
+      allow:
+        - Read
+        - Edit
+        - Write
+        - Bash
+        - PowerShell
+        - Glob
+        - Grep
+      network:
+        egress: denied
+
+  reviewer-readonly:
+    description: >-
+      Adversarial reviewer: never fixes, never commits. Denies Edit/Write
+      tools and the enumerable repo-mutation commands in both shells;
+      deliberately retains bare Bash/PowerShell for hostile-input probing
+      (lesson #12).
+    envelope:
+      deny:
+        - Edit
+        - Write
+        - Edit(.claude/**)
+        - Write(.claude/**)
+        - Bash(git commit*)
+        - PowerShell(git commit*)
+        - Bash(git push*)
+        - PowerShell(git push*)
+        - Bash(git apply*)
+        - PowerShell(git apply*)
+        - Bash(git stash*)
+        - PowerShell(git stash*)
+        - Bash(git merge*)
+        - PowerShell(git merge*)
+      ask: []
+      allow:
+        - Read
+        - Glob
+        - Grep
+        - Bash
+        - PowerShell
+
+  shaping-agent:
+    description: >-
+      Shaping agent: docs-only writes. Denies non-docs write surfaces by
+      enumerable prefix; allow-narrows to docs/** (documentation-only).
+    envelope:
+      deny:
+        - Bash(git push --force*)
+        - Bash(git push -f *)
+        - PowerShell(git push --force*)
+        - PowerShell(git push -f *)
+        - Edit(.claude/**)
+        - Write(.claude/**)
+        - Edit(plugins/**)
+        - Write(plugins/**)
+        - Edit(skills/**)
+        - Write(skills/**)
+        - Edit(apps/**)
+        - Write(apps/**)
+        - Edit(config/**)
+        - Write(config/**)
+      ask: []
+      allow:
+        - Read
+        - Glob
+        - Grep
+        - Edit(docs/**)
+        - Write(docs/**)
+
+  builder-deps:
+    description: >-
+      builder-standard's envelope plus declared (documentation-only) network
+      egress allowlist intent for dependency-registry access.
+    envelope:
+      deny:
+        - Bash(git push --force*)
+        - Bash(git push -f *)
+        - PowerShell(git push --force*)
+        - PowerShell(git push -f *)
+        - Edit(.claude/**)
+        - Write(.claude/**)
+      ask: []
+      allow:
+        - Read
+        - Edit
+        - Write
+        - Bash
+        - PowerShell
+        - Glob
+        - Grep
+      network:
+        egress: allowlist
+        notes: >-
+          dependency-registry access; DOCUMENTATION-ONLY in this goal - not
+          proven to gate at the process boundary (charter D4/F-L)

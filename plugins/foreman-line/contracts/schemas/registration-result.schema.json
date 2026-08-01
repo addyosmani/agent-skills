@@ -1,0 +1,51 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ticketKeys",
+    "links"
+  ],
+  "properties": {
+    "ticketKeys": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "direction",
+          "ticketKey",
+          "commitSha",
+          "permalink"
+        ],
+        "properties": {
+          "direction": {
+            "type": "string",
+            "enum": [
+              "ticket->commit",
+              "commit->ticket"
+            ]
+          },
+          "ticketKey": {
+            "type": "string",
+            "minLength": 1
+          },
+          "commitSha": {
+            "type": "string",
+            "minLength": 1
+          },
+          "permalink": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

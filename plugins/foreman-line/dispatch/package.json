@@ -1,0 +1,29 @@
+{
+  "name": "@foreman-line/dispatch",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Jira query + next-candidate ranking for the Foreman Line dispatch flow (W2). Read-only: queries KONE for dispatchable issues assigned to clinton.morgan, resolves workflowId + priorReceiptLocator from the in-repo receipt chain, and returns a ranked CandidateList. Subsequent W2 parcels (routing-eval, skill-resolver, kompress-adapter, approval-cli) add sub-modules here.",
+  "engines": {
+    "node": ">=24.11.1"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "lint": "biome check ."
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "ajv": "8.20.0",
+    "yaml": "2.9.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.3",
+    "@types/node": "26.1.1",
+    "tsx": "4.23.1",
+    "typescript": "7.0.2"
+  }
+}

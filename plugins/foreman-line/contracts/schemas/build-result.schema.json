@@ -1,0 +1,29 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "branch",
+    "commitShas",
+    "touchedSurfaces"
+  ],
+  "properties": {
+    "branch": {
+      "type": "string",
+      "minLength": 1
+    },
+    "commitShas": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "touchedSurfaces": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "jira"
+  ],
+  "properties": {
+    "jira": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "\\S"
+      },
+      "minItems": 1
+    }
+  }
+}

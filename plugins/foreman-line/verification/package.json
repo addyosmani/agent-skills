@@ -1,0 +1,28 @@
+{
+  "name": "@foreman-line/verification",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Stage-D verification harness for the Foreman Line (W3-P1). Executes a built parcel's acceptance criteria as pass/fail checks under the named-test convention (AC-CONVENTION.md), runs the verifier-side skill-injection matrix checks, and emits RFC-8785 Stage-D claim sub-receipts chained from the Stage-C dispatch receipt through a BuildResult bridge sub-receipt. Produces evidence only; the pass/rework verdict is W3-P3.",
+  "engines": {
+    "node": ">=24.11.1"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "lint": "biome check ."
+  },
+  "dependencies": {
+    "ajv": "8.20.0",
+    "yaml": "2.9.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.3",
+    "@types/node": "26.1.1",
+    "tsx": "4.23.1",
+    "typescript": "7.0.2"
+  }
+}

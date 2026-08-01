@@ -1,0 +1,509 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "profiles"
+  ],
+  "properties": {
+    "profiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coordinator",
+        "builder-standard",
+        "builder-architecture",
+        "reviewer-readonly",
+        "shaping-agent",
+        "builder-deps"
+      ],
+      "properties": {
+        "coordinator": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "description",
+            "envelope"
+          ],
+          "properties": {
+            "description": {
+              "type": "string",
+              "minLength": 1
+            },
+            "envelope": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "deny",
+                "ask",
+                "allow"
+              ],
+              "properties": {
+                "deny": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\(.+\\))?$"
+                  }
+                },
+                "ask": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\(.+\\))?$"
+                  }
+                },
+                "allow": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\(.+\\))?$"
+                  }
+                },
+                "defaultMode": {
+                  "type": "string",
+                  "enum": [
+                    "default",
+                    "acceptEdits",
+                    "plan"
+                  ]
+                },
+                "additionalDirectories": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "network": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "egress"
+                  ],
+                  "properties": {
+                    "egress": {
+                      "type": "string",
+                      "enum": [
+                        "denied",
+                        "allowlist",
+                        "allowed"
+                      ]
+                    },
+                    "notes": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "builder-standard": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "description",
+            "envelope"
+          ],
+          "properties": {
+            "description": {
+              "type": "string",
+              "minLength": 1
+            },
+            "envelope": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "deny",
+                "ask",
+                "allow"
+              ],
+              "properties": {
+                "deny": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\(.+\\))?$"
+                  }
+                },
+                "ask": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\(.+\\))?$"
+                  }
+                },
+                "allow": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\(.+\\))?$"
+                  }
+                },
+                "defaultMode": {
+                  "type": "string",
+                  "enum": [
+                    "default",
+                    "acceptEdits",
+                    "plan"
+                  ]
+                },
+                "additionalDirectories": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "network": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "egress"
+                  ],
+                  "properties": {
+                    "egress": {
+                      "type": "string",
+                      "enum": [
+                        "denied",
+                        "allowlist",
+                        "allowed"
+                      ]
+                    },
+                    "notes": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "builder-architecture": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "description",
+            "envelope"
+          ],
+          "properties": {
+            "description": {
+              "type": "string",
+              "minLength": 1
+            },
+            "envelope": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "deny",
+                "ask",
+                "allow"
+              ],
+              "properties": {
+                "deny": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\(.+\\))?$"
+                  }
+                },
+                "ask": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\(.+\\))?$"
+                  }
+                },
+                "allow": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\(.+\\))?$"
+                  }
+                },
+                "defaultMode": {
+                  "type": "string",
+                  "enum": [
+                    "default",
+                    "acceptEdits",
+                    "plan"
+                  ]
+                },
+                "additionalDirectories": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "network": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "egress"
+                  ],
+                  "properties": {
+                    "egress": {
+                      "type": "string",
+                      "enum": [
+                        "denied",
+                        "allowlist",
+                        "allowed"
+                      ]
+                    },
+                    "notes": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "reviewer-readonly": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "description",
+            "envelope"
+          ],
+          "properties": {
+            "description": {
+              "type": "string",
+              "minLength": 1
+            },
+            "envelope": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "deny",
+                "ask",
+                "allow"
+              ],
+              "properties": {
+                "deny": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\(.+\\))?$"
+                  }
+                },
+                "ask": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\(.+\\))?$"
+                  }
+                },
+                "allow": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\(.+\\))?$"
+                  }
+                },
+                "defaultMode": {
+                  "type": "string",
+                  "enum": [
+                    "default",
+                    "acceptEdits",
+                    "plan"
+                  ]
+                },
+                "additionalDirectories": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "network": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "egress"
+                  ],
+                  "properties": {
+                    "egress": {
+                      "type": "string",
+                      "enum": [
+                        "denied",
+                        "allowlist",
+                        "allowed"
+                      ]
+                    },
+                    "notes": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "shaping-agent": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "description",
+            "envelope"
+          ],
+          "properties": {
+            "description": {
+              "type": "string",
+              "minLength": 1
+            },
+            "envelope": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "deny",
+                "ask",
+                "allow"
+              ],
+              "properties": {
+                "deny": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\(.+\\))?$"
+                  }
+                },
+                "ask": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\(.+\\))?$"
+                  }
+                },
+                "allow": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\(.+\\))?$"
+                  }
+                },
+                "defaultMode": {
+                  "type": "string",
+                  "enum": [
+                    "default",
+                    "acceptEdits",
+                    "plan"
+                  ]
+                },
+                "additionalDirectories": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "network": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "egress"
+                  ],
+                  "properties": {
+                    "egress": {
+                      "type": "string",
+                      "enum": [
+                        "denied",
+                        "allowlist",
+                        "allowed"
+                      ]
+                    },
+                    "notes": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "builder-deps": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "description",
+            "envelope"
+          ],
+          "properties": {
+            "description": {
+              "type": "string",
+              "minLength": 1
+            },
+            "envelope": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "deny",
+                "ask",
+                "allow"
+              ],
+              "properties": {
+                "deny": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\(.+\\))?$"
+                  }
+                },
+                "ask": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\(.+\\))?$"
+                  }
+                },
+                "allow": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\(.+\\))?$"
+                  }
+                },
+                "defaultMode": {
+                  "type": "string",
+                  "enum": [
+                    "default",
+                    "acceptEdits",
+                    "plan"
+                  ]
+                },
+                "additionalDirectories": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "network": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "egress"
+                  ],
+                  "properties": {
+                    "egress": {
+                      "type": "string",
+                      "enum": [
+                        "denied",
+                        "allowlist",
+                        "allowed"
+                      ]
+                    },
+                    "notes": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,39 @@
+# Rejecting fixture (AC5c): a class self-declares `security_flavored: true`
+# but its allowlist still contains a non-frontier tier ('standard'). The
+# override requires EVERY allowlisted tier to equal 'frontier', not merely
+# to contain it — this closes the mixed-allowlist loophole.
+classes:
+  boilerplate:
+    allowlist: [economy]
+    ceiling_usd: 0.50
+  standard-feature:
+    allowlist: [standard]
+    ceiling_usd: 5.00
+  architecture/risk:
+    allowlist: [frontier]
+    ceiling_usd: 25.00
+  implementation/standard:
+    allowlist: [standard]
+    ceiling_usd: 5.00
+  security-audit:
+    allowlist: [standard, frontier]
+    ceiling_usd: 25.00
+    security_flavored: true
+
+data_classification:
+  public:
+    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+  internal:
+    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+  restricted:
+    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+
+roles:
+  coordinator: frontier
+  verifier: frontier
+  builder: per-class
+
+model_tiers:
+  frontier: [claude-opus-4-8]
+  standard: [claude-sonnet-5]
+  economy: [claude-haiku-4-5]

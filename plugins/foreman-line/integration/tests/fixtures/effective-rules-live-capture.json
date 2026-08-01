@@ -1,0 +1,93 @@
+{
+  "provenance": {
+    "note": "REAL captured responses from the live GitHub API — coordinator-captured (CLOSE-P1 spec Design item 2). NOT hand-written. Each member's 'capture' field is the verbatim JSON body returned by the command in its 'command' field. Do not edit captures; recapture instead.",
+    "capturedBy": "coordinator",
+    "capturedAt": "2026-07-28T13:28:00-04:00",
+    "repoMainSha": "1de7284"
+  },
+  "branchRules": {
+    "command": "gh api repos/KaseyaOne/kaseya-one-productivity-tools/rules/branches/main",
+    "endpoint": "branch-rules (repos/:owner/:repo/rules/branches/:branch) — carries NO bypass-actor field anywhere (coordinator finding, 2026-07-28); bypass actors live on the ruleset endpoint",
+    "capture": [
+      {
+        "type": "repository_visibility",
+        "parameters": { "public": false, "internal": false, "private": true },
+        "ruleset_source_type": "Enterprise",
+        "ruleset_source": "kaseya",
+        "ruleset_id": 8520252
+      },
+      {
+        "type": "deletion",
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "KaseyaOne/kaseya-one-productivity-tools",
+        "ruleset_id": 19044225
+      },
+      {
+        "type": "non_fast_forward",
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "KaseyaOne/kaseya-one-productivity-tools",
+        "ruleset_id": 19044225
+      },
+      {
+        "type": "deletion",
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "KaseyaOne/kaseya-one-productivity-tools",
+        "ruleset_id": 19402394
+      },
+      {
+        "type": "non_fast_forward",
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "KaseyaOne/kaseya-one-productivity-tools",
+        "ruleset_id": 19402394
+      },
+      {
+        "type": "pull_request",
+        "parameters": {
+          "required_approving_review_count": 0,
+          "dismiss_stale_reviews_on_push": true,
+          "required_reviewers": [],
+          "require_code_owner_review": false,
+          "dismissal_restriction": { "enabled": false, "allowed_actors": [] },
+          "require_last_push_approval": false,
+          "required_review_thread_resolution": false,
+          "allowed_merge_methods": ["merge", "squash", "rebase"]
+        },
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "KaseyaOne/kaseya-one-productivity-tools",
+        "ruleset_id": 19402394
+      },
+      {
+        "type": "code_scanning",
+        "parameters": {
+          "code_scanning_tools": [
+            {
+              "tool": "CodeQL",
+              "security_alerts_threshold": "high_or_higher",
+              "alerts_threshold": "errors"
+            }
+          ]
+        },
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "KaseyaOne/kaseya-one-productivity-tools",
+        "ruleset_id": 19402394
+      },
+      {
+        "type": "code_quality",
+        "parameters": { "severity": "errors" },
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "KaseyaOne/kaseya-one-productivity-tools",
+        "ruleset_id": 19402394
+      }
+    ]
+  },
+  "rulesetBypass": {
+    "command": "gh api repos/KaseyaOne/kaseya-one-productivity-tools/rulesets/19402394 --jq '{id, name, enforcement, bypass_actors}'",
+    "endpoint": "ruleset (repos/:owner/:repo/rulesets/:id) — the surface that carries bypass_actors; captured empty (no bypass actors configured)",
+    "capture": {
+      "bypass_actors": [],
+      "enforcement": "active",
+      "id": 19402394,
+      "name": "tools protector"
+    }
+  }
+}
