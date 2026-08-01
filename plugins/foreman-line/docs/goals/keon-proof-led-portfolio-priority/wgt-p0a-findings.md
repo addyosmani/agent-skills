@@ -10,9 +10,9 @@
 |---|---|---|
 | Worktree | `D:/Repos/agent-skills-worktrees/wgt-p0a-foreman-reconciliation-20260801` | PASS |
 | Branch | `codex/wgt-p0a-foreman-reconciliation-20260801` | PASS |
-| Rework entry HEAD | `0044c5284dd994541961eb25dba87eedf7e83753` | PASS |
+| Historical rework checkpoint | retained in prior commits only; not current-state authority | recorded, not current PASS evidence |
 | Base | `origin/main` at `714ac657ded62d5a549428d06574fcb710ecc481` | PASS |
-| Rework entry status | clean; branch was three commits ahead of `origin/main` | PASS |
+| Current branch status | must be re-run at final review dispatch; no stale ahead count is authoritative | pending final dispatch check |
 | Bootstrap PR #4 | merged at `48d1db73ad0a6e9c2d9bd76f92f3a44d9fb7fcf0` | PASS |
 | Bootstrap closeout PR #5 | merged at `714ac657ded62d5a549428d06574fcb710ecc481` | PASS |
 | Tracked tree | `plugins/foreman-line` and the completed bootstrap spec are on `origin/main` | PASS |
@@ -75,8 +75,9 @@ reply monitoring, and Kaseya work remain NO-GO.
 
 ## Review disposition
 
-Two independent, context-independent, read-only reviews returned **HOLD**;
-neither returned **PASS**:
+Two earlier independent, context-independent, read-only reviews returned
+**HOLD**; neither returned **PASS**. Those findings are historical rework
+provenance, not a claim about the final review dispatch:
 
 | Review | Disposition | Required rework |
 |---|---|---|

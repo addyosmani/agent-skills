@@ -4,11 +4,12 @@
 **Role:** bounded builder
 **Date:** 2026-08-01
 **Starting commit:** `f807422d54c9cf2d10c48bdbfd712c01be0d2082`
-**Prior clean checkpoint:** `9ef7077000de04f94b3e5cdbc5434c86a99696fa`
-**Review target:** the exact branch `HEAD` at fresh-review dispatch; no record
-changes are permitted after dispatch. The coordinator records the resulting
-SHA in the publication evidence and verifies that the published commit is the
-reviewed commit.
+**Prior checkpoint:** historical pre-final-handoff state; not current-state
+authority.
+**Review/publication binding:** the exact branch `HEAD` at fresh-review
+dispatch is authoritative. No record changes are permitted after dispatch.
+The coordinator records the resulting SHA in the publication evidence and
+verifies that the published commit is the reviewed commit.
 
 ## Result
 
@@ -65,19 +66,18 @@ decision, and coordinator closeout conditions are satisfied.
 
 ## Commands and checks
 
-The prior checkpoint above is retained for provenance. Exact rework checks are
-recorded below; the fresh-review target is the exact branch `HEAD` at dispatch,
-not the superseded checkpoint. Publication is prohibited if the reviewed SHA
-and published SHA differ.
+The prior checkpoint is historical provenance only. Exact rework checks are
+recorded below; the fresh-review target is the exact branch `HEAD` at dispatch.
+Publication is prohibited if the reviewed SHA and published SHA differ.
 
 | Command | Exact result |
 |---|---|
-| `git rev-parse HEAD` | `9ef7077000de04f94b3e5cdbc5434c86a99696fa` (prior checkpoint; re-run at dispatch) |
+| `git rev-parse HEAD` | re-run at fresh-review dispatch; the dispatch SHA is authoritative |
 | `git branch --show-current` | `codex/wgt-p0a-foreman-reconciliation-20260801` |
-| `git status --short --branch` | clean branch; exact ahead count and SHA re-run at dispatch |
-| `git diff --name-only origin/main...HEAD` | exactly the five already-changed allowed docs; the allowed `docs/specs/done/` destination is absent at the prior checkpoint; re-run at dispatch |
-| `git diff --check origin/main...HEAD` | exit `0`; no output at the prior checkpoint; re-run at dispatch |
-| `git diff --check` | exit `0`; no output at the prior checkpoint; re-run at dispatch |
+| `git status --short --branch` | re-run at fresh-review dispatch; must be clean |
+| `git diff --name-only origin/main...HEAD` | re-run at fresh-review dispatch; must be exactly the permitted current paths |
+| `git diff --check origin/main...HEAD` | re-run at fresh-review dispatch; must exit `0` with no output |
+| `git diff --check` | re-run at fresh-review dispatch; must exit `0` with no output |
 | exact six-file scope comparison | PASS: changed paths are a subset of the six Allowed Files; no outside path is present |
 | `npm --prefix plugins/foreman-line/spec-linter run typecheck` | Not a P0A prerequisite; not run |
 | `plugins/foreman-line/spec-linter/node_modules/.bin/tsx.cmd plugins/foreman-line/spec-linter/src/cli.ts validate plugins/foreman-line/docs/specs/active/WGT-P0A-foreman-record-reconciliation.md` | PASS; no violation output |
