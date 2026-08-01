@@ -132,6 +132,33 @@ follows only after this exact `WGT-P0A -> WGT-P0B -> WGT-P0C` chain is green.
 No dependent parcel may be shaped as active implementation before its required
 predecessor is merged or explicitly deferred by an amended charter.
 
+## WGT-P0A rework provenance — 2026-08-01
+
+The exact read-only Linear snapshot observed at
+`2026-08-01T13:18:39.9237092Z` is durable record evidence:
+
+| Issue | Status | Linear `updatedAt` | Existing URL |
+|---|---|---|---|
+| `KEO-59` | `In Progress` | `2026-07-31T21:15:06.582Z` | <https://linear.app/keonsystems/issue/KEO-59/workflow-evidence-review-first-paid-commercial-slice> |
+| `KEO-145` | `In Progress` | `2026-07-31T21:15:08.637Z` | <https://linear.app/keonsystems/issue/KEO-145/run-customer-discovery-and-design-partner-campaign> |
+| `KEO-156` | `In Progress` | `2026-07-31T20:17:19.672Z` | <https://linear.app/keonsystems/issue/KEO-156/specify-the-workflow-evidence-review-method-and-auditor-grade> |
+| `KEO-157` | `In Progress` | `2026-07-31T20:16:26.942Z` | <https://linear.app/keonsystems/issue/KEO-157/evaluate-a-conditional-agent-harness-binding-module-for-the-paid> |
+| `KEO-158` | `In Progress` | `2026-07-31T21:15:11.150Z` | <https://linear.app/keonsystems/issue/KEO-158/design-the-public-website-stripe-checkout-and-neon-commercial-state> |
+| `KEO-197` | `In Progress` | `2026-07-31T20:16:37.925Z` | <https://linear.app/keonsystems/issue/KEO-197/browseahead-detect-domainpath-slop-squatting-before-agent-navigation> |
+
+The query was read-only and caused no Linear mutation. `discovery.md` is
+historical and outside the exact six-file P0A scope; it is not edited or used
+as current-state authority.
+
+KPM-06, the exact ten-recipient Gmail Sent result, and the absence of a KPM-07
+actual-send receipt are inherited from the verified starting state. P0A did
+not re-search Gmail or mint a receipt because reply monitoring is prohibited.
+
+The two independent review dispositions are **HOLD**, not **PASS**: the first
+required durable timestamped provenance for live Linear claims, and the second
+required exact handoff command results plus a pinned content commit. Gate 3
+remains withheld.
+
 ## Per-parcel loop
 
 1. Dispatch a fresh shaping session with a docs-only envelope.

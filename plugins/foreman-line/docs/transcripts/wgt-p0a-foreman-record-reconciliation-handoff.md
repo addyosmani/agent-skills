@@ -4,7 +4,8 @@
 **Role:** bounded builder
 **Date:** 2026-08-01
 **Starting commit:** `f807422d54c9cf2d10c48bdbfd712c01be0d2082`
-**Ending commit:** final bounded record commit containing this handoff; exact SHA is reported at closeout
+**Pinned content commit:** `0044c5284dd994541961eb25dba87eedf7e83753` (clean rework-entry HEAD)
+**Ending commit:** final bounded rework commit; exact SHA is reported at closeout
 
 ## Result
 
@@ -37,19 +38,50 @@ decision, and coordinator closeout conditions are satisfied.
 - PR #5: merged at `714ac657ded62d5a549428d06574fcb710ecc481`
 - `plugins/foreman-line` and the completed bootstrap spec are tracked on
   `origin/main`.
-- Read-only Linear: `KEO-59` is `In Progress`; `KEO-145`, `KEO-156`,
-  `KEO-157`, and `KEO-158` are existing related `In Progress` records;
-  `KEO-197` remains the sole BrowseAhead lane.
-- Outreach: KPM-06 is `PRE-G2 / DO NOT SEND`; the already-recorded exact
-  ten-recipient Gmail Sent result is zero; no KPM-07 actual-send receipt
-  exists; reply monitoring is prohibited; Kaseya remains excluded.
+- Exact read-only Linear snapshot observed at
+  `2026-08-01T13:18:39.9237092Z`:
+
+  | Issue | Status | Linear `updatedAt` | Existing URL |
+  |---|---|---|---|
+  | `KEO-59` | `In Progress` | `2026-07-31T21:15:06.582Z` | <https://linear.app/keonsystems/issue/KEO-59/workflow-evidence-review-first-paid-commercial-slice> |
+  | `KEO-145` | `In Progress` | `2026-07-31T21:15:08.637Z` | <https://linear.app/keonsystems/issue/KEO-145/run-customer-discovery-and-design-partner-campaign> |
+  | `KEO-156` | `In Progress` | `2026-07-31T20:17:19.672Z` | <https://linear.app/keonsystems/issue/KEO-156/specify-the-workflow-evidence-review-method-and-auditor-grade> |
+  | `KEO-157` | `In Progress` | `2026-07-31T20:16:26.942Z` | <https://linear.app/keonsystems/issue/KEO-157/evaluate-a-conditional-agent-harness-binding-module-for-the-paid> |
+  | `KEO-158` | `In Progress` | `2026-07-31T21:15:11.150Z` | <https://linear.app/keonsystems/issue/KEO-158/design-the-public-website-stripe-checkout-and-neon-commercial-state> |
+  | `KEO-197` | `In Progress` | `2026-07-31T20:16:37.925Z` | <https://linear.app/keonsystems/issue/KEO-197/browseahead-detect-domainpath-slop-squatting-before-agent-navigation> |
+
+  The search was read-only and caused no Linear mutation; no issue, document,
+  backlog item, or WGT record was created or edited. `discovery.md` is
+  historical and outside the exact six-file scope, so it remains untouched.
+- Outreach state is inherited from the verified starting state: KPM-06 is
+  `PRE-G2 / DO NOT SEND`, the exact ten-recipient Gmail Sent result is zero,
+  and no KPM-07 actual-send receipt exists. P0A did not re-search Gmail or
+  mint a receipt because reply monitoring is prohibited; Kaseya remains
+  excluded.
 
 ## Commands and checks
 
-Read-only Step 0 commands included branch/worktree/status, remote `origin/main`,
-merge ancestry, tracked-tree, GitHub PR, and Linear observations. The final
-handoff must include the exact local spec-linter, Markdown, diff-scope,
-whitespace, and clean-status commands with their results.
+The pinned content commit is the clean rework-entry `HEAD` shown above. Exact
+rework checks are recorded below; the final rework commit is intentionally
+reported at closeout because this handoff cannot contain its own SHA.
+
+| Command | Exact result |
+|---|---|
+| `git rev-parse HEAD` | `0044c5284dd994541961eb25dba87eedf7e83753` |
+| `git branch --show-current` | `codex/wgt-p0a-foreman-reconciliation-20260801` |
+| `git status --short --branch` | `## codex/wgt-p0a-foreman-reconciliation-20260801...origin/main [ahead 3]`; no file changes |
+| `git diff --name-only origin/main...HEAD` | exactly the five already-changed allowed docs; the allowed `docs/specs/done/` destination is absent |
+| `git diff --check origin/main...HEAD` | exit `0`; no output |
+| `git diff --check` | exit `0`; no output |
+| exact six-file scope comparison | PASS: changed paths are a subset of the six Allowed Files; no outside path is present |
+| `npm --prefix plugins/foreman-line/spec-linter run typecheck` | PASS |
+| `plugins/foreman-line/spec-linter/node_modules/.bin/tsx.cmd plugins/foreman-line/spec-linter/src/cli.ts validate plugins/foreman-line/docs/specs/active/WGT-P0A-foreman-record-reconciliation.md` | PASS; no violation output |
+| Markdown whitespace check: `git diff --check origin/main...HEAD -- '*.md'` | exit `0`; no output |
+
+The Linear search was read-only/no mutation. `discovery.md` is historical and
+outside scope. Two independent reviews returned **HOLD**, not **PASS**: one
+for missing durable timestamped Linear provenance and one for missing exact
+handoff command results/pinned content commit.
 
 ## Blockers and decisions needed
 

@@ -381,3 +381,29 @@ The earlier broad authorization wording in this historical amendment and the
 older loop record must not be read as current P0A authority; the ratified
 WGT-A1 through WGT-A6 split, the active P0A spec, and the gate facts above are
 the current record.
+
+## P0A rework provenance — exact read-only snapshot
+
+Observed at `2026-08-01T13:18:39.9237092Z`, the exact Linear snapshot was:
+
+| Issue | Status | Linear `updatedAt` | Existing URL |
+|---|---|---|---|
+| `KEO-59` | `In Progress` | `2026-07-31T21:15:06.582Z` | <https://linear.app/keonsystems/issue/KEO-59/workflow-evidence-review-first-paid-commercial-slice> |
+| `KEO-145` | `In Progress` | `2026-07-31T21:15:08.637Z` | <https://linear.app/keonsystems/issue/KEO-145/run-customer-discovery-and-design-partner-campaign> |
+| `KEO-156` | `In Progress` | `2026-07-31T20:17:19.672Z` | <https://linear.app/keonsystems/issue/KEO-156/specify-the-workflow-evidence-review-method-and-auditor-grade> |
+| `KEO-157` | `In Progress` | `2026-07-31T20:16:26.942Z` | <https://linear.app/keonsystems/issue/KEO-157/evaluate-a-conditional-agent-harness-binding-module-for-the-paid> |
+| `KEO-158` | `In Progress` | `2026-07-31T21:15:11.150Z` | <https://linear.app/keonsystems/issue/KEO-158/design-the-public-website-stripe-checkout-and-neon-commercial-state> |
+| `KEO-197` | `In Progress` | `2026-07-31T20:16:37.925Z` | <https://linear.app/keonsystems/issue/KEO-197/browseahead-detect-domainpath-slop-squatting-before-agent-navigation> |
+
+The search was read-only and caused no Linear mutation; no issue, document,
+backlog item, or WGT record was created or edited. `discovery.md` is historical
+and outside the exact six-file P0A scope, so it remains untouched.
+
+KPM-06, the exact ten-recipient Gmail Sent result, and the absence of a KPM-07
+actual-send receipt are inherited from the verified starting state. P0A did
+not re-search Gmail or mint a send receipt because reply monitoring is
+prohibited. G2 remains open and the Kaseya exclusion remains in force.
+
+Two independent reviews returned **HOLD**: durable timestamped provenance was
+missing for the live Linear claims, and the handoff lacked exact command
+results plus a pinned content commit. No reviewer **PASS** is claimed.

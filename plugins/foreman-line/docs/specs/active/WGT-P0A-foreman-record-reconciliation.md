@@ -57,9 +57,9 @@ WGT-P0C Linear reconciliation only after P0B is independently verified.
 - [ ] Gate states explicitly distinguish Gate 1 closed, Gate 2 standing
   dispatch granted for the named queue, Gate 3 withheld per parcel, G2 open,
   G4 not established, and H5/H6A/H6B/H7P/H7/H8 human/external and open.
-- [ ] Current Linear observations are recorded without duplicate creation:
-  `KEO-59` In Progress; `KEO-145`, `KEO-156`, `KEO-157`, and `KEO-158` are
-  existing related records; `KEO-197` remains the sole BrowseAhead lane.
+- [ ] The exact read-only Linear snapshot observed at
+  `2026-08-01T13:18:39.9237092Z` is recorded with each existing issue URL and
+  its Linear `updatedAt` value; no duplicate creation or mutation is claimed.
 - [ ] Outreach truth is recorded: KPM-06 is prepared/approval-gated, the exact
   ten-recipient Gmail Sent search returned zero messages, no KPM-07 actual-send
   receipt exists, and reply monitoring is prohibited until explicit G2 closure
@@ -167,8 +167,40 @@ must perform the independent reviews, Gate 3 decision, and later Stage F
 closure before moving this spec to `docs/specs/done/`; P0A does not archive its
 own spec.
 
+## P0A rework provenance — 2026-08-01
+
+The following exact read-only Linear snapshot was observed at
+`2026-08-01T13:18:39.9237092Z` and is retained as durable provenance. The
+search was read-only and caused no Linear mutation; no issue, document,
+backlog item, or WGT record was created or edited.
+
+| Issue | Status | Linear `updatedAt` | Existing URL |
+|---|---|---|---|
+| `KEO-59` | `In Progress` | `2026-07-31T21:15:06.582Z` | <https://linear.app/keonsystems/issue/KEO-59/workflow-evidence-review-first-paid-commercial-slice> |
+| `KEO-145` | `In Progress` | `2026-07-31T21:15:08.637Z` | <https://linear.app/keonsystems/issue/KEO-145/run-customer-discovery-and-design-partner-campaign> |
+| `KEO-156` | `In Progress` | `2026-07-31T20:17:19.672Z` | <https://linear.app/keonsystems/issue/KEO-156/specify-the-workflow-evidence-review-method-and-auditor-grade> |
+| `KEO-157` | `In Progress` | `2026-07-31T20:16:26.942Z` | <https://linear.app/keonsystems/issue/KEO-157/evaluate-a-conditional-agent-harness-binding-module-for-the-paid> |
+| `KEO-158` | `In Progress` | `2026-07-31T21:15:11.150Z` | <https://linear.app/keonsystems/issue/KEO-158/design-the-public-website-stripe-checkout-and-neon-commercial-state> |
+| `KEO-197` | `In Progress` | `2026-07-31T20:16:37.925Z` | <https://linear.app/keonsystems/issue/KEO-197/browseahead-detect-domainpath-slop-squatting-before-agent-navigation> |
+
+`KEO-59` remains the commercial parent and `KEO-197` remains the sole
+capacity-only BrowseAhead lane. `discovery.md` is historical evidence and is
+outside this parcel's exact six-file Allowed Files scope; P0A does not edit it
+or treat it as current-state authority.
+
+KPM-06, the exact ten-recipient Gmail Sent result, and the absence of a KPM-07
+actual-send receipt are inherited from the verified starting state. P0A did
+not re-search Gmail or mint an outreach/send receipt because reply monitoring
+is prohibited until explicit G2 closure plus an actual KPM-07 send. The Kaseya
+exclusion remains in force.
+
+Two independent reviews returned **HOLD**: one required durable timestamped
+provenance for the live Linear claims, and one required exact handoff command
+results plus a pinned content commit. This rework records those gaps and does
+not claim reviewer **PASS** or Gate 3 closure.
+
 ## Status
 
-Builder record prepared within exact scope. Local doc/spec checks and the
-independent read-only review chain remain required before any merge or
-publication. No external system was mutated.
+Bounded rework is prepared within exact scope. The two independent reviewer
+dispositions remain **HOLD** pending review of this rework; no external system
+was mutated, and no merge or publication claim is made.

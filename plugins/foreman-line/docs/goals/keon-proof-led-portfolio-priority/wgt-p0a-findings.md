@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-01
 **Parcel:** WGT-P0A
-**Disposition:** bounded record changes prepared; Gate 3 and independent review remain pending
+**Disposition:** bounded review rework prepared; both independent reviews remain HOLD and Gate 3 remains withheld
 
 ## Step 0 evidence
 
@@ -10,9 +10,9 @@
 |---|---|---|
 | Worktree | `D:/Repos/agent-skills-worktrees/wgt-p0a-foreman-reconciliation-20260801` | PASS |
 | Branch | `codex/wgt-p0a-foreman-reconciliation-20260801` | PASS |
-| Starting HEAD | `f807422d54c9cf2d10c48bdbfd712c01be0d2082` | PASS |
+| Rework entry HEAD | `0044c5284dd994541961eb25dba87eedf7e83753` | PASS |
 | Base | `origin/main` at `714ac657ded62d5a549428d06574fcb710ecc481` | PASS |
-| Starting status | clean; one shaping commit ahead of `origin/main` | PASS |
+| Rework entry status | clean; branch was three commits ahead of `origin/main` | PASS |
 | Bootstrap PR #4 | merged at `48d1db73ad0a6e9c2d9bd76f92f3a44d9fb7fcf0` | PASS |
 | Bootstrap closeout PR #5 | merged at `714ac657ded62d5a549428d06574fcb710ecc481` | PASS |
 | Tracked tree | `plugins/foreman-line` and the completed bootstrap spec are on `origin/main` | PASS |
@@ -23,17 +23,27 @@ external action and the historical wording is not rewritten.
 
 ## Read-only live-state observations
 
-- Linear `KEO-59` is `In Progress` and remains the sole commercial parent.
-- `KEO-145`, `KEO-156`, `KEO-157`, and `KEO-158` are existing related records;
-  the current observed status for each is `In Progress`.
-- `KEO-197` is the sole BrowseAhead lane and is currently `In Progress`; it
-  remains capacity-only and has no first-revenue dependency edge.
-- KPM-06 is prepared and approval-gated as `PRE-G2 / DO NOT SEND`.
-- The exact ten-recipient Gmail Sent search is already recorded as returning
-  zero messages. P0A does not repeat Gmail search or begin reply monitoring.
-- No KPM-07 actual-send receipt exists in the current recorded state.
-- Reply monitoring remains prohibited until explicit G2 closure plus an actual
-  KPM-07 send. The Kaseya exclusion remains mandatory.
+The exact Linear snapshot observed at `2026-08-01T13:18:39.9237092Z` was:
+
+| Issue | Status | Linear `updatedAt` | Existing URL |
+|---|---|---|---|
+| `KEO-59` | `In Progress` | `2026-07-31T21:15:06.582Z` | <https://linear.app/keonsystems/issue/KEO-59/workflow-evidence-review-first-paid-commercial-slice> |
+| `KEO-145` | `In Progress` | `2026-07-31T21:15:08.637Z` | <https://linear.app/keonsystems/issue/KEO-145/run-customer-discovery-and-design-partner-campaign> |
+| `KEO-156` | `In Progress` | `2026-07-31T20:17:19.672Z` | <https://linear.app/keonsystems/issue/KEO-156/specify-the-workflow-evidence-review-method-and-auditor-grade> |
+| `KEO-157` | `In Progress` | `2026-07-31T20:16:26.942Z` | <https://linear.app/keonsystems/issue/KEO-157/evaluate-a-conditional-agent-harness-binding-module-for-the-paid> |
+| `KEO-158` | `In Progress` | `2026-07-31T21:15:11.150Z` | <https://linear.app/keonsystems/issue/KEO-158/design-the-public-website-stripe-checkout-and-neon-commercial-state> |
+| `KEO-197` | `In Progress` | `2026-07-31T20:16:37.925Z` | <https://linear.app/keonsystems/issue/KEO-197/browseahead-detect-domainpath-slop-squatting-before-agent-navigation> |
+
+The Linear search was read-only and caused no mutation; no issue, document,
+backlog item, or WGT record was created or edited. `KEO-59` remains the
+commercial parent and `KEO-197` remains the sole capacity-only BrowseAhead
+lane. `discovery.md` is historical and outside the exact six-file P0A scope;
+it was not edited or used as current-state authority.
+
+KPM-06, the exact ten-recipient Gmail Sent result, and the absence of a KPM-07
+actual-send receipt are inherited from the verified starting state. P0A did
+not re-search Gmail or mint a receipt because reply monitoring is prohibited.
+The Kaseya exclusion remains mandatory.
 
 ## Gate and queue findings
 
@@ -63,8 +73,16 @@ reply monitoring, and Kaseya work remain NO-GO.
 
 ## Review disposition
 
-The exact diff still requires two fresh, context-independent, read-only reviews
-for this architecture/risk parcel. Reviewers must not edit, commit, publish,
-push, open or merge a PR, mutate Linear, search Gmail, or perform outreach.
-Until both reviews and the later coordinator Gate 3 decision are green, this
-record is not a completion or release claim.
+Two independent, context-independent, read-only reviews returned **HOLD**;
+neither returned **PASS**:
+
+| Review | Disposition | Required rework |
+|---|---|---|
+| Independent review 1 | **HOLD** | Live Linear claims needed durable timestamped provenance. |
+| Independent review 2 | **HOLD** | The handoff needed exact command results and a pinned content commit. |
+
+Reviewers did not edit, commit, publish, push, open or merge a PR, mutate
+Linear, search Gmail, or perform outreach. This bounded rework records the
+review dispositions and evidence; the later coordinator Gate 3 decision and
+fresh review of this rework remain pending, so this is not a completion or
+release claim.
