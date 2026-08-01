@@ -5,7 +5,7 @@
 **Date:** 2026-08-01
 **Starting commit:** `f807422d54c9cf2d10c48bdbfd712c01be0d2082`
 **Pinned content commit:** `0044c5284dd994541961eb25dba87eedf7e83753` (clean rework-entry HEAD)
-**Ending commit:** final bounded rework commit; exact SHA is reported at closeout
+**Ending commit:** `b4ff55c` (first bounded rework commit; handoff pin follows)
 
 ## Result
 
@@ -62,8 +62,8 @@ decision, and coordinator closeout conditions are satisfied.
 ## Commands and checks
 
 The pinned content commit is the clean rework-entry `HEAD` shown above. Exact
-rework checks are recorded below; the final rework commit is intentionally
-reported at closeout because this handoff cannot contain its own SHA.
+rework checks are recorded below; the ending commit above is the first bounded
+rework commit, with this handoff pin committed separately.
 
 | Command | Exact result |
 |---|---|
