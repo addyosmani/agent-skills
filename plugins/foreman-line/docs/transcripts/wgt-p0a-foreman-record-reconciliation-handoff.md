@@ -4,8 +4,11 @@
 **Role:** bounded builder
 **Date:** 2026-08-01
 **Starting commit:** `f807422d54c9cf2d10c48bdbfd712c01be0d2082`
-**Pinned content commit:** `0044c5284dd994541961eb25dba87eedf7e83753` (clean rework-entry HEAD)
-**Ending commit:** `b4ff55c` (first bounded rework commit; handoff pin follows)
+**Prior clean checkpoint:** `9ef7077000de04f94b3e5cdbc5434c86a99696fa`
+**Review target:** the exact branch `HEAD` at fresh-review dispatch; no record
+changes are permitted after dispatch. The coordinator records the resulting
+SHA in the publication evidence and verifies that the published commit is the
+reviewed commit.
 
 ## Result
 
@@ -62,18 +65,19 @@ decision, and coordinator closeout conditions are satisfied.
 
 ## Commands and checks
 
-The pinned content commit is the clean rework-entry `HEAD` shown above. Exact
-rework checks are recorded below; the ending commit above is the first bounded
-rework commit, with this handoff pin committed separately.
+The prior checkpoint above is retained for provenance. Exact rework checks are
+recorded below; the fresh-review target is the exact branch `HEAD` at dispatch,
+not the superseded checkpoint. Publication is prohibited if the reviewed SHA
+and published SHA differ.
 
 | Command | Exact result |
 |---|---|
-| `git rev-parse HEAD` | `0044c5284dd994541961eb25dba87eedf7e83753` |
+| `git rev-parse HEAD` | `9ef7077000de04f94b3e5cdbc5434c86a99696fa` (prior checkpoint; re-run at dispatch) |
 | `git branch --show-current` | `codex/wgt-p0a-foreman-reconciliation-20260801` |
-| `git status --short --branch` | `## codex/wgt-p0a-foreman-reconciliation-20260801...origin/main [ahead 3]`; no file changes |
-| `git diff --name-only origin/main...HEAD` | exactly the five already-changed allowed docs; the allowed `docs/specs/done/` destination is absent |
-| `git diff --check origin/main...HEAD` | exit `0`; no output |
-| `git diff --check` | exit `0`; no output |
+| `git status --short --branch` | clean branch; exact ahead count and SHA re-run at dispatch |
+| `git diff --name-only origin/main...HEAD` | exactly the five already-changed allowed docs; the allowed `docs/specs/done/` destination is absent at the prior checkpoint; re-run at dispatch |
+| `git diff --check origin/main...HEAD` | exit `0`; no output at the prior checkpoint; re-run at dispatch |
+| `git diff --check` | exit `0`; no output at the prior checkpoint; re-run at dispatch |
 | exact six-file scope comparison | PASS: changed paths are a subset of the six Allowed Files; no outside path is present |
 | `npm --prefix plugins/foreman-line/spec-linter run typecheck` | Not a P0A prerequisite; not run |
 | `plugins/foreman-line/spec-linter/node_modules/.bin/tsx.cmd plugins/foreman-line/spec-linter/src/cli.ts validate plugins/foreman-line/docs/specs/active/WGT-P0A-foreman-record-reconciliation.md` | PASS; no violation output |

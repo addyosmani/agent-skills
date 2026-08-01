@@ -151,8 +151,10 @@ historical and outside the exact six-file P0A scope; it is not edited or used
 as current-state authority.
 
 KPM-06, the exact ten-recipient Gmail Sent result, and the absence of a KPM-07
-actual-send receipt are inherited from the verified starting state. P0A did
-not re-search Gmail or mint a receipt because reply monitoring is prohibited.
+actual-send receipt are inherited from the user-authorized verified starting
+state, but remain unverified/held because no durable repo receipt is available
+in agent-skills. P0A did not re-search Gmail or mint a receipt because reply
+monitoring is prohibited.
 
 The two independent review dispositions are **HOLD**, not **PASS**: the first
 required durable timestamped provenance for live Linear claims, and the second
