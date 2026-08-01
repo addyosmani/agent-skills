@@ -1,0 +1,19 @@
+{
+  "name": "@kaseya-one/pcc",
+  "version": "0.1.0-scaffold",
+  "description": "Proof-Gated Parcel Compiler CLI",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "bin": { "pcc": "./src/cli.ts" },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test test/*.test.ts",
+    "lint": "biome check ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.3",
+    "@types/node": "26.1.1",
+    "tsx": "4.23.1",
+    "typescript": "7.0.2"
+  }
+}
