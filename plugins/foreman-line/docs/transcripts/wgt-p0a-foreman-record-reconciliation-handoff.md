@@ -91,17 +91,24 @@ and diff-check. Two independent reviews returned **HOLD**, not **PASS**: one
 for missing durable timestamped Linear provenance and one for missing exact
 handoff command results/pinned content commit.
 
+## Stage F closeout
+
+Two fresh independent read-only reviews returned PASS at the exact reviewed
+head `ec4e02d057db594206cdfac35471ea7b445caea0`, with no unresolved Blocker,
+High, or Medium finding. PR #6 merged unchanged at
+`8276691fd058dcde600dcb1374fd22d305c4a7a8`, and fresh `origin/main` was
+verified at that commit. The active parcel spec was archived under
+`plugins/foreman-line/docs/specs/done/`; no active WGT-P0A spec remains.
+
 ## Blockers and decisions needed
 
 - No Step 0 mismatch or missing Allowed File remains.
-- Two fresh context-independent read-only reviews are still required.
-- Gate 3 remains withheld; do not push, open/merge a PR, publish, mutate
-  Linear/Gmail, send outreach, enable payment, handle customer data, deploy,
-  or work on Kaseya.
+- No P0A blocker remains. G2, named human/external gates, and the no-send,
+  no-monitoring, no-payment, no-publication, no-customer-data, and Kaseya
+  boundaries remain active.
 
 ## Next safe action
 
-Coordinator verifies this exact diff and runs the independent reviews. If green,
-the next implementation action is WGT-P0B in a separate `keon-docs`
-repo-owned branch/worktree. WGT-P0C is deferred until P0A and P0B are both
-independently verified and is the only later step that may reconcile Linear.
+WGT-P0A is merged and closed. The next implementation action is WGT-P0B in a
+separate `keon-docs` repo-owned branch/worktree. WGT-P0C is deferred until P0B
+is independently verified and is the only later step that may reconcile Linear.
