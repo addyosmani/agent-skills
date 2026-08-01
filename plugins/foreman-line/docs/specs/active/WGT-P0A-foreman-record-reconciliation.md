@@ -60,10 +60,13 @@ WGT-P0C Linear reconciliation only after P0B is independently verified.
 - [ ] The exact read-only Linear snapshot observed at
   `2026-08-01T13:18:39.9237092Z` is recorded with each existing issue URL and
   its Linear `updatedAt` value; no duplicate creation or mutation is claimed.
-- [ ] Outreach truth is recorded: KPM-06 is prepared/approval-gated, the exact
-  ten-recipient Gmail Sent search returned zero messages, no KPM-07 actual-send
-  receipt exists, and reply monitoring is prohibited until explicit G2 closure
-  plus an actual KPM-07 send. The Kaseya exclusion is retained.
+- [ ] Outreach truth is recorded from the user-authorized verified starting-state
+  directive: KPM-06 is prepared as `PRE-G2 / DO NOT SEND`, the exact
+  ten-recipient Gmail Sent result is zero, and no KPM-07 actual-send receipt is
+  available. These statuses are recorded but unverified/held because no durable
+  repo receipt is available in agent-skills; P0A did not search Gmail or mint a
+  receipt, and reply monitoring remains blocked. The Kaseya exclusion is
+  retained.
 - [ ] The old pre-bootstrap missing-source stop is retained as history but
   explicitly resolved by the merged bootstrap evidence; it cannot continue to
   block P0A or authorize any external action.
@@ -188,11 +191,12 @@ capacity-only BrowseAhead lane. `discovery.md` is historical evidence and is
 outside this parcel's exact six-file Allowed Files scope; P0A does not edit it
 or treat it as current-state authority.
 
-KPM-06, the exact ten-recipient Gmail Sent result, and the absence of a KPM-07
-actual-send receipt are inherited from the verified starting state. P0A did
-not re-search Gmail or mint an outreach/send receipt because reply monitoring
-is prohibited until explicit G2 closure plus an actual KPM-07 send. The Kaseya
-exclusion remains in force.
+KPM-06's prepared `PRE-G2 / DO NOT SEND` status, the exact ten-recipient Gmail
+Sent result of zero, and the absence of a KPM-07 actual-send receipt are
+inherited from the user-authorized verified starting-state directive. These
+statuses are recorded but unverified/held because no durable repo receipt is
+available in agent-skills. P0A did not search Gmail or mint a receipt; reply
+monitoring remains blocked. The Kaseya exclusion remains in force.
 
 Two independent reviews returned **HOLD**: one required durable timestamped
 provenance for the live Linear claims, and one required exact handoff command

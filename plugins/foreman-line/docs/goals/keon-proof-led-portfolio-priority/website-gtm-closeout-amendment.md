@@ -362,11 +362,14 @@ plane. The 2026-08-01 read-only Linear observation records:
 
 No duplicate issue, document, backlog item, or WGT Linear record was created.
 
-KPM-06 remains prepared and approval-gated as `PRE-G2 / DO NOT SEND`. The
-already-recorded exact ten-recipient Gmail Sent search returned zero messages;
-no KPM-07 actual-send receipt exists. Reply monitoring remains prohibited
-until explicit G2 closure and a separately recorded actual KPM-07 send. The
-Kaseya exclusion remains in force.
+KPM-06 remains prepared and approval-gated as `PRE-G2 / DO NOT SEND`; the exact
+ten-recipient Gmail Sent result is zero, and no KPM-07 actual-send receipt is
+available. These statuses are inherited from the user-authorized verified
+starting-state directive and are recorded but unverified/held because no
+durable repo receipt is available in agent-skills. P0A did not search Gmail or
+mint a receipt; reply monitoring remains blocked until explicit G2 closure and
+a separately recorded actual KPM-07 send. The Kaseya exclusion remains in
+force.
 
 Gate 1 is closed for the ratified WGT-A1 through WGT-A6 amendment. Gate 2 is
 standing dispatch authorization only for the named agent parcels in the
@@ -399,10 +402,13 @@ The search was read-only and caused no Linear mutation; no issue, document,
 backlog item, or WGT record was created or edited. `discovery.md` is historical
 and outside the exact six-file P0A scope, so it remains untouched.
 
-KPM-06, the exact ten-recipient Gmail Sent result, and the absence of a KPM-07
-actual-send receipt are inherited from the verified starting state. P0A did
-not re-search Gmail or mint a send receipt because reply monitoring is
-prohibited. G2 remains open and the Kaseya exclusion remains in force.
+KPM-06's prepared `PRE-G2 / DO NOT SEND` status, the exact ten-recipient Gmail
+Sent result of zero, and the absence of a KPM-07 actual-send receipt are
+inherited from the user-authorized verified starting-state directive. These
+statuses are recorded but unverified/held because no durable repo receipt is
+available in agent-skills. P0A did not search Gmail or mint a receipt; reply
+monitoring remains blocked. G2 remains open and the Kaseya exclusion remains
+in force.
 
 Two independent reviews returned **HOLD**: durable timestamped provenance was
 missing for the live Linear claims, and the handoff lacked exact command

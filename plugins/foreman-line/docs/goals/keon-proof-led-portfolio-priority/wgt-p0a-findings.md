@@ -40,10 +40,12 @@ commercial parent and `KEO-197` remains the sole capacity-only BrowseAhead
 lane. `discovery.md` is historical and outside the exact six-file P0A scope;
 it was not edited or used as current-state authority.
 
-KPM-06, the exact ten-recipient Gmail Sent result, and the absence of a KPM-07
-actual-send receipt are inherited from the verified starting state. P0A did
-not re-search Gmail or mint a receipt because reply monitoring is prohibited.
-The Kaseya exclusion remains mandatory.
+KPM-06's prepared `PRE-G2 / DO NOT SEND` status, the exact ten-recipient Gmail
+Sent result of zero, and the absence of a KPM-07 actual-send receipt are
+inherited from the user-authorized verified starting-state directive. These
+statuses are recorded but unverified/held because no durable repo receipt is
+available in agent-skills. P0A did not search Gmail or mint a receipt; reply
+monitoring remains blocked. The Kaseya exclusion remains mandatory.
 
 ## Gate and queue findings
 

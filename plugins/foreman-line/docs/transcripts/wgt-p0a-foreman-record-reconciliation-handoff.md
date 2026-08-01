@@ -53,11 +53,12 @@ decision, and coordinator closeout conditions are satisfied.
   The search was read-only and caused no Linear mutation; no issue, document,
   backlog item, or WGT record was created or edited. `discovery.md` is
   historical and outside the exact six-file scope, so it remains untouched.
-- Outreach state is inherited from the verified starting state: KPM-06 is
-  `PRE-G2 / DO NOT SEND`, the exact ten-recipient Gmail Sent result is zero,
-  and no KPM-07 actual-send receipt exists. P0A did not re-search Gmail or
-  mint a receipt because reply monitoring is prohibited; Kaseya remains
-  excluded.
+- Outreach state is inherited from the user-authorized verified starting-state
+  directive: KPM-06 is prepared as `PRE-G2 / DO NOT SEND`, the exact
+  ten-recipient Gmail Sent result is zero, and no KPM-07 actual-send receipt is
+  available. These statuses are recorded but unverified/held because no durable
+  repo receipt is available in agent-skills. P0A did not search Gmail or mint a
+  receipt; reply monitoring remains blocked. Kaseya remains excluded.
 
 ## Commands and checks
 
@@ -74,12 +75,15 @@ rework commit, with this handoff pin committed separately.
 | `git diff --check origin/main...HEAD` | exit `0`; no output |
 | `git diff --check` | exit `0`; no output |
 | exact six-file scope comparison | PASS: changed paths are a subset of the six Allowed Files; no outside path is present |
-| `npm --prefix plugins/foreman-line/spec-linter run typecheck` | PASS |
+| `npm --prefix plugins/foreman-line/spec-linter run typecheck` | Not a P0A prerequisite; not run |
 | `plugins/foreman-line/spec-linter/node_modules/.bin/tsx.cmd plugins/foreman-line/spec-linter/src/cli.ts validate plugins/foreman-line/docs/specs/active/WGT-P0A-foreman-record-reconciliation.md` | PASS; no violation output |
 | Markdown whitespace check: `git diff --check origin/main...HEAD -- '*.md'` | exit `0`; no output |
 
 The Linear search was read-only/no mutation. `discovery.md` is historical and
-outside scope. Two independent reviews returned **HOLD**, not **PASS**: one
+outside scope. The spec-linter typecheck was not a P0A prerequisite and was not
+run; because no TypeScript, product, package, or test file changed, P0A
+acceptance relies only on active-spec validation, spec-linter lint, diff scope,
+and diff-check. Two independent reviews returned **HOLD**, not **PASS**: one
 for missing durable timestamped Linear provenance and one for missing exact
 handoff command results/pinned content commit.
 
