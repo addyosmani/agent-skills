@@ -1,10 +1,10 @@
 ---
 ticket: WGT-P0BOOT
 title: Tracked Foreman Line bootstrap
-status: active
+status: done
 owner: clinton.morgan
 created: 2026-07-31
-updated: 2026-07-31
+updated: 2026-08-01
 supersedes: null
 superseded_by: null
 risk: elevated
