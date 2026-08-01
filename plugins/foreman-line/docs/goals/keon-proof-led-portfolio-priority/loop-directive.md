@@ -14,33 +14,41 @@ and the triaged plan review at
 
 ### Current ownership and stop state — 2026-08-01
 
-The primary Codex coordinator resumed ownership at the post-plan-review parcel
-boundary. WGT-D1 through WGT-D10 and WGT-A1 through WGT-A6 are ratified, and
-the mandatory repaired-plan follow-up review passed. The loop is stopped at
-WGT-P0A preflight because the Foreman plugin is untracked and absent from all
-available `agent-skills` base branches while the containing checkout is dirty.
-No builder is live. Resume only after the owner chooses tracked-plugin
-bootstrap or explicitly ratifies a local-only coordinator-ledger exception.
+The primary Codex coordinator owns this current WGT-P0A parcel boundary. The
+fresh Step 0 inventory in the named isolated worktree found the ratified base,
+tracked Foreman bootstrap, exact branch/worktree, and exact Allowed Files; the
+builder's partial edits remain unclaimed until this coordinator verifies them.
+WGT-D1 through WGT-D10 and WGT-A1 through WGT-A6 remain ratified.
+
+The old missing-source preflight stop is historical and was resolved by the
+merged tracked-plugin bootstrap. It is not the current stop state and does not
+authorize external action. The current stop state is coordinator verification
+of the bounded P0A record reconciliation, including exact-scope checks and the
+two required fresh read-only reviews. No product, package, test, contract,
+external-control, outreach, publication, payment, customer-data, deployment,
+Gmail, or Kaseya action is authorized.
 
 ## Standing authorizations
 
-1. **Gate 2 — dispatch is granted** exactly for P0-P2, P3A-P3E, P4-P7, and
-   BA1-BA2, subject to the charter dependency order, exact Allowed Files, one
-   branch/worktree per repo parcel, and every dispatch's Step 0
-   restate-and-stop gate. Clint Morgan additionally granted parcel-specific
-   Gate 2 authorization for bounded P0V on 2026-07-29, before P0 Gate 3.
-2. **Gate 3 — merge is withheld by default.** Clint Morgan granted and consumed
-   parcel-specific Gate 3 for P1 through PR #22, P2 through PR #23, and P5A
-   through PR #173 on 2026-07-30. A complete green deterministic and
-   adversarial evidence chain produces a merge-decision request; it never
-   authorizes merge. No merge, squash merge, rebase merge, or equivalent
-   integration action occurs without Clint's parcel-specific approval.
-3. **External actions are not authorized.** H0-H4, customer contact, public
-   publication, payment enablement or acceptance, invoices, legal acceptance,
-   production deployment, and customer-data handling always stop for explicit
-   approval.
-4. Push and draft-PR creation are permitted only when a parcel spec explicitly
-   includes them and all pre-PR checks are green. They do not imply Gate 3.
+1. **Gate 2 — parcel-scoped standing dispatch only.** The current exact queue is
+   `WGT-P0A -> WGT-P0B -> WGT-P0C`, subject to each parcel's exact spec,
+   Allowed Files, isolated branch/worktree, dependency order, and fresh Step 0.
+   Gate 2 does not grant portfolio-wide implementation authority.
+2. **Gate 3 — withheld.** A complete green deterministic and adversarial
+   evidence chain produces a parcel-specific decision request; it never
+   authorizes merge, push, PR creation, or equivalent integration action.
+3. **Current gate state remains held.** G2 is open; G4 is not established; and
+   H5, H6A, H6B, H7P, H7, and H8 are human/external gates open and not
+   performed. Payment, publication, customer-data handling, outreach, Gmail
+   reply monitoring, and Kaseya work remain NO-GO.
+4. Push, draft-PR creation, Linear mutation, and other external actions remain
+   outside this P0A parcel and require later explicit authority.
+
+## Historical authorization record — retained for audit
+
+The following 2026-07-30 authorization amendment is preserved as historical
+record. It is superseded for the current P0A parcel by the parcel-scoped gate
+state above and must not be read as current authority.
 
 ## Authorization amendment — 2026-07-30
 
@@ -63,7 +71,7 @@ non-dependency rules remain: BrowseAhead stays WIP one and may not delay the
 Review-first revenue path. A failed release gate is a finding to repair, not a
 revived authorization hold.
 
-## Active release sequence
+## Historical release sequence — retained for audit
 
 1. Publish and merge BA1, then shape BA2 against its frozen contract in the
    bounded BrowseAhead lane.
@@ -86,7 +94,21 @@ Follow `docs/COORDINATOR-PATTERN.md`,
 `skills/parcel-driven-development/SKILL.md`, `docs/SPEC-CONVENTION.md`, and the
 standing constraints referenced by each kickstarter.
 
-## Queue and dependency order
+## Current queue and dependency order
+
+1. **WGT-P0A — current parcel.** Complete coordinator reconciliation and the
+   exact-scope review chain in this isolated Foreman worktree. Gate 3 remains
+   withheld.
+2. **WGT-P0B — next safe action.** After green P0A and coordinator acceptance,
+   reconcile the authoritative initiative records in a separate `keon-docs`
+   repo-owned branch/worktree.
+3. **WGT-P0C — deferred.** Reconcile existing Linear state only after P0A and
+   P0B are independently verified; create no duplicate backlog or WGT record.
+
+No parcel crosses a red or unknown gate. The ratified dependency-ready queue
+follows only after this exact `WGT-P0A -> WGT-P0B -> WGT-P0C` chain is green.
+
+## Historical queue and dependency order — retained for audit
 
 1. P0V — claims-validation repair, now the sole prerequisite to resuming P0
    Gate 3 evidence.

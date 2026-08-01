@@ -147,7 +147,28 @@ Only these exact paths may be created, edited, moved, or deleted in this parcel:
 Any required path outside this list is a stop-and-report condition requiring a
 ratified amendment. No glob or directory shorthand grants mutation authority.
 
+## Builder reconciliation record — 2026-08-01
+
+Step 0 passed on the named worktree and branch. The worktree was clean before
+implementation; `HEAD` was `f807422d54c9cf2d10c48bdbfd712c01be0d2082`, the
+branch was `codex/wgt-p0a-foreman-reconciliation-20260801`, and local
+`origin/main` was the verified base
+`714ac657ded62d5a549428d06574fcb710ecc481`.
+
+The merged bootstrap evidence is verified: agent-skills PR #4 merged at
+`48d1db73ad0a6e9c2d9bd76f92f3a44d9fb7fcf0`, closeout PR #5 merged at
+`714ac657ded62d5a549428d06574fcb710ecc481`, and `plugins/foreman-line` plus
+the completed bootstrap spec are tracked on `origin/main`. The prior
+pre-bootstrap missing-source stop remains historical evidence and is resolved
+for this parcel; it neither blocks P0A nor authorizes any external action.
+
+This spec remains `active` after the builder record changes. The coordinator
+must perform the independent reviews, Gate 3 decision, and later Stage F
+closure before moving this spec to `docs/specs/done/`; P0A does not archive its
+own spec.
+
 ## Status
 
-Ready for builder dispatch after coordinator shaping lint and standalone spec
-commit. No builder is authorized to broaden scope or mutate external systems.
+Builder record prepared within exact scope. Local doc/spec checks and the
+independent read-only review chain remain required before any merge or
+publication. No external system was mutated.

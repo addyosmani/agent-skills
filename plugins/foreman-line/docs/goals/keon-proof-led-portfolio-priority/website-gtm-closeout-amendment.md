@@ -327,3 +327,57 @@ one explicit owner decision:
 
 Option 1 is recommended because option 2 weakens persistent-state and Stage F
 closure evidence.
+
+## WGT-P0A bootstrap reconciliation — 2026-08-01
+
+The pre-bootstrap stop above is retained as historical record and is no longer
+the current P0A blocker. The exact tracked-plugin bootstrap was completed and
+verified on the existing agent-skills worktree:
+
+- PR #4, `Track Foreman Line plugin source`, merged at
+  `48d1db73ad0a6e9c2d9bd76f92f3a44d9fb7fcf0`.
+- PR #5, `Close Foreman bootstrap parcel`, merged at
+  `714ac657ded62d5a549428d06574fcb710ecc481`.
+- Remote `origin/main` resolves to
+  `714ac657ded62d5a549428d06574fcb710ecc481`.
+- `plugins/foreman-line` and
+  `plugins/foreman-line/docs/specs/done/WGT-P0BOOT-tracked-foreman-bootstrap.md`
+  are present in the verified `origin/main` tree.
+
+This resolves the missing-source and absent-merge-target condition for P0A
+without rewriting the historical stop. It does not authorize a product edit,
+Linear mutation, Gmail search, outreach, publication, payment, deployment,
+customer-data handling, or Kaseya work.
+
+### Current read-only control-plane snapshot
+
+The existing Keon initiative and `KEO-59` remain the sole commercial control
+plane. The 2026-08-01 read-only Linear observation records:
+
+- `KEO-59`: `In Progress` and sole commercial parent.
+- `KEO-145`, `KEO-156`, `KEO-157`, and `KEO-158`: existing related records;
+  their current status is `In Progress`.
+- `KEO-197`: the sole BrowseAhead lane, currently `In Progress`; it remains
+  capacity-only and has no edge into the first-revenue queue.
+
+No duplicate issue, document, backlog item, or WGT Linear record was created.
+
+KPM-06 remains prepared and approval-gated as `PRE-G2 / DO NOT SEND`. The
+already-recorded exact ten-recipient Gmail Sent search returned zero messages;
+no KPM-07 actual-send receipt exists. Reply monitoring remains prohibited
+until explicit G2 closure and a separately recorded actual KPM-07 send. The
+Kaseya exclusion remains in force.
+
+Gate 1 is closed for the ratified WGT-A1 through WGT-A6 amendment. Gate 2 is
+standing dispatch authorization only for the named agent parcels in the
+superseding queue and their exact scopes. Gate 3 remains withheld per parcel
+until its complete green evidence chain and parcel-specific decision. G2 is
+open, G4 is not established, and H5, H6A, H6B, H7P, H7, and H8 remain
+human/external gates open and not performed. Payment, publication,
+customer-data handling, outreach, Gmail reply monitoring, and Kaseya work
+remain NO-GO.
+
+The earlier broad authorization wording in this historical amendment and the
+older loop record must not be read as current P0A authority; the ratified
+WGT-A1 through WGT-A6 split, the active P0A spec, and the gate facts above are
+the current record.
