@@ -1,9 +1,9 @@
 # WGT-P0A session handoff — Foreman record reconciliation
 
-**Parcel:** WGT-P0A  
-**Role:** bounded builder  
-**Date:** 2026-08-01  
-**Starting commit:** `f807422d54c9cf2d10c48bdbfd712c01be0d2082`  
+**Parcel:** WGT-P0A
+**Role:** bounded builder
+**Date:** 2026-08-01
+**Starting commit:** `f807422d54c9cf2d10c48bdbfd712c01be0d2082`
 **Ending commit:** final bounded record commit containing this handoff; exact SHA is reported at closeout
 
 ## Result

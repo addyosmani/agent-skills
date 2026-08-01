@@ -1,7 +1,7 @@
 # WGT-P0A Findings — Foreman record reconciliation
 
-**Date:** 2026-08-01  
-**Parcel:** WGT-P0A  
+**Date:** 2026-08-01
+**Parcel:** WGT-P0A
 **Disposition:** bounded record changes prepared; Gate 3 and independent review remain pending
 
 ## Step 0 evidence
