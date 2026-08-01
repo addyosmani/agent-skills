@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-01
 **Parcel:** WGT-P0A
-**Disposition:** bounded review rework prepared; both independent reviews remain HOLD and Gate 3 remains withheld
+**Disposition:** complete; two fresh independent reviews PASS; PR #6 merged
 
 ## Step 0 evidence
 
@@ -85,7 +85,16 @@ provenance, not a claim about the final review dispatch:
 | Independent review 2 | **HOLD** | The handoff needed exact command results and a pinned content commit. |
 
 Reviewers did not edit, commit, publish, push, open or merge a PR, mutate
-Linear, search Gmail, or perform outreach. This bounded rework records the
-review dispositions and evidence; the later coordinator Gate 3 decision and
-fresh review of this rework remain pending, so this is not a completion or
-release claim.
+Linear, search Gmail, or perform outreach. This section retains the historical
+HOLD dispositions and evidence.
+
+## Stage F closeout — 2026-08-01
+
+Two fresh independent read-only reviews then returned PASS at the exact
+reviewed head `ec4e02d057db594206cdfac35471ea7b445caea0`, with no unresolved
+Blocker, High, or Medium finding. PR #6 was published unchanged and merged at
+`8276691fd058dcde600dcb1374fd22d305c4a7a8`; fresh `origin/main` was verified
+at that merge commit. WGT-P0A is complete. The next safe action is WGT-P0B in
+a separate `keon-docs` repo-owned branch/worktree. G2, the named human and
+external gates, and the no-send/no-monitoring/no-payment/no-publication/
+no-customer-data/Kaseya boundaries remain unchanged.

@@ -1,7 +1,7 @@
 ---
 ticket: WGT-P0A
 title: Foreman record reconciliation
-status: active
+status: done
 owner: clinton.morgan
 created: 2026-08-01
 updated: 2026-08-01
@@ -203,8 +203,21 @@ provenance for the live Linear claims, and one required exact handoff command
 results plus a pinned content commit. This rework records those gaps and does
 not claim reviewer **PASS** or Gate 3 closure.
 
+## Stage F closeout — 2026-08-01
+
+- Two fresh independent context-independent read-only reviews returned PASS at
+  the exact pre-merge reviewed head `ec4e02d057db594206cdfac35471ea7b445caea0`,
+  with no unresolved Blocker, High, or Medium finding.
+- The reviewed head was pushed unchanged as PR #6, verified clean, and merged
+  at `8276691fd058dcde600dcb1374fd22d305c4a7a8`. Fresh `origin/main` was
+  verified at that merge commit.
+- Publication and merge preserved the no-send, no-monitoring, no-payment,
+  no-publication, no-customer-data, and Kaseya boundaries. G2 and all named
+  human or external gates remain open as recorded.
+- This spec is archived at `docs/specs/done/`; no active WGT-P0A spec remains.
+
 ## Status
 
-Bounded rework is prepared within exact scope. The two independent reviewer
-dispositions remain **HOLD** pending review of this rework; no external system
-was mutated, and no merge or publication claim is made.
+WGT-P0A is complete and merged. The next safe action is WGT-P0B in a separate
+`keon-docs` repo-owned branch/worktree; WGT-P0C remains deferred until P0B is
+independently verified.
