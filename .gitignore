@@ -3,5 +3,7 @@ node_modules/
 .env
 .env.*
 *.log
+.claude/settings.local.json
+**/.claude/settings.local.json
 .claude/.simplify-ignore-cache/
 .claude/sdd-cache/
