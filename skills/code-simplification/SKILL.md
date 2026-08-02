@@ -294,6 +294,44 @@ function UserBadge({ user }: Props) {
 // This is a judgment call — flag it, don't auto-refactor.
 ```
 
+## Right-sizing LLM Calls
+
+The same simplification principle that removes unnecessary abstraction applies to LLM usage: don't use more model than the task requires. Using a flagship model for every call — summarization, classification, templated generation — is the LLM equivalent of importing a framework to center a div. It adds cost and latency without improving output quality.
+
+### Match model tier to task complexity
+
+| Task type | Complexity signal | Right tier |
+|---|---|---|
+| Summarization, classification, templated generation | Fixed output format, well-defined input | Fast/cheap (Haiku, Flash, GPT-3.5) |
+| Code generation, structured extraction, multi-step reasoning | Requires judgment, ambiguous input | Mid-tier (Sonnet, GPT-4o-mini) |
+| Architecture decisions, adversarial review, novel problem solving | High stakes, no clear right answer | Powerful (Opus, GPT-4o) |
+
+Start at the cheapest tier that meets the quality bar. Move up only when outputs fail your eval — not based on intuition about difficulty. A task that feels complex often isn't once the prompt is well-structured.
+
+### Prefer one prompt over a chain
+
+Multi-step prompt chains are the LLM equivalent of unnecessary indirection: they multiply cost and failure points, and make errors harder to trace.
+
+```typescript
+// Over-engineered: three calls to do what one can do
+const topics = await llm.call('Extract key topics from: ' + doc);
+const summaries = await llm.call('Summarize each topic: ' + topics);
+const result = await llm.call('Write an executive summary: ' + summaries);
+
+// Simplified: one clear prompt, one call
+const result = await llm.call('Write a 3-sentence executive summary of: ' + doc);
+```
+
+A chain earns its complexity only when intermediate outputs are independently useful, need human review, or require routing logic (classify first, then handle each class differently with a specialized prompt).
+
+### Include only context that changes the output
+
+Every token sent is a cost and a source of noise. Before including context in a prompt, ask: if this were removed, would the output change? Background that doesn't affect the answer doesn't belong in the prompt. See `context-engineering` for techniques.
+
+### Memoize deterministic calls
+
+If the same prompt and input will always produce equivalent output, cache the result rather than re-calling the model. File summarization, code documentation, and classification against a fixed schema are all candidates. The cheapest LLM call is the one you don't make.
+
 ## Common Rationalizations
 
 | Rationalization | Reality |
@@ -305,6 +343,8 @@ function UserBadge({ user }: Props) {
 | "This abstraction might be useful later" | Don't preserve speculative abstractions. If it's not used now, it's complexity without value. Remove it and re-add when needed. |
 | "The original author must have had a reason" | Maybe. Check git blame — apply Chesterton's Fence. But accumulated complexity often has no reason; it's just the residue of iteration under pressure. |
 | "I'll refactor while adding this feature" | Separate refactoring from feature work. Mixed changes are harder to review, revert, and understand in history. |
+| "Use the most powerful model to be safe" | Power doesn't compensate for a poorly structured prompt, and it adds cost and latency on every call. Right-size first, escalate when outputs fail eval. |
+| "A multi-step chain gives us more control" | Chains multiply cost and failure surface. A single well-crafted prompt is simpler, cheaper, and easier to debug than three sequential calls. |
 
 ## Red Flags
 
@@ -315,6 +355,8 @@ function UserBadge({ user }: Props) {
 - Simplifying code you don't fully understand
 - Batching many simplifications into one large, hard-to-review commit
 - Refactoring code outside the scope of the current task without being asked
+- Using a flagship LLM model for every call regardless of task complexity
+- Multi-step prompt chains where a single well-structured prompt would produce the same output
 
 ## Verification
 
@@ -322,6 +364,8 @@ After completing a simplification pass:
 
 - [ ] All existing tests pass without modification
 - [ ] Build succeeds with no new warnings
+- [ ] Any LLM calls use the cheapest model tier whose outputs pass the quality bar
+- [ ] No multi-step prompt chain exists where a single prompt produces equivalent output
 - [ ] Linter/formatter passes (no style regressions)
 - [ ] Each simplification is a reviewable, incremental change
 - [ ] The diff is clean — no unrelated changes mixed in
