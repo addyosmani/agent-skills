@@ -190,6 +190,48 @@ Test failure → Agent follows debugging-and-error-recovery skill
 Build error → Agent checks config and dependencies
 ```
 
+## Eval Gating for LLM Features
+
+Standard test suites verify deterministic code. LLM features — prompts, system instructions, model config, retrieval logic, tool definitions — can break in ways unit tests won't catch: a prompt rewrite that scores well on one case but silently regresses three others; a system instruction change that makes the model refuse valid requests. The fix is a dedicated eval step that runs whenever LLM-affecting files change and blocks merge if the pass rate drops.
+
+**Trigger on path, not on every commit.** Evals call a live model and cost real money. Use `paths:` filters so the eval job only fires when the files that actually influence model behavior are touched:
+
+```yaml
+# .github/workflows/evals.yml
+name: Eval Gate
+on:
+  pull_request:
+    paths:
+      - 'prompts/**'
+      - 'src/config/model*.ts'
+      - 'src/retrieval/**'
+      - 'src/tools/**'
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: 'npm' }
+      - run: npm ci
+      - name: Run eval suite
+        run: npm run evals
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          EVAL_PASS_THRESHOLD: '0.90'  # fail if pass rate drops below 90%
+```
+
+**What belongs in the eval suite:**
+- **Golden pairs** — known-good input/output pairs captured from manual testing or production logs
+- **Regression cases** — every input that caused a past production failure; stays in the suite permanently
+- **Adversarial inputs** — known injection attempts and out-of-scope requests the model should refuse
+- **Edge cases** — empty input, very long input, multilingual input if the prompt is expected to handle it
+
+**Gate on pass rate, not exact match.** LLM output is non-deterministic — the same prompt produces different text each run. Exact-match assertions create flaky evals. Instead, score each output (correct / incorrect against a rubric, or via an LLM judge) and fail the gate when the pass rate drops below a threshold calibrated from your baseline. A drop of 5 percentage points or more is a regression worth blocking. A PR that lowers the eval pass rate is treated identically to a PR that breaks a unit test: **do not merge it**.
+
+For guidance on building and evolving the eval suite itself — writing cases, choosing judges, and closing the feedback loop after failures — see `test-driven-development` and `observability-and-instrumentation`.
+
 ## Deployment Strategies
 
 ### Preview Deployments
@@ -366,6 +408,8 @@ jobs:
 | "The test is flaky, just re-run" | Flaky tests mask real bugs and waste everyone's time. Fix the flakiness. |
 | "We'll add CI later" | Projects without CI accumulate broken states. Set it up on day one. |
 | "Manual testing is enough" | Manual testing doesn't scale and isn't repeatable. Automate what you can. |
+| "Evals are expensive, skip them in CI" | Run evals only on path-filtered changes to prompt or model config files — the cost is proportionate. Skipping them means shipping prompt regressions silently. |
+| "Our prompts didn't change, so evals aren't needed" | Model config, retrieval logic, and tool definitions all affect output. Any of these changing without an eval gate is a blind deployment. |
 
 ## Red Flags
 
@@ -376,6 +420,8 @@ jobs:
 - No rollback mechanism
 - Secrets stored in code or CI config files (not secrets manager)
 - Long CI times with no optimization effort
+- LLM features (prompts, model config, retrieval logic) shipped with no eval gate
+- Eval suite using exact-match assertions on LLM output (produces flaky, unmaintainable evals)
 
 ## Verification
 
@@ -388,3 +434,5 @@ After setting up or modifying CI:
 - [ ] Secrets are stored in the secrets manager, not in code
 - [ ] Deployment has a rollback mechanism
 - [ ] Pipeline runs in under 10 minutes for the test suite
+- [ ] Eval gate configured for any PR touching prompts, model config, retrieval logic, or tool definitions
+- [ ] Eval suite gates on pass rate with a documented baseline threshold (not exact-match assertions)
