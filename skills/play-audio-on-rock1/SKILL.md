@@ -48,8 +48,14 @@ Raw PCM (S16LE mono) — no MP3 decode needed on either side.
 
 ### 2. Transfer the clip + the player to rock1
 
-The PCM is ~176KB raw / ~235KB base64 for a 4s clip. Transfer in 4 chunks of base64 (~59KB each) using `printf '%s' '<b64>' | base64 -d >> /tmp/audio/clip.pcm` (first chunk uses `>` not `>>`). Use the same pattern for `scripts/play.py` (~5KB — single transfer fine).
+The PCM is ~176KB raw / ~235KB base64 for a 4s clip. Transfer in 4 chunks of base64 (~59KB each) — first chunk uses `tee` (truncate or create), subsequent chunks use `tee -a` (append). Use the same pattern for `scripts/play.py` (~5KB — single transfer fine):
 
+```bash
+# First chunk (creates the file):
+printf '%s' '[b64]' | base64 -d | tee /tmp/audio/clip.pcm
+# Subsequent chunks (append):
+printf '%s' '[b64-2]' | base64 -d | tee -a /tmp/audio/clip.pcm
+```
 ### 3. Play through `hw:1,0`
 
 ```bash
@@ -64,10 +70,10 @@ That's it. The player expands mono→stereo inline, opens ALSA, writes frames, d
 
 ```bash
 for i in 1 2 3 4 5 6 7; do
-  printf '=== [%s] play %d/7 START ===\n' "$(date -u +%H:%M:%S)" "$i" | tee -a /dev/ttyS2 >/dev/null
-  sudo -n python3 /tmp/audio/play.py /tmp/audio/clip.pcm --device hw:1,0 2>&1 | tee -a /dev/ttyS2
+  printf '=== [%s] play %d/7 START ===\n' "$(date -u +%H:%M:%S)" "$i" | tee -a /dev/ttyS2
+  sudo -n python3 /tmp/audio/play.py /tmp/audio/clip.pcm --device hw:1,0 |& tee -a /dev/ttyS2
   rc=${PIPESTATUS[0]}
-  printf '=== [%s] play %d/7 END rc=%d ===\n' "$(date -u +%H:%M:%S)" "$i" "$rc" | tee -a /dev/ttyS2 >/dev/null
+  printf '=== [%s] play %d/7 END rc=%d ===\n' "$(date -u +%H:%M:%S)" "$i" "$rc" | tee -a /dev/ttyS2
 done
 ```
 
@@ -104,7 +110,7 @@ All three are pure Python 3 stdlib + `ctypes→libasound.so.2`. No `pip install`
 - **sudo vs audio group**: shant isn't in the audio group on rock1 by default. Either `sudo usermod -aG audio shant` (then restart the bridge to pick up the new group) or use `sudo -n` (root bypasses group via `CAP_DAC_OVERRIDE`).
 - **Mixer state is in-memory**: ES8316 driver state resets on reboot. Run `sudo alsactl store -f /var/lib/alsa/asound.state` to persist.
 - **The "DAC at 0% but audio plays" quirk**: ES8316 auto-enables the I2S→DAC→HP path on `snd_pcm_open`, ignoring muted-mixer state until something else changes it. Playback works even when mixer controls report off — `set_mixer.py` forces them on so the path stays alive across `snd_pcm_close`.
-- **PCM transfer size**: bridge POST bodies are fine up to ~240KB JSON. For clips longer than ~8s, chunk into ~60KB base64 chunks. Each chunk uses `printf '%s' '<b64>' | base64 -d >> /tmp/audio/clip.pcm` (first chunk `>` not `>>`).
+- **PCM transfer size**: bridge POST bodies are fine up to ~240KB JSON. For clips longer than ~8s, chunk into ~60KB base64 chunks. Each chunk uses `printf '%s' '[b64]' | base64 -d | tee -a /tmp/audio/clip.pcm` (first chunk uses `tee` to truncate or create; subsequent chunks use `tee -a` to append).
 - **`idx=0` across all mixer elements**: cosmetic quirk of the ES8316 selem layout — every element reports index 0 in `snd_mixer_selem_get_index`. Names + values are correct; ignore the index.
 - **`snd_mixer_selem_get_name` returns `const char*` directly** (one arg, no buffer, no rc). Setting argtypes to `[c_void_p, c_char_p]` and treating the return as an int is a common bug — `inspect.py` uses the correct signature.
 
