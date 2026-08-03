@@ -1,0 +1,28 @@
+{
+  "name": "@foreman-line/registration",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Jira MCP registration for the Foreman Line (W1-P4): Stage B - a mechanical default-deny sandbox gate, hash-refusal, the bidirectional SHA-permalink write-back protocol, and the Stage-B receipt that turns an approved parcel set + Epic/Story tree into tracked Jira issues.",
+  "engines": {
+    "node": ">=24.11.1"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "lint": "biome check ."
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "ajv": "8.20.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.3",
+    "@types/node": "26.1.1",
+    "tsx": "4.23.1",
+    "typescript": "7.0.2"
+  }
+}

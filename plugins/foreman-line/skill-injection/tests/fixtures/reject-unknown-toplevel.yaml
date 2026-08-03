@@ -1,0 +1,19 @@
+# AC3b: an unknown sixth top-level key must be rejected — the five roles
+# are the complete, locked-closed enumeration.
+builder:
+  '*': [test-coverage]
+
+verifier_harness:
+  '*': [test-coverage.check]
+
+adversarial_reviewer:
+  '*': [code-review]
+
+coordinator:
+  rework_first: [build-fix-loop]
+
+integration:
+  jira: [jira-workflow]
+
+smart_triage:
+  '*': [some-skill]

@@ -1,0 +1,25 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "allowlist",
+    "ceiling_usd"
+  ],
+  "properties": {
+    "allowlist": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "ceiling_usd": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "security_flavored": {
+      "type": "boolean"
+    }
+  }
+}

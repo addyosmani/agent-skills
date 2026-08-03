@@ -1,0 +1,18 @@
+{
+  "name": "foreman-line",
+  "version": "0.1.0",
+  "description": "Contract-first development coordination from goal shaping through verified closure.",
+  "author": {
+    "name": "Clint Morgan"
+  },
+  "homepage": "https://github.com/KaseyaOne/kaseya-one-productivity-tools/tree/main/plugins/foreman-line",
+  "repository": "https://github.com/KaseyaOne/kaseya-one-productivity-tools",
+  "license": "MIT",
+  "keywords": [
+    "parcels",
+    "multi-agent",
+    "coordination",
+    "verification",
+    "governance"
+  ]
+}

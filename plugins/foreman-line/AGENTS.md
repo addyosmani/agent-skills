@@ -1,0 +1,3 @@
+Foreman Line work: plan at plugins/foreman-line/docs/FOREMAN-LINE-PLAN.md, conventions at plugins/foreman-line/docs/SPEC-CONVENTION.md, dispatch via plugins/foreman-line/docs/kickstarters/, specs at plugins/foreman-line/docs/specs/ (active/ = live contracts, done/ = shipped), lessons at plugins/foreman-line/docs/transcripts/defects_lessons.md.
+
+Coordinator role: charter at plugins/foreman-line/docs/COORDINATOR-PATTERN.md (Stage Zero ideation, three human gates, dispatch table, long-running loop); entry point is the `/goal` skill at plugins/foreman-line/skills/goal/. Goals live under plugins/foreman-line/docs/goals/<slug>/ (charter, plan-review findings, loop directive).

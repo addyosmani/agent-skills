@@ -1,0 +1,56 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "prRef",
+    "ciJobs",
+    "auditTrigger"
+  ],
+  "properties": {
+    "prRef": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ciJobs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "job",
+          "outcome"
+        ],
+        "properties": {
+          "job": {
+            "type": "string",
+            "minLength": 1
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "success",
+              "failure",
+              "skipped",
+              "cancelled"
+            ]
+          }
+        }
+      }
+    },
+    "auditTrigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "triggered"
+      ],
+      "properties": {
+        "triggered": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

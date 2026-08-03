@@ -1,0 +1,15 @@
+# Multiply-invalid document: verifier_harness is omitted (AC3a) AND builder
+# carries a bad glob key (AC3c) simultaneously — used to prove the CLI lists
+# every violation, not just the first.
+builder:
+  '*': [test-coverage]
+  'ui*': [kds-figma]
+
+adversarial_reviewer:
+  '*': [code-review]
+
+coordinator:
+  rework_first: [build-fix-loop]
+
+integration:
+  jira: [jira-workflow]

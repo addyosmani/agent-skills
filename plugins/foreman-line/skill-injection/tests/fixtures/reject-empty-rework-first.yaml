@@ -1,0 +1,16 @@
+# AC4c: coordinator.rework_first must be a non-empty SkillName[]; an empty
+# array is rejected — no empty-object/empty-array variant for coordinator.
+builder:
+  '*': [test-coverage]
+
+verifier_harness:
+  '*': [test-coverage.check]
+
+adversarial_reviewer:
+  '*': [code-review]
+
+coordinator:
+  rework_first: []
+
+integration:
+  jira: [jira-workflow]

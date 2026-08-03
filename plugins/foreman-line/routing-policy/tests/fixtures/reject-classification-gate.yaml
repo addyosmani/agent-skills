@@ -1,0 +1,35 @@
+# Rejecting fixture (AC5a): a public-only model leaks into `restricted`.
+# `claude-experimental-public` is eligible under `public` but was never added
+# to `internal`, so its presence under `restricted` violates the D6 invariant
+# that eligibility must narrow monotonically: restricted ⊆ internal ⊆ public.
+classes:
+  boilerplate:
+    allowlist: [economy]
+    ceiling_usd: 0.50
+  standard-feature:
+    allowlist: [standard]
+    ceiling_usd: 5.00
+  architecture/risk:
+    allowlist: [frontier]
+    ceiling_usd: 25.00
+  implementation/standard:
+    allowlist: [standard]
+    ceiling_usd: 5.00
+
+data_classification:
+  public:
+    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8, claude-experimental-public]
+  internal:
+    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+  restricted:
+    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8, claude-experimental-public]
+
+roles:
+  coordinator: frontier
+  verifier: frontier
+  builder: per-class
+
+model_tiers:
+  frontier: [claude-opus-4-8]
+  standard: [claude-sonnet-5]
+  economy: [claude-haiku-4-5]

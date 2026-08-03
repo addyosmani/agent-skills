@@ -1,0 +1,18 @@
+# AC4e: a duplicate glob-pattern key within a single role map ('*' appears
+# twice under builder) must be a parse-time error.
+builder:
+  '*': [test-coverage]
+  'ui/*': [kds-figma]
+  '*': [some-other-skill]
+
+verifier_harness:
+  '*': [test-coverage.check]
+
+adversarial_reviewer:
+  '*': [code-review]
+
+coordinator:
+  rework_first: [build-fix-loop]
+
+integration:
+  jira: [jira-workflow]

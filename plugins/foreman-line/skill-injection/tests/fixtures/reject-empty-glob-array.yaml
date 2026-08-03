@@ -1,0 +1,17 @@
+# AC4b: '*' present under builder but mapping to an empty array — distinct
+# from, and equally disallowed as, an absent role map. Never a silent
+# "resolves to no skills injected."
+builder:
+  '*': []
+
+verifier_harness:
+  '*': [test-coverage.check]
+
+adversarial_reviewer:
+  '*': [code-review]
+
+coordinator:
+  rework_first: [build-fix-loop]
+
+integration:
+  jira: [jira-workflow]

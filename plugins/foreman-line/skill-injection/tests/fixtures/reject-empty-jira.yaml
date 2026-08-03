@@ -1,0 +1,16 @@
+# AC4c: integration.jira must be a non-empty SkillName[]; an empty array is
+# rejected — same reasoning as coordinator.rework_first.
+builder:
+  '*': [test-coverage]
+
+verifier_harness:
+  '*': [test-coverage.check]
+
+adversarial_reviewer:
+  '*': [code-review]
+
+coordinator:
+  rework_first: [build-fix-loop]
+
+integration:
+  jira: []

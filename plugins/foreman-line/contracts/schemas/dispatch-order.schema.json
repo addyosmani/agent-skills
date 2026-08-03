@@ -1,0 +1,35 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "parcelRef",
+    "stepZeroRestatement",
+    "routingDecisionRef",
+    "injectedSkills"
+  ],
+  "properties": {
+    "parcelRef": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stepZeroRestatement": {
+      "type": "string",
+      "minLength": 1
+    },
+    "routingDecisionRef": {
+      "type": "string",
+      "minLength": 1
+    },
+    "injectedSkills": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "permissionProfile": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "reason",
+    "originStage",
+    "targetStage",
+    "attempt"
+  ],
+  "properties": {
+    "reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "originStage": {
+      "type": "string",
+      "enum": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F"
+      ]
+    },
+    "targetStage": {
+      "type": "string",
+      "enum": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F"
+      ]
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "verdictReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hash",
+        "locator"
+      ],
+      "properties": {
+        "hash": {
+          "type": "string",
+          "minLength": 1
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

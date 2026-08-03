@@ -1,0 +1,17 @@
+# AC3d: an unknown key nested under coordinator (other than rework_first)
+# must be rejected.
+builder:
+  '*': [test-coverage]
+
+verifier_harness:
+  '*': [test-coverage.check]
+
+adversarial_reviewer:
+  '*': [code-review]
+
+coordinator:
+  rework_first: [build-fix-loop]
+  extra_field: [not-allowed]
+
+integration:
+  jira: [jira-workflow]

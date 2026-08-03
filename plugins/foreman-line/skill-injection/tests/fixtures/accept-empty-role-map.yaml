@@ -1,0 +1,15 @@
+# AC4a: builder present as an empty object ({}) is accepted — an explicit,
+# visible "no rule yet," never a missing key.
+builder: {}
+
+verifier_harness:
+  '*': [test-coverage.check]
+
+adversarial_reviewer:
+  '*': [code-review]
+
+coordinator:
+  rework_first: [build-fix-loop]
+
+integration:
+  jira: [jira-workflow]

@@ -1,0 +1,57 @@
+profiles:
+  coordinator:
+    description: Coordinator missing its self-modification guard.
+    envelope:
+      deny: []
+      ask: []
+      allow: []
+  builder-standard:
+    description: Standard builder.
+    envelope:
+      deny:
+        - Edit(.claude/**)
+        - Write(.claude/**)
+      ask: []
+      allow: []
+  builder-architecture:
+    description: Architecture builder.
+    envelope:
+      deny:
+        - Edit(.claude/**)
+        - Write(.claude/**)
+      ask: []
+      allow: []
+  reviewer-readonly:
+    description: Reviewer.
+    envelope:
+      deny:
+        - Edit
+        - Write
+        - Bash(git commit*)
+        - PowerShell(git commit*)
+        - Bash(git push*)
+        - PowerShell(git push*)
+        - Bash(git apply*)
+        - PowerShell(git apply*)
+        - Bash(git stash*)
+        - PowerShell(git stash*)
+        - Bash(git merge*)
+        - PowerShell(git merge*)
+      ask: []
+      allow: []
+  shaping-agent:
+    description: Shaping agent.
+    envelope:
+      deny:
+        - Edit(.claude/**)
+        - Write(.claude/**)
+      ask: []
+      allow: []
+  builder-deps:
+    description: Dependency builder.
+    envelope:
+      deny:
+        - Edit(.claude/**)
+        - Write(.claude/**)
+      ask: []
+      allow: []

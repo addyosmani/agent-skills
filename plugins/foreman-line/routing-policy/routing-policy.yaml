@@ -1,0 +1,50 @@
+# Foreman Line — Model Routing Policy (v0)
+#
+# Concrete July-2026 instantiation of plan §5. Revisit quarterly — model
+# pricing and capability change faster than this document should be treated
+# as permanent. See routing-policy/README.md for the schema shape, the
+# exit-code contract, and the four invariants the validator enforces.
+
+classes:
+  boilerplate:
+    # Mechanical fixes and build-fix-loop don't deserve Sonnet tokens.
+    allowlist: [economy]
+    ceiling_usd: 0.50
+  standard-feature:
+    allowlist: [standard]
+    ceiling_usd: 5.00
+  architecture/risk:
+    # W0 contract work routes frontier per policy (same reasoning as W0-P1).
+    allowlist: [frontier]
+    ceiling_usd: 25.00
+  implementation/standard:
+    # Scaffold work; no frontier routing required (the class PCC-P0 used).
+    allowlist: [standard]
+    ceiling_usd: 5.00
+
+data_classification:
+  # v0: all three current models are already approved-endpoint / on-platform
+  # inference, so eligibility is uniform across tiers today. Classification
+  # gating is still evaluated before cost optimization (D6) — this is the
+  # list a future model addition must respect (each tier's eligible set must
+  # narrow monotonically: restricted subset-of internal subset-of public).
+  public:
+    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+  internal:
+    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+  restricted:
+    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+
+roles:
+  coordinator: frontier # always; D4
+  verifier: frontier # always; distinct-instance-from-coordinator is a dispatch-time property (W2-P3/W3), not expressed here
+  builder: per-class
+
+model_tiers:
+  # Tier vocabulary below `frontier` is this parcel's own v0 content and is
+  # revisable quarterly; it diverges from plan §5's illustrative
+  # small/medium/large. `frontier` is the one literal name the validator's
+  # invariants depend on — do not rename it.
+  frontier: [claude-opus-4-8] # Coordinator, Adversarial Reviewer, and the security-audit hard override
+  standard: [claude-sonnet-5] # Builder default
+  economy: [claude-haiku-4-5] # Boilerplate / build-fix-loop
