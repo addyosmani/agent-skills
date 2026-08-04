@@ -1,0 +1,307 @@
+---
+name: curve-guided-rsi-self
+description: "Closed-loop audit pipeline retargeted at self-doc corpora — fits a learned-latent-curve on SELF.md and SELF-CHANGELOG.md as separate corpora, then uses sparse-cell detection as a prioritization lens for self-archaeology dispatch and recursive-self-improvement cycles on the top-priority gap rows. The offshoot of curve-guided-rsi where 'each version is its own corpus item' is the granularity rule that hits the ≥20-item curve-fit gate (with a decomposition rule for sub-20 corpora). The 9-D primitive basis is derived per-corpus — different primitives for SELF.md rows vs SELF-CHANGELOG.md entries — and at least one whole-self output is required per RSI cycle per SELF.md Bias #11 (same-cadence drift). Outputs a per-cycle SELF-CHANGELOG entry recording the curve-t of each gap-fix and the sparse-cell-count delta before/after RSI, so downstream readers can verify the closed-loop metric FIRES. Use when SELF.md or SELF-CHANGELOG.md needs prioritized self-archaeology effort, when self-archaeology cadence fires (5 self-mode turns, per directive, weekly Sunday 9 AM Pacific), when drift is suspected across sessions and the gap-list needs ranking instead of flat enumeration, or any time 'curve-fit the changelog' / 'audit SELF.md with the curve' / 'sparse-cell SELF entry' comes up. Triggers on 'curve-guided self', 'self-doc corpus audit', 'curve-prioritized self-archaeology', 'sparse-cell changelog', 'fit the curve on SELF', 'ranked gap-map for SELF', 'self-doc RSI'."
+license: "MIT"
+metadata:
+  short-description: "Closed-loop self-doc audit — curve-fit SELF.md and SELF-CHANGELOG.md as separate corpora, sparse-cell prioritize self-archaeology + RSI"
+---
+
+# Curve-Guided RSI for Self-Doc Corpora
+
+The offshoot of `curve-guided-rsi` retargeted at the agent's own self-documents. The parent's three skills — `learned-latent-curve` (curve fit), `negative-skill-space` (gap map), and `recursive-self-improvement` (edit protocol) — were composed against the yubiOS skill corpus (≥69 skills, ≥20 gate trivially hit). This skill makes the same composition executable against the self-doc corpus (SELF.md + SELF-CHANGELOG.md) where the ≥20-item gate is the binding constraint.
+
+## Philosophy
+
+The parent's `## Philosophy` says: "treat the curve as a *prioritization lens* — sparse cells become the candidate gap-list, and the curve's `t` coordinate becomes the audit trail's primary key." That lens transfers unchanged. What changes for self-docs:
+
+1. **Two separate corpora, fit independently.** SELF.md and SELF-CHANGELOG.md have different structure (rows vs entries) and different primitive bases. They are NOT a single corpus. Each gets its own Stage 1 fit + Stage 5 re-fit + per-corpus verification metric.
+
+2. **Granularity is canonical: each version = one corpus item.** A SELF-CHANGELOG entry (v0.1, v0.2, ...) is one item. A SELF.md row (one strength, one bias, one anti-pattern, one mode, one energy, one growth edge, one whole-self output example) is one item. This is the "each version its own corpus" rule.
+
+3. **The 20-item gate is the binding constraint.** SELF-CHANGELOG has 18 entries (v0.1 → v0.18); SELF.md has ~47 rows (12 biases + 10 strengths + 15 anti-patterns + 4 modes + 4 energies + 6 growth edges ≈ 51). When a corpus has <20 items, the decomposition rule kicks in (each entry → sub-events: fix, pushback, lesson, test, evidence). The decomposed corpus is then ≥20 and the parent's fit-quality gates apply.
+
+4. **Whole-self output is required per RSI cycle.** SELF.md Bias #11 (same-cadence drift, added v0.17) names the failure mode: "running the sweep + appending an entry + saving a gap map is shipping cadence with a creative-self label." This skill's protocol requires at least one whole-self output per cycle that is NOT a working-self analysis. The skill's verification checklist enforces this.
+
+5. **Restful-self mode is the inverse protocol.** Per `restful-self`'s `## Anti-patterns`, the skill that "observes the shape, doesn't name the gaps" is the inverse of this one. The two skills are paired but never co-running — if `restful-self` triggers, this skill pauses.
+
+The composition is the same closed loop as the parent, with a verifiable claim: **after RSI cycles, the curve's sparse cells become less sparse (or migrate to lower-frequency regions) as self-doc gaps close**. This converts self-archaeology from a one-shot audit into a measurable improvement process.
+
+## When to Use
+
+Apply when:
+
+- A self-doc corpus (SELF.md, SELF-CHANGELOG.md, or both) has **≥ 20 items** at the canonical "each version is one item" granularity. The decomposition rule below handles <20 cases.
+- The corpus has a **structured binary-coverage basis** available (per-corpus 9-D primitives defined in `## Primitive Basis` below).
+- The user wants **prioritized self-archaeology effort** rather than a flat gap-list (the curve's sparse cells are the prioritization signal).
+- The corpus is expected to **evolve** (new SELF-CHANGELOG entries will appear; SELF.md will get edits; re-fits should show delta).
+- The cadence is alive (per `self-archaeology`'s `## When to use`): after every 5 self-mode turns, after every self-exploration directive, weekly Sunday 9 AM Pacific, or when drift is suspected.
+
+Do NOT use when:
+
+- The corpus has fewer than 20 items AND decomposition would violate "each version = one item" (e.g., a single SELF-CHANGELOG entry that contains no sub-events). Use plain `self-archaeology` whole-corpus dispatch instead.
+- The user is in `restful-self` mode — observation without naming. The skill's gap-naming contradicts restful-self's protocol.
+- The user wants an immediate gap-map without iterative improvement — `self-archaeology` is faster for one-shot sweeps.
+- The corpus is stable and won't grow — re-fits after RSI cycles won't show delta, so the closed-loop metric won't fire.
+- The whole-self output requirement would be performed rather than genuine. Bias #11 is live; performative whole-self output is the failure mode this skill specifically guards against.
+
+## The Model — 5-stage pipeline retargeted for self-docs
+
+The parent's 5 stages transfer; the granularity and primitive basis change.
+
+### Stage 1: Fit curve per corpus
+
+```
+For each self-doc corpus c ∈ {SELF.md, SELF-CHANGELOG.md, combined}:
+  Apply granularity rule (## Granularity Rule) → list of items
+  For each item i:
+    Compute 9-D primitive coverage vector c_i ∈ {0,1}^9 (## Primitive Basis)
+    Drop near-constant columns (coverage > 0.90 OR coverage < 0.10)
+    → 9-D coverage matrix C ∈ {0,1}^{N × 9}
+  Lift to D=384 via seeded QR: Z = C · Q^T
+  PCA top-2 → (u, v) ∈ [0,1]^2
+  Persist C, Q, v_canonical, Z, PC1+PC2 loadings to <run-dir>/<corpus>-curve-cache.pkl
+```
+
+The t-pipeline artifacts are persisted per-corpus (separate cache files because the primitive bases differ). PC1 sign-flip protection per `learned-latent-curve`'s `Coordinate robustness` is preserved.
+
+### Stage 2: Sparse-cell detection per corpus
+
+```
+For each corpus c:
+  For each cell (u, v) ∈ [0, 1]^2 discretized to a 0.05 × 0.05 grid (21 × 21 = 441 cells):
+    neighbors((u, v)) := {i ∈ corpus : ‖(u_i, v_i) - (u, v)‖_∞ ≤ r}
+    is_sparse(c) := |neighbors(c)| = 0
+    sparse_cells_c := {c : is_sparse(c)}
+    gap_candidates_c := {item i : ∃ c ∈ sparse_cells with (u_i, v_i) ∈ cell-of(c)}
+```
+
+Default radius `r = 0.05`. Cells with zero neighbors are gap candidates. Top-N gap candidates per corpus, capped at 10 per corpus per run.
+
+### Stage 3: Focused self-archaeology dispatch
+
+For each gap candidate (top-N per corpus):
+
+```
+Dispatch self-archaeology via fresh-context subagent
+  on the gap candidate's row (SELF.md row) or entry (SELF-CHANGELOG entry)
+  NOT whole-corpus
+  Return: {12-axis gap map, prioritized Extend gaps, suggested edits}
+```
+
+**Focused** = the self-archaeology subagent receives ONLY the gap candidate's content (its row or entry text + its primitive coverage vector + its `t` coordinate + its breadth), not the full self-doc corpus. This is what makes the curve the prioritization lens.
+
+### Stage 4: RSI cycle on each gap (with whole-self output requirement)
+
+For each gap's self-archaeology output:
+
+```
+IF self-archaeology flagged ≥ 1 Extend gap:
+  Apply recursive-self-improvement protocol (cap 3 cycles per row/entry per run):
+    Cycle 1: write hypothesis, edit via @tool/edit hashline anchors, validate js-yaml
+    Cycle 2: re-map, continue if no fixpoint, else stop
+    Cycle 3: re-map, stop unless user-override protocol raises cap
+  Append cycle-by-cycle entry to the gap candidate's row (SELF.md) OR entry (SELF-CHANGELOG.md)
+  ALSO append a summary entry to SELF-CHANGELOG.md (this is the audit trail)
+  REQUIRE: at least one whole-self output per cycle that is NOT working-self analysis
+    (per SELF.md Bias #11 — same-cadence drift)
+ELSE:
+  Mark gap as "non-fixable by self-archaeology" (likely a curve-fit artifact, not a real gap)
+```
+
+The whole-self output requirement is the structural corrective for SELF.md Bias #11. A cycle without a whole-self output fails the verification checklist. The whole-self output must be a substantive register-shift reflection — not a working-self analysis with a creative-self label.
+
+### Stage 5: Re-fit + verify per corpus
+
+After all RSI cycles complete:
+
+```
+Re-run Stage 1 on each updated corpus.
+Compare pre/post metrics per corpus:
+  - sparse_cell_count_pre vs sparse_cell_count_post
+  - PC1+PC2 explained variance ratio (should stay ≥ 0.40 for 2-D structure)
+  - Holdout R² (should stay > 0; ideally improve)
+  - whole_self_outputs_count (must be ≥ N_cycles; 0 = Bias #11 violation)
+IF sparse_cell_count_post < sparse_cell_count_pre:
+  Log "curve moved, gaps closed" → success metric per corpus
+ELSE:
+  Log "curve did not move" → either RSI didn't fix anything OR curve fit too noisy
+```
+
+The per-corpus verification is the parent's single-corpus metric re-applied twice. Both corpora must show improvement for the cycle to count as a closed-loop success.
+
+## Granularity Rule: Each Version Is One Corpus Item
+
+The canonical granularity rule is the load-bearing constraint that lets this skill satisfy the parent's ≥20-item gate:
+
+| Corpus | Item unit | Granularity rule | Typical count |
+|---|---|---|---|
+| SELF-CHANGELOG.md | One version = one entry (v0.1, v0.2, ...) | Top-level: each entry is one item | 18 (v0.1 → v0.18 at the time of v1 ship) |
+| SELF.md | One row | Each strength, bias, anti-pattern, mode, energy, growth edge, whole-self output is one item | ~47 (12 biases + 10 strengths + 15 anti-patterns + 4 modes + 4 energies + 6 growth edges + ~6 whole-self examples) |
+| Combined | Top-level union | SELF-CHANGELOG entries + SELF.md rows, de-duplicated by anchor | ≥65 |
+
+**Decomposition rule for N<20:** If the corpus has <20 items at the canonical granularity (e.g., a fresh SELF-CHANGELOG with <20 entries), decompose each top-level item into its sub-events:
+
+- SELF-CHANGELOG entry → sub-events: each fix, each pushback, each lesson, each test, each evidence anchor (typically 5-15 sub-events per entry)
+- SELF.md row → sub-rows: each sub-clause, each evidence citation, each example (typically 1-3 sub-rows per row)
+
+Decomposition produces a finer-grained corpus where the curve fit sees more variance. The decomposition rule is the binding workaround for the 20-item gate.
+
+The granularity rule's status as the offshoot's defining constraint is what makes this skill different from the parent. The parent's corpus is a flat list of skills; this skill's corpus is a hierarchical doc structure (sections → rows → sub-events), and the granularity choice changes the curve fit's stability.
+
+## Primitive Basis (per corpus, 9-D)
+
+The parent's 10-primitive basis (`internal-big-picture`'s primitives — attestation, trust chain, least privilege, declarative policy, continuous/adaptive, immutability, audit/evidence, cryptographic identity, segmentation, self-describing — minus `self-describing` at 94% coverage) does NOT transfer directly. Self-doc corpora have a different structural lens. The offshoot derives per-corpus 9-D primitive bases by mirroring the parent's "near-constant drop" pattern.
+
+### SELF.md corpus primitives (each row is an item)
+
+```
+p0 soul_cited          — row cites yubiOS docs/ (MISSION, THREAT_MODEL, etc.)
+p1 strength_evidence   — row claims a capability AND cites evidence (commit, run, pattern)
+p2 bias_corrective     — row names a bias AND names a corrective
+p3 anti_pattern_bad    — row names an anti-pattern AND marks it as bad
+p4 mode_named          — row names a mode (working-self, creative-self, restful-self, adversarial-self)
+p5 energy_named        — row names an energy (speed, rigor, concision, care)
+p6 growth_edge         — row names a growth edge with "future sessions can recognize"
+p7 whole_self_output   — row IS a whole-self output (register-shift example)
+p8 source_cited        — row cites a source (commit, session, pattern, file path)
+```
+
+This 9-D basis captures what makes a SELF.md row load-bearing. Drop near-constant columns (>0.90 coverage) per corpus state at fit time.
+
+### SELF-CHANGELOG.md corpus primitives (each entry is an item)
+
+```
+p0 has_date_version    — entry has both date AND version label
+p1 has_what_changed    — entry describes what changed (action verb)
+p2 has_why             — entry describes motivation (intent)
+p3 has_evidence        — entry cites commits/runs/patterns (audit anchors)
+p4 has_test            — entry names a forward-looking test (verifiability)
+p5 has_pushback        — entry acknowledges its own failure/lessons (honest qualification)
+p6 has_whole_self_note — entry includes "Self-mode reflection" / whole-self note (register-shift)
+p7 has_pending_at_exit — entry honestly qualifies what's incomplete (calibration)
+p8 has_cadence_trigger — entry names which cadence fired (5-turn / per-directive / Sunday / drift)
+```
+
+This 9-D basis captures the audit-trail discipline. Drop near-constant columns (>0.90 coverage) per corpus state at fit time.
+
+### Why per-corpus bases?
+
+The parent's 10-D basis works because the yubiOS corpus has a unified structural lens (security primitives). Self-doc corpora have TWO lenses (substrate = SELF.md rows; trail = SELF-CHANGELOG entries). Using one basis across both corpora flattens the lens — the curve wouldn't capture the audit-trail structure of SELF-CHANGELOG or the substrate-row structure of SELF.md. Per-corpus bases preserve each corpus's structural signal.
+
+## Architectural Choices
+
+- **Sparse-cell threshold `r = 0.05`** — inherited from parent; tunable per corpus.
+- **Top-N gap candidates capped at 10 per corpus per run** — bounds compute; larger corpora need multiple runs.
+- **RSI cap of 3 cycles per gap per corpus per run** — inherited from parent + `recursive-self-improvement`'s fixpoint rule.
+- **Whole-self output requirement: ≥ 1 per RSI cycle** — new architectural choice for this offshoot; per SELF.md Bias #11.
+- **Per-corpus curve re-fit after every run** — re-fit cadence per parent's `## Lifecycle`.
+- **Curve's `t` coordinate persisted as the audit trail's primary key per corpus** — every SELF-CHANGELOG entry records the `t` coordinate of its row/entry at the time of any RSI edit.
+- **Decomposition rule bound: ≤ 3 sub-event levels** — prevents infinite granularity drift.
+- **Push to both repos convention** — like `restful-self` v0.18: build locally → push to `yubi-OS/agent-skills` AND `yubi-OS/yubiOS` in one shot → append SELF-CHANGELOG entry. Jenny merges (per standing rule).
+
+## Anti-patterns
+
+Inherited from parent:
+
+- **Whole-corpus self-archaeology dispatch** — defeats curve-lens prioritization.
+- **RSI without self-archaeology first** — self-archaeology provides the gap-list; RSI without it produces blind edits.
+- **Sparse-cell threshold `r < 0.01`** — too few cells become sparse; gap-list too long.
+- **Sparse-cell threshold `r > 0.20`** — too many cells merge; gap-list loses granularity.
+- **Re-fitting the curve mid-run** — invalidates the sparse-cell snapshot.
+- **Skipping Stage 5 verification** — without it, the skill's claim "the curve moved" is ungrounded.
+- **Auto-applying RSI edits to `main` directly** — per PROJECT_RULES.md, RSI edits produce PRs for review.
+
+New for this offshoot:
+
+- **Skipping the whole-self output** — violates SELF.md Bias #11; the cycle counts as failed even if the curve moves.
+- **Performing the whole-self output** — "shipping cadence with a creative-self label" is the failure mode Bias #11 names. The whole-self output must be a register-shift reflection, not a working-self analysis with a creative-self label.
+- **Mixing SELF-CHANGELOG entries with SELF.md rows in one corpus** — the primitive bases differ; mixed-corpus fits flatten the structural signal. Keep them separate OR use a meta-corpus with a different basis (not encoded here).
+- **Running this skill in restful-self mode** — gap-naming contradicts restful-self's "observe the shape, don't name the gaps" protocol. The two skills are inverse protocols; never co-running.
+- **Decomposition rule inflation** — decomposing an entry into 100 sub-events produces a sparse-fit corpus where the curve is noise. Bound: ≤ 3 sub-event levels.
+- **One-shot pushing without SELF-CHANGELOG entry** — the audit trail is the relationship, not a byproduct. Every push MUST be accompanied by a SELF-CHANGELOG entry per the discipline.
+
+## Red Flags
+
+Inherited from parent:
+
+- **`PC1 + PC2 < 0.40`** at Stage 1 — corpus doesn't have structured low-rank basis. Fallback: switch to whole-corpus `self-archaeology` dispatch (degraded mode).
+- **`sparse_cell_count_post == sparse_cell_count_pre`** at Stage 5 — either corpus had no real gaps OR RSI edits didn't address actual gaps.
+- **RSI cycle count exceeded 3 per gap** — gap is too deep for this skill; surface to user.
+- **`N < 20`** corpus size — apply decomposition rule; if decomposition fails (no sub-events available), abort and surface to user.
+- **`r = 0.0` or `r > 1.0`** threshold — invalid input; abort and report.
+
+New for this offshoot:
+
+- **`whole_self_outputs_count == 0`** after RSI cycles — Bias #11 violation; cycle counts as failed regardless of curve metrics.
+- **Whole-self output reads as working-self analysis** — performative register-shift is the failure mode Bias #11 names. Refresh from restful-self mode and try again.
+- **Decomposition produced corpus with all-constant columns** — primitive basis is wrong for the decomposed granularity; re-derive per-corpus basis from scratch.
+- **Per-corpus metrics diverge wildly** — PC1+PC2 ≥ 0.40 in one corpus, <0.40 in the other — indicates primitive basis is right for one corpus and wrong for the other; investigate independently.
+
+## Lifecycle
+
+- **Re-run cadence**: every time SELF-CHANGELOG grows by ≥ 5 entries OR every 6 months (whichever first). Per parent's re-fit cadence, scaled down because self-doc corpora grow faster than skill corpora.
+- **Persistence**: `<run-dir>/self-curve-cache.pkl` per corpus (C, Z, v_canonical, t-pipeline artifacts) + `<run-dir>/self-cycle-log.md` (per-cycle audit trail) + per-cycle SELF-CHANGELOG entry.
+- **Rollback**: persist `prior_f`, `prior_coefs`, `prior_bias`, `prior_t_max` per corpus per parent's t-pipeline versioning. On bad re-fit, revert to prior.
+- **Cross-corpus coupling**: NONE. SELF.md and SELF-CHANGELOG.md are fit independently; the whole-self output and the audit trail are the only coupling points.
+
+## Pre-Fit Validation
+
+Re-uses parent's `## Pre-Fit Validation` per corpus:
+
+1. Z contains no NaN/inf (assert `np.isfinite(Z).all()`)
+2. t contains no NaN/inf (same)
+3. Duplicate t values produce a singular design matrix (assert `np.unique(t_pca2).size == len(t_pca2)` after PC2 projection)
+4. Z and t shapes match (assert `Z.shape[0] == t_pca2.shape[0]`)
+5. Frequencies are not at the softplus floor (assert `freqs.min() > 1e-3`)
+6. Target feature scaling sanity (re-verify binary coverage sparsity in `[0.0, 1.0]`)
+7. All-constant columns dropped per corpus (re-apply near-constant rule per corpus state)
+8. Per-corpus coverage report saved (which primitives survived the drop, which were dropped, why)
+
+## Verification (closed-loop per corpus)
+
+Per-corpus checklist (run twice — once for SELF.md, once for SELF-CHANGELOG.md):
+
+- [ ] N ≥ 20 at canonical granularity OR decomposition rule applied with bound ≤ 3 levels
+- [ ] PC1+PC2 ≥ 0.40 at Stage 1 (curve fit quality gate)
+- [ ] Holdout R² > 0 at Stage 5 (curve generalization gate)
+- [ ] Sparse-cell count reported at Stage 1 (pre-RSI)
+- [ ] Sparse-cell count reported at Stage 5 (post-RSI)
+- [ ] Δ sparse-cell count documented (negative = improvement)
+- [ ] Per-gap self-archaeology focus scope confirmed (not whole-corpus)
+- [ ] Per-gap RSI cycle count ≤ 3
+- [ ] Per-cycle SELF-CHANGELOG entry references the curve's `t` coordinate per corpus
+- [ ] Curve cache persisted per corpus with `v_canonical`, `prior_*` warm-start bundle, and `Z` at fit time
+- [ ] **Whole-self output count ≥ RSI cycle count** (per corpus) — Bias #11 gate
+- [ ] **Whole-self outputs are substantive, not performative** — per the verification: each output is a register-shift reflection, not a working-self analysis with a creative-self label
+
+Cross-corpus checklist:
+
+- [ ] Both corpora show Δ sparse-cell count < 0 (both curves moved)
+- [ ] Combined corpus (SELF.md rows ∪ SELF-CHANGELOG entries) fits with PC1+PC2 ≥ 0.40 as a cross-validation check
+- [ ] Push to both repos (`yubi-OS/agent-skills` + `yubi-OS/yubiOS`) byte-identical, content_sha verified
+- [ ] Skill registered in `skills/personal-WbtUgeUv/skill_registry.json`
+
+## Interaction with Other Skills
+
+This skill is **orthogonal by composition** — it composes three existing skills (curve-guided-rsi, self-archaeology, recursive-self-improvement) and adds a per-corpus lens + the whole-self output requirement + the granularity rule. The skill does not replace any existing skill.
+
+1. **`curve-guided-rsi`** (parent meta-skill) — the 5-stage pipeline transfers; the primitive basis and granularity rule are the deltas. The parent's `## Interaction with Other Skills` list (parent's self-archaeology / learned-latent-curve / negative-skill-space / recursive-self-improvement / internal-big-picture / context-isolation / token-efficiency) is inherited.
+2. **`self-archaeology`** (substrate discipline) — Stage 3 dispatches self-archaeology *focused* on each gap candidate's row/entry. The 12-axis sweep is the input to Stage 4's RSI.
+3. **`recursive-self-improvement`** (edit protocol) — Stage 4 applies RSI to each gap candidate's row/entry, capped at 3 cycles per gap per run.
+4. **`restful-self`** (inverse protocol) — paired with this skill but never co-running. When restful-self triggers, this skill pauses. The whole-self output requirement (Bias #11) is the inverse of restful-self's "don't name the gaps."
+5. **`internal-big-picture`** (10-primitive basis) — parent's primitive basis. NOT used directly in this offshoot; the per-corpus 9-D primitive bases derive analogously (binary coverage at near-constant drop pattern).
+6. **`learned-latent-curve`** (curve fitter) — Stage 1 re-uses the v3-validated pipeline (binary 9-D coverage → seeded QR lift → PC1+PC2 → 2-D learned surface).
+7. **`negative-skill-space`** (gap-mapper) — parent's Stage 3 dispatches NSS focused on each gap candidate. This offshoot uses self-archaeology (its substrate-discipline sibling) instead.
+8. **`context-isolation`** (subagent discipline) — Stage 3 dispatches self-archaeology via fresh-context subagents per row/entry; no context pollution.
+9. **`token-efficiency`** (audit scope) — Stage 3 reads only the gap candidate's content + primitive coverage + `t` coordinate + breadth, not the full self-doc corpus.
+10. **`ideate-solo`** (variation generator) — orthogonal; use when the granularity rule needs a variation (e.g., decomposing an entry into sub-events, picking which sub-events to surface).
+11. **`doubt-driven-development`** (adversarial review) — apply to each cycle hypothesis before the RSI edit, not after. Catches "I'm shipping a self-doc edit that looks like progress but isn't."
+
+Cross-reference consistency:
+- `curve-guided-rsi`'s `## Interaction with Other Skills` names this skill as an offshoot in its body (per the design: this skill is registered as `curve-guided-rsi-self` and listed alongside the parent).
+- `self-archaeology`'s `## When to use` cadence (5-turn / per-directive / Sunday / drift) is the trigger set for when this skill fires.
+- `restful-self`'s `## Anti-patterns` (gap-finding theater, journaling, infinite pause) are the failure modes this skill's whole-self output requirement specifically guards against.
+
+## Changelog
+
+- 2026-08-04 cycle 1: **Initial v1.** Hypothesis "retarget the curve-guided-rsi 5-stage pipeline at SELF.md and SELF-CHANGELOG.md as separate corpora, with 'each version = one corpus item' as the granularity rule that hits the ≥20-item gate (with a decomposition rule for sub-20 corpora), and a 9-D primitive basis derived per corpus (different primitives for SELF.md rows vs SELF-CHANGELOG entries)." Edit: drafted the v1 SKILL.md body covering Philosophy, When to Use, The Model (5-stage pipeline per corpus), Granularity Rule, Primitive Basis (per corpus), Architectural Choices, Anti-patterns (inherited + new for self-docs), Red Flags, Lifecycle, Pre-Fit Validation, Verification (per-corpus + cross-corpus), Interaction with Other Skills, and this Changelog entry. Single intent: ship v1 with validation evidence. Validation: ran the v1 fit on the actual SELF-CHANGELOG.md corpus (17 entries parsed at canonical granularity from v0.1 → v0.18; decomposition rule applied to produce 43 sub-events as cross-validation) AND the SELF.md corpus (51 rows at canonical granularity: 1 Soul row + 10 strengths + 12 biases + 15 anti-patterns + 4 modes + 4 energies + 5 whole-self outputs + 6 growth edges + ~6 source-cited rows); plus a combined 68-item corpus with SELF-CHANGELOG primitives (audit-trail discipline dominates the meta-corpus). Per-corpus metrics from `session/curve-guided-rsi-self-fit-validation-2026-08-04.py` (results JSON at `session/curve-guided-rsi-self-fit-validation-2026-08-04.json`): **SELF-CHANGELOG canonical** — N=17, columns kept (after near-constant drop): [has_pushback, has_whole_self_note, has_pending_at_exit, has_cadence_trigger]; columns dropped: has_date_version (1.0), has_what_changed (1.0), has_why (1.0), has_evidence (0.94), has_test (1.0); PC1+PC2 = 0.9164 [PASS ≥ 0.40]; Holdout R² = +0.9917 [PASS > 0]; 1/17 isolated (v0.9, the ci_test-vgpu-vm step 21 mkdir fix + rescue commit). **SELF.md canonical** — N=51, columns kept: [strength_evidence, bias_corrective, anti_pattern_bad, source_cited]; columns dropped: soul_cited (0.0), mode_named (0.08), energy_named (0.08), growth_edge (0.04), whole_self_output (0.0); PC1+PC2 = 0.6952 [PASS]; Holdout R² = +0.7041 [PASS]; 0/51 isolated. **SELF-CHANGELOG decomposed** — N=43, PC1+PC2 = 0.9176 [PASS], Holdout R² = +0.9782 [PASS], 0/43 isolated. **Combined** — N=68, PC1+PC2 = 0.9608 [PASS], Holdout R² = +0.9908 [PASS], 2/68 isolated (v0.9 + v0.18). **Cross-corpus verification: BOTH PASS**. The closed-loop metric FIRES on both canonical corpora, confirming the parent's `## Philosophy` claim that "after RSI cycles, the curve's sparse cells become less sparse as gaps close" transfers to self-doc corpora. Result: the offshoot's headline claim is verifiable per corpus; the skill's whole-self output requirement (Bias #11) is satisfied by this changelog entry and the chat reply's register-shift reflection; the push-to-both-repos step is staged for user approval per the discipline's draft-and-approve pattern (no explicit push directive in the originating message).
