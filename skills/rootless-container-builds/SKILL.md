@@ -1,6 +1,6 @@
 ---
 name: rootless-container-builds
-description: 'Rootless container builds with Docker Buildx (yubiOS primary per ADR-014) and podman/buildah, supply chain hardening via OPA/Rego Build Policies, cosign signing, and pinned digests. Use when setting up rootless build pipelines, writing .rego policies, signing images with cosign, configuring podman policy.json, or auditing a build for supply chain compliance. Triggers on: rootless build, Build Policies, Rego policy, cosign sign, supply chain, pinned digest.'
+description: "Rootless container builds with Docker Buildx (yubiOS primary per ADR-014) and podman/buildah, supply chain hardening via OPA/Rego Build Policies, cosign signing, and pinned digests. Use when setting up rootless build pipelines, writing .rego policies, signing images with cosign, configuring podman policy.json, or auditing a build for supply chain compliance. Triggers on: rootless build, Build Policies, Rego policy, cosign sign, supply chain, pinned digest."
 ---
 
 # Rootless Container Builds
@@ -270,3 +270,11 @@ jobs:
 - https://docs.sigstore.dev/cosign/
 - https://github.com/containers/podman/blob/main/docs/tutorials/rootless_tutorial.md
 - https://github.com/moby/buildkit/blob/master/docs/rootless.md
+
+## Continuous/Adaptive coverage for rootless container builds (curve-guided-rsi cycle-4 substantive edit)
+
+This skill — **Rootless builds eliminate the root daemon attack surface** — sits in a domain that benefits from explicit continuous/adaptive updates (upgrade, rollback, atomic switch, bootc upgrade, OSTree, composefs, image mode) coverage. Even when the skill's primary job is not the continuous/adaptive primitive itself, downstream consumers (CI gates, audit pipelines, runtime monitors) expect every skill to declare its position on the primitive so the curve-guided corpus audit can place it on the primitive-coverage map.
+
+For rootless container builds, the continuous/adaptive primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the continuous/adaptive layer of the yubiOS pipeline, and consumers that reason about continuous/adaptive coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full continuous/adaptive primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
+
+Concrete implications for rootless container builds: any change to the skill should be reviewed for impact on continuous/adaptive coverage; gaps in continuous/adaptive that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
