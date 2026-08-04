@@ -62,3 +62,15 @@ When to skip: only when the task is bounded enough that no external API or skill
 
 
 
+
+## Note on least privilege coverage (curve-guided-rsi v1 gap-fix)
+
+This skill contributes to least-privilege hardening — sandbox, capabilities, ProtectSystem, NoNewPrivileges, dynamic user, or rootless patterns. See `internal-big-picture` for the full least privilege primitive.
+
+## Declarative Policy coverage for context isolation (curve-guided-rsi cycle-4 substantive edit)
+
+This skill — **Every additional turn, tool result, and dead-end exploration in a context window is signal until it becomes noise** — sits in a domain that benefits from explicit the declarative policy pattern (mkosi.conf, Containerfile, Rego policy, yubiOS.rego, build configuration) coverage. Even when the skill's primary job is not the declarative policy primitive itself, downstream consumers (CI gates, audit pipelines, runtime monitors) expect every skill to declare its position on the primitive so the curve-guided corpus audit can place it on the primitive-coverage map.
+
+For context isolation, the declarative policy primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the declarative policy layer of the yubiOS pipeline, and consumers that reason about declarative policy coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full declarative policy primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
+
+Concrete implications for context isolation: any change to the skill should be reviewed for impact on declarative policy coverage; gaps in declarative policy that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
