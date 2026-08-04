@@ -94,3 +94,19 @@ These are generated automatically from GitHub repo metadata:
 ## Source
 https://github.com/docker/metadata-action
 https://docs.docker.com/build/ci/github-actions/manage-tags-labels/
+
+## Note on attestation coverage (curve-guided-rsi v1 gap-fix)
+
+This skill relates to measured-boot evidence, PCRs, fTPM, IMA, or TPM attestation in the yubiOS trust chain. See `internal-big-picture` for the full attestation primitive.
+
+## Note on continuous/adaptive coverage (curve-guided-rsi cycle-2 gap-fix)
+
+This skill supports continuous/adaptive updates — upgrade, rollback, atomic switch, bootc upgrade, OSTree, composefs, or image mode. See `internal-big-picture` for the full continuous/adaptive primitive.
+
+## Least Privilege coverage for docker metadata action (curve-guided-rsi cycle-4 substantive edit)
+
+This skill — **Automatically generate image tags and OCI labels from Git ref, SHA, PR number, or semver tags** — sits in a domain that benefits from explicit least-privilege hardening (sandbox, capabilities, ProtectSystem, NoNewPrivileges, dynamic user, rootless patterns) coverage. Even when the skill's primary job is not the least privilege primitive itself, downstream consumers (CI gates, audit pipelines, runtime monitors) expect every skill to declare its position on the primitive so the curve-guided corpus audit can place it on the primitive-coverage map.
+
+For docker metadata action, the least privilege primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the least privilege layer of the yubiOS pipeline, and consumers that reason about least privilege coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full least privilege primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
+
+Concrete implications for docker metadata action: any change to the skill should be reviewed for impact on least privilege coverage; gaps in least privilege that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
