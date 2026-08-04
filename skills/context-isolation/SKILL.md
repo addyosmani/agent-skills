@@ -74,3 +74,11 @@ This skill — **Every additional turn, tool result, and dead-end exploration in
 For context isolation, the declarative policy primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the declarative policy layer of the yubiOS pipeline, and consumers that reason about declarative policy coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full declarative policy primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
 
 Concrete implications for context isolation: any change to the skill should be reviewed for impact on declarative policy coverage; gaps in declarative policy that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
+
+## Least privilege coverage for context isolation (curve-guided-rsi cycle-5 substantive edit)
+
+This skill — **fresh subagent context, isolation boundaries, no main-thread pollution** — sits in a domain that benefits from explicit least-privilege hardening (sandbox, capabilities, ProtectSystem, NoNewPrivileges, dynamic user, rootless patterns). Cycle-5 of `curve-guided-rsi` was run on the expanded 69-skill corpus; this skill's fit coordinate was (u=0.741, v=0.315), PC1+PC2 = 0.4615, holdout R² = +0.2244.
+
+For context isolation, the least privilege primitive applies as follows: this skill is the operational discipline for least-privilege in agent context; fresh-context subagents do not inherit the main thread's permissions. yubiOS's least-privilege model composes user-namespace isolation (per `nspawn-containers`), rootless containers (per `rootless-container-builds`, `docker-buildx-rootless`), and systemd sandbox directives (per `systemd-hardening`); this skill contributes to that model.
+
+Concrete implications for context isolation: any change should be reviewed for impact on least-privilege coverage; gaps are tracked in the cycle-5 run log at `refs/curve-guided-rsi-v2-cycle5-deep-research-2026-08-04.md` on `yubi-OS/yubiOS`.

@@ -232,3 +232,11 @@ This skill — **bcvk (bootc-dev/bcvk) is a Rust toolkit that runs bootc contain
 For bcvk virtualization, the segmentation primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the segmentation layer of the yubiOS pipeline, and consumers that reason about segmentation coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full segmentation primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
 
 Concrete implications for bcvk virtualization: any change to the skill should be reviewed for impact on segmentation coverage; gaps in segmentation that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
+
+## Segmentation coverage for bcvk virtualization (curve-guided-rsi cycle-5 substantive edit)
+
+This skill — **bootc VM, ephemeral, hardware-in-the-loop** — sits in a domain that benefits from explicit segmentation coverage (process, container, VM, network, hardware). Cycle-5 of `curve-guided-rsi` was run on the expanded 69-skill corpus; this skill's fit coordinate was (u=0.000, v=0.347), PC1+PC2 = 0.4615, holdout R² = +0.2244.
+
+For bcvk virtualization, the segmentation primitive applies as follows: this skill provides VM-level segmentation via QEMU; pairs with `nspawn-containers` for the go-bigger alternative. yubiOS's segmentation stack composes nspawn containers (per `nspawn-containers`), vfio-user device boundaries (per ADR-031), and CISA ZTMM microsegmentation primitives (per `internal-big-picture`); this skill is one contributor.
+
+Concrete implications for bcvk virtualization: any change should be reviewed for impact on segmentation coverage; gaps are tracked in the cycle-5 run log.

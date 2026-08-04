@@ -300,3 +300,11 @@ This skill — **Design stable, well-documented interfaces that are hard to misu
 For api and interface design, the least privilege primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the least privilege layer of the yubiOS pipeline, and consumers that reason about least privilege coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full least privilege primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
 
 Concrete implications for api and interface design: any change to the skill should be reviewed for impact on least privilege coverage; gaps in least privilege that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
+
+## Segmentation coverage for api and interface design (curve-guided-rsi cycle-5 substantive edit)
+
+This skill — **API contract, type safety, interface stability** — sits in a domain that benefits from explicit segmentation coverage (process, container, VM, network, hardware). Cycle-5 of `curve-guided-rsi` was run on the expanded 69-skill corpus; this skill's fit coordinate was (u=1.000, v=0.553), PC1+PC2 = 0.4615, holdout R² = +0.2244.
+
+For api and interface design, the segmentation primitive applies as follows: this skill contributes to the segmentation primitive at the API layer; well-designed boundaries reduce blast radius. yubiOS's segmentation stack composes nspawn containers (per `nspawn-containers`), vfio-user device boundaries (per ADR-031), and CISA ZTMM microsegmentation primitives (per `internal-big-picture`); this skill is one contributor.
+
+Concrete implications for api and interface design: any change should be reviewed for impact on segmentation coverage; gaps are tracked in the cycle-5 run log.

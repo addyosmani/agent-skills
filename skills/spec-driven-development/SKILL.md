@@ -210,3 +210,11 @@ This skill — **Write a structured specification before writing any code** — 
 For spec driven development, the continuous/adaptive primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the continuous/adaptive layer of the yubiOS pipeline, and consumers that reason about continuous/adaptive coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full continuous/adaptive primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
 
 Concrete implications for spec driven development: any change to the skill should be reviewed for impact on continuous/adaptive coverage; gaps in continuous/adaptive that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
+
+## Declarative policy coverage for spec-driven development (curve-guided-rsi cycle-5 substantive edit)
+
+This skill — **spec-first, RFC, requirements clarity** — sits in a domain that benefits from explicit declarative policy coverage (data-as-config: .rego, Build Policies, mkosi.conf, Containerfile, sysext.conf). Cycle-5 of `curve-guided-rsi` was run on the expanded 69-skill corpus; this skill's fit coordinate was (u=0.710, v=0.351), PC1+PC2 = 0.4615, holdout R² = +0.2244.
+
+For spec-driven development, the declarative policy primitive applies as follows: this skill contributes to declarative policy at the spec level; specs are the policy-as-data. yubiOS's declarative-policy stack composes Rego Build Policies (per `docker-build-policy`, `rootless-container-builds`), mkosi declarative config (per `mkosi-image-builder`), sysext overlay manifests (per `composefs-kernel-floors`), and systemd unit hardening (per `systemd-hardening`); this skill is one contributor.
+
+Concrete implications for spec-driven development: any change should be reviewed for impact on declarative-policy coverage; gaps are tracked in the cycle-5 run log.

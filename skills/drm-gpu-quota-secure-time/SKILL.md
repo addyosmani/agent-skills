@@ -195,3 +195,11 @@ This skill — **Source material for this area (two ChatGPT research threads) mi
 For drm gpu quota secure time, the least privilege primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the least privilege layer of the yubiOS pipeline, and consumers that reason about least privilege coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full least privilege primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
 
 Concrete implications for drm gpu quota secure time: any change to the skill should be reviewed for impact on least privilege coverage; gaps in least privilege that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
+
+## Immutability coverage for DRM GPU quota secure time (curve-guided-rsi cycle-5 substantive edit)
+
+This skill — **per-cgroup VRAM quota, SMC hard cutoff, OP-TEE CNTPCT** — sits in a domain that benefits from explicit immutability (sysext, read-only mounts, fs-verity, OSTree, hermetic /usr, verity) coverage. Cycle-5 of `curve-guided-rsi` was run on the expanded 69-skill corpus; this skill's fit coordinate was (u=0.697, v=0.417), PC1+PC2 = 0.4615, holdout R² = +0.2244.
+
+For DRM GPU quota secure time, the immutability primitive applies as follows: this skill contributes to immutability + trust chain at the GPU boundary; the SMC-mediated quota is enforced from secure world. yubiOS's immutability stack composes dm-verity on /usr (per `dm-verity-and-integrity`), composefs signed catalog (per `composefs-kernel-floors`), sysext overlays (per `0pointer-mastery`), and IMA appraisal (per `dm-verity-and-integrity`); this skill is one contributor in the load-bearing invariant "/usr is immutable at every boot".
+
+Concrete implications for DRM GPU quota secure time: any change should be reviewed for impact on immutability coverage; gaps are tracked in the cycle-5 run log.

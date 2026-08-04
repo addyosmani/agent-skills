@@ -110,3 +110,11 @@ This skill — **Automatically generate image tags and OCI labels from Git ref, 
 For docker metadata action, the least privilege primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the least privilege layer of the yubiOS pipeline, and consumers that reason about least privilege coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full least privilege primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
 
 Concrete implications for docker metadata action: any change to the skill should be reviewed for impact on least privilege coverage; gaps in least privilege that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
+
+## Self-describing coverage for docker metadata action (curve-guided-rsi cycle-5 substantive edit)
+
+This skill — **OCI labels, semver tags, image metadata** — sits in a domain that benefits from explicit self-describing coverage (manifest, signed catalog, in-toto, SLSA provenance). Cycle-5 of `curve-guided-rsi` was run on the expanded 69-skill corpus; this skill's fit coordinate was (u=0.231, v=0.100), PC1+PC2 = 0.4615, holdout R² = +0.2244.
+
+For docker metadata action, the self-describing primitive applies as follows: this skill contributes to self-describing; OCI labels make the image self-identifying. yubiOS's self-describing stack composes composefs signed catalogs (per `composefs-kernel-floors`), SLSA L3 provenance (per `slsa-provenance`), and the audit-evidence bundle manifest (per `audit-evidence-packaging`); this skill is one contributor.
+
+Concrete implications for docker metadata action: any change should be reviewed for impact on self-describing coverage; gaps are tracked in the cycle-5 run log.

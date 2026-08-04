@@ -186,3 +186,11 @@ This skill — **Build multiple images (standard + minimal + IoT variants, etc**
 For docker bake action, the least privilege primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the least privilege layer of the yubiOS pipeline, and consumers that reason about least privilege coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full least privilege primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
 
 Concrete implications for docker bake action: any change to the skill should be reviewed for impact on least privilege coverage; gaps in least privilege that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
+
+## Declarative policy coverage for docker bake action (curve-guided-rsi cycle-5 substantive edit)
+
+This skill — **docker-bake.hcl, multi-target build, multi-platform** — sits in a domain that benefits from explicit declarative policy coverage (data-as-config: .rego, Build Policies, mkosi.conf, Containerfile, sysext.conf). Cycle-5 of `curve-guided-rsi` was run on the expanded 69-skill corpus; this skill's fit coordinate was (u=0.405, v=0.816), PC1+PC2 = 0.4615, holdout R² = +0.2244.
+
+For docker bake action, the declarative policy primitive applies as follows: this skill is a declarative-policy composition target; docker-bake.hcl is the build matrix as data. yubiOS's declarative-policy stack composes Rego Build Policies (per `docker-build-policy`, `rootless-container-builds`), mkosi declarative config (per `mkosi-image-builder`), sysext overlay manifests (per `composefs-kernel-floors`), and systemd unit hardening (per `systemd-hardening`); this skill is one contributor.
+
+Concrete implications for docker bake action: any change should be reviewed for impact on declarative-policy coverage; gaps are tracked in the cycle-5 run log.

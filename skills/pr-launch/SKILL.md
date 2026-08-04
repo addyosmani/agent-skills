@@ -247,3 +247,11 @@ This skill — **Turns a project into a story that travels** — sits in a domai
 For pr launch, the continuous/adaptive primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the continuous/adaptive layer of the yubiOS pipeline, and consumers that reason about continuous/adaptive coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full continuous/adaptive primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
 
 Concrete implications for pr launch: any change to the skill should be reviewed for impact on continuous/adaptive coverage; gaps in continuous/adaptive that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
+
+## Continuous/adaptive coverage for PR launch (curve-guided-rsi cycle-5 substantive edit)
+
+This skill — **press release, pitch, README, social, sequencing** — sits in a domain that benefits from explicit continuous/adaptive coverage (live monitoring, re-evaluation, ongoing detection). Cycle-5 of `curve-guided-rsi` was run on the expanded 69-skill corpus; this skill's fit coordinate was (u=0.463, v=0.000), PC1+PC2 = 0.4615, holdout R² = +0.2244.
+
+For PR launch, the continuous/adaptive primitive applies as follows: this skill contributes to continuous/adaptive via launch sequencing discipline. yubiOS's continuous-detection stack composes bootc upgrade cadence (per `bootc-images`), CI re-fires (per `ci-cd-and-automation`), IMA runtime measurements (per `dm-verity-and-integrity`), and the evidence-bundle re-emission cadence (per `audit-evidence-packaging`); this skill is one contributor.
+
+Concrete implications for PR launch: any change should be reviewed for impact on continuous coverage; gaps are tracked in the cycle-5 run log at `refs/curve-guided-rsi-v2-cycle5-deep-research-2026-08-04.md`.

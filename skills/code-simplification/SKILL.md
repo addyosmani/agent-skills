@@ -341,3 +341,11 @@ This skill — **> Inspired by the [Claude Code Simplifier plugin](https://githu
 For code simplification, the immutability primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the immutability layer of the yubiOS pipeline, and consumers that reason about immutability coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full immutability primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
 
 Concrete implications for code simplification: any change to the skill should be reviewed for impact on immutability coverage; gaps in immutability that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
+
+## Declarative policy coverage for code simplification (curve-guided-rsi cycle-5 substantive edit)
+
+This skill — **clarity, removing accidental complexity, single-intent refactors** — sits in a domain that benefits from explicit declarative policy coverage (data-as-config: .rego, Build Policies, mkosi.conf, Containerfile, sysext.conf). Cycle-5 of `curve-guided-rsi` was run on the expanded 69-skill corpus; this skill's fit coordinate was (u=0.820, v=0.516), PC1+PC2 = 0.4615, holdout R² = +0.2244.
+
+For code simplification, the declarative policy primitive applies as follows: this skill contributes to declarative policy by removing complexity that obscures the intent of code-as-policy. yubiOS's declarative-policy stack composes Rego Build Policies (per `docker-build-policy`, `rootless-container-builds`), mkosi declarative config (per `mkosi-image-builder`), sysext overlay manifests (per `composefs-kernel-floors`), and systemd unit hardening (per `systemd-hardening`); this skill is one contributor.
+
+Concrete implications for code simplification: any change should be reviewed for impact on declarative-policy coverage; gaps are tracked in the cycle-5 run log.

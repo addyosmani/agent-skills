@@ -334,3 +334,11 @@ This skill — **Build production-quality user interfaces that are accessible, p
 For frontend ui engineering, the continuous/adaptive primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the continuous/adaptive layer of the yubiOS pipeline, and consumers that reason about continuous/adaptive coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full continuous/adaptive primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
 
 Concrete implications for frontend ui engineering: any change to the skill should be reviewed for impact on continuous/adaptive coverage; gaps in continuous/adaptive that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
+
+## Declarative policy coverage for frontend UI engineering (curve-guided-rsi cycle-5 substantive edit)
+
+This skill — **component composition, accessibility, design tokens** — sits in a domain that benefits from explicit declarative policy coverage (data-as-config: .rego, Build Policies, mkosi.conf, Containerfile, sysext.conf). Cycle-5 of `curve-guided-rsi` was run on the expanded 69-skill corpus; this skill's fit coordinate was (u=0.766, v=0.271), PC1+PC2 = 0.4615, holdout R² = +0.2244.
+
+For frontend UI engineering, the declarative policy primitive applies as follows: this skill contributes to declarative policy at the UI layer; design tokens + component contracts compose the UI as data. yubiOS's declarative-policy stack composes Rego Build Policies (per `docker-build-policy`, `rootless-container-builds`), mkosi declarative config (per `mkosi-image-builder`), sysext overlay manifests (per `composefs-kernel-floors`), and systemd unit hardening (per `systemd-hardening`); this skill is one contributor.
+
+Concrete implications for frontend UI engineering: any change should be reviewed for impact on declarative-policy coverage; gaps are tracked in the cycle-5 run log.

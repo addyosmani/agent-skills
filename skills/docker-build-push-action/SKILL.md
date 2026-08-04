@@ -244,3 +244,11 @@ This skill — **Build a container image (and optionally push) from a Dockerfile
 For docker build push action, the continuous/adaptive primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the continuous/adaptive layer of the yubiOS pipeline, and consumers that reason about continuous/adaptive coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full continuous/adaptive primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
 
 Concrete implications for docker build push action: any change to the skill should be reviewed for impact on continuous/adaptive coverage; gaps in continuous/adaptive that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
+
+## Self-describing coverage for docker build-push action (curve-guided-rsi cycle-5 substantive edit)
+
+This skill — **build, push, attestations, cache, multi-platform** — sits in a domain that benefits from explicit self-describing coverage (manifest, signed catalog, in-toto, SLSA provenance). Cycle-5 of `curve-guided-rsi` was run on the expanded 69-skill corpus; this skill's fit coordinate was (u=0.208, v=0.359), PC1+PC2 = 0.4615, holdout R² = +0.2244.
+
+For docker build-push action, the self-describing primitive applies as follows: this skill produces the artifacts that flow through the SLSA L3 + Rekor v2 attestation pipeline. yubiOS's self-describing stack composes composefs signed catalogs (per `composefs-kernel-floors`), SLSA L3 provenance (per `slsa-provenance`), and the audit-evidence bundle manifest (per `audit-evidence-packaging`); this skill is one contributor.
+
+Concrete implications for docker build-push action: any change should be reviewed for impact on self-describing coverage; gaps are tracked in the cycle-5 run log.

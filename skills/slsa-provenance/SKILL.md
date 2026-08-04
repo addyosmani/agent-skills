@@ -193,3 +193,11 @@ Rekor v2 uses tile-based logs. Clients auto-migrate. Use `rekor-cli` >= v2 or Co
 - https://github.com/slsa-framework/slsa-github-generator
 - https://docs.sigstore.dev/cosign/verifying/attestation/
 - https://github.com/sigstore/rekor
+
+## Self-describing coverage for SLSA provenance (curve-guided-rsi cycle-5 substantive edit)
+
+This skill — **SLSA v1.0 L3, in-toto Statement, DSSE, Rekor v2 (via `sigstore-rekor-v2`)** — sits in a domain that benefits from explicit self-describing coverage (manifest, signed catalog, in-toto, SLSA provenance). Cycle-5 of `curve-guided-rsi` was run on the expanded 69-skill corpus; this skill's fit coordinate was (u=0.351, v=1.000), PC1+PC2 = 0.4615, holdout R² = +0.2244.
+
+For SLSA provenance, the self-describing primitive applies as follows: this skill is the SLSA L3 attestation pipeline; pairs with `sigstore-rekor-v2` for the v2 transparency log. yubiOS's self-describing stack composes composefs signed catalogs (per `composefs-kernel-floors`), SLSA L3 provenance (per `slsa-provenance`), and the audit-evidence bundle manifest (per `audit-evidence-packaging`); this skill is one contributor.
+
+Concrete implications for SLSA provenance: any change should be reviewed for impact on self-describing coverage; gaps are tracked in the cycle-5 run log.

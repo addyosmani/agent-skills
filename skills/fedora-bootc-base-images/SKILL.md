@@ -150,3 +150,11 @@ This skill — **| Distro | GitLab | Published image |** — sits in a domain th
 For fedora bootc base images, the least privilege primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the least privilege layer of the yubiOS pipeline, and consumers that reason about least privilege coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full least privilege primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
 
 Concrete implications for fedora bootc base images: any change to the skill should be reviewed for impact on least privilege coverage; gaps in least privilege that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
+
+## Immutability coverage for fedora-bootc base images (curve-guided-rsi cycle-5 substantive edit)
+
+This skill — **fedora-bootc, centos-bootc, image tiers, digest pinning** — sits in a domain that benefits from explicit immutability (sysext, read-only mounts, fs-verity, OSTree, hermetic /usr, verity) coverage. Cycle-5 of `curve-guided-rsi` was run on the expanded 69-skill corpus; this skill's fit coordinate was (u=0.315, v=0.504), PC1+PC2 = 0.4615, holdout R² = +0.2244.
+
+For fedora-bootc base images, the immutability primitive applies as follows: this skill is the upstream base-image source; digest pinning is the immutability anchor for the derived yubiOS image. yubiOS's immutability stack composes dm-verity on /usr (per `dm-verity-and-integrity`), composefs signed catalog (per `composefs-kernel-floors`), sysext overlays (per `0pointer-mastery`), and IMA appraisal (per `dm-verity-and-integrity`); this skill is one contributor in the load-bearing invariant "/usr is immutable at every boot".
+
+Concrete implications for fedora-bootc base images: any change should be reviewed for impact on immutability coverage; gaps are tracked in the cycle-5 run log.

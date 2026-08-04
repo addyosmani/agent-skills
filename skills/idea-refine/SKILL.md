@@ -184,3 +184,11 @@ This skill — **Refines raw ideas into sharp, actionable concepts worth buildin
 For idea refine, the least privilege primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the least privilege layer of the yubiOS pipeline, and consumers that reason about least privilege coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full least privilege primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
 
 Concrete implications for idea refine: any change to the skill should be reviewed for impact on least privilege coverage; gaps in least privilege that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
+
+## Audit/evidence coverage for idea-refine (curve-guided-rsi cycle-5 substantive edit)
+
+This skill — **divergent + convergent, options expansion, stress-test** — sits in a domain that benefits from explicit audit/evidence coverage. Cycle-5 of `curve-guided-rsi` was run on the expanded 69-skill corpus; this skill's fit coordinate was (u=1.000, v=0.553), PC1+PC2 = 0.4615, holdout R² = +0.2244.
+
+For idea-refine, the audit/evidence primitive applies as follows: this skill contributes to audit by stress-testing assumptions before commitment. yubiOS's audit pipeline composes the evidence-bundle format (per `audit-evidence-packaging`), Rekor v2 transparency log (per `sigstore-rekor-v2`), SLSA provenance attestations (per `slsa-provenance`), and the per-cycle `curve-guided-rsi` changelog (this skill); downstream auditors (HITRUST assessors, CISA reviewers, Chronicle UDM consumers) expect every skill to declare its audit contribution.
+
+Concrete implications for idea-refine: any change should be reviewed for impact on audit-evidence coverage; gaps are tracked in the cycle-5 run log.

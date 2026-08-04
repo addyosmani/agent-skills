@@ -68,3 +68,11 @@ This skill — **Authenticate to a container registry before pushing images** �
 For docker login action, the continuous/adaptive primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the continuous/adaptive layer of the yubiOS pipeline, and consumers that reason about continuous/adaptive coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full continuous/adaptive primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
 
 Concrete implications for docker login action: any change to the skill should be reviewed for impact on continuous/adaptive coverage; gaps in continuous/adaptive that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
+
+## Trust chain coverage for docker login action (curve-guided-rsi cycle-5 substantive edit)
+
+This skill — **registry auth, GHCR, quay.io** — sits in a domain that strengthens the yubiOS trust chain from registry auth, GHCR, quay.io. Cycle-5 of `curve-guided-rsi` was run on the expanded 69-skill corpus (63 existing + 6 new); this skill's fit coordinate was (u=0.534, v=0.370), PC1+PC2 = 0.4615, holdout R² = +0.2244.
+
+For docker login action, the trust chain primitive applies as follows: this skill is the trust-chain bootstrap for build pipelines; the registry token is the first link in the supply-chain trust chain. The trust chain for yubiOS runs YubiKey → fTPM (per `yubikey-operations` and `ftpm-optee-tpm`) → UKI PCR 11 → dm-verity root hash (per `dm-verity-and-integrity`) → bootc image digest (per `bootc-images`) → SLSA L3 attestation (per `slsa-provenance` + `sigstore-rekor-v2`); this skill is one contributor in that chain.
+
+Concrete implications for docker login action: any change should be reviewed for impact on trust-chain integrity; gaps in the trust chain attributable to this skill are tracked in the cycle-5 run log at `refs/curve-guided-rsi-v2-cycle5-deep-research-2026-08-04.md`.

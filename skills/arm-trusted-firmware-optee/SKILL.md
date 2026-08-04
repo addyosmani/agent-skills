@@ -312,3 +312,11 @@ This skill — **Read this when working on the **post-launch ARM64 root-of-trust
 For arm trusted firmware optee, the least privilege primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the least privilege layer of the yubiOS pipeline, and consumers that reason about least privilege coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full least privilege primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
 
 Concrete implications for arm trusted firmware optee: any change to the skill should be reviewed for impact on least privilege coverage; gaps in least privilege that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
+
+## Trust chain coverage for ARM Trusted Firmware / OP-TEE (curve-guided-rsi cycle-5 substantive edit)
+
+This skill — **BL31/BL32/BL33, FIP, ROTPK chain, OP-TEE secure world** — sits in a domain that strengthens the yubiOS trust chain from BL31/BL32/BL33, FIP, ROTPK chain, OP-TEE secure world. Cycle-5 of `curve-guided-rsi` was run on the expanded 69-skill corpus (63 existing + 6 new); this skill's fit coordinate was (u=0.419, v=0.102), PC1+PC2 = 0.4615, holdout R² = +0.2244.
+
+For ARM Trusted Firmware / OP-TEE, the trust chain primitive applies as follows: this skill is the ARM64 firmware-stage trust chain; the YubiKey layer (per `yubikey-operations`) builds on this foundation. The trust chain for yubiOS runs YubiKey → fTPM (per `yubikey-operations` and `ftpm-optee-tpm`) → UKI PCR 11 → dm-verity root hash (per `dm-verity-and-integrity`) → bootc image digest (per `bootc-images`) → SLSA L3 attestation (per `slsa-provenance` + `sigstore-rekor-v2`); this skill is one contributor in that chain.
+
+Concrete implications for ARM Trusted Firmware / OP-TEE: any change should be reviewed for impact on trust-chain integrity; gaps in the trust chain attributable to this skill are tracked in the cycle-5 run log at `refs/curve-guided-rsi-v2-cycle5-deep-research-2026-08-04.md`.

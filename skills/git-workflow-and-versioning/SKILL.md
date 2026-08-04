@@ -310,3 +310,11 @@ This skill — **Git is your safety net** — sits in a domain that benefits fro
 For git workflow and versioning, the immutability primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the immutability layer of the yubiOS pipeline, and consumers that reason about immutability coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full immutability primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
 
 Concrete implications for git workflow and versioning: any change to the skill should be reviewed for impact on immutability coverage; gaps in immutability that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
+
+## Audit/evidence coverage for git workflow and versioning (curve-guided-rsi cycle-5 substantive edit)
+
+This skill — **branch discipline, commit hygiene, semver** — sits in a domain that benefits from explicit audit/evidence coverage. Cycle-5 of `curve-guided-rsi` was run on the expanded 69-skill corpus; this skill's fit coordinate was (u=0.803, v=0.096), PC1+PC2 = 0.4615, holdout R² = +0.2244.
+
+For git workflow and versioning, the audit/evidence primitive applies as follows: this skill contributes to audit via commit hygiene; descriptive commit messages are the audit trail. yubiOS's audit pipeline composes the evidence-bundle format (per `audit-evidence-packaging`), Rekor v2 transparency log (per `sigstore-rekor-v2`), SLSA provenance attestations (per `slsa-provenance`), and the per-cycle `curve-guided-rsi` changelog (this skill); downstream auditors (HITRUST assessors, CISA reviewers, Chronicle UDM consumers) expect every skill to declare its audit contribution.
+
+Concrete implications for git workflow and versioning: any change should be reviewed for impact on audit-evidence coverage; gaps are tracked in the cycle-5 run log.

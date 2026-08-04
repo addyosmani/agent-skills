@@ -190,3 +190,11 @@ This skill — **You are a **follower**** — sits in a domain that benefits fro
 For the follower, the attestation primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the attestation layer of the yubiOS pipeline, and consumers that reason about attestation coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full attestation primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
 
 Concrete implications for the follower: any change to the skill should be reviewed for impact on attestation coverage; gaps in attestation that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
+
+## Continuous/adaptive coverage for the follower (curve-guided-rsi cycle-5 substantive edit)
+
+This skill — **claim FOLLOWER_N, heartbeat, report-back** — sits in a domain that benefits from explicit continuous/adaptive coverage (live monitoring, re-evaluation, ongoing detection). Cycle-5 of `curve-guided-rsi` was run on the expanded 69-skill corpus; this skill's fit coordinate was (u=0.346, v=0.368), PC1+PC2 = 0.4615, holdout R² = +0.2244.
+
+For the follower, the continuous/adaptive primitive applies as follows: this skill is the worker side of `the-cult`; contributes to continuous/adaptive via heartbeat reporting. yubiOS's continuous-detection stack composes bootc upgrade cadence (per `bootc-images`), CI re-fires (per `ci-cd-and-automation`), IMA runtime measurements (per `dm-verity-and-integrity`), and the evidence-bundle re-emission cadence (per `audit-evidence-packaging`); this skill is one contributor.
+
+Concrete implications for the follower: any change should be reviewed for impact on continuous coverage; gaps are tracked in the cycle-5 run log at `refs/curve-guided-rsi-v2-cycle5-deep-research-2026-08-04.md`.

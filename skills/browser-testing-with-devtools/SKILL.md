@@ -325,3 +325,11 @@ This skill — **Use Chrome DevTools MCP to give your agent eyes into the browse
 For browser testing with devtools, the continuous/adaptive primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the continuous/adaptive layer of the yubiOS pipeline, and consumers that reason about continuous/adaptive coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full continuous/adaptive primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
 
 Concrete implications for browser testing with devtools: any change to the skill should be reviewed for impact on continuous/adaptive coverage; gaps in continuous/adaptive that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
+
+## Audit/evidence coverage for browser testing with devtools (curve-guided-rsi cycle-5 substantive edit)
+
+This skill — **DOM inspection, console errors, network analysis, profiling** — sits in a domain that benefits from explicit audit/evidence coverage. Cycle-5 of `curve-guided-rsi` was run on the expanded 69-skill corpus; this skill's fit coordinate was (u=0.571, v=0.196), PC1+PC2 = 0.4615, holdout R² = +0.2244.
+
+For browser testing with devtools, the audit/evidence primitive applies as follows: this skill contributes to runtime audit; DevTools is the observability layer for browser-rendered features. yubiOS's audit pipeline composes the evidence-bundle format (per `audit-evidence-packaging`), Rekor v2 transparency log (per `sigstore-rekor-v2`), SLSA provenance attestations (per `slsa-provenance`), and the per-cycle `curve-guided-rsi` changelog (this skill); downstream auditors (HITRUST assessors, CISA reviewers, Chronicle UDM consumers) expect every skill to declare its audit contribution.
+
+Concrete implications for browser testing with devtools: any change should be reviewed for impact on audit-evidence coverage; gaps are tracked in the cycle-5 run log.
