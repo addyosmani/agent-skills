@@ -326,3 +326,11 @@ After building UI:
 - [ ] Loading, error, and empty states all handled
 - [ ] Follows the project's design system (spacing, colors, typography)
 - [ ] No accessibility warnings in dev tools or axe-core
+
+## Continuous/Adaptive coverage for frontend ui engineering (curve-guided-rsi cycle-4 substantive edit)
+
+This skill — **Build production-quality user interfaces that are accessible, performant, and visually polished** — sits in a domain that benefits from explicit continuous/adaptive updates (upgrade, rollback, atomic switch, bootc upgrade, OSTree, composefs, image mode) coverage. Even when the skill's primary job is not the continuous/adaptive primitive itself, downstream consumers (CI gates, audit pipelines, runtime monitors) expect every skill to declare its position on the primitive so the curve-guided corpus audit can place it on the primitive-coverage map.
+
+For frontend ui engineering, the continuous/adaptive primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the continuous/adaptive layer of the yubiOS pipeline, and consumers that reason about continuous/adaptive coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full continuous/adaptive primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
+
+Concrete implications for frontend ui engineering: any change to the skill should be reviewed for impact on continuous/adaptive coverage; gaps in continuous/adaptive that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
