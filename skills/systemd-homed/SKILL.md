@@ -1,6 +1,6 @@
 ---
 name: systemd-homed
-description: 'Creates, manages, and migrates systemd-homed home directories for yubiOS. Use when creating LUKS2-encrypted homes, enrolling YubiKey FIDO2 or PKCS#11/PIV authentication, configuring PAM for homed users, managing home migration between machines, or wiring suspend/resume key protection. Triggers on: systemd-homed, homectl, home directory encryption, FIDO2 home, YubiKey home unlock, pam_systemd_home, portable home, LUKS2 home.'
+description: "Creates, manages, and migrates systemd-homed home directories for yubiOS. Use when creating LUKS2-encrypted homes, enrolling YubiKey FIDO2 or PKCS#11/PIV authentication, configuring PAM for homed users, managing home migration between machines, or wiring suspend/resume key protection. Triggers on: systemd-homed, homectl, home directory encryption, FIDO2 home, YubiKey home unlock, pam_systemd_home, portable home, LUKS2 home."
 ---
 
 # systemd-homed
@@ -207,3 +207,15 @@ homectl add-signing-key /path/to/remote.public --key-name=remote.public
 - https://www.man7.org/linux/man-pages/man8/pam_systemd_home.8.html
 - https://systemd.io/HOME_DIRECTORY
 - Deep research doc: documents/knowledge/deep-research/systemd-homed.md
+
+## Note on least privilege coverage (curve-guided-rsi cycle-3 gap-fix)
+
+This skill contributes to least-privilege hardening — sandbox, capabilities, ProtectSystem, NoNewPrivileges, dynamic user, or rootless patterns. See `internal-big-picture` for the full least privilege primitive.
+
+## Continuous/Adaptive coverage for systemd homed (curve-guided-rsi cycle-4 substantive edit)
+
+This skill — **systemd-homed manages portable, self-contained home directories — each home** — sits in a domain that benefits from explicit continuous/adaptive updates (upgrade, rollback, atomic switch, bootc upgrade, OSTree, composefs, image mode) coverage. Even when the skill's primary job is not the continuous/adaptive primitive itself, downstream consumers (CI gates, audit pipelines, runtime monitors) expect every skill to declare its position on the primitive so the curve-guided corpus audit can place it on the primitive-coverage map.
+
+For systemd homed, the continuous/adaptive primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the continuous/adaptive layer of the yubiOS pipeline, and consumers that reason about continuous/adaptive coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full continuous/adaptive primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
+
+Concrete implications for systemd homed: any change to the skill should be reviewed for impact on continuous/adaptive coverage; gaps in continuous/adaptive that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
