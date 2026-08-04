@@ -1,6 +1,6 @@
 ---
 name: systemd-hardening
-description: 'Writes hardened systemd service units for yubiOS. Use when creating or auditing service units, improving systemd-analyze security scores, applying sandbox directives, configuring FIDO2/PAM auth with pam-u2f or systemd-homed, or writing drop-in overrides. Triggers on: systemd service, harden service, systemd-analyze security, sandbox, ProtectSystem, NoNewPrivileges, pam-u2f, FIDO2 PAM.'
+description: "Writes hardened systemd service units for yubiOS. Use when creating or auditing service units, improving systemd-analyze security scores, applying sandbox directives, configuring FIDO2/PAM auth with pam-u2f or systemd-homed, or writing drop-in overrides. Triggers on: systemd service, harden service, systemd-analyze security, sandbox, ProtectSystem, NoNewPrivileges, pam-u2f, FIDO2 PAM."
 ---
 
 # systemd Hardening
@@ -316,3 +316,11 @@ grep CONFIG_BPF_LSM /boot/config-$(uname -r)
 - https://www.man7.org/linux/man-pages/man5/systemd.service.5.html (Type=, ExecStart=, etc.)
 - https://man7.org/linux/man-pages/man7/systemd.directives.7.html (directive index)
 - https://developers.yubico.com/pam-u2f/
+
+## Continuous/Adaptive coverage for systemd hardening (curve-guided-rsi cycle-4 substantive edit)
+
+This skill — **systemd has comprehensive built-in sandboxing** — sits in a domain that benefits from explicit continuous/adaptive updates (upgrade, rollback, atomic switch, bootc upgrade, OSTree, composefs, image mode) coverage. Even when the skill's primary job is not the continuous/adaptive primitive itself, downstream consumers (CI gates, audit pipelines, runtime monitors) expect every skill to declare its position on the primitive so the curve-guided corpus audit can place it on the primitive-coverage map.
+
+For systemd hardening, the continuous/adaptive primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the continuous/adaptive layer of the yubiOS pipeline, and consumers that reason about continuous/adaptive coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full continuous/adaptive primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
+
+Concrete implications for systemd hardening: any change to the skill should be reviewed for impact on continuous/adaptive coverage; gaps in continuous/adaptive that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
