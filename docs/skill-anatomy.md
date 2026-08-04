@@ -11,10 +11,11 @@ skills/
   skill-name/
     SKILL.md           # Required: The skill definition
     scripts/           # Optional: Runnable helpers used by the skill workflow
+    references/        # Optional: Skill-specific reference documentation
     supporting-file.md # Optional: Reference material loaded on demand
 ```
 
-`SKILL.md` is the only required file. Add `scripts/` only when the skill actually ships runnable helpers, and omit the directory entirely for markdown-only skills.
+`SKILL.md` is the only required file. Add `scripts/` or `references/` only when the skill actually needs them, and omit them entirely for simpler skills.
 
 ## SKILL.md Format
 
@@ -107,6 +108,37 @@ Keep patterns and principles inline when under 50 lines.
 
 If a skill does not need runnable helpers, do not create an empty `scripts/` directory just to mirror other skills. Empty directories add noise without changing how the skill works.
 
+## Shared References
+
+Checklists used by more than one skill — testing, security, performance, accessibility, definition-of-done — live in `references/` at the repository root, deliberately *not* inside any skill directory.
+
+This is a pack-level design choice. The Agent Skills spec describes a skill as a self-contained directory, but several skills here point at the same checklists. Colocating those would force one of two options: copy the checklist into every skill that uses it, or pick one skill to "own" it and have the others reach into that directory. Both drift over time. A single repo-root copy stays the source of truth.
+
+The tradeoff is portability: a whole-repo install (such as the Claude Code marketplace plugin) carries `references/` along, but a per-skill install that copies only `skills/<name>/` leaves the repo-root sibling behind, and those links resolve to nothing. That gap is tracked in [#361](https://github.com/addyosmani/agent-skills/issues/361).
+
+Current convention: material used by exactly one skill is a supporting file inside that skill's directory; material shared across skills goes in `references/`.
+
+## Context Efficiency
+
+Skills load on demand: only the skill name and description sit in context at startup. The full `SKILL.md` loads only when an agent decides the skill is relevant. To keep that load cheap:
+
+- **Keep `SKILL.md` under 500 lines.** Move detailed reference material into supporting files.
+- **Write specific descriptions.** A precise description helps the agent activate the skill at the right moment and skip it otherwise.
+- **Use progressive disclosure.** Reference supporting files that are read only when the workflow reaches them.
+- **Prefer scripts over inline code.** Executing a script consumes no context; only its output does. Inline code blocks are paid for on every load.
+- **Keep file references one level deep.** Link directly from `SKILL.md` to supporting files rather than chaining through intermediate documents.
+
+## Script Requirements
+
+When a skill ships runnable helpers under `scripts/`, each script follows these conventions:
+
+- Use a `#!/bin/bash` shebang.
+- Use `set -e` for fail-fast behavior.
+- Write status messages to stderr: `echo "Message" >&2`.
+- Write machine-readable output (JSON) to stdout.
+- Include a cleanup trap for temporary files.
+- Reference the script path as `skills/<skill-name>/scripts/<script>.sh` (repo-relative).
+
 ## Writing Principles
 
 1. **Process over knowledge.** Skills are workflows, not reference docs. Steps, not facts.
@@ -121,7 +153,8 @@ If a skill does not need runnable helpers, do not create an empty `scripts/` dir
 - Skill directories: `lowercase-hyphen-separated`
 - Skill files: `SKILL.md` (always uppercase)
 - Supporting files: `lowercase-hyphen-separated.md`
-- References: stored in `references/` at the project root, not inside skill directories
+- Shared references: stored in the root `references/` directory, not inside skill directories (see [Shared References](#shared-references) for why).
+- Skill-specific references: a single supporting doc can stay as a loose file in the skill directory (the `Supporting files` entry above); when several related docs travel with the skill, the emerging convention for self-contained, distributable skills is to group them in a `references/` directory inside the skill directory, so the skill carries its own supporting docs.
 
 ## Cross-Skill References
 

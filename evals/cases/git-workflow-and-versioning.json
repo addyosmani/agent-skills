@@ -1,0 +1,43 @@
+{
+  "skill_name": "git-workflow-and-versioning",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Split this messy working tree into clean atomic commits",
+        "top_k": 3
+      },
+      {
+        "prompt": "Resolve the merge conflict on this feature branch",
+        "top_k": 3
+      },
+      {
+        "prompt": "How should we tag and version this release?",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Add a loading spinner to the submit button"
+      },
+      {
+        "prompt": "Write integration tests for the payments API",
+        "owner": "test-driven-development"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The working tree mixes a refactor, a bug fix, and a new feature. Turn it into a clean history.",
+      "expected_output": "Separate atomic commits with clear messages, each independently green",
+      "files": [
+        "git-workflow-and-versioning"
+      ],
+      "expectations": [
+        "Refactor, fix, and feature land as separate commits",
+        "Commit messages are imperative and standalone",
+        "Each commit leaves the tree in a working state"
+      ]
+    }
+  ]
+}

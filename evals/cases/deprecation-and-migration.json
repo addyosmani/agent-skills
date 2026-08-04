@@ -1,0 +1,43 @@
+{
+  "skill_name": "deprecation-and-migration",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "We are sunsetting the v1 API, plan the deprecation",
+        "top_k": 3
+      },
+      {
+        "prompt": "Migrate users off the legacy auth system without breaking them",
+        "top_k": 3
+      },
+      {
+        "prompt": "How do I remove this old feature safely for existing users?",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Add dark mode to the settings page"
+      },
+      {
+        "prompt": "Why is this test flaky on CI?",
+        "owner": "ci-cd-and-automation"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Plan the deprecation of a public v1 REST API with 200 external consumers, replaced by v2.",
+      "expected_output": "A staged deprecation plan: comms, timeline, compatibility window, monitoring, and removal criteria",
+      "files": [
+        "deprecation-and-migration"
+      ],
+      "expectations": [
+        "Consumers are notified with a timeline before any breaking change",
+        "A compatibility or migration window exists with monitoring of remaining usage",
+        "Removal is gated on measured migration, not a calendar date alone"
+      ]
+    }
+  ]
+}

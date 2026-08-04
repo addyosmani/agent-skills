@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8"><title>Signup</title></head>
+  <body>
+    <form id="signup-form">
+      <label>Email <input id="email" name="email" type="email" required></label>
+      <button type="submit">Create account</button>
+    </form>
+    <p id="status" aria-live="polite"></p>
+    <script>
+      document.querySelector('#signup-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const email = document.querySelector('#email').value;
+        const response = await fetch('/api/signup', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        const result = await response.json();
+        document.querySelector('#status').textContent = result.message;
+      });
+    </script>
+  </body>
+</html>

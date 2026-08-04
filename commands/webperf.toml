@@ -8,7 +8,7 @@ prompt = """
 Deep mode — activate when any of these is available:
 - A Lighthouse JSON report file (e.g. `npx lighthouse <url> --output json --output-path ./report.json`, or `npx -p chrome-devtools-mcp chrome-devtools lighthouse_audit --output-format=json` from the Chrome DevTools MCP CLI)
 - A PageSpeed Insights JSON response (includes Lighthouse + CrUX)
-- A CrUX API response (requires CRUX_API_KEY or GOOGLE_API_KEY)
+- A CrUX API response (requires $CRUX_API_KEY or $GOOGLE_API_KEY environment variables — never hard-code these values in config files)
 - A DevTools performance trace
 - A live URL plus the chrome-devtools MCP server configured in the harness (capture metrics directly via lighthouse_audit and performance_* tools)
 - The Chrome DevTools MCP CLI invoked locally (via `npx -p chrome-devtools-mcp chrome-devtools <tool>`), passing the JSON output to the agent

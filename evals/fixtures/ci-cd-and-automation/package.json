@@ -1,0 +1,8 @@
+{
+  "name": "ci-fixture",
+  "private": true,
+  "scripts": {
+    "lint": "node --check src/slug.js",
+    "test": "node --test"
+  }
+}

@@ -7,7 +7,7 @@
 Copilot supports creating agent skills using a `.github/skills`, `.claude/skills`, or `.agents/skills` directory in your repository.
 
 ```bash
-mkdir -p .github
+mkdir -p .github/skills/test-driven-development .github/skills/code-review-and-quality
 
 # Create files for essential skills
 cat /path/to/agent-skills/skills/test-driven-development/SKILL.md > .github/skills/test-driven-development/SKILL.md

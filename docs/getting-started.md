@@ -41,6 +41,8 @@ Start with the `using-agent-skills` skill loaded. It contains a flowchart that m
 
 ## Recommended Setup
 
+Rolling out to a real project? The **[Adoption Guide](adoption-guide.md)** covers two end-to-end paths: the full lifecycle from day one for a greenfield project, and an incremental, verification-first rollout for an established codebase. The setup below is the quick version.
+
 ### Minimal (Start here)
 
 Load three essential skills into your rules file:
@@ -118,11 +120,18 @@ The `.claude/commands/` directory contains slash commands for Claude Code. These
 | `/build auto` | planning-and-task-breakdown → incremental-implementation + test-driven-development (whole plan, one approval) |
 | `/test` | test-driven-development |
 | `/review` | code-review-and-quality |
+| `/code-simplify` | code-simplification |
 | `/ship` | shipping-and-launch |
 | `/webperf` | web-performance-auditor (specialist agent, web apps only) |
 | `/discover` *(planned)* | design-sprint |
 
 `/discover` (and optional alias `/sprint`) is planned as a future wrapper. Until it exists, invoke discovery in natural language and let intent mapping select `design-sprint`.
+
+> **Note:** When installed as a Claude Code plugin you may see a warning like
+> _"Default commands/ folder is ignored because the manifest sets 'commands'"_.
+> This is expected. The root `commands/` directory belongs to the Antigravity CLI
+> and is intentionally separate from `.claude/commands/`. All Claude Code slash
+> commands load correctly from `.claude/commands/`; the warning is cosmetic.
 
 ## Using References
 
@@ -134,8 +143,19 @@ The `references/` directory contains supplementary checklists:
 | `performance-checklist.md` | performance-optimization |
 | `security-checklist.md` | security-and-hardening |
 | `accessibility-checklist.md` | frontend-ui-engineering |
+| `definition-of-done.md` | all skills / every change |
+| `observability-checklist.md` | observability-and-instrumentation |
+| `orchestration-patterns.md` | doubt-driven-development |
 
 Load a reference when you need detailed patterns beyond what the skill covers.
+
+If you install one skill with `npx skills add ... --skill <name>`, only the
+selected `skills/<name>/` directory is copied. The skill still works, but paths
+to supplementary checklists in the repo-level `references/` directory are
+unavailable. Use a whole-repo integration, clone the repository, or copy the
+needed checklist into a `references/` directory inside the installed skill.
+This portability gap is tracked in
+[addyosmani/agent-skills#361](https://github.com/addyosmani/agent-skills/issues/361).
 
 ## Spec and task artifacts
 

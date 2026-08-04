@@ -199,3 +199,5 @@ After instrumenting a feature, confirm:
 - [ ] A single request can be followed end-to-end in the tracing UI without broken spans
 - [ ] Every new alert is symptom-based, has a runbook link, and was test-fired once
 - [ ] An induced failure in staging was located via telemetry alone, without reading the source
+
+For the at-a-glance version of this list, including the pre-launch instrumentation gate, see `references/observability-checklist.md`.

@@ -1,0 +1,45 @@
+{
+  "skill_name": "spec-driven-development",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Write a spec for the new billing feature before we write any code",
+        "top_k": 3
+      },
+      {
+        "prompt": "Draft a PRD with objectives and boundaries for this project",
+        "top_k": 3
+      },
+      {
+        "prompt": "We are starting a new service, define the requirements first",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Trace this request across our services",
+        "owner": "observability-and-instrumentation"
+      },
+      {
+        "prompt": "Simplify this clever one-liner into readable code",
+        "owner": "code-simplification"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We want usage-based billing. Produce the spec before any implementation.",
+      "expected_output": "A SPEC.md covering objectives, behavior, data model, testing strategy, and explicit boundaries",
+      "files": [
+        "spec-driven-development"
+      ],
+      "expectations": [
+        "The spec includes explicit boundaries and non-goals",
+        "Ambiguities are surfaced as questions rather than silently resolved",
+        "A testing strategy is part of the spec",
+        "No implementation code is written"
+      ]
+    }
+  ]
+}

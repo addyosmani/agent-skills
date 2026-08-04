@@ -43,7 +43,7 @@ agy plugin list
 
 ## Slash Commands
 
-The plugin registers 7 custom slash commands that map to the development lifecycle:
+The plugin registers 8 custom slash commands: 7 lifecycle commands plus the `/webperf` specialist audit:
 
 | Command | What it does | Activated Skill |
 |---------|--------------|-----------------|
@@ -54,6 +54,7 @@ The plugin registers 7 custom slash commands that map to the development lifecyc
 | `/review` | Five-axis code review | `code-review-and-quality` |
 | `/code-simplify` | Reduce complexity without changing behavior | `code-simplification` |
 | `/ship` | Pre-launch checklist via parallel persona fan-out | `shipping-and-launch` |
+| `/webperf` | Audit browser-facing apps for Core Web Vitals and performance issues | `web-performance-auditor` |
 
 Each command automatically invokes the corresponding skill and guides the agent step-by-step.
 

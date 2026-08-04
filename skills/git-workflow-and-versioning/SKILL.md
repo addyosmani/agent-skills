@@ -1,6 +1,6 @@
 ---
 name: git-workflow-and-versioning
-description: Structures git workflow practices. Use when making any code change. Use when committing, branching, resolving conflicts, or when you need to organize work across multiple parallel streams.
+description: Structures git workflow practices. Use when making any code change. Use when committing, branching, resolving conflicts, or when you need to organize work across multiple parallel streams. Use when cutting a release, choosing a semantic version bump, tagging, or writing a changelog.
 ---
 
 # Git Workflow and Versioning
@@ -267,6 +267,49 @@ git blame src/services/task.ts
 git log --grep="validation" --oneline
 ```
 
+## Release & Versioning
+
+Commits are how *you* track change; a **version** is how your *consumers* track it. The moment anything else depends on your code — another team, a published package, a deployed client — "latest on main" stops being a sufficient answer to "what am I running, and is it safe to upgrade?" A version number and a changelog are the contract that answers it.
+
+### Semantic Versioning
+
+For anything with consumers, version `MAJOR.MINOR.PATCH` and let the number carry meaning:
+
+```
+  MAJOR  breaking change — consumers must change their code to upgrade
+  MINOR  new functionality, backward-compatible — safe to upgrade
+  PATCH  bug fix, backward-compatible — safe to upgrade
+```
+
+The number is a promise, so make the code match it. A "patch" that changes behavior consumers relied on is a major change wearing a disguise (Hyrum's Law — see the `api-and-interface-design` skill). When unsure whether a change is breaking, assume it is; a surprise major is far cheaper than a broken consumer.
+
+### Tag the release, and let the tag be the source of truth
+
+A release is an immutable point in history, not a moving branch. Tag it so it can always be reproduced:
+
+```bash
+git tag -a v1.4.0 -m "Release 1.4.0"
+git push origin v1.4.0
+```
+
+Derive the version from the tag rather than hand-editing it in scattered files, so the artifact, the tag, and the changelog can never disagree.
+
+### Keep a changelog written for humans
+
+A changelog is not `git log`. It's the curated, consumer-facing answer to "what changed and do I care?" — grouped by `Added / Changed / Fixed / Deprecated / Removed / Security`, newest on top, every entry phrased around user impact, not internal mechanics.
+
+```markdown
+## [1.4.0] - 2025-06-12
+### Added
+- Bulk task import via CSV
+### Fixed
+- Timezone drift in recurring task due dates
+### Deprecated
+- `GET /v1/tasks/all` — use the paginated `GET /v1/tasks` (removal in 2.0)
+```
+
+Write the entry in the same change that makes the change, while the impact is fresh — not reconstructed from commit archaeology at release time. Breaking changes get a migration note and a deprecation window (follow the `deprecation-and-migration` skill); shipping the actual release is the `shipping-and-launch` skill's job — this section is the versioning contract that feeds it.
+
 ## Common Rationalizations
 
 | Rationalization | Reality |
@@ -277,6 +320,9 @@ git log --grep="validation" --oneline
 | "Branches add overhead" | Short-lived branches are free and prevent conflicting work from colliding. Long-lived branches are the problem — merge within 1-3 days. |
 | "I'll split this change later" | Large changes are harder to review, riskier to deploy, and harder to revert. Split before submitting, not after. |
 | "I don't need a .gitignore" | Until `.env` with production secrets gets committed. Set it up immediately. |
+| "It's just a small fix, bump the patch" | Check what consumers can observe. A behavior change they relied on is a major, whatever the diff size. |
+| "The changelog is just the commit log" | Commits are for you; the changelog is for consumers, curated by impact. Generating one from raw commits buries what matters. |
+| "We'll write the changelog at release time" | By then the impact is reconstructed from memory and half of it is missing. Write the entry with the change. |
 
 ## Red Flags
 
@@ -287,6 +333,9 @@ git log --grep="validation" --oneline
 - Committing `node_modules/`, `.env`, or build artifacts
 - Long-lived branches that diverge significantly from main
 - Force-pushing to shared branches
+- A breaking change shipped under a minor or patch version bump
+- A release with no tag, or a version number hand-edited out of sync with the tag
+- A user-facing release with no changelog entry, or a changelog that's just dumped commit messages
 
 ## Verification
 
@@ -298,3 +347,9 @@ For every commit:
 - [ ] No secrets in the diff
 - [ ] No formatting-only changes mixed with behavior changes
 - [ ] `.gitignore` covers standard exclusions
+
+For every release (anything with consumers):
+
+- [ ] The version bump matches the change: breaking → major, additive → minor, fix → patch
+- [ ] The release is tagged, and the version is derived from the tag, not hand-edited out of sync
+- [ ] The changelog has a curated, human-readable entry grouped by impact for this version
