@@ -264,6 +264,26 @@ These checks are prerequisites, not diagnostics. A fit that proceeds without the
 - [ ] `t` pipeline persisted alongside the checkpoint (scaler, PCA loadings, rank map, `v_canonical`, warm-start bundle `prior_f`/`prior_coefs`/`prior_bias`/`prior_t_max`, target matrix `Z` at fit time, and `baseline_ridge_residual` for Drift signal #5)
 - [ ] Both raw-PCA and rank-uniformized `t` tried; the choice justified by condition number or holdout error
 
+## Empirical Validation
+
+End-to-end verification on the yubiOS artifact corpus (62 → 211 artifacts across v1–v4) is documented in `yubi-OS/yubiOS/refs/learned-latent-curve-yubios-artifact-primitives-coverage-{,-v2,-v3,-v4}-2026-08-03.md`. Headline results:
+
+| Version | N | Model | Holdout R² | Mean cosine | Status |
+|---|---|---|---|---|---|
+| v1 | 62 | 1-D curve, raw-content target | −0.155 | 0.662 | FAIL (raw content is multi-dim) |
+| v2 | 213 | 1-D curve, primitive-coverage target | +0.183 | 0.794 | PASS (honest first fit) |
+| **v3** | **211** | **2-D learned surface, primitive-coverage target** | **+0.4655** | **0.858** | **HEADLINE PASS** |
+| v4 | 211 | 2-D surface, sentence-transformer target | −0.005 to +0.130 | 0.50–0.62 | NEGATIVE (PC1 = 9.55% ≪ 0.40 gate; sentence-transformer is the wrong target for this curve) |
+
+**What the v3 fit validated against this skill's body:**
+
+- `## When NOT to Use` PC1 ≥ 0.40 heuristic — v3 PC1+PC2 = 0.4036 passes as 2-D structure (per the §2-D alternative architecture); v4 PC1 = 9.55% fails decisively, confirming the heuristic.
+- `## Anti-patterns` "Fixed-basis fit sold as learned" — v3 gradient refinement (500 epochs) moved frequencies by max 0.001; the closed-form ridge at initial log-spaced frequencies is the actual fitting mechanism, and the gradient step is mostly a coefficient-matrix polish.
+- `## Verification` holdout R² > 0 gate — v3 hit +0.4655 (mean holdout cosine 0.858, range 0.65–0.98), the first across v1–v4 to clear the gate strongly.
+- `## The Target Space` low-rank target pipeline — v3 binary-coverage lift (effective rank ~9) is the correct target for this curve; v4 sentence-transformer (effective rank ~211) confirms the wrong-target failure mode empirically and validates the section's "Hand-rolled TF-IDF + SVD + L2 normalization destroyed the semantic structure" anti-pattern.
+- `## Lifecycle` §t-pipeline versioning — v3's manual coverage overrides + `.gitkeep` filtering + PC1+PC2 of 9-D coverage are the `t`-pipeline artifacts the skill prescribes; `v_canonical` and warm-start bundle persisted in `session/llc-v3-fit-cache.pkl`.
+
+
 ## Interaction with Other Skills
 
 This skill fits a curve; the fit lives in a wider github-yubios / Sauna ecosystem. Pair deliberately with the following skills in the order given; the names are not exhaustive, these are the natural ones for the skill's own worked example.
