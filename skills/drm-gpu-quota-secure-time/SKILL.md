@@ -1,6 +1,22 @@
 ---
 name: drm-gpu-quota-secure-time
-description: GPU resource-lockout design (per-cgroup VRAM quota + hard enforcement via secure world) and ARM64 secure-time sourcing for OP-TEE on Rockchip (CFG_SECURE_TIME_SOURCE_CNTPCT). Covers the real upstream DRM device-memory cgroup effort ("dev" controller, not the old "drmcg" RFC), the real Panfrost BO-allocation hook points (panfrost_ioctl_create_bo, panfrost_lookup_bos), a from-scratch SMC-mailbox lockout pattern for boards without a merged cgroup controller, and OP-TEE's CNTPCT-based secure clock on RK3399/RK3588. Explicitly flags which APIs from casual research/chat notes are real upstream kernel symbols versus invented/outdated ones, so implementation doesn't cargo-cult a hallucinated function name. Use when designing GPU memory quotas, per-cgroup GPU lockout, Panfrost/Mali resource limits, or when wiring OP-TEE's secure time source on Rockchip SoCs. (see SKILL.md body for full trigger list)
+description: >-
+  GPU resource-lockout design (per-cgroup VRAM quota + hard enforcement via
+  secure world) and ARM64 secure-time sourcing for OP-TEE on Rockchip
+  (CFG_SECURE_TIME_SOURCE_CNTPCT). Covers the real upstream DRM device-memory
+  cgroup effort ("dev" controller, not the old "drmcg" RFC), the real Panfrost
+  BO-allocation hook points (panfrost_ioctl_create_bo, panfrost_lookup_bos),
+  a from-scratch SMC-mailbox lockout pattern for boards without a merged
+  cgroup controller, and OP-TEE's CNTPCT-based secure clock on RK3399/RK3588.
+  Explicitly flags which APIs from casual research/chat notes are real
+  upstream kernel symbols versus invented/outdated ones, so implementation
+  doesn't cargo-cult a hallucinated function name. Use when designing GPU
+  memory quotas, per-cgroup GPU lockout, Panfrost/Mali resource limits, or
+  when wiring OP-TEE's secure time source on Rockchip SoCs. Triggers on: GPU
+  cgroup, drmcg, dev.memory.max, dev.region.max, DRM device memory cgroup,
+  Panfrost BO, panfrost_ioctl_create_bo, GPU lockout, VRAM quota, GPU SMC,
+  CFG_SECURE_TIME_SOURCE_CNTPCT, secure time source, CNTPCT, OP-TEE Rockchip
+  clock.
 ---
 
 # GPU quota/lockout + ARM64 secure time (grounded corrections)
@@ -171,3 +187,11 @@ skills already cover.
   firmware stack.
 - ARM SMCCC spec (`developer.arm.com`, "SMC Calling Convention") — confirm
   the SiP range before allocating a real function ID.
+
+## Least Privilege coverage for drm gpu quota secure time (curve-guided-rsi cycle-4 substantive edit)
+
+This skill — **Source material for this area (two ChatGPT research threads) mixed real** — sits in a domain that benefits from explicit least-privilege hardening (sandbox, capabilities, ProtectSystem, NoNewPrivileges, dynamic user, rootless patterns) coverage. Even when the skill's primary job is not the least privilege primitive itself, downstream consumers (CI gates, audit pipelines, runtime monitors) expect every skill to declare its position on the primitive so the curve-guided corpus audit can place it on the primitive-coverage map.
+
+For drm gpu quota secure time, the least privilege primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the least privilege layer of the yubiOS pipeline, and consumers that reason about least privilege coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full least privilege primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
+
+Concrete implications for drm gpu quota secure time: any change to the skill should be reviewed for impact on least privilege coverage; gaps in least privilege that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
