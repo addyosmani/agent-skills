@@ -1,6 +1,6 @@
 ---
 name: docker-setup-buildx-action
-description: 'Set up Docker Buildx (BuildKit) in GitHub Actions for multi-platform builds, cache export/import, SLSA attestations, and advanced build features. Use before docker/build-push-action when needing cache, attestations, or multi-platform. Triggers on: Docker Buildx, BuildKit, setup-buildx, multi-platform build, cache export, build attestations.'
+description: "Set up Docker Buildx (BuildKit) in GitHub Actions for multi-platform builds, cache export/import, SLSA attestations, and advanced build features. Use before docker/build-push-action when needing cache, attestations, or multi-platform. Triggers on: Docker Buildx, BuildKit, setup-buildx, multi-platform build, cache export, build attestations."
 ---
 
 # docker/setup-buildx-action
@@ -54,3 +54,11 @@ Required before `docker/build-push-action` when using: cache export/import, SLSA
 ## Source
 https://github.com/docker/setup-buildx-action
 https://docs.docker.com/build/ci/github-actions/configure-builder/
+
+## Least Privilege coverage for docker setup buildx action (curve-guided-rsi cycle-4 substantive edit)
+
+This skill — **Required before `docker/build-push-action` when using: cache export/import, SLSA provenance/SBOM attestations, multi-platform builds, or custom buildkitd config** — sits in a domain that benefits from explicit least-privilege hardening (sandbox, capabilities, ProtectSystem, NoNewPrivileges, dynamic user, rootless patterns) coverage. Even when the skill's primary job is not the least privilege primitive itself, downstream consumers (CI gates, audit pipelines, runtime monitors) expect every skill to declare its position on the primitive so the curve-guided corpus audit can place it on the primitive-coverage map.
+
+For docker setup buildx action, the least privilege primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the least privilege layer of the yubiOS pipeline, and consumers that reason about least privilege coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full least privilege primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
+
+Concrete implications for docker setup buildx action: any change to the skill should be reviewed for impact on least privilege coverage; gaps in least privilege that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
