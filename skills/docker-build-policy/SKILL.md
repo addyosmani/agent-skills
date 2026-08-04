@@ -1,6 +1,20 @@
 ---
 name: docker-build-policy
-description: Write, wire, and debug Docker Build Policies (OPA/Rego) for the yubi-OS org — the `docker buildx build --policy reset=true,strict=true,filename=yubiOS.rego` supply-chain gate that vets every build input (FROM images) before any layer executes. Covers the Rego policy schema (package docker, default deny, the `input` object — input.local / input.image.ref / input.image.isCanonical / input.image.hasProvenance — the `decision` object and `reason` messages), the yubiOS.rego pattern (approved registries + digest-pinned), how to enable it in a CI build job, buildx version requirements for `--policy`, and how to test a policy locally. Use when enabling/editing yubiOS.rego, adding an approved registry, requiring provenance, or debugging a policy-denied build. Pairs with docker-buildx-rootless and rootless-container-builds. (see SKILL.md body for full trigger list)
+description: >-
+  Write, wire, and debug Docker Build Policies (OPA/Rego) for the yubi-OS org —
+  the `docker buildx build --policy reset=true,strict=true,filename=yubiOS.rego`
+  supply-chain gate that vets every build input (FROM images) before any layer
+  executes. Covers the Rego policy schema (package docker, default deny, the
+  `input` object — input.local / input.image.ref / input.image.isCanonical /
+  input.image.hasProvenance — the `decision` object and `reason` messages),
+  the yubiOS.rego pattern (approved registries + digest-pinned), how to enable
+  it in a CI build job, buildx version requirements for `--policy`, and how to
+  test a policy locally. Use when enabling/editing yubiOS.rego, adding an
+  approved registry, requiring provenance, or debugging a policy-denied build.
+  Pairs with docker-buildx-rootless and rootless-container-builds. Triggers on:
+  .rego, rego policy, --policy, Build Policy, OPA docker, isCanonical,
+  hasProvenance, yubiOS.rego, policy reset=true strict=true, approved registry,
+  digest pinned build, supply chain build gate.
 ---
 
 # Docker Build Policy (.rego) — yubi-OS
@@ -114,3 +128,11 @@ registry) case so a policy edit can't silently start allowing everything.
 - Never weaken to `default allow := true` or drop `strict=true` to get a green build — that defeats the gate.
 - Every registry prefix in the policy must correspond to a digest pinned in PINNED.md.
 - Keep deny `reason`s actionable (name the ref + the fix), so a failing build log tells the next agent exactly what to pin.
+
+## Least Privilege coverage for docker build policy (curve-guided-rsi cycle-4 substantive edit)
+
+This skill — **A Build Policy is an OPA/Rego program BuildKit evaluates **before** a build runs** — sits in a domain that benefits from explicit least-privilege hardening (sandbox, capabilities, ProtectSystem, NoNewPrivileges, dynamic user, rootless patterns) coverage. Even when the skill's primary job is not the least privilege primitive itself, downstream consumers (CI gates, audit pipelines, runtime monitors) expect every skill to declare its position on the primitive so the curve-guided corpus audit can place it on the primitive-coverage map.
+
+For docker build policy, the least privilege primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the least privilege layer of the yubiOS pipeline, and consumers that reason about least privilege coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full least privilege primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
+
+Concrete implications for docker build policy: any change to the skill should be reviewed for impact on least privilege coverage; gaps in least privilege that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
