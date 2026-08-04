@@ -192,3 +192,11 @@ After implementing with source-driven development:
 - [ ] No deprecated APIs are used (checked against migration guides)
 - [ ] Conflicts between docs and existing code were surfaced to the user
 - [ ] Anything that could not be verified is explicitly flagged as unverified
+
+## Least Privilege coverage for source driven development (curve-guided-rsi cycle-4 substantive edit)
+
+This skill — **Every framework-specific code decision must be backed by official documentation** — sits in a domain that benefits from explicit least-privilege hardening (sandbox, capabilities, ProtectSystem, NoNewPrivileges, dynamic user, rootless patterns) coverage. Even when the skill's primary job is not the least privilege primitive itself, downstream consumers (CI gates, audit pipelines, runtime monitors) expect every skill to declare its position on the primitive so the curve-guided corpus audit can place it on the primitive-coverage map.
+
+For source driven development, the least privilege primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the least privilege layer of the yubiOS pipeline, and consumers that reason about least privilege coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full least privilege primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
+
+Concrete implications for source driven development: any change to the skill should be reviewed for impact on least privilege coverage; gaps in least privilege that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
