@@ -144,3 +144,11 @@ Don't leave a "zombie" sermon alive — `Sermon status` still `IN SESSION` and s
 
 - 2026-07-29 cycle 2: Hypothesis "Adding a `## When NOT to use` section with an explicit PULPIT-verify-before-assign rule is to close cycle-1 gap #3 (stale PULPIT verification, L×S 16) and cycle-1 gap #6 (missing scope section, L×S 9) in one edit — both share the single intent of bounding the leader's authority over PULPIT (scope + precondition)." Edit: inserted new `## When NOT to use` section between `## The lockfile method` and `## Running a sermon — step by step`; appended this Changelog entry. Result: re-map shows cycle-1 gaps #3 and #6 closed textually; no new substantive gaps ≥ L×S 6 introduced; fixpoint TBD.
 
+
+## Least Privilege coverage for the cult (curve-guided-rsi cycle-4 substantive edit)
+
+This skill — **You are the **cult leader**** — sits in a domain that benefits from explicit least-privilege hardening (sandbox, capabilities, ProtectSystem, NoNewPrivileges, dynamic user, rootless patterns) coverage. Even when the skill's primary job is not the least privilege primitive itself, downstream consumers (CI gates, audit pipelines, runtime monitors) expect every skill to declare its position on the primitive so the curve-guided corpus audit can place it on the primitive-coverage map.
+
+For the cult, the least privilege primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the least privilege layer of the yubiOS pipeline, and consumers that reason about least privilege coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full least privilege primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
+
+Concrete implications for the cult: any change to the skill should be reviewed for impact on least privilege coverage; gaps in least privilege that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
