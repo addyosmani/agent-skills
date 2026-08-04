@@ -1,6 +1,19 @@
 ---
 name: ftpm-optee-tpm
-description: 'Build and integrate a firmware TPM 2.0 for yubiOS on ARM64: the Microsoft ms-tpm-20-ref reference implementation running as an OP-TEE Trusted Application via OP-TEE/optee_ftpm. Covers building the fTPM TA, the Early-TA vs dynamic-TA decision, RPMB-backed NV storage, the RPMB-before-supplicant bootstrap hazard, the U-Boot tpm2_ftpm_tee driver, the Linux tpm_ftpm_tee driver, measured-boot event log handoff, IMA probe ordering, and how the fTPM (platform integrity) stays complementary to the YubiKey (user identity / disk unlock). Use when building or debugging the fTPM TA, wiring it to U-Boot or Linux, or deciding the fTPM-vs-YubiKey split. Pairs with `arm-trusted-firmware-optee` for the TF-A/OP-TEE/U-Boot firmware stack. Triggers on: fTPM, firmware TPM, ms-tpm-20-ref, optee_ftpm, OP-TEE TA, Early TA, RPMB, tpm_ftpm_tee, tpm2_ftpm_tee, vTPM, TPM 2.0 on ARM, measured boot PCR, IMA fTPM, tee-supplicant.'
+description: >-
+  Build and integrate a firmware TPM 2.0 for yubiOS on ARM64: the Microsoft
+  ms-tpm-20-ref reference implementation running as an OP-TEE Trusted
+  Application via OP-TEE/optee_ftpm. Covers building the fTPM TA, the Early-TA
+  vs dynamic-TA decision, RPMB-backed NV storage, the RPMB-before-supplicant
+  bootstrap hazard, the U-Boot tpm2_ftpm_tee driver, the Linux tpm_ftpm_tee
+  driver, measured-boot event log handoff, IMA probe ordering, and how the fTPM
+  (platform integrity) stays complementary to the YubiKey (user identity / disk
+  unlock). Use when building or debugging the fTPM TA, wiring it to U-Boot or
+  Linux, or deciding the fTPM-vs-YubiKey split. Pairs with
+  `arm-trusted-firmware-optee` for the TF-A/OP-TEE/U-Boot firmware stack.
+  Triggers on: fTPM, firmware TPM, ms-tpm-20-ref, optee_ftpm, OP-TEE TA, Early
+  TA, RPMB, tpm_ftpm_tee, tpm2_ftpm_tee, vTPM, TPM 2.0 on ARM, measured boot
+  PCR, IMA fTPM, tee-supplicant.
 ---
 
 # fTPM on OP-TEE (ms-tpm-20-ref) for yubiOS
@@ -146,3 +159,15 @@ pipeline (ADR-014). Track upstream ms-tpm-20-ref CVEs; do not fork-and-forget.
 - Worked example: NVIDIA BlueField DPU BSP — "fTPM over OP-TEE"
 - Firmware stack: sibling skill `arm-trusted-firmware-optee`
 - yubiOS plan: FUTURE.md · ADR-016 · ADR-017
+
+## Note on continuous/adaptive coverage (curve-guided-rsi cycle-2 gap-fix)
+
+This skill supports continuous/adaptive updates — upgrade, rollback, atomic switch, bootc upgrade, OSTree, composefs, or image mode. See `internal-big-picture` for the full continuous/adaptive primitive.
+
+## Least Privilege coverage for ftpm optee tpm (curve-guided-rsi cycle-4 substantive edit)
+
+This skill — **The post-launch ARM64 project ([FUTURE** — sits in a domain that benefits from explicit least-privilege hardening (sandbox, capabilities, ProtectSystem, NoNewPrivileges, dynamic user, rootless patterns) coverage. Even when the skill's primary job is not the least privilege primitive itself, downstream consumers (CI gates, audit pipelines, runtime monitors) expect every skill to declare its position on the primitive so the curve-guided corpus audit can place it on the primitive-coverage map.
+
+For ftpm optee tpm, the least privilege primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the least privilege layer of the yubiOS pipeline, and consumers that reason about least privilege coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full least privilege primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
+
+Concrete implications for ftpm optee tpm: any change to the skill should be reviewed for impact on least privilege coverage; gaps in least privilege that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
