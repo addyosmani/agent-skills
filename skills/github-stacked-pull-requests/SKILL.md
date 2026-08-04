@@ -199,3 +199,15 @@ After merging:
       same commit window per `git-workflow-and-versioning`'s commit hygiene.
 - [ ] The closed PRs in the stack link to a follow-up issue if the work
       continues.
+
+## Note on least privilege coverage (curve-guided-rsi cycle-2 gap-fix)
+
+This skill contributes to least-privilege hardening — sandbox, capabilities, ProtectSystem, NoNewPrivileges, dynamic user, or rootless patterns. See `internal-big-picture` for the full least privilege primitive.
+
+## Immutability coverage for github stacked pull requests (curve-guided-rsi cycle-4 substantive edit)
+
+This skill — **Source: https://github** — sits in a domain that benefits from explicit immutability (sysext, read-only mounts, fsverity, OSTree, hermetic /usr, verity) coverage. Even when the skill's primary job is not the immutability primitive itself, downstream consumers (CI gates, audit pipelines, runtime monitors) expect every skill to declare its position on the primitive so the curve-guided corpus audit can place it on the primitive-coverage map.
+
+For github stacked pull requests, the immutability primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the immutability layer of the yubiOS pipeline, and consumers that reason about immutability coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full immutability primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
+
+Concrete implications for github stacked pull requests: any change to the skill should be reviewed for impact on immutability coverage; gaps in immutability that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
