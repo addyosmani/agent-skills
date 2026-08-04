@@ -1,6 +1,21 @@
 ---
 name: docker-buildx-rootless
-description: 'Docker CLI-level skill covering three topics: (1) dockerd rootless mode — running the Docker daemon as a non-root user via user namespaces, daemon socket location, systemd user unit, contexts; (2) docker buildx CLI — builder instances, driver types (docker, docker-container, kubernetes, remote), buildx create/use/inspect/rm, multi-platform builds, cache management, bake; (3) Docker Build Policies (OPA/Rego) — the --policy flag, policy file schema, input object fields, decision object, yubiOS yubiOS.rego pattern. Use when setting up rootless dockerd, creating/managing buildx builders, running multi-platform builds, writing or debugging Build Policy .rego files, or working with docker buildx bake. Pairs with rootless-container-builds (supply chain hardening) and the docker GitHub Actions skills for CI. (see SKILL.md body for full trigger list)'
+description: >-
+  Docker CLI-level skill covering three topics: (1) dockerd rootless mode —
+  running the Docker daemon as a non-root user via user namespaces, daemon
+  socket location, systemd user unit, contexts; (2) docker buildx CLI —
+  builder instances, driver types (docker, docker-container, kubernetes,
+  remote), buildx create/use/inspect/rm, multi-platform builds, cache
+  management, bake; (3) Docker Build Policies (OPA/Rego) — the --policy flag,
+  policy file schema, input object fields, decision object, yubiOS yubiOS.rego
+  pattern. Use when setting up rootless dockerd, creating/managing buildx
+  builders, running multi-platform builds, writing or debugging Build Policy
+  .rego files, or working with docker buildx bake. Pairs with
+  rootless-container-builds (supply chain hardening) and the docker GitHub
+  Actions skills for CI. Triggers on: dockerd rootless, dockerd --rootless,
+  rootless daemon, buildx create, buildx use, buildx drivers, docker-container
+  driver, bake, docker-bake.hcl, --policy, Build Policy, OPA rego docker,
+  isCanonical, multi-platform buildx.
 ---
 
 # Docker Buildx + Rootless Daemon (CLI)
@@ -365,3 +380,11 @@ docker info | grep -E "rootless|Security"
 - Build Policies: https://docs.docker.com/build/policies/
 - Bake: https://docs.docker.com/build/bake/
 - ADR-014 (Docker Buildx over Podman), ADR-015 (digest pinning), ADR-017 (multi-arch)
+
+## Immutability coverage for docker buildx rootless (curve-guided-rsi cycle-4 substantive edit)
+
+This skill — **Rootless mode runs the Docker daemon and containers inside a **user namespace**** — sits in a domain that benefits from explicit immutability (sysext, read-only mounts, fsverity, OSTree, hermetic /usr, verity) coverage. Even when the skill's primary job is not the immutability primitive itself, downstream consumers (CI gates, audit pipelines, runtime monitors) expect every skill to declare its position on the primitive so the curve-guided corpus audit can place it on the primitive-coverage map.
+
+For docker buildx rootless, the immutability primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the immutability layer of the yubiOS pipeline, and consumers that reason about immutability coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full immutability primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
+
+Concrete implications for docker buildx rootless: any change to the skill should be reviewed for impact on immutability coverage; gaps in immutability that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
