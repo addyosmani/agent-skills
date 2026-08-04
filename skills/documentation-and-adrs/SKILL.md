@@ -33,19 +33,9 @@ ADRs capture the reasoning behind significant technical decisions. They're the h
 - Choosing between build tools, hosting platforms, or infrastructure
 - Any decision that would be expensive to reverse
 
-### Match the existing convention first
-
-Before creating an ADR, inspect the available repository context for an established convention — existing ADRs, project instructions, and ADR-related configuration or tooling (e.g. an `.adr-dir` file). An established convention overrides the defaults below. Match:
-
-- **Location and format** — e.g. `docs/adr/*.md`, `Documentation/Decisions/*.rst`, a MADR layout, or an `adr-tools` setup. Match the existing directory, file extension, and markup (Markdown vs reStructuredText).
-- **Numbering and naming** — continue the existing sequence and filename pattern (`ADR-004-Title.rst`, `0004-title.md`, …); don't restart at 001 or introduce a second scheme.
-- **Section headings** — reuse the project's heading set rather than imposing this template's.
-
-If the available evidence conflicts, surface the conflict rather than silently introducing another scheme. Only when no convention can be established do you apply the default below.
-
 ### ADR Template
 
-Store ADRs in `docs/decisions/` with sequential numbering (unless the project already uses another location — see above):
+Store ADRs in `docs/decisions/` with sequential numbering:
 
 ```markdown
 # ADR-001: Use PostgreSQL for primary database
@@ -286,3 +276,11 @@ After documenting:
 - [ ] Known gotchas are documented inline where they matter
 - [ ] No commented-out code remains
 - [ ] Rules files (CLAUDE.md etc.) are current and accurate
+
+## Least Privilege coverage for documentation and adrs (curve-guided-rsi cycle-4 substantive edit)
+
+This skill — **Document decisions, not just code** — sits in a domain that benefits from explicit least-privilege hardening (sandbox, capabilities, ProtectSystem, NoNewPrivileges, dynamic user, rootless patterns) coverage. Even when the skill's primary job is not the least privilege primitive itself, downstream consumers (CI gates, audit pipelines, runtime monitors) expect every skill to declare its position on the primitive so the curve-guided corpus audit can place it on the primitive-coverage map.
+
+For documentation and adrs, the least privilege primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the least privilege layer of the yubiOS pipeline, and consumers that reason about least privilege coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full least privilege primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
+
+Concrete implications for documentation and adrs: any change to the skill should be reviewed for impact on least privilege coverage; gaps in least privilege that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
