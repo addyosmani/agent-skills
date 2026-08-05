@@ -160,6 +160,37 @@ tail -F /tmp/audio/queue/queue.log | tee -a /dev/ttyS2
 
 `PREQUEUE: …` lines in the log mark when the worker starts, finishes, fails, or swaps into `current`.
 
+
+### Stop everything cleanly (before a fresh queue push, before reboot, etc.)
+
+`queue.sh stop` kills the daemon + the in-flight prequeue worker, but does NOT reliably kill `play2.py`. `play2.py` runs as **root** via `sudo -n python3` wrapper, so the bridge user `shant` cannot signal it directly — `kill -9` from the bridge fails with "Operation not permitted", and the music keeps playing even though `queue.sh stop` "succeeded". Hard-stop sequence:
+
+```bash
+# 1. queue.sh stop (kills queue_player.sh + prequeue worker; signals play2.py via SIGTERM)
+sudo -n /tmp/audio/queue/queue.sh stop
+
+# 2. Wait for SIGTERM to propagate, then verify (do NOT trust kill -0 — see anti-pattern below)
+sleep 2
+
+# 3. sudo walk /proc to find any surviving play2.py PIDs
+#    (do NOT use pkill -f play2.py — the bash command line itself contains "play2.py"
+#     and pkill would self-match and SIGKILL the cleanup script)
+sudo -n sh -c 'for p in /proc/[0-9]*; do grep -q play2.py "$p/cmdline" 2>/dev/null && echo "STILL: $(tr \"\0\" \" \" < $p/cmdline)"; done'
+
+# 4. sudo kill -9 each surviving PID by exact PID
+for pid in $(sudo -n sh -c 'ls /proc | grep -E "^[0-9]+$" | while read p; do grep -q play2.py /proc/$p/cmdline 2>/dev/null && echo $p; done'); do
+  echo killing $pid; sudo -n kill -9 "$pid"
+done
+
+# 5. Verify ALSA device is free (fuser without sudo can be wrong)
+sudo -n fuser /dev/snd/pcmC1D0p 2>&1 || echo "device free"
+
+# 6. Cleanup scratch
+sudo -n rm -f /tmp/audio/queue/current.* /tmp/audio/queue/next.* \
+  /tmp/audio/queue/prequeue.lock /tmp/audio/queue/prequeue.out
+```
+
+**Why this matters:** without sudo + /proc walk, a "stopped everything" report can be wrong — the daemon dies, the verification grep returns nothing, but `play2.py` is still alive and pumping audio to `hw:1,0`. The user hears music keep playing. The 2026-08-05 SAMPLMAN-set stop demonstrated this twice in a row before the sudo walk caught the surviving `play2.py` (PID 17180) by walking `/proc` with sudo permissions.
 ## Files in this skill
 
 - `SKILL.md` — this file
