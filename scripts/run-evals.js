@@ -184,13 +184,25 @@ function resolveFixturePath(root, rel) {
   if (path.isAbsolute(rel)) {
     throw new Error(`fixture path must be relative: ${rel}`);
   }
-  const resolvedRoot = path.resolve(root);
+  const resolvedRoot = fs.realpathSync(path.resolve(root));
   const resolvedPath = path.resolve(resolvedRoot, rel);
-  const back = path.relative(resolvedRoot, resolvedPath);
-  if (back === '' || back === '..' || back.startsWith(`..${path.sep}`) || path.isAbsolute(back)) {
+  // Resolve symlinks when the target exists so a symlink inside a fixture
+  // directory cannot escape the sandbox. For new files (workspace dest),
+  // realpath the parent directory instead.
+  let realPath;
+  try {
+    realPath = fs.realpathSync(resolvedPath);
+  } catch {
+    // Target doesn't exist yet (workspace destination). Resolve the parent
+    // to catch symlinked parent directories, then re-append the basename.
+    const parentReal = fs.realpathSync(path.dirname(resolvedPath));
+    realPath = path.join(parentReal, path.basename(resolvedPath));
+  }
+  const back = path.relative(resolvedRoot, realPath);
+  if (back === '..' || back.startsWith(`..${path.sep}`) || back.startsWith(`../`) || path.isAbsolute(back)) {
     throw new Error(`fixture path escapes workspace: ${rel}`);
   }
-  return resolvedPath;
+  return realPath;
 }
 
 // ---------- tier 2 ----------
@@ -397,7 +409,9 @@ function materializeWorkspace(ev) {
     }
     const dest = resolveFixturePath(workspace, rel);
     fs.mkdirSync(path.dirname(dest), { recursive: true });
-    fs.cpSync(src, dest, { recursive: true });
+    // Dereference symlinks so no live link into the host filesystem survives
+    // into the throwaway workspace where the agent has Bash access.
+    fs.cpSync(src, dest, { recursive: true, dereference: true });
     const fixtureRoot = fs.statSync(dest).isDirectory() ? dest : path.dirname(dest);
     setupDirs.add(path.join(fixtureRoot, '.eval'));
   }
@@ -443,7 +457,16 @@ function parseGrading(raw) {
   return ok ? g : null;
 }
 
+// Skill name must be a valid kebab-case identifier — no path separators,
+// no "..", no absolute paths. Without this, --behavioral "../../x" would
+// resolve to files outside the project tree for both reads and writes.
+const VALID_SKILL_NAME = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
 function runBehavioral(skillName, dryRun) {
+  if (!skillName || !VALID_SKILL_NAME.test(skillName)) {
+    console.error(`Invalid skill name: "${skillName}" — must be kebab-case (e.g. "my-skill")`);
+    process.exit(1);
+  }
   const caseFile = path.join(CASES_DIR, `${skillName}.json`);
   if (!fs.existsSync(caseFile)) {
     console.error(`No eval case file for "${skillName}"`);
@@ -456,6 +479,7 @@ function runBehavioral(skillName, dryRun) {
     process.exit(1);
   }
   if (!dryRun) fs.mkdirSync(RESULTS_DIR, { recursive: true });
+  const workspaces = [];
   let failures = 0;
 
   for (const ev of d.evals) {
@@ -482,6 +506,7 @@ function runBehavioral(skillName, dryRun) {
     const workspace = kind === 'dialogue'
       ? fs.mkdtempSync(path.join(os.tmpdir(), 'agent-skills-dialogue-eval-'))
       : materializeWorkspace(ev);
+    workspaces.push(workspace);
     console.log(`eval ${ev.id}: executing ${kind} eval in ${workspace} ...`);
     // stream-json + verbose captures the full transcript. Execution grading
     // uses tool calls as evidence; dialogue grading uses conversational turns.
@@ -489,6 +514,7 @@ function runBehavioral(skillName, dryRun) {
     // edit files and run commands in the throwaway workspace; without it,
     // headless denials would force the exact narrate-instead-of-perform
     // failure mode that trace grading exists to catch.
+    try {
     const trace = execFileSync(
       'claude',
       ['-p', '--verbose', '--output-format', 'stream-json',
@@ -527,6 +553,11 @@ function runBehavioral(skillName, dryRun) {
     fs.writeFileSync(`${base}.grading.json`, JSON.stringify(grading, null, 2) + '\n');
     console.log(`eval ${ev.id}: ${grading.summary.passed}/${grading.summary.total} expectations passed -> ${path.relative(ROOT, base)}.grading.json`);
     if (grading.summary.passed < grading.summary.total) failures++;
+    } finally {
+      // Always clean up throwaway workspaces to prevent leaking fixture data
+      // into world-readable temp directories.
+      try { fs.rmSync(workspace, { recursive: true, force: true }); } catch { /* best-effort */ }
+    }
   }
   process.exit(failures ? 1 : 0);
 }
