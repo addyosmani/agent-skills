@@ -53,6 +53,14 @@ charter. In particular, its manual first-revenue path replaces the
 infrastructure-first path; BrowseAhead engineering is frozen; and no prior
 standing Gate 2 authority carries forward for affected P1-P7 or BA1-BA2 work.
 
+The mandatory fresh plan review then accepted six corrective findings. Gate 1
+is reopened only for Revision 3 of the linked KPP-001-A amendment: manual paid
+path ownership, human paid-path milestones, KEO-54 reconciliation disposition,
+an explicit Gate 2 matrix, preview timebox accounting, and valid-negative exit
+conditions. On 2026-08-05, Clint Morgan ratified Revision 3. The linked
+matrix is controlling; only its stated shaping/proposal authority applies, and
+no amended parcel is dispatchable without the separate approval it requires.
+
 ## Objective
 
 Reach first safe revenue through the existing Keon Workflow Evidence Review,
