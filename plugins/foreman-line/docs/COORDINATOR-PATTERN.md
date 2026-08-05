@@ -25,8 +25,9 @@ Everything downstream of Stage Zero was formalized first; Stage Zero was run by 
 
 1. **Intake.** Developer brings a concept - a sentence to a page. The coordinator interrogates it: what does done mean, who consumes the result, what is deliberately out, what constraints are non-negotiable, what existing canon applies.
 2. **Ideation is mutual.** The coordinator proposes; the developer disposes. Open design questions are surfaced as explicit numbered decisions with a recommendation each - never silently resolved. (The four-decision ratification that created this document is the reference example.)
-3. **Output: the Goal Charter**, one document, containing: the objective; locked decisions (D1–Dn, each with its reasoning recorded); the wave/parcel decomposition with dependency order; per-parcel one-liners with risk and routing class; the goal exit criterion; standing authorizations granted for this goal (see Gates); and the stop conditions.
-4. **Gate 1 - ratification.** The developer approves the charter explicitly. This gate can never be delegated or pre-authorized: a "mutual final design decision" with one party absent is neither mutual nor a decision.
+3. **Commentary is not a change request.** Treat a developer's reaction, rationale, question, preference, or conversational aside as context, not authority to mutate a ratified charter, dependency graph, dispatch gate, Linear relation, or implementation scope. Make such a change only when the developer explicitly directs the mutation and names its target and intended replacement; otherwise draft the proposed amendment and request ratification. This prevents a coordinator from converting informal conversation into operational state.
+4. **Output: the Goal Charter**, one document, containing: the objective; locked decisions (D1–Dn, each with its reasoning recorded); the wave/parcel decomposition with dependency order; per-parcel one-liners with risk and routing class; the goal exit criterion; standing authorizations granted for this goal (see Gates); and the stop conditions.
+5. **Gate 1 - ratification.** The developer approves the charter explicitly. This gate can never be delegated or pre-authorized: a "mutual final design decision" with one party absent is neither mutual nor a decision.
 
 ## Plan-level adversarial review - always
 
