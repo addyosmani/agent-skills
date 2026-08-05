@@ -170,6 +170,7 @@ tail -F /tmp/audio/queue/queue.log | tee -a /dev/ttyS2
 - `examples/playlist-upbeat-verified.md` — 6 upbeat YouTube IDs verified via yt-dlp 2026-08-05 (Don't Stop Me Now / Walking on Sunshine / Happy / September / I Gotta Feeling / Uptown Funk). New default for "queue something upbeat" requests.
 - `examples/playlist-jacob-collier.md` — 6 verified Jacob Collier IDs (Don't You Worry 'Bout a Thing / Hideaway / Little Blue / In The Real Early Morning / Dancing Queen / Fix You). Curator-selected to span studio solo + orchestral live + high-profile collabs.
 - `examples/playlist-lofi-verified.md` — 6 verified lo-fi / chillhop IDs (Nujabes - Feather / Idealism - Both Of Us / Wyl & Wun Two - Kübla / Tom Misch - It Runs Through Me / Idealism - Amaranthine / Ensemble ☁️ Dreamy Lofi Hiphop). Curator's pick for chill study/work background; Lofi Girl 24/7 livestream IDs explicitly excluded (live stream recordings not downloadable).
+- `examples/playlist-samplman.md` — full-channel dump archetype: ALL 65 uploads from the SAMPLMAN - Topic YouTube channel (UCcxS3mHY3ITjmLv5M00lCpQ), yt-dlp verified 2026-08-05. Total runtime ~1h 53min. Two numbered series (ITS A BEAUTIFUL DAY FOR A DAY × 15, SEETHROUGH × 11) plus ~39 standalone cuts. Distinct from the other examples which are hand-picked; this is the "play me everything by X" template. Not triggered on rock1 per user directive.
 
 All scripts are pure bash + standard GNU userland (no Python deps on the device beyond the parent's `play2.py` + `set_mixer.py`).
 
