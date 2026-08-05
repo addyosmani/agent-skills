@@ -78,6 +78,26 @@ Ship with confidence. The goal is not just to deploy — it's to deploy safely, 
 
 Ship behind feature flags to decouple deployment from release:
 
+#### Go
+
+```go
+// Feature flag check
+flags, err := getFeatureFlags(ctx, userID)
+if err != nil {
+  return nil, fmt.Errorf("getFeatureFlags: %w", err)
+}
+
+if flags.TaskSharing {
+  // New feature: task sharing
+  return handleTaskSharingPanel(w, task)
+}
+
+// Default: existing behavior
+return nil
+```
+
+#### TypeScript
+
 ```typescript
 // Feature flag check
 const flags = await getFeatureFlags(userId);
@@ -186,6 +206,55 @@ Client metrics:
 ```
 
 ### Error Reporting
+
+#### Go
+
+```go
+// Middleware for error reporting
+func errorReportingMiddleware(next http.Handler) http.Handler {
+  return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    defer func() {
+      if err := recover(); err != nil {
+        reportError(r.Context(), fmt.Errorf("%v", err), map[string]any{
+          "method": r.Method,
+          "url": r.URL.String(),
+          "userID": extractUserID(r),
+          "panicked": true,
+        })
+        w.WriteHeader(http.StatusInternalServerError)
+        json.NewEncoder(w).Encode(map[string]any{
+          "error": map[string]string{
+            "code": "INTERNAL_ERROR",
+            "message": "Something went wrong",
+          },
+        })
+      }
+    }()
+    next.ServeHTTP(w, r)
+  })
+}
+
+// Error handler for HTTP errors
+func handleError(w http.ResponseWriter, r *http.Request, err error) {
+  reportError(r.Context(), err, map[string]any{
+    "method": r.Method,
+    "url": r.URL.String(),
+    "userID": extractUserID(r),
+  })
+
+  // Don't expose internals to users
+  w.Header().Set("Content-Type", "application/json")
+  w.WriteHeader(http.StatusInternalServerError)
+  json.NewEncoder(w).Encode(map[string]any{
+    "error": map[string]string{
+      "code": "INTERNAL_ERROR",
+      "message": "Something went wrong",
+    },
+  })
+}
+```
+
+#### TypeScript
 
 ```typescript
 // Set up error boundary with reporting

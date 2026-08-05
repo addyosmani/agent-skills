@@ -125,6 +125,18 @@ Every framework-specific pattern gets a citation. The user must be able to verif
 
 **In code comments:**
 
+#### Go
+
+```go
+// Context timeout pattern for graceful shutdown
+// Source: https://pkg.go.dev/context#WithTimeout
+// Example: https://go.dev/blog/pipelines
+ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
+```
+
+#### TypeScript
+
 ```typescript
 // React 19 form handling with useActionState
 // Source: https://react.dev/reference/react/useActionState#usage

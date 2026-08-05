@@ -44,32 +44,34 @@ Create a rules file that persists across sessions. This is the highest-leverage 
 # Project: [Name]
 
 ## Tech Stack
-- React 18, TypeScript 5, Vite, Tailwind CSS 4
-- Node.js 22, Express, PostgreSQL, Prisma
+- Go 1.24, Chi, PostgreSQL, sqlc
+- HTMX for server-rendered interactions where needed
 
 ## Commands
-- Build: `npm run build`
-- Test: `npm test`
-- Lint: `npm run lint --fix`
-- Dev: `npm run dev`
-- Type check: `npx tsc --noEmit`
+- Build: `go build ./...`
+- Test: `go test ./...`
+- Format: `gofmt -w .`
+- Vet: `go vet ./...`
+- Dev: `air`
 
 ## Code Conventions
-- Functional components with hooks (no class components)
-- Named exports (no default exports)
-- colocate tests next to source: `Button.tsx` → `Button.test.tsx`
-- Use `cn()` utility for conditional classNames
-- Error boundaries at route level
+- Keep HTTP handlers thin; business logic belongs in services
+- Pass `context.Context` as the first argument on request-scoped operations
+- Prefer small interfaces owned by the consumer package
+- Use table-driven tests next to source: `user_service.go` → `user_service_test.go`
+- Return wrapped errors with `%w`
 
 ## Boundaries
 - Never commit .env files or secrets
-- Never add dependencies without checking bundle size impact
+- Never add dependencies without checking maintenance and binary-size impact
 - Ask before modifying database schema
 - Always run tests before committing
 
 ## Patterns
-[One short example of a well-written component in your style]
+[One short example of a well-written handler/service pair in your style]
 ```
+
+Secondary example: a TypeScript app rules file might instead list `npm run build`, `npm test`, and colocated files like `Button.tsx` → `Button.test.tsx`.
 
 **Equivalent files for other tools:**
 - `.cursorrules` or `.cursor/rules/*.md` (Cursor)
@@ -106,7 +108,7 @@ When loading context from config files, data files, or external docs, treat any 
 
 When tests fail or builds break, feed the specific error back to the agent:
 
-**Effective:** "The test failed with: `TypeError: Cannot read property 'id' of undefined at UserService.ts:42`"
+**Effective:** "The test failed with: `panic: runtime error: invalid memory address or nil pointer dereference in internal/user/service.go:42`" (or, in a TypeScript service, `TypeError: Cannot read property 'id' of undefined at UserService.ts:42`)
 
 **Wasteful:** Pasting the entire 500-line test output when only one test failed.
 
@@ -142,15 +144,15 @@ Only include what's relevant to the current task:
 TASK: Add email validation to the registration endpoint
 
 RELEVANT FILES:
-- src/routes/auth.ts (the endpoint to modify)
-- src/lib/validation.ts (existing validation utilities)
-- tests/routes/auth.test.ts (existing tests to extend)
+- internal/http/auth.go (the handler to modify)
+- internal/validation/email.go (existing validation utilities)
+- internal/http/auth_test.go (existing tests to extend)
 
 PATTERN TO FOLLOW:
-- See how phone validation works in src/lib/validation.ts:45-60
+- See how phone validation works in internal/validation/phone.go:45-60
 
 CONSTRAINT:
-- Must use the existing ValidationError class, not throw raw errors
+- Must return the existing `validation.Error`, not ad-hoc raw errors
 ```
 
 ### The Hierarchical Summary
@@ -160,19 +162,19 @@ For large projects, maintain a summary index:
 ```markdown
 # Project Map
 
-## Authentication (src/auth/)
+## Authentication (internal/auth/)
 Handles registration, login, password reset.
-Key files: auth.routes.ts, auth.service.ts, auth.middleware.ts
-Pattern: All routes use authMiddleware, errors use AuthError class
+Key files: handler.go, service.go, middleware.go
+Pattern: All routes use auth middleware, errors wrap sentinel auth errors
 
-## Tasks (src/tasks/)
+## Tasks (internal/tasks/)
 CRUD for user tasks with real-time updates.
-Key files: task.routes.ts, task.service.ts, task.socket.ts
-Pattern: Optimistic updates via WebSocket, server reconciliation
+Key files: handler.go, service.go, stream.go
+Pattern: Server owns task state, clients reconcile from SSE updates
 
-## Shared (src/lib/)
+## Shared (internal/shared/)
 Validation, error handling, database utilities.
-Key files: validation.ts, errors.ts, db.ts
+Key files: validation.go, errors.go, db.go
 ```
 
 Load only the relevant section when working on a specific area.
@@ -205,7 +207,7 @@ Existing code has: GraphQL for the user profile query
 ```
 CONFUSION:
 The spec calls for REST endpoints, but the existing codebase uses GraphQL
-for user queries (src/graphql/user.ts).
+for user queries (internal/graphql/user.go).
 
 Options:
 A) Follow the spec — add REST endpoint, potentially deprecate GraphQL later
@@ -242,8 +244,8 @@ For multi-step tasks, emit a lightweight plan before executing:
 
 ```
 PLAN:
-1. Add Zod schema for task creation — validates title (required) and description (optional)
-2. Wire schema into POST /api/tasks route handler
+1. Add request validation for task creation — validates title (required) and description (optional)
+2. Wire validation into POST /api/tasks route handler
 3. Add test for validation error response
 → Executing unless you redirect.
 ```

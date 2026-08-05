@@ -56,10 +56,10 @@ Can you reproduce the failure?
 Cannot reproduce on demand:
 ├── Timing-dependent?
 │   ├── Add timestamps to logs around the suspected area
-│   ├── Try with artificial delays (setTimeout, sleep) to widen race windows
+│   ├── Try with artificial delays (`time.Sleep`, controlled channel blocking, or `setTimeout`/`sleep` in other stacks) to widen race windows
 │   └── Run under load or concurrency to increase collision probability
 ├── Environment-dependent?
-│   ├── Compare Node/browser versions, OS, environment variables
+│   ├── Compare Go/Node/runtime versions, OS, environment variables
 │   ├── Check for differences in data (empty vs populated database)
 │   └── Try reproducing in CI where the environment is clean
 ├── State-dependent?
@@ -72,8 +72,17 @@ Cannot reproduce on demand:
     └── Document the conditions observed and revisit when it recurs
 ```
 
-For test failures (npm shown — substitute the repository's own test command, per the test-driven-development skill's Discover the Stack First section):
+For test failures (Go shown first; substitute the repository's own test command, per the test-driven-development skill's Discover the Stack First section):
 ```bash
+# Run the specific failing Go test
+go test ./... -run TestSearchTasks_SpecialCharacters
+
+# Reproduce concurrency bugs by widening race windows
+go test ./... -race -run TestSearchTasks_SpecialCharacters
+
+# Step through the failing test in the Go debugger
+dlv test ./pkg/search -- -test.run TestSearchTasks_SpecialCharacters
+
 # Run the specific failing test
 npm test -- --grep "test name"
 
@@ -105,7 +114,22 @@ git bisect start
 git bisect bad                    # Current commit is broken
 git bisect good <known-good-sha> # This commit worked
 # Git will checkout midpoint commits; run your test at each
+git bisect run go test ./... -run TestSearchTasks_SpecialCharacters  # Go example
 git bisect run npm test -- --grep "failing test"  # substitute the repository's focused-test command
+```
+
+**Use the right debugger and analyzers for the stack you're in:**
+
+```bash
+# Step-through debugging for Go binaries
+dlv debug ./cmd/server
+
+# Step-through debugging for Go tests
+dlv test ./pkg/search -- -test.run TestSearchTasks_SpecialCharacters
+
+# Static analysis that often finds the bug before runtime
+go vet ./...
+golangci-lint run
 ```
 
 ### Step 3: Reduce
@@ -115,6 +139,7 @@ Create the minimal failing case:
 - Remove unrelated code/config until only the bug remains
 - Simplify the input to the smallest example that triggers the failure
 - Strip the test to the bare minimum that reproduces the issue
+- For Go concurrency bugs, isolate the smallest set of goroutines/channels and rerun with `go test -race` or `go run -race`
 
 A minimal reproduction makes the root cause obvious and prevents fixing symptoms instead of causes.
 
@@ -135,9 +160,51 @@ Root cause fix (good):
 
 Ask: "Why does this happen?" until you reach the actual cause, not just where it manifests.
 
+For Go services, root-cause analysis often means tracing the real failure path instead of the final returned error or panic:
+
+- Read the full panic stack trace before changing code; the top frame is not always where the bug started
+- If a `panic` is expected to be contained, verify the `recover` path logs enough context and doesn't silently hide the bug
+- Wrap errors with context using `fmt.Errorf("loading customer: %w", err)` so callers can trace which operation failed
+- Use `errors.Is` and `errors.As` to distinguish root causes from transport noise
+- For CPU, memory, or goroutine leaks, capture profiles and inspect them with `go tool pprof`
+
 ### Step 5: Guard Against Recurrence
 
 Write a test that catches this specific failure:
+
+#### Go
+
+```go
+// The bug: task titles with special characters broke the search
+func TestSearchTasks_SpecialCharacters(t *testing.T) {
+  ctx := context.Background()
+  task, err := createTask(ctx, &CreateTaskInput{Title: `Fix "quotes" & <brackets>`})
+  if err != nil {
+    t.Fatalf("createTask failed: %v", err)
+  }
+
+  results, err := searchTasks(ctx, "quotes")
+  if err != nil {
+    t.Fatalf("searchTasks failed: %v", err)
+  }
+
+  if len(results) != 1 {
+    t.Errorf("searchTasks returned %d results, want 1", len(results))
+  }
+  
+  if results[0].Title != `Fix "quotes" & <brackets>` {
+    t.Errorf("title = %q, want %q", results[0].Title, `Fix "quotes" & <brackets>`)
+  }
+}
+```
+
+For concurrency or leak bugs, add the reproduction guard to the verification loop too:
+
+```bash
+go test ./... -race
+```
+
+#### TypeScript
 
 ```typescript
 // The bug: task titles with special characters broke the search
@@ -153,9 +220,28 @@ This test will prevent the same bug from recurring. It should fail without the f
 
 ### Step 6: Verify End-to-End
 
-After fixing, verify the complete scenario with the repository's own commands (npm shown):
+After fixing, verify the complete scenario with the repository's own commands (Go shown first):
 
 ```bash
+# Run the focused Go test
+go test ./... -run TestSearchTasks_SpecialCharacters
+
+# Run the full Go test suite
+go test ./...
+
+# Re-check concurrency issues before declaring victory
+go test ./... -race
+
+# Run static analysis
+go vet ./...
+golangci-lint run
+
+# Build the binary
+go build ./...
+
+# If the issue is performance/resource-related, inspect a profile
+go tool pprof cpu.prof
+
 # Run the specific test
 npm test -- --grep "specific test"
 
@@ -189,6 +275,9 @@ Test fails after code change:
 
 ```
 Build fails:
+├── Go compile error → Read the cited file/line, then run go build ./... again after the smallest fix
+├── go vet / golangci-lint failure → Treat it as a likely bug signal, not optional noise
+├── Module/dependency error → Check go.mod/go.sum, run go mod tidy if the repository uses it
 ├── Type error → Read the error, check the types at the cited location
 ├── Import error → Check the module exists, exports match, paths are correct
 ├── Config error → Check build config files for syntax/schema issues
@@ -200,6 +289,13 @@ Build fails:
 
 ```
 Runtime error:
+├── panic: ...
+│   └── Read the full stack trace
+│       → Identify the first application frame and inspect inputs/state there
+│       → Check whether a recover path should convert the panic into an error response
+├── wrapped error chain
+│   └── Follow fmt.Errorf(... %w ...) layers with errors.Is / errors.As
+│       → Confirm which underlying error actually triggered the failure
 ├── TypeError: Cannot read property 'x' of undefined
 │   └── Something is null/undefined that shouldn't be
 │       → Check data flow: where does this value come from?
@@ -214,6 +310,54 @@ Runtime error:
 ## Safe Fallback Patterns
 
 When under time pressure, use safe fallbacks:
+
+#### Go
+
+```go
+// Safe default + warning (instead of crashing)
+func getConfig(key string) string {
+  value := os.Getenv(key)
+  if value == "" {
+    log.Printf("warn: missing config %s, using default", key)
+    if def, ok := defaults[key]; ok {
+      return def
+    }
+    return ""
+  }
+  return value
+}
+
+// Graceful degradation (instead of broken feature)
+func renderChart(w http.ResponseWriter, data []ChartPoint) {
+  if len(data) == 0 {
+    renderEmptyState(w, "No data available for this period")
+    return
+  }
+
+  if err := renderChartData(w, data); err != nil {
+    log.Printf("error: chart render failed: %v", err)
+    renderErrorState(w, "Unable to display chart")
+    return
+  }
+}
+```
+
+If you must catch a crash boundary in Go, recover narrowly and convert it into observable failure:
+
+```go
+func handler(w http.ResponseWriter, r *http.Request) {
+  defer func() {
+    if rec := recover(); rec != nil {
+      log.Printf("panic in handler: %v", rec)
+      http.Error(w, "internal server error", http.StatusInternalServerError)
+    }
+  }()
+
+  serveRequest(w, r)
+}
+```
+
+#### TypeScript
 
 ```typescript
 // Safe default + warning (instead of crashing)
@@ -258,6 +402,7 @@ Add logging only when it helps. Remove it when done.
 - Error boundaries with error reporting
 - API error logging with request context
 - Performance metrics at key user flows
+- Go profile endpoints or captured profiles that are intentionally part of incident response (`pprof`, goroutine dumps)
 
 ## Common Rationalizations
 

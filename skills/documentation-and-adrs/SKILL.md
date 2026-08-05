@@ -101,9 +101,29 @@ PROPOSED → ACCEPTED → (SUPERSEDED or DEPRECATED)
 
 ## Inline Documentation
 
+In Go, doc comments live directly above the declaration they describe and start with the identifier name (for example, `// Foo does X and returns Y.`). `godoc` and pkg.go.dev render those comments automatically, so there is no separate doc-generation step for standard package docs. Package-level documentation belongs in a `doc.go` file or directly above the `package` clause (for example, `// Package cart calculates order totals and checkout adjustments.`). By convention, exported identifiers should have doc comments; documenting unexported identifiers is optional but useful for non-obvious behavior.
+
 ### When to Comment
 
 Comment the *why*, not the *what*:
+
+#### Go
+
+```go
+// BAD: Restates the code
+// Increment counter by 1
+counter++
+
+// GOOD: Explains non-obvious intent
+// Rate limit uses a sliding window — reset counter at window boundary,
+// not on a fixed schedule, to prevent burst attacks at window edges
+if now.Sub(windowStart) > windowSize {
+  counter = 0
+  windowStart = now
+}
+```
+
+#### TypeScript
 
 ```typescript
 // BAD: Restates the code
@@ -121,6 +141,27 @@ if (now - windowStart > WINDOW_SIZE_MS) {
 
 ### When NOT to Comment
 
+#### Go
+
+```go
+// Don't comment self-explanatory code
+func calculateTotal(items []CartItem) float64 {
+  total := 0.0
+  for _, item := range items {
+    total += item.Price * float64(item.Quantity)
+  }
+  return total
+}
+
+// Don't leave TODO comments for things you should just do now
+// TODO: add error handling  ← Just add it
+
+// Don't leave commented-out code
+// oldImplementation := func() { ... }  ← Delete it, git has history
+```
+
+#### TypeScript
+
 ```typescript
 // Don't comment self-explanatory code
 function calculateTotal(items: CartItem[]): number {
@@ -135,6 +176,24 @@ function calculateTotal(items: CartItem[]): number {
 ```
 
 ### Document Known Gotchas
+
+#### Go
+
+```go
+// InitializeTheme sets up the theme.
+// IMPORTANT: This must be called during server startup, before any HTTP handlers run.
+// If called after startup, concurrent requests may see inconsistent theme state.
+//
+// See ADR-003 for the full design rationale.
+func InitializeTheme(theme *Theme) error {
+  themeMutex.Lock()
+  defer themeMutex.Unlock()
+  globalTheme = theme
+  return nil
+}
+```
+
+#### TypeScript
 
 ```typescript
 /**
@@ -153,7 +212,27 @@ export function initializeTheme(theme: Theme): void {
 
 For public APIs (REST, GraphQL, library interfaces):
 
-### Inline with Types (Preferred for TypeScript)
+### Go doc comments (Preferred for Go packages)
+
+For Go libraries and services, document exported functions, types, interfaces, and package behavior with doc comments directly above each declaration. `godoc` and pkg.go.dev render these comments automatically, so you usually don't need a separate documentation build step. Unexported identifiers can be documented too, but focus first on exported APIs.
+
+```go
+// Package tasks manages task creation, lookup, and workflow transitions.
+package tasks
+
+// CreateTask creates a new task.
+//
+// Title is required. Description is optional.
+// It returns the created task with server-generated ID and timestamps.
+//
+// It returns ErrValidation if title is empty or exceeds 200 characters.
+// It returns ErrUnauthenticated if the caller is not authenticated.
+func CreateTask(ctx context.Context, input CreateTaskInput) (*Task, error) {
+  // ...
+}
+```
+
+### Inline with Types (Alternative for TypeScript)
 
 ```typescript
 /**
@@ -282,7 +361,7 @@ After documenting:
 
 - [ ] ADRs exist for all significant architectural decisions
 - [ ] README covers quick start, commands, and architecture overview
-- [ ] API functions have parameter and return type documentation
+- [ ] Exported Go APIs (or equivalent public APIs in your stack) have parameter and return type documentation
 - [ ] Known gotchas are documented inline where they matter
 - [ ] No commented-out code remains
 - [ ] Rules files (CLAUDE.md etc.) are current and accurate

@@ -148,6 +148,20 @@ After each increment, the project must build and existing tests must pass. Don't
 
 If a feature isn't ready for users but you need to merge increments:
 
+#### Go
+
+```go
+// Feature flag for work-in-progress
+enableTaskSharing := os.Getenv("FEATURE_TASK_SHARING") == "true"
+
+if enableTaskSharing {
+  // New sharing UI / handler
+  http.HandleFunc("/tasks/share", handleTaskSharing)
+}
+```
+
+#### TypeScript
+
 ```typescript
 // Feature flag for work-in-progress
 const ENABLE_TASK_SHARING = process.env.FEATURE_TASK_SHARING === 'true';
@@ -157,11 +171,29 @@ if (ENABLE_TASK_SHARING) {
 }
 ```
 
-This lets you merge small increments to the main branch without exposing incomplete work.
-
 ### Rule 4: Safe Defaults
 
 New code should default to safe, conservative behavior:
+
+#### Go
+
+```go
+// Safe: disabled by default, opt-in
+func CreateTask(ctx context.Context, data *TaskInput, opts *CreateTaskOptions) error {
+  shouldNotify := false
+  if opts != nil && opts.Notify != nil {
+    shouldNotify = *opts.Notify
+  }
+  // ...
+  return nil
+}
+
+type CreateTaskOptions struct {
+  Notify *bool  // nil = false (safe default)
+}
+```
+
+#### TypeScript
 
 ```typescript
 // Safe: disabled by default, opt-in

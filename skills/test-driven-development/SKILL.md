@@ -50,6 +50,33 @@ The examples below use TypeScript for illustration; the workflow is identical in
 
 Write the test first. It must fail. A test that passes immediately proves nothing.
 
+#### Go
+
+```go
+// RED: This test fails because CreateTask doesn't exist yet
+func TestCreateTask(t *testing.T) {
+  task, err := createTask(context.Background(), &CreateTaskInput{Title: "Buy groceries"})
+  if err != nil {
+    t.Fatalf("createTask failed: %v", err)
+  }
+
+  if task.ID == "" {
+    t.Error("task.ID should not be empty")
+  }
+  if task.Title != "Buy groceries" {
+    t.Errorf("task.Title = %q, want %q", task.Title, "Buy groceries")
+  }
+  if task.Status != "pending" {
+    t.Errorf("task.Status = %q, want %q", task.Status, "pending")
+  }
+  if task.CreatedAt.IsZero() {
+    t.Error("task.CreatedAt should not be zero")
+  }
+}
+```
+
+#### TypeScript
+
 ```typescript
 // RED: This test fails because createTask doesn't exist yet
 describe('TaskService', () => {
@@ -67,6 +94,29 @@ describe('TaskService', () => {
 ### Step 2: GREEN — Make It Pass
 
 Write the minimum code to make the test pass. Don't over-engineer:
+
+#### Go
+
+```go
+// GREEN: Minimal implementation
+func createTask(ctx context.Context, input *CreateTaskInput) (*Task, error) {
+  if input.Title == "" {
+    return nil, fmt.Errorf("title is required")
+  }
+  task := &Task{
+    ID:        generateID(),
+    Title:     input.Title,
+    Status:    "pending",
+    CreatedAt: time.Now(),
+  }
+  if err := db.SaveTask(ctx, task); err != nil {
+    return nil, fmt.Errorf("save task: %w", err)
+  }
+  return task, nil
+}
+```
+
+#### TypeScript
 
 ```typescript
 // GREEN: Minimal implementation
@@ -93,6 +143,34 @@ With tests green, improve the code without changing behavior:
 
 Run tests after every refactor step to confirm nothing broke.
 
+#### TypeScript Example
+Validate input in a separate function, extract database logic into a service method.
+
+#### Go Example
+Separate validation logic into a validator function; wrap database errors with context.
+
+```go
+func createTask(ctx context.Context, input *CreateTaskInput) (*Task, error) {
+  // Refactored: validation extracted
+  if err := input.validate(); err != nil {
+    return nil, fmt.Errorf("validate input: %w", err)
+  }
+
+  task := &Task{
+    ID:        generateID(),
+    Title:     input.Title,
+    Status:    "pending",
+    CreatedAt: time.Now(),
+  }
+
+  // Refactored: save logic delegated to store
+  if err := db.SaveTask(ctx, task); err != nil {
+    return nil, fmt.Errorf("save task: %w", err)
+  }
+  return task, nil
+}
+```
+
 ## The Prove-It Pattern (Bug Fixes)
 
 When a bug is reported, **do not start by trying to fix it.** Start by writing a test that reproduces it.
@@ -117,6 +195,46 @@ Bug report arrives
 ```
 
 **Example:**
+
+#### Go
+
+```go
+// Bug: "Completing a task doesn't update the CompletedAt timestamp"
+
+// Step 1: Write the reproduction test (it should FAIL)
+func TestCompleteTask_SetsTimestamp(t *testing.T) {
+  task, _ := createTask(context.Background(), &CreateTaskInput{Title: "Test"})
+  completed, err := completeTask(context.Background(), task.ID)
+  if err != nil {
+    t.Fatalf("completeTask failed: %v", err)
+  }
+
+  if completed.Status != "completed" {
+    t.Errorf("Status = %q, want %q", completed.Status, "completed")
+  }
+  if completed.CompletedAt.IsZero() {
+    t.Error("CompletedAt should not be zero")  // This fails → bug confirmed
+  }
+}
+
+// Step 2: Fix the bug
+func completeTask(ctx context.Context, id string) (*Task, error) {
+  task, err := db.GetTask(ctx, id)
+  if err != nil {
+    return nil, fmt.Errorf("get task: %w", err)
+  }
+  task.Status = "completed"
+  task.CompletedAt = time.Now()  // This was missing
+  if err := db.SaveTask(ctx, task); err != nil {
+    return nil, fmt.Errorf("save task: %w", err)
+  }
+  return task, nil
+}
+
+// Step 3: Test passes → bug fixed, regression guarded
+```
+
+#### TypeScript
 
 ```typescript
 // Bug: "Completing a task doesn't update the completedAt timestamp"
@@ -185,11 +303,85 @@ Is it a critical user flow that must work end-to-end?
   → E2E test (large) — limit these to critical paths
 ```
 
+#### Go Example: Table-Driven Tests
+
+Go's idiomatic pattern for testing multiple scenarios is the table-driven test, which replaces parameterized test libraries:
+
+```go
+func TestCreateTask_ValidatesInputs(t *testing.T) {
+  tests := []struct {
+    name    string
+    input   *CreateTaskInput
+    wantErr bool
+    wantMsg string
+  }{
+    {
+      name:    "valid task",
+      input:   &CreateTaskInput{Title: "Buy groceries"},
+      wantErr: false,
+    },
+    {
+      name:    "empty title",
+      input:   &CreateTaskInput{Title: ""},
+      wantErr: true,
+      wantMsg: "title is required",
+    },
+    {
+      name:    "whitespace title",
+      input:   &CreateTaskInput{Title: "   "},
+      wantErr: true,
+      wantMsg: "title cannot be blank",
+    },
+  }
+
+  for _, tt := range tests {
+    t.Run(tt.name, func(t *testing.T) {
+      _, err := createTask(context.Background(), tt.input)
+      if (err != nil) != tt.wantErr {
+        t.Fatalf("createTask error = %v, wantErr %v", err, tt.wantErr)
+      }
+      if tt.wantErr && !strings.Contains(err.Error(), tt.wantMsg) {
+        t.Errorf("error message = %q, want substring %q", err, tt.wantMsg)
+      }
+    })
+  }
+}
+```
+
+Table-driven tests scale to dozens of cases while keeping each one readable. Each row is a scenario; the loop runs them all with `t.Run(name)` so failures are per-case, not all-or-nothing.
+
 ## Writing Good Tests
 
 ### Test State, Not Interactions
 
 Assert on the *outcome* of an operation, not on which methods were called internally. Tests that verify method call sequences break when you refactor, even if the behavior is unchanged.
+
+#### Go
+
+```go
+// Good: Tests what the function does (state-based)
+func TestListTasks_SortsBySortOrder(t *testing.T) {
+  tasks, err := listTasks(context.Background(), &ListTasksInput{
+    SortBy:    "createdAt",
+    SortOrder: "desc",
+  })
+  if err != nil {
+    t.Fatalf("listTasks failed: %v", err)
+  }
+
+  if len(tasks) < 2 {
+    t.Fatal("need at least 2 tasks to verify sort order")
+  }
+  if !tasks[0].CreatedAt.After(tasks[1].CreatedAt) {
+    t.Errorf("tasks not sorted descending: %v, %v", tasks[0].CreatedAt, tasks[1].CreatedAt)
+  }
+}
+
+// Bad: Tests how the function works internally (interaction-based)
+// (In Go, you'd use a mock or a test double, but focus on behavior, not call verification)
+```
+
+#### TypeScript
 
 ```typescript
 // Good: Tests what the function does (state-based)
@@ -212,6 +404,39 @@ it('calls db.query with ORDER BY created_at DESC', async () => {
 
 In production code, DRY (Don't Repeat Yourself) is usually right. In tests, **DAMP (Descriptive And Meaningful Phrases)** is better. A test should read like a specification — each test should tell a complete story without requiring the reader to trace through shared helpers.
 
+#### Go
+
+```go
+// DAMP: Each test is self-contained and readable
+func TestCreateTask_RejectsEmptyTitles(t *testing.T) {
+  _, err := createTask(context.Background(), &CreateTaskInput{Title: "", Assignee: "user-1"})
+  if err == nil {
+    t.Error("createTask should have failed for empty title")
+  }
+  if !strings.Contains(err.Error(), "title") {
+    t.Errorf("error = %q, want substring 'title'", err)
+  }
+}
+
+func TestCreateTask_TrimWhitespace(t *testing.T) {
+  task, err := createTask(context.Background(), &CreateTaskInput{
+    Title:    "  Buy groceries  ",
+    Assignee: "user-1",
+  })
+  if err != nil {
+    t.Fatalf("createTask failed: %v", err)
+  }
+  if task.Title != "Buy groceries" {
+    t.Errorf("task.Title = %q, want %q", task.Title, "Buy groceries")
+  }
+}
+
+// Over-DRY: Shared setup helpers obscure what each test verifies
+// (Table-driven tests are preferred when multiple scenarios test the same behavior)
+```
+
+#### TypeScript
+
 ```typescript
 // DAMP: Each test is self-contained and readable
 it('rejects tasks with empty titles', () => {
@@ -229,7 +454,7 @@ it('trims whitespace from titles', () => {
 // (Don't do this just to avoid repeating the input shape)
 ```
 
-Duplication in tests is acceptable when it makes each test independently understandable.
+Duplication in tests is acceptable when it makes each test independently understandable. In Go, table-driven tests provide a balance: one loop, multiple scenarios, each scenario is self-documenting.
 
 ### Prefer Real Implementations Over Mocks
 
@@ -245,7 +470,60 @@ Preference order (most to least preferred):
 
 **Use mocks only when:** the real implementation is too slow, non-deterministic, or has side effects you can't control (external APIs, email sending). Over-mocking creates tests that pass while production breaks.
 
+#### Go Interfaces for Testing
+
+Go's interface-based testing encourages using the real implementation where possible. Define interfaces for dependencies, then create test doubles only when necessary:
+
+```go
+// Define the interface at the boundary
+type TaskStore interface {
+  GetTask(ctx context.Context, id string) (*Task, error)
+  SaveTask(ctx context.Context, task *Task) error
+}
+
+// Production code uses the real store
+var db TaskStore = &PostgresStore{...}
+
+// In tests, inject a fake or the real store
+func TestCompleteTask(t *testing.T) {
+  // Option 1: Use a real in-memory fake
+  store := &InMemoryStore{}
+  _, _ = createTask(context.Background(), &CreateTaskInput{Title: "Test"})
+
+  // Option 2: Use real implementation (if it's fast enough)
+  db := setupTestDB(t)  // Real database in a transaction
+  
+  // Option 3: Only mock external APIs that are slow or non-deterministic
+  // Example: mocking an email service
+}
+```
+
 ### Use the Arrange-Act-Assert Pattern
+
+#### Go
+
+```go
+func TestCheckOverdue_MarksPastDeadlines(t *testing.T) {
+  // Arrange: Set up the test scenario
+  deadline, _ := time.Parse(time.RFC3339, "2025-01-01T00:00:00Z")
+  task := &Task{
+    ID:       "task-1",
+    Title:    "Test",
+    Deadline: deadline,
+  }
+
+  // Act: Perform the action being tested
+  now, _ := time.Parse(time.RFC3339, "2025-01-02T00:00:00Z")
+  isOverdue := checkOverdue(task, now)
+
+  // Assert: Verify the outcome
+  if !isOverdue {
+    t.Error("task should be marked overdue")
+  }
+}
+```
+
+#### TypeScript
 
 ```typescript
 it('marks overdue tasks when deadline has passed', () => {
@@ -265,6 +543,50 @@ it('marks overdue tasks when deadline has passed', () => {
 
 ### One Assertion Per Concept
 
+#### Go
+
+```go
+// Good: Each test verifies one behavior (use table-driven for multiple scenarios)
+func TestCreateTask_RejectsEmptyTitles(t *testing.T) { ... }
+func TestCreateTask_TrimsWhitespace(t *testing.T) { ... }
+func TestCreateTask_EnforcesMaxLength(t *testing.T) { ... }
+
+// Or use table-driven tests for multiple scenarios of the same behavior:
+func TestCreateTask_Validation(t *testing.T) {
+  tests := []struct {
+    name      string
+    title     string
+    wantErr   bool
+  }{
+    {"empty title", "", true},
+    {"valid title", "hello", false},
+    {"too long", strings.Repeat("a", 256), true},
+  }
+  for _, tt := range tests {
+    t.Run(tt.name, func(t *testing.T) {
+      _, err := createTask(context.Background(), &CreateTaskInput{Title: tt.title})
+      if (err != nil) != tt.wantErr {
+        t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
+      }
+    })
+  }
+}
+
+// Bad: Multiple unrelated assertions in one test (avoid)
+func TestValidation(t *testing.T) {
+  _, err1 := createTask(context.Background(), &CreateTaskInput{Title: ""})
+  if err1 == nil { t.Error("should reject empty title") }
+  
+  task, _ := createTask(context.Background(), &CreateTaskInput{Title: "  hello  "})
+  if task.Title != "hello" { t.Error("should trim whitespace") }
+  
+  _, err2 := createTask(context.Background(), &CreateTaskInput{Title: strings.Repeat("a", 256)})
+  if err2 == nil { t.Error("should reject long title") }
+}
+```
+
+#### TypeScript
+
 ```typescript
 // Good: Each test verifies one behavior
 it('rejects empty titles', () => { ... });
@@ -280,6 +602,40 @@ it('validates titles correctly', () => {
 ```
 
 ### Name Tests Descriptively
+
+#### Go
+
+Go test functions must start with `Test`, but the part after should read like a specification. Use `t.Run` subtests with descriptive names:
+
+```go
+// Good: Function name + subtest names read like a specification
+func TestCompleteTask(t *testing.T) {
+  tests := []struct {
+    name string
+    // ... test data
+  }{
+    {"sets status to completed and records timestamp"},
+    {"returns NotFoundError for non-existent task"},
+    {"is idempotent — completing an already-completed task is a no-op"},
+    {"sends notification to task assignee"},
+  }
+  for _, tt := range tests {
+    t.Run(tt.name, func(t *testing.T) { ... })
+  }
+}
+
+// Alternatively, separate functions with descriptive names
+func TestCompleteTask_SetsStatus(t *testing.T) { ... }
+func TestCompleteTask_ReturnsNotFoundError(t *testing.T) { ... }
+func TestCompleteTask_IsIdempotent(t *testing.T) { ... }
+
+// Bad: Vague names
+func TestCompleteTask_Works(t *testing.T) { ... }  // Vague
+func TestError(t *testing.T) { ... }               // Non-descriptive
+func TestFoo(t *testing.T) { ... }                 // Meaningless
+```
+
+#### TypeScript
 
 ```typescript
 // Good: Reads like a specification

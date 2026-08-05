@@ -9,7 +9,7 @@ description: Simplifies code for clarity. Use when refactoring code for clarity 
 
 ## Overview
 
-Simplify code by reducing complexity while preserving exact behavior. The goal is not fewer lines — it's code that is easier to read, understand, modify, and debug. Every simplification must pass a simple test: "Would a new team member understand this faster than the original?"
+Simplify code by reducing complexity while preserving exact behavior. The goal is not fewer lines — it's code that is easier to read, understand, modify, and debug. In Go, that often means keeping code left-aligned with early returns, resisting abstractions until they earn their keep, and preferring flatter package boundaries over elaborate layering. Every simplification must pass a simple test: "Would a new team member understand this faster than the original?"
 
 ## When to Use
 
@@ -62,6 +62,44 @@ Simplification that breaks project consistency is not simplification — it's ch
 
 Explicit code is better than compact code when the compact version requires a mental pause to parse.
 
+```go
+// UNCLEAR: Deep nesting hides the happy path.
+func process(item *Item) string {
+  if item != nil {
+    if item.IsNew {
+      return "New"
+    } else if item.IsUpdated {
+      return "Updated"
+    } else if item.IsArchived {
+      return "Archived"
+    } else {
+      return "Active"
+    }
+  }
+  return "Unknown"
+}
+
+// CLEAR: Guard clauses preserve line of sight.
+// In idiomatic Go, avoid the else after a return.
+func statusLabel(item *Item) string {
+  if item == nil {
+    return "Unknown"
+  }
+  if item.IsNew {
+    return "New"
+  }
+  if item.IsUpdated {
+    return "Updated"
+  }
+  if item.IsArchived {
+    return "Archived"
+  }
+  return "Active"
+}
+```
+
+Secondary TypeScript / JavaScript illustration:
+
 ```typescript
 // UNCLEAR: Dense ternary chain
 const label = isNew ? 'New' : isUpdated ? 'Updated' : isArchived ? 'Archived' : 'Active';
@@ -74,6 +112,26 @@ function getStatusLabel(item: Item): string {
   return 'Active';
 }
 ```
+
+```go
+// UNCLEAR: Unnecessary branching around a straightforward count.
+countByID := make(map[string]int)
+for _, item := range items {
+  if count, exists := countByID[item.ID]; exists {
+    countByID[item.ID] = count + 1
+  } else {
+    countByID[item.ID] = 1
+  }
+}
+
+// CLEAR: Let the zero value work for you.
+countByID := make(map[string]int)
+for _, item := range items {
+  countByID[item.ID]++
+}
+```
+
+Secondary TypeScript / JavaScript illustration:
 
 ```typescript
 // UNCLEAR: Chained reduces with inline logic
@@ -96,6 +154,7 @@ Simplification has a failure mode: over-simplification. Watch for these traps:
 - **Inlining too aggressively** — removing a helper that gave a concept a name makes the call site harder to read
 - **Combining unrelated logic** — two simple functions merged into one complex function is not simpler
 - **Removing "unnecessary" abstraction** — some abstractions exist for extensibility or testability, not complexity
+- **Adding abstraction "just in case"** — in Go especially, avoid introducing interfaces, generics, or package layers before you have a concrete need
 - **Optimizing for line count** — fewer lines is not the goal; easier comprehension is
 
 ### 5. Scope to What Changed
@@ -128,11 +187,12 @@ Scan for these patterns — each one is a concrete signal, not a vague smell:
 
 | Pattern | Signal | Simplification |
 |---------|--------|----------------|
-| Deep nesting (3+ levels) | Hard to follow control flow | Extract conditions into guard clauses or helper functions |
+| Deep nesting (3+ levels) | Hard to follow control flow | Extract conditions into guard clauses or helper functions; in Go, prefer early returns that keep the happy path left-aligned |
 | Long functions (50+ lines) | Multiple responsibilities | Split into focused functions with descriptive names |
 | Nested ternaries | Requires mental stack to parse | Replace with if/else chains, switch, or lookup objects |
 | Boolean parameter flags | `doThing(true, false, true)` | Replace with options objects or separate functions |
 | Repeated conditionals | Same `if` check in multiple places | Extract to a well-named predicate function |
+| Pass-through package layers | `handler -> service -> manager -> repository` with little added logic | Collapse unnecessary layers; Go often reads better with fewer, flatter packages |
 
 **Naming and readability:**
 
@@ -151,8 +211,12 @@ Scan for these patterns — each one is a concrete signal, not a vague smell:
 | Duplicated logic | Same 5+ lines in multiple places | Extract to a shared function |
 | Dead code | Unreachable branches, unused variables, commented-out blocks | Remove (after confirming it's truly dead) |
 | Unnecessary abstractions | Wrapper that adds no value | Inline the wrapper, call the underlying function directly |
+| Premature interfaces | One implementation used only internally | Keep the concrete type; in Go, accept interfaces at boundaries and return structs |
+| Premature generics | Type parameters add noise without reducing duplication meaningfully | Prefer a concrete type or a small interface until a reusable generic abstraction is clearly justified |
 | Over-engineered patterns | Factory-for-a-factory, strategy-with-one-strategy | Replace with the simple direct approach |
 | Redundant type assertions | Casting to a type that's already inferred | Remove the assertion |
+
+For Go codebases, automated simplification checks can find low-risk cleanup opportunities. Run the project's normal `golangci-lint` configuration and pay special attention to `gosimple` / `S1xxx` findings, then apply only the ones that improve readability in context.
 
 ### Step 3: Apply Changes Incrementally
 
@@ -186,10 +250,142 @@ If the "simplified" version is harder to understand or review, revert. Not every
 
 ## Language-Specific Guidance
 
+### Go
+
+Use Go as the default lens for this skill: preserve line of sight, avoid the `else` after a `return`, keep abstractions sparse, and lean on tooling for low-risk simplifications.
+
+#### SIMPLIFY: Guard clauses over deep nesting
+
+```go
+// Before
+func validateUser(u *User) error {
+  if u != nil {
+    if u.Email != "" {
+      if u.Active {
+        return nil
+      } else {
+        return errors.New("user is inactive")
+      }
+    } else {
+      return errors.New("email is required")
+    }
+  }
+  return errors.New("user is nil")
+}
+
+// After
+func validateUser(u *User) error {
+  if u == nil {
+    return errors.New("user is nil")
+  }
+  if u.Email == "" {
+    return errors.New("email is required")
+  }
+  if !u.Active {
+    return errors.New("user is inactive")
+  }
+  return nil
+}
+```
+
+#### SIMPLIFY: Unnecessary interface
+
+```go
+// Before
+type UserFetcher interface {
+  GetByID(ctx context.Context, id string) (*User, error)
+}
+
+type userService struct {
+  repo UserFetcher
+}
+
+// After
+type userService struct {
+  repo *UserRepository
+}
+```
+
+Only introduce the interface when you truly need multiple implementations or a package-boundary seam for testing. In Go, "accept interfaces, return structs" is usually the simpler default.
+
+#### SIMPLIFY: Unnecessary generics
+
+```go
+// Before
+func firstMatch[T any](items []T, predicate func(T) bool) (T, bool) {
+  var zero T
+  for _, item := range items {
+    if predicate(item) {
+      return item, true
+    }
+  }
+  return zero, false
+}
+
+user, ok := firstMatch(users, func(u User) bool { return u.ID == id })
+
+// After
+func findUserByID(users []User, id string) (User, bool) {
+  for _, user := range users {
+    if user.ID == id {
+      return user, true
+    }
+  }
+  return User{}, false
+}
+```
+
+If the generic helper is used once or twice and hides a simple domain operation, the concrete function is often clearer.
+
+#### SIMPLIFY: Redundant wrapper layer
+
+```go
+// Before
+func (s *UserService) GetByID(ctx context.Context, id string) (*User, error) {
+  return s.repo.GetByID(ctx, id)
+}
+
+// After
+// Remove the pass-through method and have the caller use repo.GetByID directly,
+// or move the real logic into UserService once it earns the extra layer.
+```
+
+#### SIMPLIFY: Boolean accumulator
+
+```go
+// Before
+func isValid(input string) bool {
+  if len(input) > 0 {
+    if len(input) < 100 {
+      return true
+    }
+  }
+  return false
+}
+
+// After
+func isValid(input string) bool {
+  return len(input) > 0 && len(input) < 100
+}
+```
+
+#### SIMPLIFY: Let tooling catch low-risk wins
+
+Use `golangci-lint` as a backstop for mechanical cleanups:
+
+```sh
+golangci-lint run
+```
+
+Review `gosimple` / `S1xxx` findings with judgment. Tooling can point at opportunities, but the human standard is still readability in this codebase.
+
 ### TypeScript / JavaScript
 
+Secondary / alternative illustrations:
+
+#### SIMPLIFY: Unnecessary async wrapper
+
 ```typescript
-// SIMPLIFY: Unnecessary async wrapper
 // Before
 async function getUser(id: string): Promise<User> {
   return await userService.findById(id);
@@ -198,8 +394,25 @@ async function getUser(id: string): Promise<User> {
 function getUser(id: string): Promise<User> {
   return userService.findById(id);
 }
+```
 
-// SIMPLIFY: Verbose conditional assignment
+#### Go Equivalent
+
+```go
+// Before (redundant wrapper)
+func getUser(ctx context.Context, id string) (*User, error) {
+  return userService.GetByID(ctx, id)  // Unnecessary wrapper function
+}
+
+// After (direct function reference or simpler alias)
+// Call userService.GetByID directly from caller
+// OR
+var getUser = userService.GetByID  // Direct assignment
+```
+
+#### SIMPLIFY: Verbose conditional assignment
+
+```typescript
 // Before
 let displayName: string;
 if (user.nickname) {
@@ -209,8 +422,29 @@ if (user.nickname) {
 }
 // After
 const displayName = user.nickname || user.fullName;
+```
 
-// SIMPLIFY: Manual array building
+#### Go Equivalent
+
+```go
+// Before (verbose)
+var displayName string
+if user.Nickname != "" {
+  displayName = user.Nickname
+} else {
+  displayName = user.FullName
+}
+
+// After (simpler and still explicit)
+displayName := user.FullName
+if user.Nickname != "" {
+  displayName = user.Nickname
+}
+```
+
+#### SIMPLIFY: Manual array building
+
+```typescript
 // Before
 const activeUsers: User[] = [];
 for (const user of users) {
@@ -220,15 +454,42 @@ for (const user of users) {
 }
 // After
 const activeUsers = users.filter((user) => user.isActive);
+```
 
-// SIMPLIFY: Redundant boolean return
+#### Go Equivalent
+
+```go
+// Before (verbose loop)
+var activeUsers []*User
+for _, user := range users {
+  if user.IsActive {
+    activeUsers = append(activeUsers, user)
+  }
+}
+
+// After (keep the explicit loop; just simplify the control flow)
+activeUsers := make([]*User, 0, len(users))
+for _, user := range users {
+  if !user.IsActive {
+    continue
+  }
+  activeUsers = append(activeUsers, user)
+}
+```
+
+#### SIMPLIFY: Verbose boolean return
+
+```typescript
 // Before
 function isValid(input: string): boolean {
-  if (input.length > 0 && input.length < 100) {
-    return true;
+  if (input.length > 0) {
+    if (input.length < 100) {
+      return true;
+    }
   }
   return false;
 }
+
 // After
 function isValid(input: string): boolean {
   return input.length > 0 && input.length < 100;

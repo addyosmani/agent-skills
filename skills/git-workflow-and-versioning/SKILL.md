@@ -220,12 +220,18 @@ git diff --staged
 git diff --staged | grep -i "password\|secret\|api_key\|token"
 
 # 3. Run tests
+go test ./...
+
+# 4. Keep module metadata consistent
+go mod tidy
+git diff -- go.mod go.sum
+
+# 5. Run linting / static checks
+go vet ./...
+
+# For JS/TS repos, the analogous checks are:
 npm test
-
-# 4. Run linting
 npm run lint
-
-# 5. Run type checking
 npx tsc --noEmit
 ```
 
@@ -283,16 +289,34 @@ For anything with consumers, version `MAJOR.MINOR.PATCH` and let the number carr
 
 The number is a promise, so make the code match it. A "patch" that changes behavior consumers relied on is a major change wearing a disguise (Hyrum's Law — see the `api-and-interface-design` skill). When unsure whether a change is breaking, assume it is; a surprise major is far cheaper than a broken consumer.
 
+For Go modules, this semantic version is normally expressed directly as a git tag (`v1.4.0`, `v2.0.1`), and that tag is what `go get` resolves. There is no separate `package.json`-style version file to keep in sync for the module itself. Other ecosystems may also mirror the version into a manifest, but the contract is still the same: the published version must match the compatibility story you are telling consumers.
+
 ### Tag the release, and let the tag be the source of truth
 
 A release is an immutable point in history, not a moving branch. Tag it so it can always be reproduced:
 
 ```bash
-git tag -a v1.4.0 -m "Release 1.4.0"
-git push origin v1.4.0
+# Go modules: the git tag is the version
+git tag v1.4.0 && git push origin v1.4.0
+
+# Other ecosystems may also bump a manifest before tagging/publishing
+npm version minor
+git push --follow-tags
 ```
 
-Derive the version from the tag rather than hand-editing it in scattered files, so the artifact, the tag, and the changelog can never disagree.
+For Go modules, the tag **is** the version — no separate module-version bump is needed. For v2 and above, Go also requires the major version suffix in the module path, so the repository, `go.mod`, import path, and tag all agree:
+
+```go
+module github.com/org/repo/v2
+```
+
+```go
+import "github.com/org/repo/v2"
+```
+
+If you tag `v2.3.0` but leave the module path as `github.com/org/repo`, consumers will get a broken upgrade story. Derive the version from the tag rather than hand-editing it in scattered files, so the artifact, the tag, and the changelog can never disagree.
+
+When a consumer depends on an untagged Go commit, the toolchain generates a pseudo-version such as `v0.0.0-20220101000000-abcdef123456`. That is useful for temporary pinning, but it is not a substitute for a real release: pseudo-versions are harder for humans to reason about, signal "pre-release / not yet versioned" intent, and should usually be replaced by a proper semver tag once the change is meant for broader consumption.
 
 ### Keep a changelog written for humans
 

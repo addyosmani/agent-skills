@@ -7,7 +7,7 @@ description: Automates CI/CD pipeline setup. Use when setting up or modifying bu
 
 ## Overview
 
-Automate quality gates so that no change reaches production without passing tests, lint, type checking, and build. CI/CD is the enforcement mechanism for every other skill — it catches what humans and agents miss, and it does so consistently on every single change.
+Automate quality gates so that no change reaches production without passing tests, static analysis, lint, type checking where relevant, and build. CI/CD is the enforcement mechanism for every other skill — it catches what humans and agents miss, and it does so consistently on every single change.
 
 **Shift Left:** Catch problems as early in the pipeline as possible. A bug caught in linting costs minutes; the same bug caught in production costs hours. Move checks upstream — static analysis before tests, tests before staging, staging before production.
 
@@ -30,26 +30,28 @@ Pull Request Opened
     │
     ▼
 ┌─────────────────┐
-│   LINT CHECK     │  eslint, prettier
+│   VET / LINT     │  go vet ./..., golangci-lint run
 │   ↓ pass         │
-│   TYPE CHECK     │  tsc --noEmit
+│   TYPE CHECK     │  implicit in go build; tsc --noEmit
 │   ↓ pass         │
-│   UNIT TESTS     │  jest/vitest
+│   UNIT TESTS     │  go test ./... -race -cover
 │   ↓ pass         │
-│   BUILD          │  npm run build
+│   BUILD          │  go build ./...
 │   ↓ pass         │
 │   INTEGRATION    │  API/DB tests
 │   ↓ pass         │
 │   E2E (optional) │  Playwright/Cypress
 │   ↓ pass         │
-│   SECURITY AUDIT │  npm audit
+│   SECURITY SCAN  │  govulncheck ./...
 │   ↓ pass         │
-│   BUNDLE SIZE    │  bundlesize check
+│   BUNDLE SIZE    │  web-app-specific (bundlesize, etc.)
 └─────────────────┘
     │
     ▼
   Ready for review
 ```
+
+For Go projects, treat `go vet ./...`, `golangci-lint run`, `go test ./... -race -cover`, `go build ./...`, and `govulncheck ./...` as the default merge gates. For other stacks, keep the same gate shape and substitute the repository's equivalents (`tsc --noEmit`, `npm test`, `npm run build`, `npm audit`, `pytest`, `cargo test`, etc.).
 
 **No gate can be skipped.** If lint fails, fix lint — don't disable the rule. If a test fails, fix the code — don't skip the test.
 
@@ -70,32 +72,50 @@ on:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    env:
+      GOMODCACHE: ${{ github.workspace }}/.cache/go-mod
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-go@v5
         with:
-          node-version: '22'
-          cache: 'npm'
+          go-version-file: go.mod
 
-      - name: Install dependencies
-        run: npm ci
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ${{ env.GOMODCACHE }}
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download modules
+        run: go mod download
+
+      - name: Vet
+        run: go vet ./...
 
       - name: Lint
-        run: npm run lint
-
-      - name: Type check
-        run: npx tsc --noEmit
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout=5m
 
       - name: Test
-        run: npm test -- --coverage
+        run: go test ./... -race -cover
 
       - name: Build
-        run: npm run build
+        run: go build ./...
 
-      - name: Security audit
-        run: npm audit --audit-level=high
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+
+      - name: Security scan
+        run: $(go env GOPATH)/bin/govulncheck ./...
 ```
+
+For a Node/TypeScript repository, the same pipeline shape usually becomes `actions/setup-node`, `npm ci`, `npm run lint`, `npx tsc --noEmit`, `npm test -- --coverage`, `npm run build`, and `npm audit`.
 
 ### With Database Integration Tests
 
@@ -119,24 +139,22 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-go@v5
         with:
-          node-version: '22'
-          cache: 'npm'
-      - run: npm ci
-      - name: Run migrations
-        run: npx prisma migrate deploy
-        env:
-          DATABASE_URL: postgresql://ci_user:${{ secrets.CI_DB_PASSWORD }}@localhost:5432/testdb
+          go-version-file: go.mod
       - name: Integration tests
-        run: npm run test:integration
+        run: go test ./... -tags=integration
         env:
           DATABASE_URL: postgresql://ci_user:${{ secrets.CI_DB_PASSWORD }}@localhost:5432/testdb
 ```
 
 > **Note:** Even for CI-only test databases, use GitHub Secrets for credentials rather than hardcoding values. This builds good habits and prevents accidental reuse of test credentials in other contexts.
 
+For Node/Prisma stacks, the equivalent job often runs `npm ci`, `npx prisma migrate deploy`, and `npm run test:integration` against the same kind of ephemeral database service.
+
 ### E2E Tests
+
+For browser-based systems, add a separate E2E job after the backend/service quality gates pass:
 
 ```yaml
   e2e:
@@ -184,11 +202,14 @@ Agent fixes → pushes → CI runs again
 **Key patterns:**
 
 ```
-Lint failure → Agent runs `npm run lint --fix` and commits
-Type error  → Agent reads the error location and fixes the type
+Vet/lint failure → Agent runs `go vet ./...` and `golangci-lint run`, fixes findings, and re-runs CI
+Type/build error → Agent reads the compiler output and fixes the cited package
 Test failure → Agent follows debugging-and-error-recovery skill
-Build error → Agent checks config and dependencies
+Build error → Agent runs `go build ./...` locally and checks dependencies/config
+Security scan failure → Agent investigates `govulncheck ./...` output and updates code or dependencies
 ```
+
+For JavaScript/TypeScript repositories, the same loop typically uses `npm run lint --fix`, `tsc --noEmit`, `npm test`, and `npm run build`.
 
 ## Deployment Strategies
 
@@ -215,6 +236,18 @@ Feature flags decouple deployment from release. Deploy incomplete or risky featu
 - **Roll back without redeploying.** Disable the flag instead of reverting code.
 - **Canary new features.** Enable for 1% of users, then 10%, then 100%.
 - **Run A/B tests.** Compare behavior with and without the feature.
+
+#### Go
+
+```go
+// Simple feature flag pattern
+if featureFlags.IsEnabled(ctx, "new-checkout-flow", map[string]string{"userID": userID}) {
+  return handleNewCheckout(w, r)
+}
+return handleLegacyCheckout(w, r)
+```
+
+#### TypeScript
 
 ```typescript
 // Simple feature flag pattern
@@ -295,6 +328,10 @@ updates:
     open-pull-requests-limit: 5
 ```
 
+### Release Automation
+
+If the project ships Go binaries, `goreleaser` is a common release-automation tool for building, checksumming, signing, and publishing multi-platform artifacts after CI passes.
+
 ### Build Cop Role
 
 Designate someone responsible for keeping CI green. When the build breaks, the Build Cop's job is to fix or revert — not the person whose change caused the break. This prevents broken builds from accumulating while everyone assumes someone else will fix it.
@@ -313,7 +350,7 @@ When the pipeline exceeds 10 minutes, apply these strategies in order of impact:
 ```
 Slow CI pipeline?
 ├── Cache dependencies
-│   └── Use actions/cache or setup-node cache option for node_modules
+│   └── Cache Go modules and build artifacts with GOMODCACHE, ~/.cache/go-build, and a key derived from go.sum
 ├── Run jobs in parallel
 │   └── Split lint, typecheck, test, build into separate parallel jobs
 ├── Only run what changed
@@ -329,33 +366,69 @@ Slow CI pipeline?
 **Example: caching and parallelism**
 ```yaml
 jobs:
+  vet:
+    runs-on: ubuntu-latest
+    env:
+      GOMODCACHE: ${{ github.workspace }}/.cache/go-mod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod }
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ${{ env.GOMODCACHE }}
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+      - run: go mod download
+      - run: go vet ./...
+
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '22', cache: 'npm' }
-      - run: npm ci
-      - run: npm run lint
-
-  typecheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '22', cache: 'npm' }
-      - run: npm ci
-      - run: npx tsc --noEmit
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod }
+      - uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
 
   test:
     runs-on: ubuntu-latest
+    env:
+      GOMODCACHE: ${{ github.workspace }}/.cache/go-mod
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '22', cache: 'npm' }
-      - run: npm ci
-      - run: npm test -- --coverage
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod }
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ${{ env.GOMODCACHE }}
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+      - run: go mod download
+      - run: go test ./... -race -cover
+
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GOMODCACHE: ${{ github.workspace }}/.cache/go-mod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod }
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ${{ env.GOMODCACHE }}
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+      - run: go mod download
+      - run: go build ./...
 ```
+
+For Node/TypeScript projects, parallel jobs usually split `npm run lint`, `npx tsc --noEmit`, `npm test`, and `npm run build` the same way.
 
 ## Common Rationalizations
 
@@ -381,10 +454,11 @@ jobs:
 
 After setting up or modifying CI:
 
-- [ ] All quality gates are present (lint, types, tests, build, audit)
+- [ ] All quality gates are present (for Go: `go vet ./...`, `golangci-lint run`, `go test ./... -race -cover`, `go build ./...`, `govulncheck ./...`; for other stacks, the equivalent lint/type/test/build/audit gates)
 - [ ] Pipeline runs on every PR and push to main
 - [ ] Failures block merge (branch protection configured)
 - [ ] CI results feed back into the development loop
 - [ ] Secrets are stored in the secrets manager, not in code
 - [ ] Deployment has a rollback mechanism
+- [ ] CI caches dependencies appropriately (for Go, cache GOMODCACHE/go build outputs with a `go.sum`-based key)
 - [ ] Pipeline runs in under 10 minutes for the test suite

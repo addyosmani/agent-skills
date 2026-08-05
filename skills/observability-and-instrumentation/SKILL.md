@@ -53,6 +53,37 @@ Rule of thumb: metrics tell you **that** something is wrong, traces tell you **w
 
 Log events, not prose. Every log line is a JSON object with a stable event name and machine-readable fields:
 
+#### Go
+
+```go
+// BAD: string interpolation — unqueryable, inconsistent
+log.Printf("Payment %s failed for user %s after %d retries", id, userID, n)
+
+// GOOD: stable event name + structured fields (using slog)
+import "log/slog"
+
+slog.Warn("payment failed",
+  slog.String("event", "payment_failed"),
+  slog.String("paymentId", id),
+  slog.String("provider", "stripe"),
+  slog.String("errorCode", err.Code),
+  slog.Int("attempt", n),
+)
+
+// Or with a structured logger like zap:
+import "go.uber.org/zap"
+
+logger.Warn("payment failed",
+  zap.String("event", "payment_failed"),
+  zap.String("paymentId", id),
+  zap.String("provider", "stripe"),
+  zap.String("errorCode", err.Code),
+  zap.Int("attempt", n),
+)
+```
+
+#### TypeScript
+
 ```typescript
 // BAD: string interpolation — unqueryable, inconsistent
 logger.info(`Payment ${id} failed for user ${userId} after ${n} retries`);
@@ -78,6 +109,43 @@ logger.warn({
 
 **Correlation IDs are mandatory.** Generate (or accept) a request ID at the system boundary and attach it to every log line, span, and outbound call. Without it, you cannot reconstruct a single request from interleaved logs:
 
+#### Go
+
+```go
+// Middleware: context with request ID, propagated downstream
+func requestIDMiddleware(next http.Handler) http.Handler {
+  return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    requestID := r.Header.Get("x-request-id")
+    if requestID == "" {
+      requestID = uuid.New().String()
+    }
+    
+    // Attach to context
+    ctx := context.WithValue(r.Context(), "requestID", requestID)
+    
+    // Attach to response header
+    w.Header().Set("x-request-id", requestID)
+    
+    // Create child logger with request ID
+    log := slog.With(slog.String("requestId", requestID))
+    ctx = context.WithValue(ctx, "logger", log)
+    
+    next.ServeHTTP(w, r.WithContext(ctx))
+  })
+}
+
+// In handlers, retrieve request ID from context
+func handleCheckout(w http.ResponseWriter, r *http.Request) {
+  requestID := r.Context().Value("requestID").(string)
+  log := r.Context().Value("logger").(*slog.Logger)
+  
+  log.Info("checkout started")
+  // Every log line from this context will include the requestID
+}
+```
+
+#### TypeScript
+
 ```typescript
 // Express: child logger per request, ID propagated downstream
 app.use((req, res, next) => {
@@ -95,6 +163,45 @@ app.use((req, res, next) => {
 For request-driven services, instrument **RED** on every endpoint and every external dependency: **R**ate (requests/sec), **E**rrors (failure rate), **D**uration (latency histogram, not average). For resources (queues, pools, hosts), use **USE**: **U**tilization, **S**aturation, **E**rrors.
 
 As with tracing, the vendor-neutral path is the OpenTelemetry metrics API (same SDK and context as step 5). The example below uses Prometheus' `prom-client` — one common backend choice, not the only one; the RED/USE and cardinality rules are identical either way.
+
+#### Go
+
+```go
+import "github.com/prometheus/client_golang/prometheus"
+
+var httpDuration = prometheus.NewHistogramVec(
+  prometheus.HistogramOpts{
+    Name:    "http_request_duration_seconds",
+    Help:    "HTTP request duration",
+    Buckets: []float64{0.05, 0.1, 0.25, 0.5, 1, 2.5, 5},
+  },
+  []string{"method", "route", "status_class"},  // '2xx', not '200'
+)
+
+// In middleware
+func metricsMiddleware(next http.Handler) http.Handler {
+  return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    start := time.Now()
+    
+    // Wrap response writer to capture status code
+    statusWriter := &statusResponseWriter{ResponseWriter: w}
+    
+    next.ServeHTTP(statusWriter, r)
+    
+    duration := time.Since(start).Seconds()
+    route := r.URL.Path  // Use template if available
+    statusClass := fmt.Sprintf("%dxx", statusWriter.status/100)
+    
+    httpDuration.WithLabelValues(
+      r.Method,
+      route,
+      statusClass,
+    ).Observe(duration)
+  })
+}
+```
+
+#### TypeScript
 
 ```typescript
 import { Histogram } from 'prom-client';
@@ -119,6 +226,57 @@ Track averages never, percentiles always: an average hides the 1% of users havin
 ### 5. Distributed tracing
 
 Use OpenTelemetry — it's the vendor-neutral standard, and auto-instrumentation covers HTTP, gRPC, and common DB clients with near-zero code:
+
+#### Go
+
+```go
+// init.go — OpenTelemetry setup for Go
+import (
+  "go.opentelemetry.io/otel"
+  "go.opentelemetry.io/otel/sdk/resource"
+  sdktrace "go.opentelemetry.io/otel/sdk/trace"
+  "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+  semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
+)
+
+func initTracing(ctx context.Context) error {
+  exporter, err := otlptracehttp.New(ctx)
+  if err != nil {
+    return err
+  }
+
+  resource, err := resource.New(ctx,
+    resource.WithAttributes(
+      semconv.ServiceNameKey.String("checkout-service"),
+    ),
+  )
+  if err != nil {
+    return err
+  }
+
+  tp := sdktrace.NewTracerProvider(
+    sdktrace.WithBatcher(exporter),
+    sdktrace.WithResource(resource),
+  )
+  otel.SetTracerProvider(tp)
+  return nil
+}
+
+// Add manual spans around meaningful units of work
+func applyDiscounts(ctx context.Context, order *Order) error {
+  ctx, span := otel.Tracer("checkout").Start(ctx, "apply_discounts")
+  defer span.End()
+
+  span.SetAttributes(
+    attribute.String("order_id", order.ID),
+    attribute.Int("num_items", len(order.Items)),
+  )
+  // Logic here
+  return nil
+}
+```
+
+#### TypeScript
 
 ```typescript
 // tracing.ts — must be imported before anything else

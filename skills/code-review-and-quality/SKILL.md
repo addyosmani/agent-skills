@@ -9,6 +9,8 @@ description: Conducts multi-axis code review. Use before merging any change. Use
 
 Multi-dimensional code review with quality gates. Every change gets reviewed before merge — no exceptions. Review covers five axes: correctness, readability, architecture, security, and performance.
 
+Lead with Go-specific checks when the change is in Go; keep equivalent checks for JavaScript/TypeScript and other stacks as secondary comparisons rather than the default lens.
+
 **The approval standard:** Approve a change when it definitely improves overall code health, even if it isn't perfect. Perfect code doesn't exist — the goal is continuous improvement. Don't block a change because it isn't exactly how you would have written it. If it improves the codebase and follows the project's conventions, approve it.
 
 ## When to Use
@@ -30,8 +32,11 @@ Does the code do what it claims to do?
 - Does it match the spec or task requirements?
 - Are edge cases handled (null, empty, boundary values)?
 - Are error paths handled (not just the happy path)?
+- In Go, are errors handled explicitly rather than discarded with `_`, wrapped with context (`fmt.Errorf("...: %w", err)`), and checked with `errors.Is`/`errors.As` instead of string matching? In other languages, apply the equivalent rule: don't swallow exceptions or compare error text when structured checks exist.
 - Does it pass all tests? Are the tests actually testing the right things?
+- For Go changes, are `go vet` and `golangci-lint` clean in addition to the test suite? For other ecosystems, the equivalent static-analysis and lint checks should be clean.
 - Are there off-by-one errors, race conditions, or state inconsistencies?
+- For concurrent Go code, can every goroutine stop, are channels used intentionally (no unchecked sends/receives or accidental unbuffered blocking), does `context.Context` cancellation propagate, and has `go test -race` been used where races are plausible?
 
 ### 2. Readability & Simplicity
 
@@ -41,6 +46,7 @@ Can another engineer (or agent) understand this code without the author explaini
 - Is the control flow straightforward (avoid nested ternaries, deep callbacks)?
 - Is the code organized logically (related code grouped, clear module boundaries)?
 - Are there any "clever" tricks that should be simplified?
+- In Go, is the code `gofmt`/`goimports` clean and consistent with idiomatic import grouping? In other languages, the equivalent formatter should be clean too.
 - **Could this be done in fewer lines?** (1000 lines where 100 suffice is a failure)
 - **Are abstractions earning their complexity?** (Don't generalize until the third use case)
 - Would comments help clarify non-obvious intent? (But don't comment obvious code.)
@@ -57,9 +63,11 @@ Does the change fit the system's design?
 - Is there code duplication that should be shared?
 - Are dependencies flowing in the right direction (no circular dependencies)?
 - Is the abstraction level appropriate (not over-engineered, not too coupled)?
+- In Go, are interfaces small and defined at the point of use rather than preemptively on the producer side? Large "for mocking later" interfaces are usually architecture debt, not flexibility.
+- Are generics actually buying meaningful reuse, or would a concrete type/function be clearer? In Go especially, avoid generic abstractions that only save a tiny amount of duplication.
 - **Does this refactor reduce complexity or just relocate it?** Count the concepts a reader must hold to follow the change. If a "cleaner" version leaves that count unchanged, it isn't cleaner — prefer the restructuring that makes whole branches, modes, or layers disappear over one that re-centralizes the same logic. Prefer deleting an abstraction to polishing it.
 - **Is feature-specific logic leaking into a shared or general-purpose module?** Keep logic in its owning layer, reuse the existing canonical helper instead of a near-duplicate, and don't normalize architectural drift.
-- **Are type boundaries explicit?** Question gratuitous `any`/`unknown`/optional/casts and silent fallbacks that paper over an unclear invariant — making the boundary explicit often makes the surrounding control flow simpler.
+- **Are type boundaries explicit?** Question gratuitous `interface{}`/`any`/`unknown`/optional/casts and silent fallbacks that paper over an unclear invariant — making the boundary explicit often makes the surrounding control flow simpler.
 
 ### 4. Security
 
@@ -73,6 +81,7 @@ For detailed security guidance, see `security-and-hardening`. Does the change in
 - Are dependencies from trusted sources with no known vulnerabilities?
 - Is data from external sources (APIs, logs, user content, config files) treated as untrusted?
 - Are external data flows validated at system boundaries before use in logic or rendering?
+- In Go, quickly scan for gosec-style issues such as unsanitized input reaching `exec.Command` or weak crypto primitives; in other stacks, apply the equivalent command-injection and crypto scrutiny.
 
 ### 5. Performance
 
@@ -84,6 +93,7 @@ For detailed profiling and optimization, see `performance-optimization`. Does th
 - Any unnecessary re-renders in UI components?
 - Any missing pagination on list endpoints?
 - Any large objects created in hot paths?
+- For performance-sensitive Go changes, are claims backed by benchmarks or `pprof` rather than intuition? In other stacks, look for the equivalent profiler or measurement data.
 
 ## Structural Remedies
 
@@ -240,6 +250,8 @@ Don't leave dead code lying around — it confuses future readers and agents. Bu
 
 ```
 DEAD CODE IDENTIFIED:
+- parseLegacyTimestamp() in internal/timefmt/parse.go — replaced by ParseTimestamp()
+- oldWorkerLoop() in internal/jobs/worker.go — replaced by Worker.Run(ctx)
 - formatLegacyDate() in src/utils/date.ts — replaced by formatDate()
 - OldTaskCard component in src/components/ — replaced by TaskCard
 - LEGACY_API_URL constant in src/config.ts — no remaining references
@@ -282,9 +294,9 @@ Part of code review is dependency review:
 
 **Before adding any dependency:**
 1. Does the existing stack solve this? (Often it does.)
-2. How large is the dependency? (Check bundle impact.)
+2. How large is the dependency? (Check binary/module impact in Go, bundle impact in web apps.)
 3. Is it actively maintained? (Check last commit, open issues.)
-4. Does it have known vulnerabilities? (`npm audit`)
+4. Does it have known vulnerabilities? (`govulncheck`, `gosec`, `npm audit`, or the equivalent tool for your stack)
 5. What's the license? (Must be compatible with the project.)
 
 **Rule:** Prefer standard library and existing utilities over new dependencies. Every dependency is a liability.
@@ -294,10 +306,10 @@ Part of code review is dependency review:
 1. **Read the changelog, not just the version number.** Semver is a promise the maintainer may not have kept — a "patch" can carry a behavioral change. For a major bump, read the migration notes and find what breaks.
 2. **One dependency per change.** Upgrade and merge them individually (or in small related groups). When a bulk bump breaks the build, you've lost which package did it; a single-package change makes the cause obvious and the revert clean.
 3. **Let the tests decide.** The upgrade is verified by a green suite before *and* after, not by "it installed." If coverage around the dependency's behavior is thin, that gap is the real finding — add a test first.
-4. **Mind the transitive graph.** Most installed packages are ones nobody chose directly. Review the lockfile diff, not just `package.json`; a single direct bump can pull in dozens of indirect changes.
-5. **Keep the lockfile honest.** Commit it, review its diff, and never hand-edit it. The lockfile is the thing that actually pins what ships.
+4. **Mind the transitive graph.** Most installed packages are ones nobody chose directly. Review the dependency metadata diff, not just `go.mod` or `package.json`; a single direct bump can pull in dozens of indirect changes through `go.sum`, a lockfile, or both.
+5. **Keep dependency state honest.** Commit and review the generated dependency metadata (`go.sum`, lockfiles, etc.), and never hand-edit it. That's what actually pins what ships.
 
-For triaging `npm audit` findings and supply-chain risk (typosquatting, compromised maintainers), follow the `security-and-hardening` skill — this section covers the upgrade *workflow*, that one covers the security verdict.
+For triaging `govulncheck`/`npm audit` findings and supply-chain risk (typosquatting, compromised maintainers), follow the `security-and-hardening` skill — this section covers the upgrade *workflow*, that one covers the security verdict.
 
 ## The Review Checklist
 
@@ -311,17 +323,22 @@ For triaging `npm audit` findings and supply-chain risk (typosquatting, compromi
 - [ ] Change matches spec/task requirements
 - [ ] Edge cases handled
 - [ ] Error paths handled
+- [ ] Go errors are not ignored, are wrapped with context, and use `errors.Is`/`errors.As` where applicable
 - [ ] Tests cover the change adequately
+- [ ] `go vet`, `golangci-lint`, and `go test -race` are clean when applicable
 
 ### Readability
 - [ ] Names are clear and consistent
 - [ ] Logic is straightforward
 - [ ] No unnecessary complexity
+- [ ] `gofmt`/`goimports` (or the stack-equivalent formatter) is clean
 
 ### Architecture
 - [ ] Follows existing patterns
 - [ ] No unnecessary coupling or dependencies
 - [ ] Appropriate abstraction level
+- [ ] Go interfaces are small and defined at the point of use
+- [ ] Generics are necessary, not speculative
 - [ ] Refactors reduce complexity rather than relocate it
 - [ ] No feature logic in shared modules; file stays within a healthy size
 
@@ -331,11 +348,13 @@ For triaging `npm audit` findings and supply-chain risk (typosquatting, compromi
 - [ ] No injection vulnerabilities
 - [ ] Auth checks in place
 - [ ] External data sources treated as untrusted
+- [ ] No gosec-style command injection or weak-crypto issues
 
 ### Performance
 - [ ] No N+1 patterns
 - [ ] No unbounded operations
 - [ ] Pagination on list endpoints
+- [ ] Performance-sensitive claims are backed by benchmarks, `pprof`, or equivalent measurements
 
 ### Verification
 - [ ] Tests pass

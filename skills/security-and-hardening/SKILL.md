@@ -78,6 +78,26 @@ These are prevention patterns, not a ranking. For the 2021 ordering, see the qui
 
 ### Injection (SQL, NoSQL, OS Command)
 
+#### Go
+
+```go
+// BAD: SQL injection via string concatenation
+query := fmt.Sprintf("SELECT * FROM users WHERE id = '%s'", userID)
+
+// GOOD: Parameterized query with stdlib database/sql
+var user User
+err := db.QueryRow("SELECT * FROM users WHERE id = ?", userID).Scan(&user.ID, &user.Name)
+
+// GOOD: Parameterized with sqlc (type-safe SQL code generation)
+user, err := queries.GetUserByID(ctx, userID)
+
+// GOOD: Parameterized with GORM (ORM)
+var user User
+result := db.Where("id = ?", userID).First(&user)
+```
+
+#### TypeScript
+
 ```typescript
 // BAD: SQL injection via string concatenation
 const query = `SELECT * FROM users WHERE id = '${userId}'`;
@@ -90,6 +110,44 @@ const user = await prisma.user.findUnique({ where: { id: userId } });
 ```
 
 ### Broken Authentication
+
+#### Go
+
+```go
+// Password hashing with bcrypt
+import "golang.org/x/crypto/bcrypt"
+
+const saltRounds = 12
+hashedPassword, err := bcrypt.GenerateFromPassword([]byte(plaintext), saltRounds)
+if err != nil {
+  return fmt.Errorf("hash password: %w", err)
+}
+
+// Verify password
+err = bcrypt.CompareHashAndPassword(hashedPassword, []byte(plaintext))
+if err != nil {
+  return fmt.Errorf("invalid password")
+}
+
+// Session management with secure cookies
+import "net/http"
+
+http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+  // After successful auth:
+  cookie := &http.Cookie{
+    Name:     "session",
+    Value:    sessionToken,
+    HttpOnly: true,        // Not accessible via JavaScript
+    Secure:   true,        // HTTPS only
+    SameSite: http.SameSiteLaxMode,  // CSRF protection
+    MaxAge:   24 * 60 * 60, // 24 hours
+    Path:     "/",
+  }
+  http.SetCookie(w, cookie)
+})
+```
+
+#### TypeScript
 
 ```typescript
 // Password hashing
@@ -115,6 +173,26 @@ app.use(session({
 
 ### Cross-Site Scripting (XSS)
 
+#### Go
+
+```go
+// BAD: Rendering user input as HTML
+fmt.Fprintf(w, "<div>%s</div>", userInput)  // XSS vulnerability
+
+// GOOD: Use html/template with automatic escaping
+import "html/template"
+
+tmpl := template.Must(template.New("page").Parse("<div>{{ . }}</div>"))
+tmpl.Execute(w, userInput)  // Automatically HTML-escaped
+
+// GOOD: Explicitly escape strings
+import "html"
+safe := html.EscapeString(userInput)
+fmt.Fprintf(w, "<div>%s</div>", safe)
+```
+
+#### TypeScript
+
 ```typescript
 // BAD: Rendering user input as HTML
 element.innerHTML = userInput;
@@ -128,6 +206,40 @@ const clean = DOMPurify.sanitize(userInput);
 ```
 
 ### Broken Access Control
+
+#### Go
+
+```go
+// Always check authorization, not just authentication
+func handleUpdateTask(w http.ResponseWriter, r *http.Request) {
+  userID := r.Context().Value("userID").(string)
+  taskID := r.PathValue("id")
+  
+  task, err := taskService.FindByID(r.Context(), taskID)
+  if err != nil {
+    http.Error(w, "task not found", http.StatusNotFound)
+    return
+  }
+
+  // Check that the authenticated user owns this resource
+  if task.OwnerID != userID {
+    http.Error(w, "not authorized to modify this task", http.StatusForbidden)
+    return
+  }
+
+  // Proceed with update
+  updated, err := taskService.Update(r.Context(), taskID, r.Body)
+  if err != nil {
+    http.Error(w, "update failed", http.StatusInternalServerError)
+    return
+  }
+  
+  w.Header().Set("Content-Type", "application/json")
+  json.NewEncoder(w).Encode(updated)
+}
+```
+
+#### TypeScript
 
 ```typescript
 // Always check authorization, not just authentication
@@ -148,6 +260,48 @@ app.patch('/api/tasks/:id', authenticate, async (req, res) => {
 ```
 
 ### Security Misconfiguration
+
+#### Go
+
+```go
+// Security headers
+func securityHeaders(next http.Handler) http.Handler {
+  return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+    w.Header().Set("X-Content-Type-Options", "nosniff")
+    w.Header().Set("X-Frame-Options", "DENY")
+    w.Header().Set("X-XSS-Protection", "1; mode=block")
+    next.ServeHTTP(w, r)
+  })
+}
+
+// Content Security Policy
+func cspHeader(next http.Handler) http.Handler {
+  return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Security-Policy", 
+      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self'")
+    next.ServeHTTP(w, r)
+  })
+}
+
+// CORS — restrict to known origins
+func corsMiddleware(next http.Handler) http.Handler {
+  return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    origin := r.Header.Get("Origin")
+    allowedOrigins := strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",")
+    for _, allowed := range allowedOrigins {
+      if origin == allowed {
+        w.Header().Set("Access-Control-Allow-Origin", origin)
+        w.Header().Set("Access-Control-Allow-Credentials", "true")
+        break
+      }
+    }
+    next.ServeHTTP(w, r)
+  })
+}
+```
+
+#### TypeScript
 
 ```typescript
 // Security headers (use helmet for Express)
@@ -174,6 +328,39 @@ app.use(cors({
 
 ### Sensitive Data Exposure
 
+#### Go
+
+```go
+// Never return sensitive fields in API responses
+type PublicUser struct {
+  ID    string `json:"id"`
+  Name  string `json:"name"`
+  Email string `json:"email"`
+  // PasswordHash and ResetToken are NOT included
+}
+
+func sanitizeUser(user *User) *PublicUser {
+  return &PublicUser{
+    ID:    user.ID,
+    Name:  user.Name,
+    Email: user.Email,
+  }
+}
+
+// Use environment variables for secrets
+var (
+  stripeAPIKey = os.Getenv("STRIPE_API_KEY")
+)
+
+func init() {
+  if stripeAPIKey == "" {
+    log.Fatal("STRIPE_API_KEY not configured")
+  }
+}
+```
+
+#### TypeScript
+
 ```typescript
 // Never return sensitive fields in API responses
 function sanitizeUser(user: UserRecord): PublicUser {
@@ -189,6 +376,62 @@ if (!API_KEY) throw new Error('STRIPE_API_KEY not configured');
 ### Server-Side Request Forgery (SSRF)
 
 Any time the server fetches a URL the user influenced — webhooks, "import from URL", image proxies, link previews — an attacker can aim it at internal services (cloud metadata, `localhost`, private IPs).
+
+#### Go
+
+```go
+// BAD: fetch whatever the user gives you
+resp, _ := http.Get(req.Body.WebhookURL)
+
+// GOOD: allowlist scheme + host, reject if ANY resolved IP is private, forbid redirects
+import (
+  "net"
+  "net/http"
+  "net/url"
+  "strings"
+)
+
+var allowedHosts = map[string]bool{"hooks.example.com": true}
+
+func assertSafeURL(raw string) (*url.URL, error) {
+  u, err := url.Parse(raw)
+  if err != nil {
+    return nil, fmt.Errorf("invalid URL: %w", err)
+  }
+  
+  if u.Scheme != "https" {
+    return nil, fmt.Errorf("https only")
+  }
+  
+  if !allowedHosts[u.Hostname()] {
+    return nil, fmt.Errorf("host not allowed")
+  }
+  
+  // Resolve ALL records; a single private IP fails the check
+  ips, err := net.LookupIP(u.Hostname())
+  if err != nil {
+    return nil, fmt.Errorf("DNS lookup failed: %w", err)
+  }
+  
+  for _, ip := range ips {
+    if ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() {
+      return nil, fmt.Errorf("private/reserved IP: %s", ip)
+    }
+  }
+  
+  return u, nil
+}
+
+// Fetch with redirects forbidden
+client := &http.Client{
+  CheckRedirect: func(req *http.Request, via []*http.Request) error {
+    return http.ErrUseLastResponse  // Forbid redirects
+  },
+}
+resp, err := client.Get(url.String())
+```
+
+#### TypeScript
 
 ```typescript
 // BAD: fetch whatever the user gives you
@@ -215,13 +458,61 @@ async function assertSafeUrl(raw: string): Promise<URL> {
 await fetch(await assertSafeUrl(req.body.webhookUrl), { redirect: 'error' });
 ```
 
-The `range() !== 'unicast'` check covers loopback, link-local `169.254.169.254` (cloud metadata, the #1 SSRF target), private, and unique-local ranges across IPv4 and IPv6.
+The `ip.IsPrivate()` and related checks cover loopback, link-local, private ranges across IPv4 and IPv6.
 
-**Caveat — this still has a TOCTOU gap.** `fetch` resolves DNS again after the check, so an attacker using a short-TTL record can rebind to an internal IP between validation and connection. For high-risk surfaces, resolve once and connect to the pinned IP, or put a filtering agent in front (`request-filtering-agent` / `ssrf-req-filter`).
+**Caveat — this still has a TOCTOU gap.** `http.Get` resolves DNS again after the check, so an attacker using a short-TTL record can rebind to an internal IP between validation and connection. For high-risk surfaces, resolve once and connect to the pinned IP, or put a filtering agent in front.
 
 ## Input Validation Patterns
 
 ### Schema Validation at Boundaries
+
+#### Go
+
+```go
+type CreateTaskRequest struct {
+  Title       string    `json:"title" validate:"required,min=1,max=200"`
+  Description string    `json:"description" validate:"max=2000"`
+  Priority    string    `json:"priority" validate:"omitempty,oneof=low medium high"`
+  DueDate     time.Time `json:"dueDate" validate:"omitempty"`
+}
+
+// Using the validator package
+import "github.com/go-playground/validator/v10"
+
+func handleCreateTask(w http.ResponseWriter, r *http.Request) {
+  var req CreateTaskRequest
+  if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+    http.Error(w, "invalid JSON", http.StatusBadRequest)
+    return
+  }
+  
+  validate := validator.New()
+  if err := validate.Struct(req); err != nil {
+    w.WriteHeader(http.StatusUnprocessableEntity)
+    json.NewEncoder(w).Encode(map[string]interface{}{
+      "error": map[string]interface{}{
+        "code":    "VALIDATION_ERROR",
+        "message": "Invalid input",
+        "details": err.Error(),
+      },
+    })
+    return
+  }
+  
+  // req is now validated
+  task, err := taskService.Create(r.Context(), &req)
+  if err != nil {
+    http.Error(w, "create failed", http.StatusInternalServerError)
+    return
+  }
+  
+  w.Header().Set("Content-Type", "application/json")
+  w.WriteHeader(http.StatusCreated)
+  json.NewEncoder(w).Encode(task)
+}
+```
+
+#### TypeScript
 
 ```typescript
 import { z } from 'zod';
@@ -252,6 +543,57 @@ app.post('/api/tasks', async (req, res) => {
 ```
 
 ### File Upload Safety
+
+#### Go
+
+```go
+// Restrict file types and sizes
+const maxSize = 5 * 1024 * 1024  // 5MB
+
+var allowedTypes = map[string]bool{
+  "image/jpeg": true,
+  "image/png":  true,
+  "image/webp": true,
+}
+
+func validateUpload(r *http.Request) error {
+  // Parse the multipart form
+  if err := r.ParseMultipartForm(maxSize); err != nil {
+    return fmt.Errorf("invalid form: %w", err)
+  }
+  
+  file, handler, err := r.FormFile("file")
+  if err != nil {
+    return fmt.Errorf("missing file: %w", err)
+  }
+  defer file.Close()
+  
+  // Check file size
+  if handler.Size > maxSize {
+    return fmt.Errorf("file too large (max 5MB)")
+  }
+  
+  // Check MIME type from Content-Type header
+  if !allowedTypes[handler.Header.Get("Content-Type")] {
+    return fmt.Errorf("file type not allowed")
+  }
+  
+  // Don't trust the filename or extension — check magic bytes if critical
+  // (Read first 512 bytes to detect actual file type)
+  buffer := make([]byte, 512)
+  _, err = file.Read(buffer)
+  if err != nil && err != io.EOF {
+    return fmt.Errorf("read file: %w", err)
+  }
+  
+  // Use a library to detect actual MIME type from magic bytes
+  // (Or verify with a simple check: JPEG starts with FF D8 FF, PNG with 89 50 4E 47, etc.)
+  
+  return nil
+}
+```
+
+#### TypeScript
 
 ```typescript
 // Restrict file types and sizes
@@ -310,6 +652,72 @@ Audits only find known advisories; they do not catch a newly malicious or typosq
 - **Review new dependencies, lockfile diffs, and script-policy changes together** — ownership, maintenance, release age, provenance, transitive graph, and typosquats such as `cross-env` vs `crossenv` (OWASP **A06**, **LLM03**).
 
 ## Rate Limiting
+
+#### Go
+
+```go
+import (
+  "github.com/go-chi/chi/v5"
+  "github.com/go-chi/httprate"
+  "time"
+)
+
+func setupRateLimiting(router *chi.Mux) {
+  // General API rate limit: 100 requests per 15 minutes
+  router.Use(httprate.LimitByIP(100, 15*time.Minute))
+  
+  // Stricter limit for auth endpoints: 10 attempts per 15 minutes
+  router.Route("/api/auth", func(r chi.Router) {
+    r.Use(httprate.LimitByIP(10, 15*time.Minute))
+    r.Post("/login", handleLogin)
+    r.Post("/register", handleRegister)
+  })
+  
+  router.Route("/api", func(r chi.Router) {
+    // General endpoints with base rate limit
+    r.Get("/tasks", listTasks)
+    r.Post("/tasks", createTask)
+  })
+}
+
+// Alternative: custom rate limiting with a map
+import (
+  "sync"
+  "time"
+)
+
+type rateLimiter struct {
+  mu        sync.Mutex
+  attempts  map[string][]time.Time
+  maxAttempts int
+  window    time.Duration
+}
+
+func (rl *rateLimiter) isAllowed(ip string) bool {
+  rl.mu.Lock()
+  defer rl.mu.Unlock()
+  
+  now := time.Now()
+  windowStart := now.Add(-rl.window)
+  
+  // Clean old attempts
+  recent := []time.Time{}
+  for _, t := range rl.attempts[ip] {
+    if t.After(windowStart) {
+      recent = append(recent, t)
+    }
+  }
+  
+  if len(recent) >= rl.maxAttempts {
+    return false  // Rate limit exceeded
+  }
+  
+  rl.attempts[ip] = append(recent, now)
+  return true
+}
+```
+
+#### TypeScript
 
 ```typescript
 import rateLimit from 'express-rate-limit';

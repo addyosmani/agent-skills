@@ -73,22 +73,28 @@ Don't deprecate without a working alternative. The replacement must:
 - Cover all critical use cases of the old system
 - Have documentation and migration guides
 - Be proven in production (not just "theoretically better")
+- Preserve a credible transition path for existing consumers (for example: Go adapters, deprecated doc comments, or build-tagged compatibility files during the overlap period)
 
 ### Step 2: Announce and Document
 
 ```markdown
-## Deprecation Notice: OldService
+## Deprecation Notice: OldClient
 
 **Status:** Deprecated as of 2025-03-01
-**Replacement:** NewService (see migration guide below)
+**Replacement:** NewClient (see migration guide below)
 **Removal date:** Advisory — no hard deadline yet
-**Reason:** OldService requires manual scaling and lacks observability.
-            NewService handles both automatically.
+**Reason:** OldClient depends on an unmaintained module version and lacks
+            context-aware APIs. NewClient fixes both.
 
 ### Migration Guide
-1. Replace `import { client } from 'old-service'` with `import { client } from 'new-service'`
-2. Update configuration (see examples below)
-3. Run the migration verification script: `npx migrate-check`
+1. Mark old exported APIs with Go doc comments in the standard format:
+   `// Deprecated: use NewClient instead.`
+2. Replace `import "github.com/org/oldclient"` with
+   `import "github.com/org/newclient/v2"` if the replacement is a v2+ module.
+3. Update `go.mod` and `go.sum`, then run `go mod tidy`.
+4. Use `go mod graph` to find downstream consumers still pinned to the old module.
+5. If the old dependency is also a security concern, run `govulncheck ./...`.
+6. Update configuration (see examples below).
 ```
 
 ### Step 3: Migrate Incrementally
@@ -98,7 +104,10 @@ Migrate consumers one at a time, not all at once. For each consumer:
 ```
 1. Identify all touchpoints with the deprecated system
 2. Update to use the replacement
+   - In Go, update import paths when a v2+ module now requires the `/v2` suffix in both the `module` line and all imports.
+   - During gradual cutovers, use `//go:build` tags or separate compatibility files so old and new implementations can coexist without tangled conditionals.
 3. Verify behavior matches (tests, integration checks)
+   - Run `go mod tidy` to normalize module metadata and `go mod graph` to understand transitive migration impact.
 4. Remove references to the old system
 5. Confirm no regressions
 ```
@@ -135,6 +144,42 @@ Phase 5: Remove old system
 
 Create an adapter that translates calls from the old interface to the new implementation. Consumers keep using the old interface while you migrate the backend.
 
+#### Go
+
+```go
+// Deprecated: use NewTaskService directly.
+type LegacyTaskService struct {
+  newService *NewTaskService
+}
+
+// Old method signature, delegates to new implementation.
+func (l *LegacyTaskService) GetTask(ctx context.Context, id int) (*OldTask, error) {
+  task, err := l.newService.FindByID(ctx, strconv.Itoa(id))
+  if err != nil {
+    return nil, err
+  }
+  return l.toOldFormat(task), nil
+}
+
+func (l *LegacyTaskService) toOldFormat(task *NewTask) *OldTask {
+  return &OldTask{ID: task.ID, Title: task.Title}
+}
+```
+
+Compatibility files can isolate the transition:
+
+```go
+//go:build legacytask
+
+package task
+
+func NewTaskAPI() TaskService {
+  return &LegacyTaskService{newService: &NewTaskService{}}
+}
+```
+
+#### TypeScript
+
 ```typescript
 // Adapter: old interface, new implementation
 class LegacyTaskService implements OldTaskAPI {
@@ -150,7 +195,28 @@ class LegacyTaskService implements OldTaskAPI {
 
 ### Feature Flag Migration
 
-Use feature flags to switch consumers from old to new system one at a time:
+Use feature flags to switch consumers from old to new system one at a time. In Go, this is often paired with separate files or build tags so compatibility code stays explicit and easy to delete.
+
+#### Go
+
+```go
+func getTaskService(ctx context.Context, userID string) TaskService {
+  if featureFlags.IsEnabled(ctx, "new-task-service", map[string]string{"userID": userID}) {
+    return NewTaskService{}
+  }
+  return &LegacyTaskService{}
+}
+
+// Or using interface assignment
+var service TaskService
+if featureFlags.IsEnabled(ctx, "new-task-service", map[string]string{"userID": userID}) {
+  service = &NewTaskService{}
+} else {
+  service = &LegacyTaskService{}
+}
+```
+
+#### TypeScript
 
 ```typescript
 function getTaskService(userId: string): TaskService {
@@ -201,6 +267,8 @@ Zombie code is code that nobody owns but everybody depends on. It's not actively
 
 **Response:** Either assign an owner and maintain it properly, or deprecate it with a concrete migration plan. Zombie code cannot stay in limbo — it either gets investment or removal.
 
+For Go dependencies specifically, treat stale modules as both migration and supply-chain risks: inspect the dependency tree with `go mod graph`, clean up unused requirements with `go mod tidy`, and run `govulncheck ./...` before deciding whether "deprecated but still working" is acceptable.
+
 ## Common Rationalizations
 
 | Rationalization | Reality |
@@ -214,6 +282,7 @@ Zombie code is code that nobody owns but everybody depends on. It's not actively
 | "Just rename the column, it's one line" | During the rollout, old and new code run together — one will query a column that no longer exists. Expand/contract, never rename in place. |
 | "I'll add the column and drop the old one in the same migration" | That couples a safe add to a destructive drop. Drops get their own deploy, after no code references the old shape. |
 | "We'll write the rollback if we need it" | A migration with no down path is a deploy you can't reverse. Write and run the `down` before merging. |
+| "We can release v2 without changing the Go module path" | In Go modules, v2+ requires the module path and imports to include `/v2`, `/v3`, etc. Skipping that breaks consumers and tooling expectations. |
 
 ## Red Flags
 
@@ -222,6 +291,9 @@ Zombie code is code that nobody owns but everybody depends on. It's not actively
 - "Soft" deprecation that's been advisory for years with no progress
 - Zombie code with no owner and active consumers
 - New features added to a deprecated system (invest in the replacement instead)
+- Go APIs that are "deprecated" in prose only, without `// Deprecated: ...` doc comments that tooling can detect
+- A v2+ Go module released without the required `/v2` major-version suffix in `module` and import paths
+- Breaking-change transition logic hidden behind ad hoc conditionals instead of explicit `//go:build` tags or separate compatibility files
 - Deprecation without measuring current usage
 - Removing code without verifying zero active consumers
 - A schema change and the code that depends on it shipped in the same deploy
@@ -234,7 +306,10 @@ After completing a deprecation:
 
 - [ ] Replacement is production-proven and covers all critical use cases
 - [ ] Migration guide exists with concrete steps and examples
+- [ ] Deprecated Go APIs are marked with `// Deprecated: use NewFunc instead.` so IDEs and static analysis can surface the migration
+- [ ] If the replacement is a Go v2+ module, `go.mod`, `go.sum`, module path, and import paths all reflect the required major-version suffix
 - [ ] All active consumers have been migrated (verified by metrics/logs)
+- [ ] Dependency impact has been checked (`go mod tidy`, `go mod graph`, and `govulncheck ./...` when relevant)
 - [ ] Old code, tests, documentation, and configuration are fully removed
 - [ ] No references to the deprecated system remain in the codebase
 - [ ] Deprecation notices are removed (they served their purpose)

@@ -122,6 +122,25 @@ Common bottlenecks by category:
 
 #### N+1 Queries (Backend)
 
+```go
+// BAD: N+1 — one query per task for the owner
+tasks, _ := db.GetAllTasks(ctx)
+for i, task := range tasks {
+  owner, _ := db.GetUserByID(ctx, task.OwnerID)
+  tasks[i].Owner = owner  // N+1 queries
+}
+
+// GOOD: Single query with join
+tasks, _ := db.GetAllTasksWithOwners(ctx)
+// SQL: SELECT t.*, u.* FROM tasks t JOIN users u ON t.owner_id = u.id
+
+// Or use GORM with Preload
+var tasks []Task
+db.Preload("Owner").Find(&tasks)
+```
+
+#### TypeScript Equivalent
+
 ```typescript
 // BAD: N+1 — one query per task for the owner
 const tasks = await db.tasks.findMany();
@@ -136,6 +155,21 @@ const tasks = await db.tasks.findMany({
 ```
 
 #### Unbounded Data Fetching
+
+```go
+// BAD: Fetching all records
+tasks, _ := db.GetAllTasks(ctx)  // Memory explosion on large datasets
+
+// GOOD: Paginated with limits
+const pageSize = 20
+offset := (page - 1) * pageSize
+tasks, _ := db.GetTasksPaginated(ctx, offset, pageSize)
+
+// In SQL:
+// SELECT * FROM tasks ORDER BY created_at DESC LIMIT 20 OFFSET 0
+```
+
+#### TypeScript Equivalent
 
 ```typescript
 // BAD: Fetching all records
@@ -263,6 +297,53 @@ function App() {
 ```
 
 #### Missing Caching (Backend)
+
+```go
+// Cache frequently-read, rarely-changed data
+const cacheTTL = 5 * time.Minute
+
+var (
+  cachedConfig *AppConfig
+  configMutex  sync.RWMutex
+  configExpiry time.Time
+)
+
+func GetAppConfig(ctx context.Context) (*AppConfig, error) {
+  configMutex.RLock()
+  if cachedConfig != nil && time.Now().Before(configExpiry) {
+    defer configMutex.RUnlock()
+    return cachedConfig, nil
+  }
+  configMutex.RUnlock()
+
+  // Cache miss — fetch and update
+  config, err := db.GetConfig(ctx)
+  if err != nil {
+    return nil, err
+  }
+
+  configMutex.Lock()
+  cachedConfig = config
+  configExpiry = time.Now().Add(cacheTTL)
+  configMutex.Unlock()
+
+  return config, nil
+}
+
+// HTTP caching headers for static assets
+http.HandleFunc("/static/", func(w http.ResponseWriter, r *http.Request) {
+  w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")  // 1 year
+  // Serve file
+})
+
+// Cache-Control for API responses
+func handleGetTasks(w http.ResponseWriter, r *http.Request) {
+  w.Header().Set("Cache-Control", "public, max-age=300")  // 5 minutes
+  // Response body
+}
+```
+
+#### TypeScript Equivalent
 
 ```typescript
 // Cache frequently-read, rarely-changed data
