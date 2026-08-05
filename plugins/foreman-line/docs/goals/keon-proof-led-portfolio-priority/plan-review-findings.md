@@ -34,3 +34,32 @@ criterion, and Gate 2 parcel scope on 2026-07-29.
 
 Gate 1 is closed. P0 is ready for shaping and dispatch under Gate 2. Gate 3
 remains withheld.
+
+---
+
+## KPP-001-A Revision 2 review — 2026-08-05
+
+**Reviewer:** Fresh, detached frontier session with no coordinator context beyond
+the goal charter, KPP-001-A amendment, KPP source, and coordinator canon.
+**Initial verdict:** FIX BEFORE AFFECTED DISPATCH.
+**Coordinator disposition:** All findings accepted. They altered the amended
+dependency graph, exit mechanics, and dispatch authority; Gate 1 reopened only
+for the corrected Revision 3 amendment. Clint Morgan ratified Revision 3 on
+2026-08-05. No parcel is dispatchable except as its explicit Gate 2 matrix
+allows.
+
+| ID | Severity | Finding | Disposition | Minimal remediation |
+|---|---|---|---|---|
+| KPP-R1 | Critical | The 2026-10-15 date trigger can fire a review but does not itself meet A1's valid-negative threshold. | fix | Require the KEO-206 review **and** the A1 threshold, zero-prepaid, and no-outstanding-call conditions before negative closure. |
+| KPP-R2 | Critical | The manual paid path has no bounded owner/artifact contract. | fix | Add P0M, a docs-only manual paid-path contract freeze for letter, invoice, approved intake/data handling, and delivery checklist. |
+| KPP-R3 | High | Successful paid delivery lacks explicit human milestones for signature, funds, intake, and delivery/economics recording. | fix | Add non-Gate-2 H-SIGN, H-FUNDS, H-INTAKE, and H-DELIVERY milestones. |
+| KPP-R4 | High | The KEO-202 input boundary omits the required KEO-54 disposition. | fix | Require the dated decision to name KEO-54, KEO-198/ex-156, and KEO-199/ex-160 dispositions before preview shaping. |
+| KPP-R5 | High | The old charter's broad standing authorization conflicts with narrowed KPP authority. | fix | Replace conflict-precedence language with one explicit Gate 2 authority matrix. |
+| KPP-R6 | Medium | The preview timebox has no defined start, accounting, or anti-reset rule. | fix | Start at owner-accepted dispatch; record consumed business days; prohibit reset by pause or reassignment; stop and return at day ten. |
+
+## Gate impact
+
+- D2-A through D7-A: corrected and ratified in Revision 3.
+- Dependency graph and exit criterion: corrected and ratified in Revision 3.
+- Gate 2: limited to the Revision 3 matrix's stated shaping/proposal authority.
+- Gate 3 and all external actions: remain withheld.
