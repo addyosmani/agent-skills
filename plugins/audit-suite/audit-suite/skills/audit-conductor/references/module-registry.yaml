@@ -1,0 +1,49 @@
+# module-registry.yaml — suite module index. Identity + routing ONLY.
+#
+# Per-module metadata (version, status, tier, applies_when, why, changelog) lives
+# in each module's frontmatter — read it there; NEVER copy it here. That rule is
+# what keeps this file drift-proof: nothing in it can disagree with a module.
+#
+# Paths are relative to the common skills/ parent (the directory holding
+# audit-conductor/, security-audit/, compliance-audit/) — identical in the repo
+# layout and the installed-plugin layout.
+#
+# Adding a module = new file in the owning skill's modules/ dir + one row here.
+# Disabling a module = flip `status: disabled` in ITS frontmatter; no edit here.
+
+registry_version: 1
+suite: audit-suite
+
+modules:
+  # security-audit — technical lenses
+  - { id: sec-owasp-asvs,           path: security-audit/modules/owasp-asvs.md }
+  - { id: sec-cis-controls,         path: security-audit/modules/cis-controls.md }
+  - { id: sec-slsa,                 path: security-audit/modules/slsa-supply-chain.md }
+  - { id: sec-zero-trust,           path: security-audit/modules/zero-trust.md }
+  - { id: sec-ai-security,          path: security-audit/modules/ai-security.md }
+  - { id: sec-ir-continuity,        path: security-audit/modules/incident-continuity.md }
+
+  # compliance-audit — control & attestation mappings
+  - { id: comp-nist-core,           path: compliance-audit/modules/nist-core.md }
+  - { id: comp-soc2,                path: compliance-audit/modules/soc2.md }
+  - { id: comp-iso-27001-family,    path: compliance-audit/modules/iso-27001-family.md }
+  - { id: comp-fedramp,             path: compliance-audit/modules/fedramp.md }
+  - { id: comp-cmmc,                path: compliance-audit/modules/cmmc-800-171.md }
+  - { id: comp-pci-dss,             path: compliance-audit/modules/pci-dss.md }
+  - { id: comp-hipaa-hitrust,       path: compliance-audit/modules/hipaa-hitrust.md }
+  - { id: comp-privacy,             path: compliance-audit/modules/privacy.md }
+  - { id: comp-ai-governance,       path: compliance-audit/modules/ai-governance.md }
+  - { id: comp-nis2,                path: compliance-audit/modules/nis2.md }
+  - { id: comp-dora,                path: compliance-audit/modules/dora.md }
+  - { id: comp-cloud-supply-chain,  path: compliance-audit/modules/cloud-supply-chain.md }
+  - { id: comp-cobit,               path: compliance-audit/modules/cobit-governance.md }
+
+external_lenses:
+  # Skills outside this plugin, dispatched by skill name. Conditional and
+  # availability-checked — if the skill isn't installed, follow `if_missing`.
+  - id: lens-tenant-isolation
+    skill: review-tenant-isolation
+    applies_when: [multi-tenant system, .NET/KaseyaOne codebase]
+    runs_between: [security-audit, compliance-audit]
+    feeds: [comp-soc2, comp-iso-27001-family, comp-privacy]
+    if_missing: note as a coverage gap in the consolidated report; do not fail the run

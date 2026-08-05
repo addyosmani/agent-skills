@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "rework_first"
+  ],
+  "properties": {
+    "rework_first": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "\\S"
+      },
+      "minItems": 1
+    }
+  }
+}

@@ -1,0 +1,44 @@
+# Example: .NET 10 Web API Migration
+# From: Any legacy .NET, Python, Java, etc.
+# To: Modern C# with minimal APIs
+
+source:
+  type: path
+  location: "D:/Repos/legacy-api"  # UPDATE THIS
+  exclude_patterns:
+    - "**/tests/**"
+    - "**/docs/**"
+    - "**/*.Tests/**"
+
+target:
+  stack: "C# Web API .NET 10"
+  output_path: "D:/Repos/modern-api"  # UPDATE THIS
+  repo_init: true
+
+options:
+  drift_tolerance: 0.05
+  
+  reconciliation:
+    enabled: true
+    min_samples_per_contract: 10
+    coverage_targets:
+      happy_path: 0.40
+      error_cases: 0.30
+      edge_cases: 0.20
+      security_flows: 0.10
+  
+  forced_optimizations:
+    - "use minimal APIs for simple CRUD endpoints"
+    - "use traditional controllers for complex flows"
+    - "replace Newtonsoft.Json with System.Text.Json"
+    - "use records for DTOs"
+    - "implement IAsyncEnumerable for streaming responses"
+    - "add health checks endpoint at /health"
+    - "add OpenAPI/Swagger documentation"
+    - "use built-in DI container"
+    - "implement global exception handling middleware"
+    - "use DateTimeOffset instead of DateTime"
+
+  # exclusions:
+  #   - module: "legacy-module"
+  #     reason: "not migrating"

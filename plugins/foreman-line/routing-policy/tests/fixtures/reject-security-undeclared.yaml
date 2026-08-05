@@ -1,0 +1,38 @@
+# Rejecting fixture (AC5c derived guard): a class named "security-review"
+# (matches /security|audit/i) does not declare `security_flavored: true`.
+# Declared + derived, never "somehow" — an author who forgets the flag on a
+# new security-named class is caught structurally, not left to convention.
+classes:
+  boilerplate:
+    allowlist: [economy]
+    ceiling_usd: 0.50
+  standard-feature:
+    allowlist: [standard]
+    ceiling_usd: 5.00
+  architecture/risk:
+    allowlist: [frontier]
+    ceiling_usd: 25.00
+  implementation/standard:
+    allowlist: [standard]
+    ceiling_usd: 5.00
+  security-review:
+    allowlist: [frontier]
+    ceiling_usd: 25.00
+
+data_classification:
+  public:
+    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+  internal:
+    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+  restricted:
+    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+
+roles:
+  coordinator: frontier
+  verifier: frontier
+  builder: per-class
+
+model_tiers:
+  frontier: [claude-opus-4-8]
+  standard: [claude-sonnet-5]
+  economy: [claude-haiku-4-5]

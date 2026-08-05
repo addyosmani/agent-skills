@@ -1,0 +1,32 @@
+{
+  "name": "@foreman-line/routing-policy",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Routing policy schema, v0 policy document, and validator for the Foreman Line (W0-P3): model/agent-count selection policy-as-code.",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "bin": {
+    "routing-policy": "./src/cli.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "generate": "tsx src/generate.ts",
+    "test": "tsx --test tests/*.test.ts",
+    "lint": "biome check ."
+  },
+  "dependencies": {
+    "ajv": "8.20.0",
+    "yaml": "2.9.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.3",
+    "@types/node": "26.1.1",
+    "tsx": "4.23.1",
+    "typescript": "7.0.2"
+  }
+}

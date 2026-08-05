@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "propertyNames": {
+    "pattern": "^(\\*|[^*]+/\\*)$"
+  },
+  "patternProperties": {
+    "^(\\*|[^*]+/\\*)$": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "\\S"
+      },
+      "minItems": 1
+    }
+  },
+  "additionalProperties": false
+}

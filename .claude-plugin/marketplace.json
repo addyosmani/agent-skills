@@ -1,22 +1,17 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
-  "name": "addy-agent-skills",
-  "description": "Production-grade engineering skills for AI coding agents — covering the full software development lifecycle from spec to ship.",
+  "name": "m0r6an-agent-skills",
+  "description": "Skills that pay the bills",
   "owner": {
-    "name": "Addy Osmani",
-    "url": "https://github.com/addyosmani"
+    "name": "Clint Morgan",
+    "url": "https://github.com/m0r6aN/agent-skills"
   },
-  "plugins": [
+  "plugins": [   
     {
-      "name": "agent-skills",
-      "source": {
-        "source": "github",
-        "repo": "addyosmani/agent-skills"
-      },
-      "description": "Production-grade engineering skills covering every phase of software development: spec, plan, build, verify, review, and ship.",
-      "homepage": "https://github.com/addyosmani/agent-skills",
-      "license": "MIT",
-      "keywords": ["skills", "agents", "engineering", "spec", "tdd", "review", "ship"]
+      "name": "foreman-line",
+      "source": "./plugins/foreman-line",
+      "description": "Foreman Line is a contract-first workflow for shaping, dispatching, verifying, integrating, and closing multi-parcel development work with explicit human gates.",
+      "keywords": ["parcels", "multi-agent", "automation", "spec", "audit", "review", "ship"]  
     }
   ]
 }

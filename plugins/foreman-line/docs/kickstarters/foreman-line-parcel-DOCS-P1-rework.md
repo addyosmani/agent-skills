@@ -1,0 +1,12 @@
+You are the builder for the DOCS-P1 rework. Your workspace is the worktree at C:\Repos\docs-p1 on branch feat/docs-p1-relocation - verify with git branch --show-current. You never work in the main working tree, and you never touch main. The spec (amended at triage, commit f773b09) is at docs/specs/done/DOCS-P1-project-docs-relocation.md; the findings and triage table are at plugins/foreman-line/docs/transcripts/adversarial-review-DOCS-P1-findings.md. Read both in full.
+
+Step 0 - before editing anything: run node -v in PowerShell (>=24.11.1; PowerShell only, never Git Bash - lesson #10), then restate the THREE rework items in your own words (they are reference-update items 8, 9, 10 in the amended spec - not the ACs), enumerate the exact files and line regions you will touch, confirm nothing else is in scope, and flag anything ambiguous. Then STOP and wait for confirmation.
+
+The three items, dispositioned from adversarial review (fix / nothing else):
+1. SF1 - docs/demo/PDD-DEMO-PLAN.md and docs/demo/foreman-line-W0-demo-notes.md: update every stale moved-target path to its post-move location. Path strings only; the surrounding prose is untouched.
+2. SF2 - plugins/foreman-line/skills/parcel-driven-development/SKILL.md: restate legacy parcel-location guidance per the SPEC-CONVENTION §2 monorepo rule as `<project-root>/docs/specs/`. Edits are confined to the location guidance.
+3. SF3 - docs/SPEC-CONVENTION.md lines 176 AND 208: the glob docs/specs/** becomes **/docs/specs/** in both. Nothing else in that file changes (the §2 amendment from the main build is already in place and stays byte-identical).
+
+Tripwires: a completion claim that does not show the per-item diff for all three items will be rejected without inspection. A diff touching any file outside the three items is a Stop-and-Report, not a judgment call. Receipts remain immutable - if a stale path you find in item 1's files turns out to be inside quoted historical material, flag it, don't fix it. After the edits, re-run the AC5 case-insensitive sweep and re-state the disposition for every remaining hit (the demo files must move from exempt-by-rule to updated; the receipt and by-rule exemptions ratified at triage stand), and re-run the spec-linter suite to show its counts are unchanged by your diff (52/53 with the one pre-existing failure is the expected state - lesson #7's corollary: your claim must show the counts, not assert them).
+
+You do not commit to main, you do not merge, and you do not decide the work is done - the coordinator does.

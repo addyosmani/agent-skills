@@ -1,0 +1,27 @@
+{
+  "name": "@foreman-line/projection",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Stage A->B seam of the Foreman Line (W1-P2): fills a shipped W1-P1 ShapingResult's empty epics with a two-level Epic/Story projection, re-validated against the frozen contracts schema plus four semantic guards, and writes a new sibling artifact for W1-P3.",
+  "engines": {
+    "node": ">=24.11.1"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "lint": "biome check ."
+  },
+  "dependencies": {
+    "ajv": "8.20.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.3",
+    "@types/node": "26.1.1",
+    "tsx": "4.23.1",
+    "typescript": "7.0.2"
+  }
+}

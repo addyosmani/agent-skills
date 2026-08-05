@@ -1,0 +1,35 @@
+# Rejecting fixture (Nit 1): one structural schema violation (top-level
+# `roles` is missing entirely - a required property) AND one semantic
+# violation (a security_flavored class with a non-frontier allowlist tier)
+# in the same document, proving the validator surfaces violations from BOTH
+# layers together in a single pass rather than short-circuiting on the first.
+classes:
+  boilerplate:
+    allowlist: [economy]
+    ceiling_usd: 0.50
+  standard-feature:
+    allowlist: [standard]
+    ceiling_usd: 5.00
+  architecture/risk:
+    allowlist: [frontier]
+    ceiling_usd: 25.00
+  implementation/standard:
+    allowlist: [standard]
+    ceiling_usd: 5.00
+  security-audit:
+    allowlist: [standard]
+    ceiling_usd: 25.00
+    security_flavored: true
+
+data_classification:
+  public:
+    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+  internal:
+    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+  restricted:
+    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+
+model_tiers:
+  frontier: [claude-opus-4-8]
+  standard: [claude-sonnet-5]
+  economy: [claude-haiku-4-5]

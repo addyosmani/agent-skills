@@ -1,0 +1,30 @@
+{
+  "name": "@foreman-line/approval",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Human approval flow CLI for the Foreman Line (W1-P3): the interactive human gate that binds approval to an RFC 8785 canonical hash of the approved parcel spec-set and mints the receipt chain's genesis / Stage-A receipt.",
+  "engines": {
+    "node": ">=24.11.1"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "bin": {
+    "approval": "./src/cli.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "lint": "biome check ."
+  },
+  "dependencies": {
+    "ajv": "8.20.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.3",
+    "@types/node": "26.1.1",
+    "tsx": "4.23.1",
+    "typescript": "7.0.2"
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kaseya.com/forge/modernize/wire_contract.schema.json",
+  "title": "Wire Contract",
+  "description": "One recorded wire-level interaction for SDK/service parity reconciliation — the request/response a client actually emits. Captured from BOTH legacy and target and diffed under drift rules. This is what closes the contract-vs-reality gap; recording only the target proves nothing.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_id", "sample_id", "transport", "redaction"],
+  "anyOf": [
+    { "required": ["rest"] },
+    { "required": ["ws"] },
+    { "required": ["libcall"] }
+  ],
+  "properties": {
+    "contract_id": {
+      "type": "string",
+      "pattern": "^cid-[A-Za-z0-9._-]+$",
+      "description": "Behavioral contract this sample belongs to."
+    },
+    "sample_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique sample id within the contract, e.g. sample-01."
+    },
+    "origin": {
+      "type": "string",
+      "enum": ["legacy", "target"],
+      "description": "Which system produced this sample. Reconciliation pairs legacy<->target by (contract_id, sample_id)."
+    },
+    "classification": {
+      "type": "string",
+      "enum": ["happy_path", "error_cases", "edge_cases", "security_flows"],
+      "description": "Stratification bucket for coverage targets."
+    },
+    "transport": {
+      "type": "string",
+      "enum": ["http", "https", "websocket", "grpc", "libcall"]
+    },
+    "rest": { "$ref": "#/$defs/rest_interaction" },
+    "ws": { "$ref": "#/$defs/ws_interaction" },
+    "libcall": { "$ref": "#/$defs/lib_interaction" },
+    "client_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "timeout_ms": { "type": "integer", "minimum": 0 },
+        "retries": { "type": "integer", "minimum": 0 },
+        "backoff": { "type": "string", "enum": ["none", "fixed", "linear", "exp", "exp_jitter"] }
+      },
+      "description": "Resilience policy representation. Parity here matters as much as payload parity."
+    },
+    "redaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["applied"],
+      "properties": {
+        "applied": { "type": "boolean" },
+        "profile": { "type": "string", "description": "e.g. pii-basic, pii-strict." },
+        "fields": { "type": "array", "items": { "type": "string" } }
+      },
+      "description": "Redaction provenance. Authorization values and secrets must NEVER be stored raw — record presence only."
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 of the canonicalized interaction, for the receipts pack."
+    }
+  },
+  "$defs": {
+    "auth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["present"],
+      "properties": {
+        "type": { "type": "string", "description": "e.g. bearer, basic, apikey, none." },
+        "present": { "type": "boolean" }
+      },
+      "description": "Auth SHAPE only — never the credential itself."
+    },
+    "rest_interaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "path"],
+      "properties": {
+        "method": { "type": "string", "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"] },
+        "path": { "type": "string", "minLength": 1 },
+        "query": { "type": "object" },
+        "headers": { "type": "object", "description": "Redacted. No Authorization value." },
+        "body": { "description": "Canonicalized request body (any JSON)." },
+        "auth": { "$ref": "#/$defs/auth" },
+        "response": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": { "type": "integer" },
+            "headers": { "type": "object" },
+            "body": {},
+            "error_code": { "type": "string" }
+          }
+        }
+      }
+    },
+    "ws_interaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["handshake", "frames"],
+      "properties": {
+        "handshake": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["path"],
+          "properties": {
+            "path": { "type": "string" },
+            "headers": { "type": "object" }
+          }
+        },
+        "frames": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type"],
+            "properties": {
+              "direction": { "type": "string", "enum": ["send", "recv"] },
+              "type": { "type": "string", "description": "e.g. text, binary, ping, pong, close." },
+              "op": { "type": "string", "description": "Message type / opcode if applicable." },
+              "payload_shape": { "description": "Canonical shape of the frame payload." }
+            }
+          }
+        }
+      }
+    },
+    "lib_interaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["op"],
+      "properties": {
+        "op": { "type": "string", "description": "Library call / method name." },
+        "args_shape": { "description": "Canonical shape of arguments." },
+        "return_shape": { "description": "Canonical shape of the return value." },
+        "throws": { "type": "array", "items": { "type": "string" }, "description": "Exception types this call may raise." }
+      }
+    }
+  }
+}

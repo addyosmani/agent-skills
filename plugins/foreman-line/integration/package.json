@@ -1,0 +1,25 @@
+{
+  "name": "@foreman-line/integration",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Stage E (Integration) capability for the Foreman Line (W4-P1): PR-automation planning, a branch-protection posture verifier over the GitHub effective-rules API, and the Stage-E ReceiptDocument emitter that inherits correlationId/workflowId from the prior Stage-D receipt. All git/gh/effective-rules effects are injected seams; the shipped test suite is fully hermetic.",
+  "engines": {
+    "node": ">=24.11.1"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "lint": "biome check .",
+    "report": "tsx src/report.ts"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.3",
+    "@types/node": "26.1.1",
+    "tsx": "4.23.1",
+    "typescript": "7.0.2"
+  }
+}

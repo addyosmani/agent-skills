@@ -1,0 +1,45 @@
+# Example: Go 1.23 Migration
+# From: Any legacy codebase
+# To: Modern Go with Gin and GORM
+
+source:
+  type: url
+  location: "https://github.com/org/legacy-service"  # UPDATE THIS
+  branch: main
+  exclude_patterns:
+    - "**/test/**"
+    - "**/vendor/**"
+    - "**/mocks/**"
+
+target:
+  stack: "Go 1.23 + Gin + GORM + Wire"
+  output_path: "/repos/service-go"  # UPDATE THIS
+  repo_init: true
+
+options:
+  drift_tolerance: 0.05
+  
+  reconciliation:
+    enabled: true
+    min_samples_per_contract: 12
+    coverage_targets:
+      happy_path: 0.35
+      error_cases: 0.35
+      edge_cases: 0.20
+      security_flows: 0.10
+  
+  forced_optimizations:
+    - "use standard Go project layout"
+    - "implement graceful shutdown"
+    - "use context.Context for cancellation"
+    - "use structured logging with slog"
+    - "implement middleware for auth/logging/recovery"
+    - "use Wire for dependency injection"
+    - "add health and readiness endpoints"
+    - "use go:embed for static assets"
+    - "implement database migrations with golang-migrate"
+    - "use errgroup for concurrent operations"
+
+  # exclusions:
+  #   - module: "deprecated-feature"
+  #     reason: "removing in new version"

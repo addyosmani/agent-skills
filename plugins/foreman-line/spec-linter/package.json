@@ -1,0 +1,32 @@
+{
+  "name": "@foreman-line/spec-linter",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Spec frontmatter schema (v0.2), type, and validator for the Foreman Line (W0-P2): machine-enforces risk:, surfaces:, routing_class:, and permission_profile: fields in SPEC-CONVENTION §4.",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "bin": {
+    "spec-linter": "./src/cli.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "generate": "tsx src/generate.ts",
+    "test": "tsx --test tests/*.test.ts",
+    "lint": "biome check ."
+  },
+  "dependencies": {
+    "ajv": "8.20.0",
+    "yaml": "2.9.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.3",
+    "@types/node": "26.1.1",
+    "tsx": "4.23.1",
+    "typescript": "7.0.2"
+  }
+}

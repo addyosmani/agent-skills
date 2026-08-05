@@ -1,0 +1,35 @@
+{
+  "name": "foreman-line",
+  "version": "0.1.0",
+  "description": "Contract-first development coordination from goal shaping through verified closure.",
+  "author": {
+    "name": "Clint Morgan"
+  },
+  "homepage": "https://github.com/KaseyaOne/kaseya-one-productivity-tools/tree/main/plugins/foreman-line",
+  "repository": "https://github.com/KaseyaOne/kaseya-one-productivity-tools",
+  "license": "MIT",
+  "keywords": [
+    "parcels",
+    "multi-agent",
+    "coordination",
+    "verification",
+    "governance"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Foreman Line",
+    "shortDescription": "Proof-gated development coordination",
+    "longDescription": "Coordinate multi-parcel development from goal shaping through external verification and human-owned release gates.",
+    "developerName": "Keon Systems",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Shape this goal into governed development parcels.",
+      "Resume the active Foreman Line goal.",
+      "Review this parcel against its acceptance contract."
+    ]
+  }
+}

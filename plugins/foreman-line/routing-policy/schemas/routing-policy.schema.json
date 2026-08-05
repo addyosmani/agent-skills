@@ -1,0 +1,155 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "classes",
+    "data_classification",
+    "roles",
+    "model_tiers"
+  ],
+  "properties": {
+    "classes": {
+      "type": "object",
+      "required": [
+        "boilerplate",
+        "standard-feature",
+        "architecture/risk",
+        "implementation/standard"
+      ],
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "allowlist",
+          "ceiling_usd"
+        ],
+        "properties": {
+          "allowlist": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "ceiling_usd": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "security_flavored": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "data_classification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "public",
+        "internal",
+        "restricted"
+      ],
+      "properties": {
+        "public": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "eligible_models"
+          ],
+          "properties": {
+            "eligible_models": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            }
+          }
+        },
+        "internal": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "eligible_models"
+          ],
+          "properties": {
+            "eligible_models": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            }
+          }
+        },
+        "restricted": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "eligible_models"
+          ],
+          "properties": {
+            "eligible_models": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            }
+          }
+        }
+      }
+    },
+    "roles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coordinator",
+        "verifier",
+        "builder"
+      ],
+      "properties": {
+        "coordinator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "verifier": {
+          "type": "string",
+          "minLength": 1
+        },
+        "builder": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "model_tiers": {
+      "type": "object",
+      "required": [
+        "frontier"
+      ],
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        },
+        "minItems": 1
+      },
+      "properties": {
+        "frontier": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        }
+      }
+    }
+  }
+}

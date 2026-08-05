@@ -1,0 +1,17 @@
+{
+  "parcelSpecRefs": [
+    "plugins/foreman-line/docs/specs/active/SCAF-P2-shared-test-scaffold-extraction.md"
+  ],
+  "epics": [
+    {
+      "key": "epic-scaffold-migration",
+      "title": "Foreman Line - Shared Test-Scaffold Extraction (SCAF-P2)",
+      "stories": [
+        {
+          "key": "SCAF-P2-shared-test-scaffold-extraction",
+          "title": "Foreman Line - shared test-scaffold extraction (SCAF-P2)"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kaseya.com/forge/modernize/contract.schema.json",
+  "title": "Behavioral Contract",
+  "description": "Contract-first behavioral contract for the modernizer skill. Encodes ONE provable behavior, backed by source evidence and linked to approved baseline spec requirements. Approved contracts are the only implementation truth (SKILL.md rule #1).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_id",
+    "version",
+    "module",
+    "name",
+    "linked_requirements",
+    "given",
+    "when",
+    "then",
+    "determinism",
+    "evidence",
+    "confidence"
+  ],
+  "properties": {
+    "contract_id": {
+      "type": "string",
+      "pattern": "^cid-[A-Za-z0-9._-]+$",
+      "description": "Stable unique contract identifier, e.g. cid-packs-create-001."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version of this contract. Bump on any behavioral change."
+    },
+    "module": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Target module / namespace this contract belongs to."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable behavior name."
+    },
+    "linked_requirements": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^([A-Z][A-Z0-9]*\\.)*(F|BR|R|CANON)-[0-9]+$"
+      },
+      "description": "Baseline spec IDs from APP_SPECIFICATION.md that this contract realizes. At least one required -- no orphan contracts asserting behavior that traces to nothing. Hierarchical/namespaced form per the locked §9 ID strategy (e.g. BACKEND.BILLING.F-003); bare F-003 still valid. Mirrors manifest.schema.json -- the two patterns move together."
+    },
+    "given": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "inputs": {
+          "description": "Input model / values that drive the behavior. Any JSON type; use null/{} for no-input triggers."
+        },
+        "preconditions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "State that must hold before the trigger fires."
+        }
+      }
+    },
+    "when": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The execution trigger — the call/event/operation under test, e.g. CreatePack(input)."
+    },
+    "then": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "status": { "description": "Expected status / result code or success signal." },
+        "outputs": { "description": "Expected output model / shape." },
+        "invariants": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Conditions that must hold after execution."
+        },
+        "side_effects": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/side_effect" },
+          "description": "Observable side effects, each with an explicit assertion (SKILL.md: side effects with explicit assertions)."
+        },
+        "errors": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/error_behavior" },
+          "description": "Error / exception behavior."
+        }
+      }
+    },
+    "determinism": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sources_of_nondeterminism", "strategy"],
+      "properties": {
+        "sources_of_nondeterminism": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "e.g. time, random, uuid, network, ordering. Empty array = fully deterministic."
+        },
+        "strategy": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "How nondeterminism is controlled for replay, e.g. freeze_time, seed_rng, inject_clock."
+        }
+      }
+    },
+    "wire_contract_ref": {
+      "type": "string",
+      "description": "Optional path to a wire_contract artifact when wire-level parity applies, e.g. receipts/wire/cid-.../sample-01.json."
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/evidence_pointer" },
+      "description": "Source evidence backing this behavior. At least one required — SKILL.md rule #4: attach evidence to every behavioral claim."
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Extraction confidence 0..1. Below the configured floor blocks the human validation gate."
+    },
+    "tombstone_ref": {
+      "type": "string",
+      "description": "Optional TOMBSTONES.md anchor when this contract encodes an APPROVED divergence from legacy behavior."
+    }
+  },
+  "$defs": {
+    "side_effect": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["type", "assertion"],
+      "properties": {
+        "type": { "type": "string", "description": "e.g. http_call, db_write, message_publish, file_write, cache_set." },
+        "target": { "type": "string" },
+        "operation": { "type": "string" },
+        "where": { "type": "object" },
+        "assertion": { "type": "string", "description": "Explicit, checkable assertion about this side effect." }
+      }
+    },
+    "error_behavior": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["condition", "expected"],
+      "properties": {
+        "condition": { "type": "string", "description": "What triggers the error path." },
+        "expected": { "type": "string", "description": "Expected handling — exception type, error code, message family, retry behavior." },
+        "code": { "type": "string" }
+      }
+    },
+    "evidence_pointer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pointer", "kind"],
+      "properties": {
+        "pointer": {
+          "type": "string",
+          "minLength": 3,
+          "description": "Evidence locator. Prefer path:line for code/test (e.g. src/packs/service.py:142 or :142-160); artifact path for trace/schema/log."
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["code", "test", "trace", "log", "schema", "doc", "config"],
+          "description": "Evidence class."
+        },
+        "note": { "type": "string" }
+      }
+    }
+  }
+}

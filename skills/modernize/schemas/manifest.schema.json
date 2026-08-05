@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kaseya.com/forge/modernize/manifest.schema.json",
+  "title": "Contract Manifest",
+  "description": "Schema for contracts/MANIFEST.yaml (and, sans approval, contracts/DRAFT_MANIFEST.yaml): the approved set of behavioral contracts plus the forgery-resistant approval block. Distinct from receipts/manifest.json (which carries the parity `claim`). Ties #7 (approval.manifest_hash transitively binds contract bodies via per-entry content_hash) and #5 (contracts_covered enumerates these entries) together. approval.manifest_hash is computed over the canonical JSON of THIS document with the `approval` block removed; see references/approval-verification.md. A validator must have approval.schema.json registered to resolve the $ref.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["manifest_version", "contracts"],
+  "properties": {
+    "manifest_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Manifest format version."
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Optional link to the choreography run (runs.run_id / task_store.db) this manifest belongs to."
+    },
+    "source_ref": {
+      "type": "string",
+      "description": "Optional source identifier (path/url/repo) the contracts were derived from."
+    },
+    "target_stack": {
+      "type": "string",
+      "description": "Optional free-form target description."
+    },
+    "contracts": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "The approved contracts. Each entry binds a contract file by content hash so the manifest hash transitively covers contract bodies (no post-approval contract edits).",
+      "items": { "$ref": "#/$defs/contract_entry" }
+    },
+    "tombstones": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "TOMBSTONES.md anchors for approved divergences/waivers recorded in this manifest."
+    },
+    "approval": {
+      "$ref": "approval.schema.json",
+      "description": "Forgery-resistant approval block. OPTIONAL in the schema so DRAFT_MANIFEST.yaml validates; the Phase II->III/IV gate REQUIRES it present and live-verified (SKILL.md Approval Gate, rule #3)."
+    }
+  },
+  "$defs": {
+    "contract_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_id", "version", "path", "content_hash"],
+      "properties": {
+        "contract_id": {
+          "type": "string",
+          "pattern": "^cid-[A-Za-z0-9._-]+$",
+          "description": "Matches contract.schema.json contract_id."
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Path to the contract file, e.g. contracts/cid-packs-create-001.yaml."
+        },
+        "content_hash": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "description": "SHA-256 over the canonical JSON of the contract file. Recomputed at the gate; any drift => manifest_hash mismatch => gate refuses (#7) and the contract counts as uncovered (#5)."
+        },
+        "linked_requirements": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^([A-Z][A-Z0-9]*\\.)*(F|BR|R|CANON)-[0-9]+$"
+          },
+          "description": "Optional echo of the contract's baseline IDs for at-a-glance traceability. Hierarchical/namespaced form per the locked §9 ID strategy (e.g. BACKEND.BILLING.F-003); bare F-003 still valid. Mirrors contract.schema.json -- the two patterns move together."
+        }
+      }
+    }
+  }
+}

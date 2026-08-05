@@ -1,0 +1,17 @@
+# AC3c: 'ui*' is not a valid glob-pattern key — must be exactly '*' or
+# '<star-free-prefix>/*'.
+builder:
+  '*': [test-coverage]
+  'ui*': [kds-figma]
+
+verifier_harness:
+  '*': [test-coverage.check]
+
+adversarial_reviewer:
+  '*': [code-review]
+
+coordinator:
+  rework_first: [build-fix-loop]
+
+integration:
+  jira: [jira-workflow]

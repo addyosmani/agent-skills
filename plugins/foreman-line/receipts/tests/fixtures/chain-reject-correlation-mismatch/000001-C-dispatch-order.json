@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1",
+  "kind": "stage",
+  "stage": "C",
+  "claimRef": null,
+  "correlation": {
+    "correlationId": "99999999-9999-9999-9999-999999999999",
+    "sessionId": "22222222-2222-2222-2222-222222222222",
+    "workflowId": "88888888-8888-8888-8888-888888888888",
+    "runId": "44444444-4444-4444-4444-444444444444"
+  },
+  "sequence": 1,
+  "prevHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "timestamp": "2026-07-15T00:00:00Z",
+  "subjectKind": "DispatchOrder",
+  "subject": {
+    "ok": true
+  },
+  "signature": null,
+  "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+}

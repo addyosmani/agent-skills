@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "coordinator",
+    "verifier",
+    "builder"
+  ],
+  "properties": {
+    "coordinator": {
+      "type": "string",
+      "minLength": 1
+    },
+    "verifier": {
+      "type": "string",
+      "minLength": 1
+    },
+    "builder": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

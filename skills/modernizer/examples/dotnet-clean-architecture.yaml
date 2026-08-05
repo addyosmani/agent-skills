@@ -1,0 +1,59 @@
+# Example: Clean Architecture .NET 10
+# From: Any legacy codebase  
+# To: Enterprise-grade C# with CQRS and DDD patterns
+
+source:
+  type: path
+  location: "D:/Repos/monolith-api"  # UPDATE THIS
+  exclude_patterns:
+    - "**/tests/**"
+    - "**/LegacyCode/**"
+
+target:
+  stack: "C# .NET 10 + Clean Architecture + MediatR + CQRS + EF Core"
+  output_path: "D:/Repos/clean-api"  # UPDATE THIS
+  repo_init: true
+
+options:
+  drift_tolerance: 0.05
+  
+  reconciliation:
+    enabled: true
+    min_samples_per_contract: 12
+    coverage_targets:
+      happy_path: 0.35
+      error_cases: 0.35
+      edge_cases: 0.20
+      security_flows: 0.10
+  
+  forced_optimizations:
+    # Project Structure
+    - "separate into Domain, Application, Infrastructure, API layers"
+    - "Domain layer has zero external dependencies"
+    - "Application layer contains MediatR handlers"
+    
+    # CQRS
+    - "separate Command and Query handlers"
+    - "use FluentValidation for command validation"
+    - "implement pipeline behaviors for cross-cutting concerns"
+    
+    # Domain-Driven Design
+    - "use strongly-typed IDs"
+    - "implement domain events"
+    - "use value objects for complex types"
+    - "aggregate roots control invariants"
+    
+    # Infrastructure
+    - "use EF Core with code-first migrations"
+    - "implement repository pattern with specifications"
+    - "use Polly for resilience policies"
+    
+    # API
+    - "use minimal APIs with endpoint grouping"
+    - "implement global exception handling"
+    - "add OpenAPI documentation with examples"
+    - "implement API versioning"
+
+  # exclusions:
+  #   - module: "reports"
+  #     reason: "moving to dedicated reporting service"

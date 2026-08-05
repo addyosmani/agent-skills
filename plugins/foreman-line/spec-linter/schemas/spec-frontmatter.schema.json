@@ -1,0 +1,100 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ticket",
+    "title",
+    "status",
+    "owner",
+    "created",
+    "updated",
+    "risk",
+    "surfaces",
+    "routing_class"
+  ],
+  "properties": {
+    "ticket": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "done",
+        "superseded"
+      ]
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created": {
+      "type": "string",
+      "minLength": 1
+    },
+    "updated": {
+      "type": "string",
+      "minLength": 1
+    },
+    "supersedes": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "superseded_by": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "risk": {
+      "type": "string",
+      "enum": [
+        "low",
+        "standard",
+        "elevated",
+        "critical"
+      ]
+    },
+    "surfaces": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "routing_class": {
+      "type": "string",
+      "enum": [
+        "boilerplate",
+        "standard-feature",
+        "architecture/risk",
+        "implementation/standard"
+      ]
+    },
+    "permission_profile": {
+      "type": "string",
+      "pattern": "\\S",
+      "enum": [
+        "coordinator",
+        "builder-standard",
+        "builder-architecture",
+        "reviewer-readonly",
+        "shaping-agent",
+        "builder-deps"
+      ]
+    },
+    "data_classification": {
+      "type": "string",
+      "pattern": "\\S"
+    }
+  }
+}

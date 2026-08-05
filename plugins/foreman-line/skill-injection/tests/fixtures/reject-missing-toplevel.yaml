@@ -1,0 +1,14 @@
+# AC3a: verifier_harness is entirely omitted — must be rejected, not
+# silently treated as "no rules for this role."
+builder:
+  '*': [test-coverage]
+  'ui/*': [kds-figma]
+
+adversarial_reviewer:
+  '*': [code-review]
+
+coordinator:
+  rework_first: [build-fix-loop]
+
+integration:
+  jira: [jira-workflow]

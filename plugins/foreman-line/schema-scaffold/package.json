@@ -1,0 +1,27 @@
+{
+  "name": "@foreman-line/schema-scaffold",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared schema-serialization scaffolding for the Foreman Line (SCAF-P1): the SchemaFile type and generate(files, outDir) machinery extracted from six independently-authored copies.",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "lint": "biome check ."
+  },
+  "dependencies": {
+    "ajv": "8.20.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.3",
+    "@types/node": "26.1.1",
+    "tsx": "4.23.1",
+    "typescript": "7.0.2"
+  }
+}

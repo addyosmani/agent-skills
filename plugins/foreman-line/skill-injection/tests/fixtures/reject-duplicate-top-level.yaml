@@ -1,0 +1,19 @@
+# AC4e: a duplicate top-level key ('builder' appears twice) must be a
+# parse-time error, never a silently-collapsed last-wins document.
+builder:
+  '*': [test-coverage]
+
+verifier_harness:
+  '*': [test-coverage.check]
+
+adversarial_reviewer:
+  '*': [code-review]
+
+coordinator:
+  rework_first: [build-fix-loop]
+
+integration:
+  jira: [jira-workflow]
+
+builder:
+  '*': [some-other-skill]
