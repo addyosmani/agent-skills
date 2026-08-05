@@ -7,6 +7,7 @@
 **Discovery:** [discovery.md](./discovery.md)
 **Plan review:** [plan-review-findings.md](./plan-review-findings.md)
 **Ratified website GTM amendment:** [website-gtm-closeout-amendment.md](./website-gtm-closeout-amendment.md)
+**Ratified KPP-001-A amendment:** [kpp-001-a-amendment-draft.md](./kpp-001-a-amendment-draft.md)
 
 ## Ratification record
 
@@ -44,6 +45,13 @@ a parcel-specific Gate 2 authorization for P0V. It adds only the verification
 prerequisite `P0V -> P0 Gate 3`; it does not change D1-D9, the commercial
 dependency graph, the exit criterion, Gate 3 withholding, or any external
 authority.
+
+On 2026-08-05, Clint Morgan fully ratified the KPP-001-A Revision 2 amendment
+to D2-D7, the affected dependency graph, the narrowed Gate 2 scope, and the
+exit criterion. The linked amendment controls wherever it conflicts with this
+charter. In particular, its manual first-revenue path replaces the
+infrastructure-first path; BrowseAhead engineering is frozen; and no prior
+standing Gate 2 authority carries forward for affected P1-P7 or BA1-BA2 work.
 
 ## Objective
 
