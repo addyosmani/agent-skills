@@ -166,7 +166,10 @@ tail -F /tmp/audio/queue/queue.log | tee -a /dev/ttyS2
 - `scripts/install.sh` — installs ffmpeg + yt-dlp on rock1, creates `/tmp/audio/queue/`
 - `scripts/queue_player.sh` — the daemon (foreground + spawned prequeue worker)
 - `scripts/queue.sh` — CLI helper (`add` / `list` / `clear` / `status` / `skip` / `stop`)
-- `examples/playlist-classic-rock.md` — sample classic-rock URLs to seed a new queue
+- `examples/playlist-classic-rock.md` — sample classic-rock URLs to seed a new queue (Don't Stop Me Now ID was wrong, fixed 2026-08-05 — `HgzGwKwLmgQ` → `HgzGwKwLmgM`)
+- `examples/playlist-upbeat-verified.md` — 6 upbeat YouTube IDs verified via yt-dlp 2026-08-05 (Don't Stop Me Now / Walking on Sunshine / Happy / September / I Gotta Feeling / Uptown Funk). New default for "queue something upbeat" requests.
+- `examples/playlist-jacob-collier.md` — 6 verified Jacob Collier IDs (Don't You Worry 'Bout a Thing / Hideaway / Little Blue / In The Real Early Morning / Dancing Queen / Fix You). Curator-selected to span studio solo + orchestral live + high-profile collabs.
+- `examples/playlist-lofi-verified.md` — 6 verified lo-fi / chillhop IDs (Nujabes - Feather / Idealism - Both Of Us / Wyl & Wun Two - Kübla / Tom Misch - It Runs Through Me / Idealism - Amaranthine / Ensemble ☁️ Dreamy Lofi Hiphop). Curator's pick for chill study/work background; Lofi Girl 24/7 livestream IDs explicitly excluded (live stream recordings not downloadable).
 
 All scripts are pure bash + standard GNU userland (no Python deps on the device beyond the parent's `play2.py` + `set_mixer.py`).
 
