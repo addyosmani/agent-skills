@@ -187,7 +187,7 @@ function resolveFixturePath(root, rel) {
   const resolvedRoot = path.resolve(root);
   const resolvedPath = path.resolve(resolvedRoot, rel);
   const back = path.relative(resolvedRoot, resolvedPath);
-  if (back === '' || back === '..' || back.startsWith(`..${path.sep}`) || path.isAbsolute(back)) {
+  if (back === '..' || back.startsWith(`..${path.sep}`) || path.isAbsolute(back)) {
     throw new Error(`fixture path escapes workspace: ${rel}`);
   }
   return resolvedPath;
