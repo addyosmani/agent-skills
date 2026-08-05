@@ -1,0 +1,44 @@
+# Example: Rust + Axum Migration
+# From: Any legacy codebase
+# To: High-performance Rust service
+
+source:
+  type: repo
+  location: "git@github.com:org/legacy-api.git"  # UPDATE THIS
+  branch: main
+  exclude_patterns:
+    - "**/tests/**"
+    - "**/benches/**"
+
+target:
+  stack: "Rust 1.75 + Axum + SQLx + Tokio"
+  output_path: "/repos/api-rust"  # UPDATE THIS
+  repo_init: true
+
+options:
+  drift_tolerance: 0.03  # Rust = precision, tighter tolerance
+  
+  reconciliation:
+    enabled: true
+    min_samples_per_contract: 15
+    coverage_targets:
+      happy_path: 0.30
+      error_cases: 0.40  # Higher — Rust error handling is explicit
+      edge_cases: 0.20
+      security_flows: 0.10
+  
+  forced_optimizations:
+    - "use Axum extractors for request parsing"
+    - "implement tower middleware stack"
+    - "use SQLx compile-time checked queries"
+    - "use thiserror for error types"
+    - "implement tracing with tracing crate"
+    - "use serde for serialization"
+    - "implement graceful shutdown with tokio"
+    - "use Arc<T> for shared state"
+    - "add OpenAPI via utoipa"
+    - "implement connection pooling with deadpool"
+
+  # exclusions:
+  #   - module: "python-scripts"
+  #     reason: "utility scripts, not part of core service"

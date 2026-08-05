@@ -37,6 +37,8 @@ pnpm-debug.log*
 !.env.sample
 *.pem
 *.key
+/.credentials.json
+/settings.json
 
 # =========================
 # Dependencies / package managers
@@ -128,11 +130,17 @@ skills/accomplish-workspace/
 # Task/session runtime artifacts
 tasks/session-*/
 tasks/*/state.json
-tasks/*/1.json
+tasks/*/[0-9]*.json
+tasks/*/.lock
 
 # Archives / packaged artifacts
 # =========================
 *.zip
+*.skill
 
 # Backups
 backups/
+
+# ai-council: machine-local seat invocations (auth quirks, project ids) — template ships instead
+plugins/foreman-line/skills/ai-council/references/seats.md
+

@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kaseya.com/forge/modernize/claim.schema.json",
+  "title": "Parity Claim",
+  "description": "The honest, evidence-gated parity claim a run is allowed to make. Emitted into receipts/manifest.json and mirrored as the DEFENSIBILITY.md headline. A run may NEVER assert a tier above what reconciliation-against-captured-legacy-samples earned. See references/defensibility-and-claims.md and SKILL.md rule #9.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tier", "parity_statement", "reconciliation", "evidence"],
+  "properties": {
+    "tier": {
+      "type": "string",
+      "enum": ["unverified", "partial", "verified", "failed"],
+      "description": "unverified = recon did not run OR zero legacy samples OR zero paired comparisons (NO parity may be claimed). partial = ran against legacy, coverage/contract gaps remain (bounded claim). verified = ran against legacy, all targets met or tombstone-waived (equivalence within drift tolerance, bounded by coverage). failed = recon ran and a strict field drifted beyond tolerance or a hard stop tripped -> block release (rule #6)."
+    },
+    "parity_statement": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable claim, scoped to the tier. At 'unverified' it MUST NOT assert parity (e.g. 'Target behavior recorded; NOT verified against legacy.')."
+    },
+    "drift_tolerance_ref": {
+      "type": "string",
+      "description": "Pointer to the drift rules under which equivalence is claimed (config drift block / scoring profile)."
+    },
+    "reconciliation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ran", "legacy_sample_count", "target_sample_count", "paired_comparison_count"],
+      "properties": {
+        "ran": { "type": "boolean", "description": "Did the reconciliation harness actually execute? false -> tier is unverified." },
+        "legacy_sample_count": { "type": "integer", "minimum": 0, "description": "Captured LEGACY behavior samples. 0 -> unverified (recording only the target proves nothing)." },
+        "target_sample_count": { "type": "integer", "minimum": 0, "description": "Captured target behavior samples." },
+        "paired_comparison_count": { "type": "integer", "minimum": 0, "description": "legacy<->target comparisons actually performed (needs both sides for the same stimulus). 0 -> unverified." },
+        "strict_drift_within_tolerance": { "type": "boolean", "description": "Were all strict fields within drift tolerance? false -> tier is failed (rule #6)." }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contracts_total", "contracts_covered", "coverage"],
+      "properties": {
+        "contracts_total": { "type": "integer", "minimum": 0 },
+        "contracts_covered": { "type": "integer", "minimum": 0, "description": "Contracts with >= min_samples_per_contract AND >= 1 paired comparison." },
+        "coverage": {
+          "type": "array",
+          "description": "Per-stratum achieved vs target coverage.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["stratum", "target", "achieved", "met"],
+            "properties": {
+              "stratum": { "type": "string", "enum": ["happy_path", "error_cases", "edge_cases", "security_flows"] },
+              "target": { "type": "number", "minimum": 0 },
+              "achieved": { "type": "number", "minimum": 0 },
+              "met": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "description": "Named items dragging the tier below 'verified'. A gap with no waived_by_tombstone forces 'partial'; a waived gap stays in the list (recorded as accepted, never laundered out).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["what", "kind"],
+        "properties": {
+          "what": { "type": "string", "description": "e.g. 'security_flows coverage 0.01 < 0.05' or 'cid-packs-delete-003 has 0 paired comparisons'." },
+          "kind": { "type": "string", "enum": ["coverage", "uncovered_contract", "no_legacy_samples", "recon_skipped"] },
+          "waived_by_tombstone": { "type": "string", "description": "TOMBSTONES.md anchor if this gap was explicitly accepted; absent = unwaived (forces 'partial')." }
+        }
+      }
+    }
+  }
+}

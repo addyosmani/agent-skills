@@ -1,0 +1,85 @@
+source:
+  type: repo
+  location: "<PY_SDK_GIT>"
+  branch: main
+  include_patterns: ["**/*"]
+  exclude_patterns:
+    - "**/__pycache__/**"
+    - "**/.venv/**"
+    - "**/.git/**"
+    - "**/dist/**"
+    - "**/build/**"
+    - "**/*.lock"
+    - "**/coverage/**"
+
+target:
+  stack: "C# .NET 10 SDK (REST + WebSocket client)"
+  output_path: "D:/Repos/sample-sdk-csharp"
+  repo_init: true
+  solution_name: "Sample.Sdk"
+
+options:
+  mode: full_rewrite
+
+  contract_sources:
+    # For client SDKs hitting a core service, traces become the BEST truth source.
+    prefer: [traces, tests, schemas, logs, docs]
+    trace_capture:
+      enabled: true
+      duration_seconds: 900
+      transport: http        # includes websocket handshake + frames captured separately
+      redaction_profile: pii-strict
+
+  drift:
+    tolerance: 0.02
+    scoring: weighted
+    strict_fields:
+      - "rest.method"
+      - "rest.path"
+      - "rest.query"
+      - "rest.headers.x-tenant-id"
+      - "rest.headers.authorization.present"
+      - "rest.body"                  # canonicalized JSON
+      - "ws.handshake.path"
+      - "ws.frames[*].type"
+      - "ws.frames[*].op"            # if you have opcodes / message types
+      - "ws.frames[*].payload_shape"
+      - "error.code"
+    ignore_fields:
+      - "timestamps.*"
+      - "traceId"
+      - "requestId"
+      - "rest.headers.date"
+      - "rest.headers.server"
+      - "ws.frames[*].nonce"
+      - "ws.frames[*].sequence"      # ignore if server-generated
+    float_epsilon: 1e-6
+    ordering: list                   # WS frames are ordered
+
+  reconciliation:
+    enabled: true
+    min_samples_per_contract: 25
+    coverage_targets:
+      happy_path: 0.45
+      error_cases: 0.30
+      edge_cases: 0.20
+      security_flows: 0.05
+    classification_rules:
+      happy_path: "successful REST responses and successful WS flows"
+      error_cases: "non-2xx REST or WS error frames"
+      edge_cases: "empty payloads, max sizes, unicode, float precision, retry edges"
+      security_flows: "bad token, tenant mismatch, unauthorized tool calls"
+
+  data_handling:
+    encrypt_at_rest: true
+    redact:
+      - pattern: "(?i)authorization:.*"
+      - jsonpath: "$..token"
+      - jsonpath: "$..secret"
+      - jsonpath: "$..apiKey"
+
+  stop_conditions:
+    min_contracts: 15
+    max_low_confidence_ratio: 0.15
+    strict_drift_abort: true
+    max_retry_per_task: 2

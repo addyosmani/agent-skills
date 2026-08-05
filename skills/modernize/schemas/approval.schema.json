@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kaseya.com/forge/modernize/approval.schema.json",
+  "title": "Manifest Approval Block",
+  "description": "Forgery-resistant human-approval evidence for the Phase II->III/IV gate. Lives as the `approval` key inside contracts/MANIFEST.yaml. The gate NEVER trusts this block as a self-asserted fact: every field is a pointer to an externally verifiable signature, and the gate re-verifies mechanically on every transition. See references/approval-verification.md and SKILL.md rule #3. Deliberately has NO `verified`/`approved` boolean -- such a field would be agent-forgeable and load-bearing, which is exactly what this design forbids.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["approver", "approved_at", "manifest_hash", "method", "anchor"],
+  "properties": {
+    "approver": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human approver identity (informational/audit). Trust derives from the signature, not this string."
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp the approval was issued (informational; the signed git object carries the authoritative time)."
+    },
+    "manifest_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "description": "SHA-256 over the canonical JSON of the manifest with the `approval` block removed (see references/approval-verification.md). This is the exact value the approver signed; it transitively binds contract bodies via per-contract content hashes recorded in the manifest."
+    },
+    "method": {
+      "type": "string",
+      "enum": ["git-signed-tag", "git-signed-commit", "detached-signature"],
+      "description": "Verification mechanism. git-signed-tag is canonical. detached-signature (GPG/minisign/ssh over manifest_hash) is the non-git fallback. An unsigned / agent-authorable approval is NOT a valid method."
+    },
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ref", "object", "signing_key_fingerprint"],
+      "properties": {
+        "ref": {
+          "type": "string",
+          "minLength": 1,
+          "description": "git tag name or commit-ish for the signed object, e.g. modernize/approve/<run_id>/<short_hash>; or the detached-signature artifact path."
+        },
+        "object": {
+          "type": "string",
+          "minLength": 7,
+          "description": "Immutable object id the ref resolved to at approval time (tag/commit SHA). Recorded so later drift in a mutable ref is detectable."
+        },
+        "signing_key_fingerprint": {
+          "type": "string",
+          "minLength": 8,
+          "description": "Fingerprint of the key that produced the signature. MUST be on the configured approver allowlist (allowed-signers). e.g. SHA256:... for SSH, or a GPG long key id."
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "description": "Optional free-text approval notes (conditions, scope caveats)."
+    }
+  }
+}

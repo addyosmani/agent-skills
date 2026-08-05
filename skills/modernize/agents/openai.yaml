@@ -1,0 +1,4 @@
+interface:
+  display_name: "Contract-First Modernizer"
+  short_description: "Modernize legacy systems with proof and receipts"
+  default_prompt: "Use $modernizer to modernize this legacy repository with contract-first extraction, HITL validation, and reconciliation evidence."

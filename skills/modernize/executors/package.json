@@ -1,0 +1,33 @@
+{
+  "name": "@modernize/executors",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Runtime executors for the modernize skill: choreography node-tree store, watcher/coverage, governance, approval gate, claim tier. Target-language-agnostic by construction.",
+  "engines": { "node": ">=22.5" },
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test --disable-warning=ExperimentalWarning --import tsx test/task-store.test.ts test/spine.test.ts test/approval.test.ts test/claim-tier.test.ts",
+    "test:built": "npm run build && node --test --disable-warning=ExperimentalWarning dist/test"
+  },
+  "dependencies": {
+    "ulid": "^2.3.0"
+  },
+  "optionalDependencies": {
+    "ioredis": "^5.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

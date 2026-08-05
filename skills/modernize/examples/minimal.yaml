@@ -1,0 +1,18 @@
+# Minimal config — the simplest valid modernizer run.
+# Point it at a repo, name a target stack, say where output goes. That's it.
+# Everything else (drift scoring, sampling mix, optimizations) uses sane defaults.
+# For the knobs, see dotnet-clean-architecture.yaml or the SDK examples.
+
+source:
+  type: path
+  location: "D:/Repos/legacy-app"        # UPDATE THIS
+
+target:
+  stack: "C# Web API .NET 10"            # free-form; Claude interprets idiomatically
+  output_path: "D:/Repos/legacy-app-v2"  # UPDATE THIS
+
+options:
+  # Reconciliation stays ON. The whole point of this skill is provable parity —
+  # turning it off ships the branding without the proof. Don't.
+  reconciliation:
+    enabled: true
