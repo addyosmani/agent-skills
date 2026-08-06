@@ -203,3 +203,20 @@ This skill — **per-cgroup VRAM quota, SMC hard cutoff, OP-TEE CNTPCT** — sit
 For DRM GPU quota secure time, the immutability primitive applies as follows: this skill contributes to immutability + trust chain at the GPU boundary; the SMC-mediated quota is enforced from secure world. yubiOS's immutability stack composes dm-verity on /usr (per `dm-verity-and-integrity`), composefs signed catalog (per `composefs-kernel-floors`), sysext overlays (per `0pointer-mastery`), and IMA appraisal (per `dm-verity-and-integrity`); this skill is one contributor in the load-bearing invariant "/usr is immutable at every boot".
 
 Concrete implications for DRM GPU quota secure time: any change should be reviewed for impact on immutability coverage; gaps are tracked in the cycle-5 run log.
+
+
+---
+
+## Cycle 5 RSI primitive-closure (2026-08-06)
+
+The hyperspherical-harmonic-curve corpus audit identified this skill as having a `cryptographic identity` coverage gap in the 10-primitive yubiOS framework. **cryptographic identity** was missing across 23/70 skills pre-cycle-5; closing one corpus-wide gap here contributes to the cycle-5 RSI delta measured in `refs/cycle5-results-2026-08-06.md`.
+
+**Relevance:** This skill relies on cryptographic identity (FIDO2 / PIV / YubiKey / ssh-key / hmac-secret / passkey). Specifically it covers: cryptographic identity, FIDO2, PIV.
+
+**Keywords introduced in this skill (cycle-5 RSI):** `cryptographic identity`, `FIDO2`, `PIV`, `YubiKey`
+
+**Audit-trail:** This addition closes one corpus-wide primitive gap (corpus-wide `cryptographic identity` count moved 23→24/70). Per-skill impact is recorded in the cycle-5 results artifact. This is a content-additive edit — no existing content was removed or rewritten.
+
+## Changelog
+
+- **2026-08-06 cycle 5 RSI**: closed `cryptographic identity` primitive gap (corpus-wide count 23→24/70). See `refs/cycle5-results-2026-08-06.md` for the corpus-fit delta measurement.

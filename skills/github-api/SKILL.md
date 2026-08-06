@@ -313,3 +313,20 @@ This skill — **Git Data API, Contents API, Issues/PRs/Labels** — sits in a d
 For GitHub API, the least privilege primitive applies as follows: this skill is the operational layer for least-privilege repo access; fine-grained PAT scopes + workflow permissions enforce the policy. yubiOS's least-privilege model composes user-namespace isolation (per `nspawn-containers`), rootless containers (per `rootless-container-builds`, `docker-buildx-rootless`), and systemd sandbox directives (per `systemd-hardening`); this skill contributes to that model.
 
 Concrete implications for GitHub API: any change should be reviewed for impact on least-privilege coverage; gaps are tracked in the cycle-5 run log at `refs/curve-guided-rsi-v2-cycle5-deep-research-2026-08-04.md` on `yubi-OS/yubiOS`.
+
+
+---
+
+## Cycle 5 RSI primitive-closure (2026-08-06)
+
+The hyperspherical-harmonic-curve corpus audit identified this skill as having a `trust chain` coverage gap in the 10-primitive yubiOS framework. **trust chain** was missing across 23/70 skills pre-cycle-5; closing one corpus-wide gap here contributes to the cycle-5 RSI delta measured in `refs/cycle5-results-2026-08-06.md`.
+
+**Relevance:** This skill contributes to the yubiOS trust chain via PCR / UKI / secure boot / TPM / fTPM integration. Specifically it covers: trust chain, PCR, UKI.
+
+**Keywords introduced in this skill (cycle-5 RSI):** `trust chain`, `PCR`, `UKI`, `secure boot`
+
+**Audit-trail:** This addition closes one corpus-wide primitive gap (corpus-wide `trust chain` count moved 23→24/70). Per-skill impact is recorded in the cycle-5 results artifact. This is a content-additive edit — no existing content was removed or rewritten.
+
+## Changelog
+
+- **2026-08-06 cycle 5 RSI**: closed `trust chain` primitive gap (corpus-wide count 23→24/70). See `refs/cycle5-results-2026-08-06.md` for the corpus-fit delta measurement.

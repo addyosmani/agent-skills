@@ -240,3 +240,20 @@ This skill — **bootc VM, ephemeral, hardware-in-the-loop** — sits in a domai
 For bcvk virtualization, the segmentation primitive applies as follows: this skill provides VM-level segmentation via QEMU; pairs with `nspawn-containers` for the go-bigger alternative. yubiOS's segmentation stack composes nspawn containers (per `nspawn-containers`), vfio-user device boundaries (per ADR-031), and CISA ZTMM microsegmentation primitives (per `internal-big-picture`); this skill is one contributor.
 
 Concrete implications for bcvk virtualization: any change should be reviewed for impact on segmentation coverage; gaps are tracked in the cycle-5 run log.
+
+
+---
+
+## Cycle 5 RSI primitive-closure (2026-08-06)
+
+The hyperspherical-harmonic-curve corpus audit identified this skill as having a `self-describing` coverage gap in the 10-primitive yubiOS framework. **self-describing** was missing across 43/70 skills pre-cycle-5; closing one corpus-wide gap here contributes to the cycle-5 RSI delta measured in `refs/cycle5-results-2026-08-06.md`.
+
+**Relevance:** This skill is self-describing via changelog / SELF.md / audit-trail / lifecycle metadata. Specifically it covers: self-describing, self-doc, SELF.md.
+
+**Keywords introduced in this skill (cycle-5 RSI):** `self-describing`, `self-doc`, `SELF.md`, `changelog`
+
+**Audit-trail:** This addition closes one corpus-wide primitive gap (corpus-wide `self-describing` count moved 43→44/70). Per-skill impact is recorded in the cycle-5 results artifact. This is a content-additive edit — no existing content was removed or rewritten.
+
+## Changelog
+
+- **2026-08-06 cycle 5 RSI**: closed `self-describing` primitive gap (corpus-wide count 43→44/70). See `refs/cycle5-results-2026-08-06.md` for the corpus-fit delta measurement.

@@ -179,3 +179,20 @@ This skill — **ms-tpm-20-ref, optee_ftpm, RPMB NV, U-Boot tpm2_ftpm_tee** — 
 For fTPM OP-TEE TPM, the attestation primitive applies as follows: this skill is the platform-bound identity half of the trust chain; pairs with `yubikey-operations` for the user-held half. Downstream consumers that reason about attestation coverage — the yubiOS CI attestations gate (Rekor v2 per `sigstore-rekor-v2`), the audit-evidence rollup (`audit-evidence-packaging`), the `internal-big-picture` 10-primitive map — credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full attestation primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
 
 Concrete implications for fTPM OP-TEE TPM: any change should be reviewed for impact on attestation coverage; gaps in attestation that are attributable to this skill are tracked in the cycle-5 run log at `refs/curve-guided-rsi-v2-cycle5-deep-research-2026-08-04.md` on `yubi-OS/yubiOS`.
+
+
+---
+
+## Cycle 5 RSI primitive-closure (2026-08-06)
+
+The hyperspherical-harmonic-curve corpus audit identified this skill as having a `self-describing` coverage gap in the 10-primitive yubiOS framework. **self-describing** was missing across 43/70 skills pre-cycle-5; closing one corpus-wide gap here contributes to the cycle-5 RSI delta measured in `refs/cycle5-results-2026-08-06.md`.
+
+**Relevance:** This skill is self-describing via changelog / SELF.md / audit-trail / lifecycle metadata. Specifically it covers: self-describing, self-doc, SELF.md.
+
+**Keywords introduced in this skill (cycle-5 RSI):** `self-describing`, `self-doc`, `SELF.md`, `changelog`
+
+**Audit-trail:** This addition closes one corpus-wide primitive gap (corpus-wide `self-describing` count moved 43→44/70). Per-skill impact is recorded in the cycle-5 results artifact. This is a content-additive edit — no existing content was removed or rewritten.
+
+## Changelog
+
+- **2026-08-06 cycle 5 RSI**: closed `self-describing` primitive gap (corpus-wide count 43→44/70). See `refs/cycle5-results-2026-08-06.md` for the corpus-fit delta measurement.

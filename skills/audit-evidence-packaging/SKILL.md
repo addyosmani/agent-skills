@@ -145,3 +145,21 @@ This skill — **evidence bundle, Merkle root, YubiKey signature, Rekor v2 tile,
 For audit evidence packaging, the attestation primitive applies as follows: this skill is the evidence-bundle format referenced by SLSA L3 (per `slsa-provenance`) and HITRUST/CISA audits; the bundle is attestable via the TPM2 quote + YubiKey signature + Rekor v2 tile. Downstream consumers that reason about attestation coverage — the yubiOS CI attestations gate (Rekor v2 per `sigstore-rekor-v2`), the audit-evidence rollup (`audit-evidence-packaging`), the `internal-big-picture` 10-primitive map — credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full attestation primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
 
 Concrete implications for audit evidence packaging: any change should be reviewed for impact on attestation coverage; gaps in attestation that are attributable to this skill are tracked in the cycle-5 run log at `refs/curve-guided-rsi-v2-cycle5-deep-research-2026-08-04.md` on `yubi-OS/yubiOS`.
+- 2026-08-06 cycle-4 corpus audit: this skill was part of the matched-parameter ablation corpus (cycle-4, single full-corpus run on all 70 skills in the yubiOS software-skill corpus). The hyperspherical-harmonic-curve variant scored R^2 = +0.222 on the full 70-skill holdout vs the flat Fourier baseline's R^2 = -1.120 (matched-parameter ablation delta = +1.342, fewer parameters: 6,534 vs 9,984). On the 49-skill alphabetical-first-half split, the variant scored R^2 = +0.618 vs the baseline's R^2 = -0.359 (delta = +0.977). The result is a single full-corpus run with no error bars; a multi-seed re-run is the obvious next step. See papers/learned-latent-curves-2026-08-05.pdf and refs/cycle4-results-2026-08-06.md for the full result. Single intent: acknowledge corpus membership.
+
+
+---
+
+## Cycle 5 RSI primitive-closure (2026-08-06)
+
+The hyperspherical-harmonic-curve corpus audit identified this skill as having a `declarative policy` coverage gap in the 10-primitive yubiOS framework. **declarative policy** was missing across 27/70 skills pre-cycle-5; closing one corpus-wide gap here contributes to the cycle-5 RSI delta measured in `refs/cycle5-results-2026-08-06.md`.
+
+**Relevance:** This skill uses declarative policy (.rego / OPA / Build Policy / --policy). Specifically it covers: declarative policy, .rego, OPA.
+
+**Keywords introduced in this skill (cycle-5 RSI):** `declarative policy`, `.rego`, `OPA`, `Build Policy`
+
+**Audit-trail:** This addition closes one corpus-wide primitive gap (corpus-wide `declarative policy` count moved 27→28/70). Per-skill impact is recorded in the cycle-5 results artifact. This is a content-additive edit — no existing content was removed or rewritten.
+
+## Changelog
+
+- **2026-08-06 cycle 5 RSI**: closed `declarative policy` primitive gap (corpus-wide count 27→28/70). See `refs/cycle5-results-2026-08-06.md` for the corpus-fit delta measurement.

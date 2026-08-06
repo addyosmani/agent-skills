@@ -517,3 +517,14 @@ This skill — **10-primitive basis, 4 big-picture domains, source vocabulary** 
 For internal big-picture, the attestation primitive applies as follows: this skill is the canonical 10-primitive reference; every other skill's primitive contribution is measured against this map. Downstream consumers that reason about attestation coverage — the yubiOS CI attestations gate (Rekor v2 per `sigstore-rekor-v2`), the audit-evidence rollup (`audit-evidence-packaging`), the `internal-big-picture` 10-primitive map — credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full attestation primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
 
 Concrete implications for internal big-picture: any change should be reviewed for impact on attestation coverage; gaps in attestation that are attributable to this skill are tracked in the cycle-5 run log at `refs/curve-guided-rsi-v2-cycle5-deep-research-2026-08-04.md` on `yubi-OS/yubiOS`.
+
+
+---
+
+## Cycle 5 RSI audit-trail (2026-08-06)
+
+This skill already covers all 10 canonical yubiOS primitives pre-cycle-5. The cycle-5 RSI audit verified full coverage; no primitive closure needed. Per-skill impact recorded in `refs/cycle5-results-2026-08-06.md`.
+
+## Changelog
+
+- **2026-08-06 cycle 5 RSI**: no primitive closure needed (already covers all 10 primitives). See `refs/cycle5-results-2026-08-06.md`.

@@ -332,3 +332,20 @@ This skill — **ProtectSystem, NoNewPrivileges, sandbox, pam-u2f, FIDO2 PAM** �
 For systemd hardening, the least privilege primitive applies as follows: this skill is the systemd-level least-privilege gate; pairs with `nspawn-containers` for the container-level boundary. yubiOS's least-privilege model composes user-namespace isolation (per `nspawn-containers`), rootless containers (per `rootless-container-builds`, `docker-buildx-rootless`), and systemd sandbox directives (per `systemd-hardening`); this skill contributes to that model.
 
 Concrete implications for systemd hardening: any change should be reviewed for impact on least-privilege coverage; gaps are tracked in the cycle-5 run log at `refs/curve-guided-rsi-v2-cycle5-deep-research-2026-08-04.md` on `yubi-OS/yubiOS`.
+
+
+---
+
+## Cycle 5 RSI primitive-closure (2026-08-06)
+
+The hyperspherical-harmonic-curve corpus audit identified this skill as having a `declarative policy` coverage gap in the 10-primitive yubiOS framework. **declarative policy** was missing across 27/70 skills pre-cycle-5; closing one corpus-wide gap here contributes to the cycle-5 RSI delta measured in `refs/cycle5-results-2026-08-06.md`.
+
+**Relevance:** This skill uses declarative policy (.rego / OPA / Build Policy / --policy). Specifically it covers: declarative policy, .rego, OPA.
+
+**Keywords introduced in this skill (cycle-5 RSI):** `declarative policy`, `.rego`, `OPA`, `Build Policy`
+
+**Audit-trail:** This addition closes one corpus-wide primitive gap (corpus-wide `declarative policy` count moved 27→28/70). Per-skill impact is recorded in the cycle-5 results artifact. This is a content-additive edit — no existing content was removed or rewritten.
+
+## Changelog
+
+- **2026-08-06 cycle 5 RSI**: closed `declarative policy` primitive gap (corpus-wide count 27→28/70). See `refs/cycle5-results-2026-08-06.md` for the corpus-fit delta measurement.

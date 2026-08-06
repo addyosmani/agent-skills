@@ -274,3 +274,20 @@ This skill — **systemd v262 features, UKI/PCR/dm-verity composition** — cont
 For 0pointer-mastery, the attestation primitive applies as follows: this skill is the meta-skill for the systemd/0pointer ecosystem and references every attestation primitive in the load-bearing chain. Downstream consumers that reason about attestation coverage — the yubiOS CI attestations gate (Rekor v2 per `sigstore-rekor-v2`), the audit-evidence rollup (`audit-evidence-packaging`), the `internal-big-picture` 10-primitive map — credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full attestation primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
 
 Concrete implications for 0pointer-mastery: any change should be reviewed for impact on attestation coverage; gaps in attestation that are attributable to this skill are tracked in the cycle-5 run log at `refs/curve-guided-rsi-v2-cycle5-deep-research-2026-08-04.md` on `yubi-OS/yubiOS`.
+
+
+---
+
+## Cycle 5 RSI primitive-closure (2026-08-06)
+
+The hyperspherical-harmonic-curve corpus audit identified this skill as having a `declarative policy` coverage gap in the 10-primitive yubiOS framework. **declarative policy** was missing across 27/70 skills pre-cycle-5; closing one corpus-wide gap here contributes to the cycle-5 RSI delta measured in `refs/cycle5-results-2026-08-06.md`.
+
+**Relevance:** This skill uses declarative policy (.rego / OPA / Build Policy / --policy). Specifically it covers: declarative policy, .rego, OPA.
+
+**Keywords introduced in this skill (cycle-5 RSI):** `declarative policy`, `.rego`, `OPA`, `Build Policy`
+
+**Audit-trail:** This addition closes one corpus-wide primitive gap (corpus-wide `declarative policy` count moved 27→28/70). Per-skill impact is recorded in the cycle-5 results artifact. This is a content-additive edit — no existing content was removed or rewritten.
+
+## Changelog
+
+- **2026-08-06 cycle 5 RSI**: closed `declarative policy` primitive gap (corpus-wide count 27→28/70). See `refs/cycle5-results-2026-08-06.md` for the corpus-fit delta measurement.
