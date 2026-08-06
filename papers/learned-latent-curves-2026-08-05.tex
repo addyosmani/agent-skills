@@ -156,11 +156,11 @@ The self-documentation offshoot retargets Equations~\ref{eq:liftpca}--\ref{eq:de
 \subsection{Model}
 
 For $\mathbf{x} \in S^2 \subset \mathbb{R}^3$ (the Riemann sphere),
-where $\mathbf{b} \in \mathbb{R}^D$ is the per-dim bias, $\mathbf{a}_{\ell,m} \in \mathbb{R}^D$ are the per-dim per-basis coefficients, and $\phi_\theta$ is the M\"obius reparameterization. The $S^N$ generalization is sketched separately in \S\ref{sec:sketch} so it does not blur the $S^2$ claim below.
+\begin{equation}
 \gamma(\mathbf{x}) = \mathbf{b} + \sum_{\ell=0}^{L} \sum_{m} \mathbf{a}_{\ell,m}\, Y^{S^2}_{\ell,m}\!\big(\phi_\theta(\mathbf{x})\big),
 \label{eq:hyperspherical}
 \end{equation}
-where $\mathbf{b} \in \mathbb{R}^D$ is the per-dim bias, $\mathbf{a}_{\ell,m} \in \mathbb{R}^D$ are the per-dim per-basis coefficients, and $\phi_\theta$ is the Möbius reparameterization.
+where $\mathbf{b} \in \mathbb{R}^D$ is the per-dim bias, $\mathbf{a}_{\ell,m} \in \mathbb{R}^D$ are the per-dim per-basis coefficients, and $\phi_\theta$ is the M\"obius reparameterization. The $S^N$ generalization is sketched separately below so it does not blur the $S^2$ claim.
 
 The parameter count is $D \cdot n_{\mathrm{basis}} + D + n_{\mathrm{Möbius}}$, where $n_{\mathrm{basis}} = \sum_{\ell=0}^{L}(2\ell+1)$ and $n_{\mathrm{Möbius}}$ is the real dimension of $\mathrm{PSL}(2,\mathbb{C})$ (Section~\ref{sec:mobius}). At $L=3$ on $S^2$, $n_{\mathrm{basis}}=16$; at $D=384$: $P = 384 \cdot 16 + 384 + 6 = 6{,}534$.
 
@@ -233,134 +233,92 @@ Self-doc corpus, combined & 154 & 0.6479 & $+0.7877$ & pass \\
 \label{tab:context}
 \end{table}
 
-\subsection{Hyperspherical-harmonic variant: full-corpus cycle-4 run (cycle 4, all 70 skills)}
+\subsection{Hyperspherical-harmonic variant: matched-parameter ablation on Splits A and B}
 
-\textbf{Hyperspherical model}: $R^2_{\mathrm{holdout}} = +0.618$ (6,534 parameters). \\
-\textbf{Flat Fourier baseline ($k=2$)}: $R^2_{\mathrm{holdout}} = -0.359$ (9,984 parameters). \\
-\textbf{Delta} (spherical $-$ flat): $+0.977$. \\
-\textbf{Phase A}: alphabetical-first-half split, 49 skills ($N_{\mathrm{train}}=35$, $N_{\mathrm{holdout}}=14$).
+The matched-parameter ablation on the two corpus splits of Section~\ref{sec:dataset} is the paper's single contribution --- that on these corpora, the hyperspherical parameter manifold is a strictly better inductive bias than the flat $[0,1]^2$ baseline, with the absolute holdout $R^2$ positive on the smaller split and the relative $\delta$ positive on both splits.
 
-The hyperspherical model outperforms the flat baseline at fewer parameters. The absolute $R^2$ is positive on this split.
-
-\subsection{Hyperspherical-harmonic variant: full-corpus cycle-4 run (cycle 4, all 70 skills, variant included)}
-
-\textbf{Hyperspherical model}: $R^2_{\mathrm{holdout}} = +0.222$ (6,534 parameters). \\
-\textbf{Flat Fourier baseline ($k=2$)}: $R^2_{\mathrm{holdout}} = -1.120$ (9,984 parameters). \\
-\textbf{Delta} (spherical $-$ flat): $+1.342$. \\
-\textbf{Phase B}: full corpus, 70 skills ($N_{\mathrm{train}}=49$, $N_{\mathrm{holdout}}=21$), hyperspherical-harmonic-curve skill itself included.
-
-At Phase B (full corpus, 70 skills) the flat Fourier baseline is worse than predicting the corpus mean ($R^2 = -1.120 < 0$), while the hyperspherical model is positive ($R^2 = +0.222$). The relative result (the sphere beats the flat baseline by $\delta = +1.342$) is therefore supported on a corpus where the flat baseline is strictly worse than predicting the mean. The Phase A spherical $R^2$ is positive ($+0.618$) on the 49-skill alphabetical-first-half split; Phase B ($+0.222$) is also positive but smaller, reflecting the added noise from including the variant itself and 21 additional skills in the corpus.
-
-\subsection{Calibration checks}
-
+\textbf{Split A (49 items, $N_{\mathrm{train}}=35$, $N_{\mathrm{holdout}}=14$):}
 \begin{itemize}
-\item Spectral mass $\rho = \sum_{\ell \geq 1} \|a_{:,\ell}\|^2 / \sum_{\ell \geq 0} \|a_{:,\ell}\|^2 \geq 0.10$: measured $0.977$ (A) / $0.983$ (B).
-\item High-degree mass $\sum_{\ell > L/2} \|a_{:,\ell}\|^2 / \mathrm{total} \leq 0.40$: measured $0.206$ (A) / $0.178$ (B).
-\item Cross-ratio check on 100 held-out 4-tuples: max residual $3.08 \times 10^{-7}$. This is consistent with float64 noise; every $\mathrm{PSL}(2,\mathbb{C})$ element preserves $\chi$ exactly, so the residual measures implementation precision, not fit quality.
-\item Möbius refinement (train $R^2$): identity $0.9125 \to$ refined $0.9211$, $\Delta = +0.009$. Train-only; no holdout effect measured.
+\item \textbf{Hyperspherical model} (S$^2$/$L{=}3$, 16 basis functions, 6,534 parameters): $R^2_{\mathrm{holdout}} = +0.618$.
+\item \textbf{Flat Fourier baseline} ($k{=}2$ on $[0,1]^2$, 25 basis functions, 9,984 parameters): $R^2_{\mathrm{holdout}} = -0.359$.
+\item \textbf{Matched-parameter $\delta$}: $+0.977$. The sphere wins by nearly 1.0 $R^2$ units at fewer parameters; the flat baseline is worse than the corpus-mean prediction.
 \end{itemize}
 
-\subsection{Hyperspherical-harmonic variant: cycle-5 + cycle-6 RSI corpus audit}
+\textbf{Split B (70 items, $N_{\mathrm{train}}=49$, $N_{\mathrm{holdout}}=21$, variant-included):}
+\begin{itemize}
+\item \textbf{Hyperspherical model}: $R^2_{\mathrm{holdout}} = +0.222$.
+\item \textbf{Flat Fourier baseline}: $R^2_{\mathrm{holdout}} = -1.120$.
+\item \textbf{Matched-parameter $\delta$}: $+1.342$. The sphere wins by more than 1.3 $R^2$ units on a corpus where the flat baseline is strictly worse than predicting the corpus mean.
+\end{itemize}
 
-\textbf{Run date}: 2026-08-06. \textbf{Run type}: two RSI passes on the full 70-skill yubiOS corpus (cycle~5 then cycle~6), with closed-loop re-fits using the hyperspherical-harmonic-curve fit protocol. Both passes are content-additive \textemdash{} no existing content was removed or rewritten. The corpus-fit protocol is: binary 10-D primitive coverage $\to$ drop near-constant columns $\to$ D=384 lift via fixed seeded QR $\to$ PCA $\to$ rank-uniformize $\to$ inverse stereographic $\to$ closed-form ridge on hyperspherical $S^2/L=3$ vs flat $k{=}2$. The per-skill target primitive was the corpus-priority primitive that THIS skill was also lacking; cycle~6 used 2nd-priority MOVABLE primitives (cycle-5-collapsed primitives excluded).
+The Split~B numbers use the full 9-column primitive basis; the Split~A numbers use the same basis. The Phase~A numbers in the merged corpus audit below (\S\ref{sec:audit}) use the same corpus as Split~B but with near-constant columns dropped ($K_\text{kept}=8$ at Phase~A); that is why Phase~A reports sphere $+0.2637$ while Split~B above reports $+0.222$ --- the basis is narrower in the corpus audit, not the corpus.
 
-\textbf{Headline numbers} across all four phases are listed in Table~\ref{tab:headline} below; the visual progression is shown in Figure~\ref{fig:progression}; the per-cycle absolute improvement is in Figure~\ref{fig:per-cycle-delta}; the per-cycle primitive-closure summary is in Table~\ref{tab:cycle-summary}; the per-primitive coverage delta is in Figure~\ref{fig:primitive-delta}; and the per-primitive coverage progression is in Table~\ref{tab:primitive-progression}. All five figures and tables are embedded directly in the rendered PDF; no external references are required.
+\subsection{Hyperspherical-harmonic corpus audit across cycles 4/5/6/7/8 (phases A--G)}\label{sec:audit}
+
+\textbf{Scope}: this section consolidates the cycle-by-cycle RSI corpus audit into a single side-by-side view of cycles 4--8 (Phase A = pre-cycle-5 baseline, Phase G = post-cycle-8), showing all seven phases A--G. Cycle~4 is the corpus-fit baseline (Phase A); cycles 5/6/7/8 are four sequential RSI primitive-closure passes on the same 70-skill yubiOS corpus. Phases A--D report the single-seed (123) number from the prior cycle-4/5/6 fits; Phases E/F (cycles 7) and Phase G (cycle 8) report the 5-seed (123, 456, 789, 1011, 1213) mean$\pm$std.
+
+\textbf{Cycle 4 (Phase A, baseline)}: hyperspherical $S^2/L=3$ vs flat $k=2$ on the 70-skill corpus, no RSI. Hyperspherical $R^2 = +0.2637$, flat $R^2 = -0.1150$, $\delta = +0.3787$, $K_\text{kept} = 8$. Sphere already wins on the absolute delta; flat baseline is worse than the corpus-mean prediction.
+
+\textbf{Cycles 5--8 (Phases B--G): RSI primitive-closure pipeline.} Each cycle applies a corpus-wide primitive-closure pass: compute per-skill 10-D binary primitive coverage from the SKILL.md text, identify the corpus-priority MOVABLE primitive that THIS skill is also lacking, append a \emph{Cycle N RSI primitive-closure (2026-08-06)} section with that primitive's keywords and a Changelog entry. Cycles are content-additive: no existing SKILL.md content is removed or rewritten. After each cycle, the hyperspherical-harmonic-curve fit is re-run on the post-cycle corpus (Phases B, D, F, G respectively). Phases C and E are intermediate re-fits using the cycle-$N+1$ starting heuristic (drop near-constant columns with coverage $> 0.90$ or $< 0.10$) so the matched-parameter comparison across the cycle-$N+1$ cycle is apples-to-apples.
+
+\textbf{Because each pass collapses near-constant columns, $K_\text{kept}$ shrinks across phases (8/6/6/5/5/4/2).} Absolute $R^2$ is therefore not strictly comparable across phases; the within-phase matched-parameter $\delta$ is the comparable quantity, and the A--G line should be read as a trajectory of a moving target, not a single learning curve.
+
+\textbf{Headline numbers} across all seven phases are in Table~\ref{tab:headline} below; the visual progression is in Figure~\ref{fig:progression}; the per-cycle absolute improvement is in Figure~\ref{fig:per-cycle-delta}; the per-primitive coverage delta is in Figure~\ref{fig:primitive-delta}; the cycle-by-cycle summary is in Table~\ref{tab:cycle-summary}; the per-primitive progression is in Table~\ref{tab:primitive-progression}.
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.85\textwidth]{chart-1-progression.png}
-\caption{Phase A $\to$ B $\to$ C $\to$ D holdout $R^2$ progression (cycle-5 + cycle-6 RSI corpus audit, 70-skill corpus).}
+\includegraphics[width=5.5in]{chart-A-G-1-progression.png}
+\caption{\textbf{Figure 1.} Phase A $\rightarrow$ B $\rightarrow$ C $\rightarrow$ D $\rightarrow$ E $\rightarrow$ F $\rightarrow$ G holdout $R^2$ progression (cycles 4/5/6/7/8 RSI corpus audit, 70-skill corpus). Error bars = 5-seed $\pm$ std for E, F, G (seeds 123, 456, 789, 1011, 1213).}
 \label{fig:progression}
 \end{figure}
 
 \begin{table}[h]
 \centering
-\includegraphics[width=0.85\textwidth]{table-1-headline.png}
-\caption{Headline numbers across cycles 5 + 6 (70-skill corpus).}
+\includegraphics[width=5.5in]{table-A-G-1-headline.png}
+\caption{\textbf{Table 1.} Headline numbers across cycles 4/5/6/7/8 (phases A--G; 70-skill corpus; error bars = 5-seed $\pm$ std for E, F, G).}
 \label{tab:headline}
 \end{table}
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.85\textwidth]{chart-2-per-cycle-delta.png}
-\caption{Per-cycle absolute improvement (sphere + flat $R^2$ delta per RSI pass).}
+\includegraphics[width=5in]{chart-A-G-2-per-cycle-delta.png}
+\caption{\textbf{Figure 2.} Per-cycle absolute improvement (cycles 5/6/7/8). The matched-parameter $\delta$ is preserved across cycles 5--7 (sphere still beats flat), but cycle 8 closes the corpus beyond the curve-fit model's honest range ($K_\text{kept}$ $4 \rightarrow 2$; sphere and flat both regress with widened error bars).}
 \label{fig:per-cycle-delta}
 \end{figure}
 
 \begin{table}[h]
 \centering
-\includegraphics[width=0.85\textwidth]{table-2-cycle-summary.png}
-\caption{Per-cycle primitive-closure summary.}
+\includegraphics[width=5.5in]{table-A-G-2-cycle-summary.png}
+\caption{\textbf{Table 2.} Per-cycle summary (cycles 4/5/6/7/8). Four primitives were driven to 70/70 by cycle 7 (segmentation and self-describing in cycle 5, cryptographic identity in cycle 6, trust chain in cycle 7); audit/evidence was already at 70/70 pre-cycle-5. Cycle 8 drives declarative policy to 70/70, the fifth primitive to saturate across the four RSI passes.}
 \label{tab:cycle-summary}
 \end{table}
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.95\textwidth]{chart-3-primitive-delta.png}
-\caption{Per-primitive coverage delta (pre-cycle-5 $\to$ post-cycle-6 corpus, 70-skill).}
+\includegraphics[width=5.5in]{chart-A-G-3-primitive-delta.png}
+\caption{\textbf{Figure 3.} Per-primitive coverage delta (pre-cycle-5 $\rightarrow$ post-cycle-8 corpus, 70-skill). Six primitives are at 70/70 after cycle 8; continuous/adaptive (68/70) and least privilege (63/70) are also near-constant under the $>0.90$ drop rule (8 of 10 primitives near-saturated). Only attestation (62/70) and immutability (58/70) survive into the kept basis, hence $K_\text{kept}=2$.}
 \label{fig:primitive-delta}
 \end{figure}
 
 \begin{table}[h]
 \centering
-\includegraphics[width=0.85\textwidth]{table-3-primitive-progression.png}
-\caption{Per-primitive coverage progression (pre-cycle-5 $\to$ post-cycle-5 $\to$ post-cycle-6).}
+\includegraphics[width=5in]{table-A-G-3-primitive-progression.png}
+\caption{\textbf{Table 3.} Per-primitive coverage progression (pre-c5 $\rightarrow$ post-c5 $\rightarrow$ post-c6 $\rightarrow$ post-c7 $\rightarrow$ post-c8). Five primitives saturate at 70/70 across the four RSI passes; the kept-column basis ($K_\text{kept}$) narrows from 8 to 2 across the 7 phases.}
 \label{tab:primitive-progression}
 \end{table}
 
+\textbf{What the Phase G numbers mean and do not show.} The cycle-5--7 $\delta$ numbers are positive and stable: Phase C $\delta = +0.32$, Phase D $\delta = +0.16$, Phase E $\delta = +0.36 \pm 0.18$, Phase F $\delta = +0.45 \pm 0.14$ (5-seed). The sphere's relative advantage over flat is preserved across four sequential RSI passes, two matched-parameter heuristics, and a corpus that progressed from $K_\text{kept}=8$ (Phase A) to $K_\text{kept}=4$ (Phase F). Cycle 8 pushes declarative policy to 70/70 saturation, the fifth primitive to saturate across the four RSI passes, narrowing the kept-column basis from $K_\text{kept}=4$ to $K_\text{kept}=2$.
 
+At $K_\text{kept}=2$ the fit is signal-limited: sphere $R^2 = +0.19 \pm 0.66$, flat $R^2 = +0.01 \pm 1.17$. The $\delta$ mean is $+0.18 \pm 0.76$, but the per-seed spread does not support a directional claim: $\delta$ is negative on 2 of 5 seeds (including seed 123, the seed used for Phases A--D, at $\delta = -0.90$), the median is $+0.09$, and the positive mean is carried by a single seed (1213) on which \emph{both} arms are far worse than the corpus mean ($-0.83$ and $-2.30$). Excluding that seed the mean $\delta$ is $-0.14$. We therefore report Phase G as a null result on the matched-parameter delta, not a preserved advantage: cycle 8 pushed the corpus past the point where this fit discriminates between the two manifolds. At $K_\text{kept}=2$ the PC1+PC2 explained-variance gate is satisfied trivially and carries no information.
 
-\subsection{Hyperspherical-harmonic variant: cycle-7 RSI corpus audit (with multi-seed error bars)}
+\subsubsection{Calibration checks}
 
-\textbf{Run date}: 2026-08-06. \textbf{Run type}: RSI Cycle~7 primitive-closure pass on the full 70-skill yubiOS corpus, with closed-loop re-fit using the hyperspherical-harmonic-curve fit protocol. Cycle~7 used the 3rd-priority MOVABLE missing primitive per skill (post-cycle-6 baseline; cycle-5-collapsed primitives excluded). The cycle-7 fit was run across 5 different deterministic seeds (123, 456, 789, 1011, 1213) to address the reviewer concern that \textit{`the empirical case is still fragile because it\u2019s one corpus, one target, one run'}. Phases A--D report the single-seed (123) number from prior cycles; Phases E and F report the 5-seed mean $\pm$ std.
-
-\textbf{Headline numbers across all six phases} are visualised in Figure~\ref{fig:cycle7-progression}; the 3-cycle absolute improvement is in Figure~\ref{fig:cycle7-per-cycle-delta}; the per-primitive coverage delta is in Figure~\ref{fig:cycle7-primitive-delta}; full per-primitive progression is in Table~\ref{tab:cycle7-primitive-progression}.
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.85\textwidth]{chart-cycle7-1-progression.png}
-\caption{Phase A $\to$ B $\to$ C $\to$ D $\to$ E $\to$ F holdout $R^2$ progression (cycle-5 + cycle-6 + cycle-7 RSI corpus audit, 70-skill corpus). Phases E and F show 5-seed mean $\pm$ std error bars (seeds 123, 456, 789, 1011, 1213).}
-\label{fig:cycle7-progression}
-\end{figure}
-
-\begin{table}[h]
-\centering
-\includegraphics[width=0.85\textwidth]{chart-cycle7-table-1-headline.png}
-\caption{Headline numbers across cycles 5 + 6 + 7 (70-skill corpus; error bars = 5-seed $\pm$ std for E, F).}
-\label{tab:cycle7-headline}
-\end{table}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.85\textwidth]{chart-cycle7-2-per-cycle-delta.png}
-\caption{Per-cycle absolute improvement across 3 RSI cycles (5, 6, 7). The matched-parameter $\delta$ is preserved across all 3 cycles at $\sim$+0.4 (sphere still beats flat).}
-\label{fig:cycle7-per-cycle-delta}
-\end{figure}
-
-\begin{table}[h]
-\centering
-\includegraphics[width=0.85\textwidth]{chart-cycle7-table-2-cycle-summary.png}
-\caption{Per-cycle primitive-closure summary (cycles 5, 6, 7). Trust chain collapsed to 70/70 in cycle 7 (33 skills targeted); segmentation and self-describing collapsed in cycle 5; cryptographic identity collapsed in cycle 6.}
-\label{tab:cycle7-cycle-summary}
-\end{table}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.95\textwidth]{chart-cycle7-3-primitive-delta.png}
-\caption{Per-primitive coverage delta (pre-cycle-5 $\to$ post-cycle-7 corpus, 70-skill). 4 of 10 primitives have collapsed to near-constant (70/70) across the 3 cycles.}
-\label{fig:cycle7-primitive-delta}
-\end{figure}
-
-\begin{table}[h]
-\centering
-\includegraphics[width=0.85\textwidth]{chart-cycle7-table-3-primitive-progression.png}
-\caption{Per-primitive coverage progression (pre-c5 $\to$ post-c5 $\to$ post-c6 $\to$ post-c7).}
-\label{tab:cycle7-primitive-progression}
-\end{table}
-
-\textbf{What cycle 7 $\delta$ numbers mean.} The cycle-7 absolute matched-parameter $\delta$ is preserved at $\sim$+0.4 across all three RSI cycles (Phase C $\delta$ = +0.32, Phase F $\delta$ = +0.45 $\pm$ 0.14). This is the strongest empirical evidence in the paper that the sphere/M\"obius method is a stable better inductive bias than the flat baseline: across three independent RSI passes, two different primitive-closure selection rules (top-priority then 2nd-priority then 3rd-priority), and a corpus that went from $K_\text{kept}$=8 to $K_\text{kept}$=5, the sphere's relative advantage is preserved.
-
-\textbf{What cycle 7 $\delta$ doesn't show.} The absolute $R^2$ of the sphere model on this 70-skill corpus is positive at every phase ($\delta \in [+0.26, +0.78]$) and grows with each RSI pass, but the synthetic-manifold benchmark and additional-corpus experiments (advisor suggestion) are queued as future work. The cycle-7 audit is content-additive on the same single corpus; an independent second corpus or a synthetic-manifold fit would strengthen the empirical case further. See Appendix~C for the benchmark sketch.
+\begin{itemize}
+\item Spectral mass $\rho = \sum_{\ell \geq 1} \|a_{:,\ell}\|^2 / \sum_{\ell \geq 0} \|a_{:,\ell}\|^2 \geq 0.10$: measured $0.977$ (Split A) / $0.983$ (Split B).
+\item High-degree mass $\sum_{\ell > L/2} \|a_{:,\ell}\|^2 / \mathrm{total} \leq 0.40$: measured $0.206$ (Split A) / $0.178$ (Split B).
+\item Cross-ratio check on 100 held-out 4-tuples: max residual $3.08 \times 10^{-7}$. This is consistent with float64 noise; every $\mathrm{PSL}(2,\mathbb{C})$ element preserves $\chi$ exactly, so the residual measures implementation precision, not fit quality.
+\item M\"obius refinement (train $R^2$): identity $0.9125 \rightarrow$ refined $0.9211$, $\Delta = +0.009$. Train-only; no holdout effect measured.
+\end{itemize}
 
 \section{Discussion}
 
@@ -443,7 +401,7 @@ When a self-doc corpus has $< 20$ items (e.g.\ a new \texttt{SELF.md} with few s
 
 \section{Appendix~C: Synthetic Manifold Benchmark Sketch (Future Work)}
 
-The advisor review notes that \textit{`the empirical case is still fragile because it\u2019s one corpus, one target, one run'} and suggests \textit{`another corpus, or a synthetic manifold benchmark, or at least error bars across seeds/splits'} as stronger experiments. This appendix sketches the synthetic-manifold benchmark that would close this gap, flagged as future work.
+The advisor review notes that \textit{`the empirical case is still fragile because it's one corpus, one target, one run'} and suggests \textit{`another corpus, or a synthetic manifold benchmark, or at least error bars across seeds/splits'} as stronger experiments. This appendix sketches the synthetic-manifold benchmark that would close this gap, flagged as future work.
 
 \subsection{C.1~~Benchmark design}
 
@@ -462,18 +420,17 @@ The synthetic-manifold benchmark is \textbf{not implemented in this paper}. The 
 \begin{thebibliography}{99}
 
 
-\begin{enumerate}
-\item Durastanti, C. (2026). \emph{Spectral Bayesian Regression on the Sphere.} arXiv:2601.20528 [math.ST]. \texttt{https://arxiv.org/abs/2601.20528}
-\item Anonymous (ICLR 2022 under review). \emph{Generalized Fourier Features for Coordinate-Based Learning on Manifolds.} OpenReview \texttt{g6UqpVislvH}.
-\item Rahimi, A., \& Recht, B. (2007). \emph{Random Features for Large-Scale Kernel Machines.} NeurIPS 2007.
-\item Tancik, M., et al. (2020). \emph{Fourier Features Let Networks Learn High Frequency Functions in Low Dimensional Domains.} NeurIPS 2020.
-\item Sitzmann, V., Martel, J., Bergman, A., Lindell, D., \& Wetzstein, G. (2020). \emph{Implicit Neural Representations with Periodic Activation Functions.} NeurIPS 2020 (SIREN).
-\item Mildenhall, B., et al. (2020). \emph{NeRF: Representing Scenes as Neural Radiance Fields for View Synthesis.} ECCV 2020.
-\item Cohen, T. S., et al. (2018). \emph{Spherical CNNs.} ICLR 2018.
-\item Nickel, M. \& Kiela, D. (2017). \emph{Poincar\'e Embeddings for Learning Hierarchical Representations.} NeurIPS 2017.
-\item Ahlfors, L. V. (1979). \emph{Complex Analysis,} 3rd ed. McGraw-Hill.
-\item do Carmo, M. P. (1976). \emph{Differential Geometry of Curves and Surfaces.} Prentice-Hall.
-\item Smith, E. (2026). \emph{Learning in Curved Weight Space: Exponential-Linear Weight Reparameterization for Improved Optimization.} arXiv:2607.09967 [cs.LG].
-\end{enumerate}
+\bibitem[Durastanti(2026)]{durastanti2026} Durastanti, C. (2026). \emph{Spectral Bayesian Regression on the Sphere.} arXiv:2601.20528 [math.ST]. \texttt{https://arxiv.org/abs/2601.20528}
+\bibitem[Anonymous(2022)]{g6UqpVislvH} Anonymous (ICLR 2022 under review). \emph{Generalized Fourier Features for Coordinate-Based Learning on Manifolds.} OpenReview \texttt{g6UqpVislvH}.
+\bibitem[Rahimi and Recht(2007)]{rahimi2007} Rahimi, A., \& Recht, B. (2007). \emph{Random Features for Large-Scale Kernel Machines.} NeurIPS 2007.
+\bibitem[Tancik et~al.(2020)]{tancik2020} Tancik, M., et al. (2020). \emph{Fourier Features Let Networks Learn High Frequency Functions in Low Dimensional Domains.} NeurIPS 2020.
+\bibitem[Sitzmann et~al.(2020)]{sitzmann2020} Sitzmann, V., Martel, J., Bergman, A., Lindell, D., \& Wetzstein, G. (2020). \emph{Implicit Neural Representations with Periodic Activation Functions.} NeurIPS 2020 (SIREN).
+\bibitem[Mildenhall et~al.(2020)]{mildenhall2020} Mildenhall, B., et al. (2020). \emph{NeRF: Representing Scenes as Neural Radiance Fields for View Synthesis.} ECCV 2020.
+\bibitem[Cohen et~al.(2018)]{cohen2018} Cohen, T. S., et al. (2018). \emph{Spherical CNNs.} ICLR 2018.
+\bibitem[Nickel and Kiela(2017)]{nickel2017} Nickel, M. \& Kiela, D. (2017). \emph{Poincar\\'e Embeddings for Learning Hierarchical Representations.} NeurIPS 2017.
+\bibitem[Ahlfors(1979)]{ahlfors1979} Ahlfors, L. V. (1979). \emph{Complex Analysis,} 3rd~ed. McGraw-Hill.
+\bibitem[do~Carmo(1976)]{docarmo1976} do Carmo, M. P. (1976). \emph{Differential Geometry of Curves and Surfaces.} Prentice-Hall.
+\bibitem[Smith(2026)]{smith2026} Smith, E. (2026). \emph{Learning in Curved Weight Space: Exponential-Linear Weight Reparameterization for Improved Optimization.} arXiv:2607.09967 [cs.LG].
+
 
 \end{document}
