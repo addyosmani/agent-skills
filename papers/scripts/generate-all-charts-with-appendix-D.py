@@ -87,15 +87,32 @@ def png_line_chart_with_errors(out_path, title, subtitle, x_labels,
         d.text((x, plot_bottom_y + 10), lbl, fill="#666666", font=f_label, anchor="mt")
 
     def plot_series(mean, std, color, label):
-        for i in range(len(x_labels) - 1):
-            x1 = margin_l + (i + 0.5) * (plot_w / len(x_labels))
-            x2 = margin_l + (i + 1.5) * (plot_w / len(x_labels))
-            y1 = to_y(mean[i])
-            y2 = to_y(mean[i + 1])
-            d.line([(x1, y1), (x2, y2)], fill=color, width=2)
-            if std[i] > 0:
-                for dx, dy in [(-12, 0), (12, 0)]:
-                    d.line([(x1 + dx, y1 - std[i] * 200), (x1 + dx, y1 + std[i] * 200)], fill=color, width=1)
+        # Y-axis pixel-per-unit conversion: this is the "right axis" — error bars
+        # must use the actual chart y-axis (plot_h / (y_max - y_min)), not a
+        # hardcoded multiplier that breaks when y_range changes.
+        px_per_unit = plot_h / (y_max - y_min)
+        coords = []
+        for i, (m, s) in enumerate(zip(mean, std)):
+            x = margin_l + (i + 0.5) * (plot_w / len(x_labels))
+            y = to_y(m)
+            coords.append((x, y))
+            if s > 0:
+                # Vertical error bar: top + bottom horizontal tick marks (5 px wide).
+                y_top = to_y(m + s)
+                y_bot = to_y(m - s)
+                d.line([(x, y_top), (x, y_bot)], fill=color, width=2)
+                d.line([(x - 5, y_top), (x + 5, y_top)], fill=color, width=2)
+                d.line([(x - 5, y_bot), (x + 5, y_bot)], fill=color, width=2)
+        # Connecting line segments
+        for i in range(len(coords) - 1):
+            d.line([coords[i], coords[i + 1]], fill=color, width=2)
+        # Markers + value labels
+        for (x, y), m, s in zip(coords, mean, std):
+            d.ellipse([x - 4, y - 4, x + 4, y + 4], fill=color)
+            if s > 0:
+                d.text((x + 8, y - 4), f"{m:+.3f}±{s:.3f}", fill=color, font=f_label, anchor="lm")
+            else:
+                d.text((x + 8, y - 4), f"{m:+.3f}", fill=color, font=f_label, anchor="lm")
         for i, x in enumerate([margin_l + (i + 0.5) * (plot_w / len(x_labels)) for i in range(len(x_labels))]):
             d.ellipse([(x - 4, to_y(mean[i]) - 4), (x + 4, to_y(mean[i]) + 4)], fill=color)
 
