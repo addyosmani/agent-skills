@@ -17,6 +17,23 @@ command -v jq   >/dev/null 2>&1 || exit 0
 command -v curl >/dev/null 2>&1 || exit 0
 command -v shasum >/dev/null 2>&1 || command -v sha256sum >/dev/null 2>&1 || exit 0
 
+# is_url_safe: reject non-https URLs and internal/loopback/metadata hosts to
+# prevent SSRF. Returns 0 (safe) or 1 (unsafe). Must be called before any curl.
+is_url_safe() {
+  local url="$1"
+  # Require https:// scheme
+  case "$url" in https://*) ;; *) return 1 ;; esac
+  # Extract host (strip scheme, path, port)
+  local host="${url#https://}"
+  host="${host%%/*}"
+  host="${host%%:*}"
+  # Reject common internal/loopback/metadata hosts
+  case "$host" in
+    localhost|127.*|0.0.0.0|169.254.169.254|10.*|172.1[6-9].*|172.2[0-9].*|172.3[01].*|192.168.*|::1|[fF][cCdD]??:*) return 1 ;;
+  esac
+  return 0
+}
+
 if [ -t 0 ]; then INPUT="{}"; else INPUT=$(cat); fi
 
 # Debug logging: active when SDD_CACHE_DEBUG=1 is set, or when a sentinel
@@ -32,6 +49,7 @@ dbg "fired, input=$(printf '%s' "$INPUT" | head -c 400)"
 URL=$(printf '%s'    "$INPUT" | jq -r '.tool_input.url    // empty' 2>/dev/null || true)
 PROMPT=$(printf '%s' "$INPUT" | jq -r '.tool_input.prompt // empty' 2>/dev/null || true)
 if [ -z "$URL" ]; then dbg "no url in tool_input, exit"; exit 0; fi
+if ! is_url_safe "$URL"; then dbg "url rejected by is_url_safe, exit"; exit 0; fi
 dbg "url=$URL prompt=$(printf '%s' "$PROMPT" | head -c 80)"
 
 # WebFetch tool_response shape (Claude Code as of 2026-04): an object with
@@ -74,12 +92,13 @@ hash_key() {
 
 CACHE_DIR="${CLAUDE_PROJECT_DIR:-$PWD}/.claude/sdd-cache"
 mkdir -p "$CACHE_DIR"
+chmod 700 "$CACHE_DIR"
 CACHE_FILE="$CACHE_DIR/$(hash_key "$URL").json"
 
-# Capture validators from the origin. Follow redirects so they match the
-# URL the agent actually talked to. Strip CR so awk's paragraph mode
-# recognises blank separators between response blocks on a redirect chain.
-HEAD_OUT=$(curl -sI -L --max-time 5 "$URL" 2>/dev/null | tr -d '\r' || true)
+# Capture validators from the origin. Strip CR so awk's paragraph mode
+# recognises blank separators between response blocks. Redirects are not
+# followed (-L removed) to prevent SSRF via redirect to internal hosts.
+HEAD_OUT=$(curl -sI --max-time 5 "$URL" 2>/dev/null | tr -d '\r' || true)
 
 # Take only the final response's headers (last paragraph) to avoid picking
 # up validators from intermediate 301/302 hops.
@@ -113,6 +132,9 @@ if [ -z "$ETAG" ] && [ -z "$LAST_MOD" ]; then
 fi
 
 NOW=$(date +%s)
+
+# Restrictive umask so cache files are only readable by the owner.
+umask 077
 
 TMP="${CACHE_FILE}.$$.tmp"
 if jq -n \

@@ -46,7 +46,11 @@ This hook caches fetched content on disk, but **revalidates with the origin serv
 
    `${CLAUDE_PROJECT_DIR}` resolves to the directory you launched Claude Code from. The snippet above works when the hooks live inside the same project. If you installed `agent-skills` elsewhere (e.g. as a shared plugin under `~/agent-skills`), replace `${CLAUDE_PROJECT_DIR}/hooks/...` with the absolute path to each script.
 
-2. Make sure `.claude/sdd-cache/` is in your `.gitignore` (already included in this repo).
+2. Make sure `.claude/sdd-cache/` is in your `.gitignore` (already included in this repo). If you use the cache in a different project, add this line to your `.gitignore`:
+
+```
+.claude/sdd-cache/
+```
 
 3. Use `/source-driven-development` (or the skill) as usual. No changes to the skill or the agent's workflow — the cache is transparent.
 
@@ -68,6 +72,9 @@ One cache entry per URL, stored as JSON in `.claude/sdd-cache/<sha>.json`:
 **Freshness rules:**
 
 - Entry is served only if the origin confirms `304 Not Modified`.
+- **TTL cap:** entries older than `SDD_CACHE_MAX_AGE` seconds (default `86400` = 24h) are bypassed and removed even on `304`, preventing a compromised origin from serving stale content indefinitely. Override with the `SDD_CACHE_MAX_AGE` env var.
+- **SSRF protection:** only `https://` URLs are accepted; internal/loopback/metadata hosts (e.g. `169.254.169.254`, `localhost`, `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `::1`, `fc00::/7`) are rejected before any curl call. Redirects are not followed (`-L` removed).
+- **Cache permissions:** the cache directory is `chmod 700` and cache files are written with `umask 077` so only the owner can read them.
 - Entries without an `ETag` or `Last-Modified` header are never cached — without a validator, the hook cannot verify freshness later, and caching would mean trusting memory.
 - Cache key is `sha256(url)`. The same URL asked with a different prompt hits the same entry; the cached body reflects the prompt used on the first fetch, and that prompt is shown alongside the hit so the agent can decide whether to re-use or re-fetch manually.
 

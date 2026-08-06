@@ -9,12 +9,17 @@
 # The file on disk ALWAYS has placeholders while the session is active.
 # The real content (with model's changes applied) lives in the backup.
 #
-# Dependencies: jq, shasum or sha1sum (auto-detected)
+# Dependencies: jq, shasum or sha1sum (auto-detected), perl (for trailing
+# newline normalisation — checked up front so a missing binary doesn't abort
+# mid-rewrite under set -e).
 
 set -euo pipefail
 
 if ! command -v jq >/dev/null 2>&1; then
   printf '%s\n' "error: missing jq" >&2; exit 1
+fi
+if ! command -v perl >/dev/null 2>&1; then
+  printf '%s\n' "error: missing perl" >&2; exit 1
 fi
 
 CACHE="${CLAUDE_PROJECT_DIR:-.}/.claude/.simplify-ignore-cache"
@@ -33,6 +38,13 @@ FILE_PATH=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev
 }
 if [ -n "$parse_error" ]; then
   printf 'Warning: %s (input: %.120s)\n' "$parse_error" "$INPUT" >&2
+fi
+
+# Symlink safety: reject symlinked file paths before any read/write processing.
+# This prevents symlink-overwrite attacks where an untrusted file_path points
+# at a symlink that redirects to a sensitive file.
+if [ -n "$FILE_PATH" ] && [ -L "$FILE_PATH" ]; then
+  exit 0
 fi
 
 hash_cmd() {
@@ -135,7 +147,7 @@ ${line}"
   # Preserve trailing newline status of source
   if [ -s "$dest" ] && [ -s "$src" ] && [ -n "$(tail -c 1 "$src")" ]; then
     perl -pe 'chomp if eof' "$dest" > "${dest}.nnl" && \
-      cat "${dest}.nnl" > "$dest" && rm -f "${dest}.nnl"
+      mv -f "${dest}.nnl" "$dest"
   fi
 
   [ $count -gt 0 ] && return 0 || return 1
@@ -150,8 +162,18 @@ if [ -z "$TOOL_NAME" ]; then
     pathfile="$CACHE/${fid}.path"
     [ -f "$pathfile" ] || { rm -f "$bak"; continue; }
     orig=$(cat "$pathfile")
+    if [ -L "$orig" ]; then
+      # Symlink safety: skip restoring to a symlink target
+      printf 'Warning: %s is a symlink, skipping restore\n' "$orig" >&2
+      rm -f "$bak" "$pathfile" "$CACHE/${fid}".block.* "$CACHE/${fid}".reason.* "$CACHE/${fid}".prefix.* "$CACHE/${fid}".suffix.*
+      rmdir "$CACHE/${fid}.lock" 2>/dev/null
+      continue
+    fi
     if [ -f "$orig" ]; then
-      cat "$bak" > "$orig"
+      # Atomic restore: write to temp, then mv into place
+      RESTORE_TMP="$CACHE/${fid}.$$.restore"
+      cat "$bak" > "$RESTORE_TMP"
+      mv -f "$RESTORE_TMP" "$orig"
       rm -f "$bak" "$pathfile" "$CACHE/${fid}".block.* "$CACHE/${fid}".reason.* "$CACHE/${fid}".prefix.* "$CACHE/${fid}".suffix.*
       rmdir "$CACHE/${fid}.lock" 2>/dev/null
     else
@@ -202,11 +224,12 @@ if [ "$TOOL_NAME" = "Read" ]; then
   cp -p "$FILE_PATH" "$CACHE/${ID}.bak" 2>/dev/null || cp "$FILE_PATH" "$CACHE/${ID}.bak"
   printf '%s' "$FILE_PATH" > "$CACHE/${ID}.path"
 
-  # Filter in-place (cat > preserves inode and permissions)
+  # Re-verify target is a regular file (not a symlink) before write-back.
+  # Filter in-place: write to temp, then atomic mv (preserves inode on same fs).
   FILTERED="$CACHE/${ID}.$$.tmp"
   rm -f "$FILTERED"
   if filter_file "$FILE_PATH" "$FILTERED" "$ID"; then
-    cat "$FILTERED" > "$FILE_PATH"
+    [ -f "$FILE_PATH" ] && [ ! -L "$FILE_PATH" ] && mv -f "$FILTERED" "$FILE_PATH"
     rm -f "$FILTERED"
   else
     rm -f "$FILTERED" "$CACHE/${ID}.bak" "$CACHE/${ID}.path"
@@ -267,7 +290,7 @@ if [ "$TOOL_NAME" = "Edit" ] || [ "$TOOL_NAME" = "Write" ]; then
   # Preserve trailing newline status
   if [ -s "$EXPANDED" ] && [ -s "$FILE_PATH" ] && [ -n "$(tail -c 1 "$FILE_PATH")" ]; then
     perl -pe 'chomp if eof' "$EXPANDED" > "${EXPANDED}.nnl" && \
-      cat "${EXPANDED}.nnl" > "$EXPANDED" && rm -f "${EXPANDED}.nnl"
+      mv -f "${EXPANDED}.nnl" "$EXPANDED"
   fi
   # Warn if model deleted a protected block entirely
   for bf in "$CACHE/${ID}".block.*; do
@@ -283,8 +306,8 @@ if [ "$TOOL_NAME" = "Edit" ] || [ "$TOOL_NAME" = "Write" ]; then
       fi
     fi
   done
-  # Preserve inode and permissions
-  cat "$EXPANDED" > "$FILE_PATH"
+  # Re-verify target is a regular file (not a symlink), then atomic swap.
+  [ -f "$FILE_PATH" ] && [ ! -L "$FILE_PATH" ] && mv -f "$EXPANDED" "$FILE_PATH"
   rm -f "$EXPANDED"
 
   # Save expanded version as new backup (this is the "real" file with model's changes)
@@ -294,7 +317,7 @@ if [ "$TOOL_NAME" = "Edit" ] || [ "$TOOL_NAME" = "Write" ]; then
   FILTERED="$CACHE/${ID}.$$.tmp"
   rm -f "$FILTERED"
   if filter_file "$FILE_PATH" "$FILTERED" "$ID"; then
-    cat "$FILTERED" > "$FILE_PATH"
+    [ -f "$FILE_PATH" ] && [ ! -L "$FILE_PATH" ] && mv -f "$FILTERED" "$FILE_PATH"
     rm -f "$FILTERED"
   fi
 

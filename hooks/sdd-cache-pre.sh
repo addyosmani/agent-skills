@@ -22,6 +22,23 @@ command -v jq   >/dev/null 2>&1 || exit 0
 command -v curl >/dev/null 2>&1 || exit 0
 command -v shasum >/dev/null 2>&1 || command -v sha256sum >/dev/null 2>&1 || exit 0
 
+# is_url_safe: reject non-https URLs and internal/loopback/metadata hosts to
+# prevent SSRF. Returns 0 (safe) or 1 (unsafe). Must be called before any curl.
+is_url_safe() {
+  local url="$1"
+  # Require https:// scheme
+  case "$url" in https://*) ;; *) return 1 ;; esac
+  # Extract host (strip scheme, path, port)
+  local host="${url#https://}"
+  host="${host%%/*}"
+  host="${host%%:*}"
+  # Reject common internal/loopback/metadata hosts
+  case "$host" in
+    localhost|127.*|0.0.0.0|169.254.169.254|10.*|172.1[6-9].*|172.2[0-9].*|172.3[01].*|192.168.*|::1|[fF][cCdD]??:*) return 1 ;;
+  esac
+  return 0
+}
+
 if [ -t 0 ]; then INPUT="{}"; else INPUT=$(cat); fi
 
 # Debug logging: active when SDD_CACHE_DEBUG=1 is set, or when a sentinel
@@ -36,6 +53,7 @@ dbg "fired"
 
 URL=$(printf '%s' "$INPUT" | jq -r '.tool_input.url // empty' 2>/dev/null || true)
 if [ -z "$URL" ]; then dbg "no url in tool_input, exit"; exit 0; fi
+if ! is_url_safe "$URL"; then dbg "url rejected by is_url_safe, exit"; exit 0; fi
 dbg "url=$URL"
 
 # Cache key is sha256(URL), truncated to 128 bits.
@@ -69,13 +87,25 @@ HEADERS=()
 [ -n "$LAST_MOD" ] && HEADERS+=(-H "If-Modified-Since: $LAST_MOD")
 
 STATUS=$(curl -sI -o /dev/null -w "%{http_code}" \
-  --max-time 5 -L \
+  --max-time 5 \
   "${HEADERS[@]}" \
   "$URL" 2>/dev/null || echo "000")
 dbg "revalidation HEAD status=$STATUS"
 
 if [ "$STATUS" != "304" ]; then
   dbg "not 304, letting WebFetch proceed"
+  exit 0
+fi
+
+# TTL cap: even on 304, reject entries older than SDD_CACHE_MAX_AGE seconds
+# (default 86400 = 24h). Prevents a compromised origin from serving stale
+# 304s indefinitely (cache poisoning).
+SDD_CACHE_MAX_AGE="${SDD_CACHE_MAX_AGE:-86400}"
+NOW=$(date +%s)
+AGE=$((NOW - FETCHED_AT))
+if [ "$AGE" -gt "$SDD_CACHE_MAX_AGE" ]; then
+  dbg "cache entry age ${AGE}s exceeds max-age ${SDD_CACHE_MAX_AGE}s, bypass"
+  rm -f "$CACHE_FILE"
   exit 0
 fi
 
