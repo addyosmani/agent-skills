@@ -85,6 +85,27 @@ Derived for the v1 experiment; per-corpus basis is replaceable (analogue to `cur
 
 **File-level coverage** = weighted aggregate over sections (weight = section byte length, normalized); threshold at 0.5 → binary c ∈ {0,1}⁹.
 
+## NSS-Coupled Entry Point (atom-bound pipeline composition)
+
+When this atom is composed with `negative-skill-space` (NSS) in the parent's Stage 3 dispatch, the dispatch chain is:
+
+```
+NSS gap-map on target file             # 12-axis qualitative sweep → 5-10 real gaps
+  ↓ (gap candidates enter atom as a constraint set)
+atom(file, gap_candidates)            # geodesic-only criterion over (gap candidates ∩ missing primitives)
+  ↓ (one atomic action selected)
+verify: Δ = d_pre - d_post             # always ≥ 0 by Lemma 1
+```
+
+In NSS-coupled mode:
+1. **NSS proposes.** `negative-skill-space`'s 12-axis sweep returns a list of real gaps (not performative, not intentional narrow scope) per the `self-archaeology`-derived filter (Extend / Pair / Accept). Only gaps with action recommendation **Extend** enter the atom's constraint set. **Pair** and **Accept** gaps are forwarded to the parent for non-atomic resolution.
+2. **Atom disposes.** For each Extend gap, the atom maps the gap to a missing primitive (gap keywords → `has_X` primitive via the per-corpus basis lookup) and checks whether the corresponding primitive is actually missing in the file's coverage vector. If yes, the primitive joins the candidate set. If no (the gap is qualitative but the file already has the primitive covered), the atom logs the gap as "non-fixable by atom" and defers to NSS.
+3. **Geodesic-only selection.** The atom selects `i* = argmin d_post` over the constraint set, applies the action, verifies Δ ≥ 0.
+
+The NSS-coupled mode is the **default** for parent's Stage 3. The atom-only mode (no NSS upstream) is the fallback when NSS isn't run — in that case the atom's constraint set is "all missing primitives" (the full set, not filtered by NSS).
+
+The constraint set is always a subset of "all missing primitives," so every atom action is still one primitive flip and the only-positive-Δ invariant (Lemma 1) is preserved. Theorem 1 (linear composition) is also preserved because NSS adds no new actions to the atom — it only filters the candidate set, and the atom's argmin-Δ is computed within whatever set NSS passes.
+
 ## S² Lift (compressed Stage 1)
 
 For a single file with N ≥ 2 sections:
