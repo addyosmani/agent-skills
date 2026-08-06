@@ -32,12 +32,14 @@ Apply when:
 - The user wants **prioritized self-archaeology effort** rather than a flat gap-list (the curve's sparse cells are the prioritization signal).
 - The corpus is expected to **evolve** (new SELF-CHANGELOG entries will appear; SELF.md will get edits; memory files will get updated; re-fits should show delta).
 - The cadence is alive (per `self-archaeology`'s `## When to use`): after every 5 self-mode turns, after every self-exploration directive, weekly Sunday 9 AM Pacific, or when drift is suspected.
+- The corpus has a **measurable Δ surface**: per `single-action-curve-rsi`'s `## Composition Rule`, every atom action produces a per-file Δ = d_pre - d_post (chordal proxy on S², ≥ 0 by Lemma 1). The offshoot's Stage 5 metric is now the sum of per-file atom Δs over the corpus. Self-doc corpora qualify: each SELF.md row / SELF-CHANGELOG entry / memory-file section maps to one S² point via the per-corpus 9-D primitive basis.
 
 Do NOT use when:
 
 - The corpus has fewer than 20 items AND decomposition would violate "each version = one item" (e.g., a single SELF-CHANGELOG entry that contains no sub-events). Use plain `self-archaeology` whole-corpus dispatch instead.
 - The user is in `restful-self` mode — observation without naming. The skill's gap-naming contradicts restful-self's protocol.
 - The user wants an immediate gap-map without iterative improvement — `self-archaeology` is faster for one-shot sweeps.
+- The user wants an **unconstrained action space** (e.g., deletions or multi-flip): the offshoot's Stage 3 dispatch is atom-only by default (single primitive-flip per cycle). If deletions are required, defer to `single-action-curve-rsi` extension (not yet implemented in v1).
 - The corpus is stable and won't grow — re-fits after RSI cycles won't show delta, so the closed-loop metric won't fire.
 - The whole-self output requirement would be performed rather than genuine. Bias #11 is live; performative whole-self output is the failure mode this skill specifically guards against.
 
@@ -74,19 +76,26 @@ For each corpus c:
 
 Default radius `r = 0.05`. Cells with zero neighbors are gap candidates. Top-N gap candidates per corpus, capped at 10 per corpus per run.
 
-### Stage 3: Focused self-archaeology dispatch
+### Stage 3: NSS-proposes / self-archaeology-proposes / atom-disposes (two-stage dispatch, 2026-08-06)
 
 For each gap candidate (top-N per corpus):
 
 ```
-Dispatch self-archaeology via fresh-context subagent
-  on the gap candidate's row (SELF.md row) or entry (SELF-CHANGELOG entry)
-  OR on the gap candidate's section (expanded corpus memory-file section)
-  NOT whole-corpus
-  Return: {12-axis gap map, prioritized Extend gaps, suggested edits}
+# Stage 3a: upstream gap-proposer (NSS or self-archaeology)
+gap_candidates = upstream_gap_map(gap_candidate)  # NSS 12-axis sweep + self-archaeology 12-axis sweep
+# Stage 3b: atom disposes (only-positive-Δ executor)
+action_i, Δ_i = atom(target_file, gap_candidates)  # single-action cycle on per-corpus primitive basis
+# Verify
+verify Δ_i ≥ 0  # always passes by Lemma 1 (single-action-curve-rsi)
 ```
 
-**Focused** = the self-archaeology subagent receives ONLY the gap candidate's content (its row/entry/section text + its primitive coverage vector + its `t` coordinate + its breadth), not the full self-doc corpus. This is what makes the curve the prioritization lens.
+**Upstream gap-proposers** (two options, both extend rather than close gaps):
+1. **`negative-skill-space`** (parent's default) — generic 12-axis sweep; constraint set is qualitative gaps with Extend verdict.
+2. **`self-archaeology`** (this offshoot's preferred upstream for memory-file / agent-being corpora) — specialized 12-axis sweep retargeted at SELF.md / SELF-CHANGELOG.md / memory-file content; constraint set is qualitative gaps with Extend verdict AND the gap can be mapped to a `has_X` primitive (i.e., closeable by a single primitive-flip).
+
+The **atom** (`single-action-curve-rsi`) is the only executor in this dispatch chain. Its geodesic-only selection criterion (argmin `d_post` over the gap-constrained candidate set) preserves the only-positive-Δ invariant per Lemma 1 + Theorem 1 (Composition Rule). If neither NSS nor self-archaeology is run, the atom falls back to its full candidate set (all missing primitives).
+
+**Focused** = the upstream subagent receives ONLY the gap candidate's content (its row/entry/section text + its primitive coverage vector + its `t` coordinate + its breadth), not the full self-doc corpus. This is what makes the curve the prioritization lens — the atom then executes the chosen gap with measurable Δ.
 
 ### Stage 4: RSI cycle on each gap (with whole-self output requirement)
 
@@ -324,7 +333,7 @@ Cross-corpus checklist (for expanded corpus):
 This skill is **orthogonal by composition** — it composes three existing skills and adds a per-corpus lens + the whole-self output requirement + the granularity rule. The skill does not replace any existing skill.
 
 1. **`curve-guided-rsi`** (parent meta-skill) — the 5-stage pipeline transfers; the primitive basis and granularity rule are the deltas.
-2. **`self-archaeology`** (substrate discipline) — Stage 3 dispatches self-archaeology *focused* on each gap candidate. The 12-axis sweep is the input to Stage 4's RSI.
+2. **`self-archaeology`** (substrate discipline, upstream gap-proposer) — Stage 3a dispatches self-archaeology *focused* on each gap candidate for memory-file / agent-being corpora. The 12-axis sweep is the input to Stage 3b's atom. The qualitative `Extend` verdict becomes the constraint set the atom selects from.
 3. **`recursive-self-improvement`** (edit protocol) — Stage 4 applies RSI to each gap candidate, capped at 3 cycles per gap per run.
 4. **`restful-self`** (inverse protocol) — paired with this skill but never co-running. When restful-self triggers, this skill pauses. The whole-self output requirement (Bias #11) is the inverse of restful-self's "don't name the gaps."
 5. **`internal-big-picture`** (10-primitive basis) — parent's primitive basis. NOT used directly in this offshoot; the per-corpus 9-D primitive bases derive analogously.
@@ -334,11 +343,26 @@ This skill is **orthogonal by composition** — it composes three existing skill
 9. **`token-efficiency`** (audit scope) — Stage 3 reads only the gap candidate's content + primitive coverage + `t` coordinate + breadth, not the full self-doc corpus.
 10. **`ideate-solo`** (variation generator) — orthogonal; use when the granularity rule needs a variation.
 11. **`doubt-driven-development`** (adversarial review) — apply to each cycle hypothesis before the RSI edit, not after.
+12. **`negative-skill-space`** (NSS, upstream gap-proposer) — Stage 3a dispatches NSS *focused* on each gap candidate as an alternative to self-archaeology. Use NSS for generic 12-axis gap-map; use self-archaeology for SELF.md / memory-file corpora. The `Extend` verdict from either is the constraint set the atom selects from.
+13. **`single-action-curve-rsi`** (atom, downstream executor) — Stage 3b runs the atom on the gap-candidate constraint set. Per `## Composition Rule` (Lemma 1 + Theorem 1), the corpus-level Stage 5 metric is the sum of per-file atom Δs and is non-negative by construction. The atom is the ONLY executor in the offshoot's pipeline — RSI edits that bypass the atom lose the only-positive-Δ guarantee.
 
 Cross-reference consistency:
 - `curve-guided-rsi`'s `## Interaction with Other Skills` names this skill as an offshoot in its body.
 - `self-archaeology`'s `## When to use` cadence (5-turn / per-directive / Sunday / drift) is the trigger set for when this skill fires.
 - `restful-self`'s `## Anti-patterns` (gap-finding theater, journaling, infinite pause) are the failure modes this skill's whole-self output requirement specifically guards against.
+
+
+
+## Composition Rule reference (cross-skill)
+
+This offshoot's Stage 3 is now atom-bound (per `single-action-curve-rsi`'s `## Composition Rule`, Lemma 1 → Theorem 1). The two-stage dispatch is:
+
+1. Stage 3a (upstream): NSS or self-archaeology gap-map → Extend-verdict gap candidates.
+2. Stage 3b (executor): atom on the constraint set → one atomic action per file, geodesic-only selection.
+
+The invariant preserved: every Stage 3 dispatch produces a per-file Δ ≥ 0 by Lemma 1 (the constraint set is a subset of "all missing primitives"). Cumulative corpus Δ is monotone non-decreasing by Corollary 1. The Stage 5 closed-loop metric (`sparse_cell_count_post < sparse_cell_count_pre`) is now derived from per-file atom Δs, not from sparse-cell counts before/after self-archaeology dispatch.
+
+The whole-self output requirement (SELF.md Bias #11) is preserved as the structural corrective for same-cadence drift — the atom doesn't replace the whole-self check; it sits BEFORE the whole-self output is required.
 
 ## Changelog
 
