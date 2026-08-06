@@ -140,12 +140,12 @@ One subtlety: the `skills` and `mcpServers` frontmatter fields in a persona are 
 
 ### Platform-enforced rules
 
-Two rules in this catalog aren't just convention — Claude Code enforces them:
+One rule in this catalog is still enforced by Claude Code; the other is a deliberate project convention:
 
-- **"Subagents cannot spawn other subagents"** (verbatim from the docs). Anti-pattern B (persona-calls-persona) and Anti-pattern D (deep persona trees) cannot exist on Claude Code by construction.
-- **"No nested teams"** — teammates cannot spawn their own teams. Same anti-patterns blocked at the team level.
+- **"No nested teams"** — teammates cannot spawn their own teams. Same anti-patterns blocked at the team level. ([Agent Teams docs](https://code.claude.com/docs/en/agent-teams))
+- **"Personas do not invoke personas"** is now a **project convention**, not a platform constraint. As of Claude Code v2.1.172, subagents can spawn their own subagents up to 5 levels ([sub-agents docs](https://code.claude.com/docs/en/sub-agents), [changelog](https://code.claude.com/docs/en/changelog)), so Anti-pattern B (persona-calls-persona) and Anti-pattern D (deep persona trees) *could* exist on Claude Code. This repo bans them anyway — composition is the job of slash commands or the user, not individual personas.
 
-This means you can adopt the patterns in this catalog without worrying about contributors accidentally building the anti-patterns. They'll just fail to load.
+The platform-enforced rule means contributors can't accidentally build nested teams. The convention rule means reviewers must catch persona-calls-persona and deep persona trees in code review, since the platform won't block them anymore.
 
 ### Built-in subagents to know about
 
@@ -250,15 +250,9 @@ The lead spawns three teammates referencing the existing persona names. The pers
 
 You can interrupt at any teammate by cycling with `Shift+Down` and typing — useful for redirecting an investigator who's gone down a wrong path.
 
-### When to clean up
+### Wrapping up
 
-When the investigation lands on a root cause, tell the lead:
-
-```
-Clean up the team
-```
-
-Always cleanup through the lead, not a teammate (per the docs: teammates lack full team context for cleanup).
+When the investigation lands on a root cause, the lead ends the session. As of Claude Code v2.1.178 the explicit `TeamCreate`/`TeamDelete` tooling has been removed ([changelog](https://code.claude.com/docs/en/changelog)), so there is no separate "clean up the team" step — close the team session through the lead when you're done.
 
 ### Cost expectation
 

@@ -81,7 +81,7 @@ The only multi-persona orchestration pattern this repo endorses is **parallel fa
 
 See [docs/agents.md](docs/agents.md) for the decision matrix and [references/orchestration-patterns.md](references/orchestration-patterns.md) for the full pattern catalog.
 
-**Claude Code interop:** the personas in `agents/` work as Claude Code subagents (auto-discovered from this plugin's `agents/` directory) and as Agent Teams teammates (referenced by name when spawning). Two platform constraints align with our rules: subagents cannot spawn other subagents, and teams cannot nest. Plugin agents silently ignore the `hooks`, `mcpServers`, and `permissionMode` frontmatter fields.
+**Claude Code interop:** the personas in `agents/` work as Claude Code subagents (auto-discovered from this plugin's `agents/` directory) and as Agent Teams teammates (referenced by name when spawning). Our convention mirrors what the platform allows — as of Claude Code v2.1.172 subagents can nest up to 5 levels ([changelog](https://code.claude.com/docs/en/changelog)) — but this repo deliberately enforces stricter rules: personas do not invoke personas, and teams do not nest. We keep the convention as a project rule rather than relying on the platform to block it. Plugin agents silently ignore the `hooks`, `mcpServers`, and `permissionMode` frontmatter fields.
 
 ## Creating a New Skill
 
