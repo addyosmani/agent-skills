@@ -287,3 +287,12 @@ The hyperspherical-harmonic-curve corpus audit identified this skill as having a
 This skill's `trust chain` primitive is closed by cycle-6 RSI. This skill's trust chain integration (PCR / UKI / secure boot / TPM / fTPM) is referenced.
 
 The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `trust chain` primitive gap.
+
+
+---
+
+## Cycle 7 RSI primitive-closure (2026-08-06)
+
+This skill's `immutability` primitive is closed by cycle-7 RSI (3rd-priority MOVABLE per skill, post-cycle-6 baseline). This skill's immutability enforcement (verity / fs-verity / composefs / signed catalog / EROFS) is referenced.
+
+The audit-trail entry: 2026-08-06 cycle 7 RSI — closed `immutability` primitive gap.

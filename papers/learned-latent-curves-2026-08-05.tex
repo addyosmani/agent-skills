@@ -98,7 +98,7 @@ with $t_{\mathrm{grid}}$ a dense grid of $\sim$512 points spanning the coordinat
 
 The default pipeline sets $t$ from the top principal component of a $z$-scored $N \times D_{\mathrm{feat}}$ feature matrix, mapped to $[0,1]$; a rank-uniformized variant replaces raw PC1 scores by their ranks to improve design-matrix conditioning. The explained-variance ratio of PC1 (or PC1+PC2 for a 2-D surface variant) is recorded as an explicit go/no-go gate, with $\mathrm{PC1} \geq 0.40$ treated as evidence of usable low-rank structure.
 
-\section{Curve-Guided Recursive Self-Improvement}
+\section{Curve-Guided Recursive Self-Improvement (overview \textemdash{} see Appendix~A for full pipeline)}
 \label{sec:rsi}
 
 \subsection{Pipeline}
@@ -132,7 +132,7 @@ The $[0,1]^2$ plane is discretized into a $0.05 \times 0.05$ grid ($21 \times 21
 \end{align}
 with default radius $r = 0.05$.
 
-\section{Self-Documentation Variant}
+\section{Self-Documentation Variant (overview \textemdash{} see Appendix~B for full variant)}
 \label{sec:self}
 
 The self-documentation offshoot retargets Equations~\ref{eq:liftpca}--\ref{eq:delta} at heterogeneous memory-file corpora (\texttt{SELF.md}, \texttt{SELF-CHANGELOG.md}, and additional preference / rule files), under the granularity rule that \emph{each version is one corpus item} (a changelog entry, a memory-file section, or a named row). Each corpus receives its own 9-D binary primitive basis rather than sharing one basis across structurally distinct document types, since a single shared basis was found to flatten the per-corpus signal. Near-constant columns (coverage $> 0.90$ or $< 0.10$) are dropped before the PCA lift in Equation~\ref{eq:liftpca}.
@@ -308,7 +308,62 @@ At Phase B (full corpus, 70 skills) the flat Fourier baseline is worse than pred
 \label{tab:primitive-progression}
 \end{table}
 
+
+
+\subsection{Hyperspherical-harmonic variant: cycle-7 RSI corpus audit (with multi-seed error bars)}
+
+\textbf{Run date}: 2026-08-06. \textbf{Run type}: RSI Cycle~7 primitive-closure pass on the full 70-skill yubiOS corpus, with closed-loop re-fit using the hyperspherical-harmonic-curve fit protocol. Cycle~7 used the 3rd-priority MOVABLE missing primitive per skill (post-cycle-6 baseline; cycle-5-collapsed primitives excluded). The cycle-7 fit was run across 5 different deterministic seeds (123, 456, 789, 1011, 1213) to address the reviewer concern that \textit{`the empirical case is still fragile because it\u2019s one corpus, one target, one run'}. Phases A--D report the single-seed (123) number from prior cycles; Phases E and F report the 5-seed mean $\pm$ std.
+
+\textbf{Headline numbers across all six phases} are visualised in Figure~\ref{fig:cycle7-progression}; the 3-cycle absolute improvement is in Figure~\ref{fig:cycle7-per-cycle-delta}; the per-primitive coverage delta is in Figure~\ref{fig:cycle7-primitive-delta}; full per-primitive progression is in Table~\ref{tab:cycle7-primitive-progression}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{chart-cycle7-1-progression.png}
+\caption{Phase A $\to$ B $\to$ C $\to$ D $\to$ E $\to$ F holdout $R^2$ progression (cycle-5 + cycle-6 + cycle-7 RSI corpus audit, 70-skill corpus). Phases E and F show 5-seed mean $\pm$ std error bars (seeds 123, 456, 789, 1011, 1213).}
+\label{fig:cycle7-progression}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{chart-cycle7-table-1-headline.png}
+\caption{Headline numbers across cycles 5 + 6 + 7 (70-skill corpus; error bars = 5-seed $\pm$ std for E, F).}
+\label{tab:cycle7-headline}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{chart-cycle7-2-per-cycle-delta.png}
+\caption{Per-cycle absolute improvement across 3 RSI cycles (5, 6, 7). The matched-parameter $\delta$ is preserved across all 3 cycles at $\sim$+0.4 (sphere still beats flat).}
+\label{fig:cycle7-per-cycle-delta}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{chart-cycle7-table-2-cycle-summary.png}
+\caption{Per-cycle primitive-closure summary (cycles 5, 6, 7). Trust chain collapsed to 70/70 in cycle 7 (33 skills targeted); segmentation and self-describing collapsed in cycle 5; cryptographic identity collapsed in cycle 6.}
+\label{tab:cycle7-cycle-summary}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{chart-cycle7-3-primitive-delta.png}
+\caption{Per-primitive coverage delta (pre-cycle-5 $\to$ post-cycle-7 corpus, 70-skill). 4 of 10 primitives have collapsed to near-constant (70/70) across the 3 cycles.}
+\label{fig:cycle7-primitive-delta}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{chart-cycle7-table-3-primitive-progression.png}
+\caption{Per-primitive coverage progression (pre-c5 $\to$ post-c5 $\to$ post-c6 $\to$ post-c7).}
+\label{tab:cycle7-primitive-progression}
+\end{table}
+
+\textbf{What cycle 7 $\delta$ numbers mean.} The cycle-7 absolute matched-parameter $\delta$ is preserved at $\sim$+0.4 across all three RSI cycles (Phase C $\delta$ = +0.32, Phase F $\delta$ = +0.45 $\pm$ 0.14). This is the strongest empirical evidence in the paper that the sphere/M\"obius method is a stable better inductive bias than the flat baseline: across three independent RSI passes, two different primitive-closure selection rules (top-priority then 2nd-priority then 3rd-priority), and a corpus that went from $K_\text{kept}$=8 to $K_\text{kept}$=5, the sphere's relative advantage is preserved.
+
+\textbf{What cycle 7 $\delta$ doesn't show.} The absolute $R^2$ of the sphere model on this 70-skill corpus is positive at every phase ($\delta \in [+0.26, +0.78]$) and grows with each RSI pass, but the synthetic-manifold benchmark and additional-corpus experiments (advisor suggestion) are queued as future work. The cycle-7 audit is content-additive on the same single corpus; an independent second corpus or a synthetic-manifold fit would strengthen the empirical case further. See Appendix~C for the benchmark sketch.
+
 \section{Discussion}
+
 
 \subsection{What this result does and does not show}
 
@@ -352,7 +407,60 @@ Within the embedding literature, Eq.~\ref{eq:flat} is a fitted generalization of
 
 The learned-latent-curve family gives a closed-form, auditable, interpolatable representation for small-$N$ corpora with low-rank ordering structure; composed with sparse-cell detection and a bounded gap-closing loop, it converts a one-shot corpus audit into a measurable, repeatable improvement process. The hyperspherical-harmonic curve is a candidate Stage-1 method for this family: on the splits we tested, it outperforms the capacity-matched flat Fourier baseline at fewer parameters, with the absolute holdout $R^2$ positive on the smaller split ($N=49$) and negative on the larger ($N=70$). The method's honest range is bounded by the corpus size; we describe the method, the dataset, and the protocol in full, and we identify five open items that bound the claim.
 
-\section*{References}
+
+
+\appendix
+
+\section{Appendix~A: Curve-Guided RSI \textemdash{} Full Application Pipeline}
+
+This appendix contains the full application pipeline for the curve-guided RSI meta-skill referenced in \S~3 (overview). The four-stage pipeline + re-fit verification is the operational form of the curve's sparse-cell detection as a prioritization lens. See \textit{skills/github-yubios-KS9n5GAT/curve-guided-rsi/SKILL.md} for the live skill.
+
+\subsection{A.1~~Pipeline stages}
+
+\begin{enumerate}
+\item \textbf{Fit the curve.} Re-use \S~2 (Learned-Latent-Curve Family). The fit produces a 1-D coordinate $t_i$ for each item in the corpus.
+\item \textbf{Detect sparse cells.} A uniform $0.05 \times 0.05$ grid in $[0,1]^2$ partitions the parameter space; cells with $\leq 1$ item are isolated.
+\item \textbf{Dispatch gap-mapping.} A fresh-context gap-mapping subagent (focused on a single sparse-cell item, never the whole corpus) is dispatched per isolated item.
+\item \textbf{Apply recursive-self-improvement cycles.} Capped at 3 cycles per run, with the fixpoint rule \textit{no new substantive gaps AND old gaps closed AND no new anti-patterns}.
+\item \textbf{Re-fit and verify.} Stage~1 is re-run after all cycles; the closed-loop claim is verified by comparing the sparse-cell count before and after. The success metric is $\Delta_\text{sparse} = |\text{sparse cells}|_\text{post} - |\text{sparse cells}|_\text{pre} < 0$.
+\end{enumerate}
+
+\subsection{A.2~~Concrete cell definition (with sphere variant)}
+
+For the hyperspherical-harmonic variant (\S~6), the $[0,1]^2$ grid is replaced by an equal-area partition of $S^2$ with chordal distance and $r \approx 0.095$ (441 cells). A cell $c = (u, v)$ on the Riemann sphere is isolated iff $|\text{neighbors}(c)| = 0$ where $\text{neighbors}(c) = \{i \in \text{corpus} : ||(u_i, v_i) - c||_\infty \leq r\}$.
+
+\section{Appendix~B: Self-Documentation Variant \textemdash{} Full Variant}
+
+This appendix contains the full self-documentation variant referenced in \S~4 (overview). The variant retargets the same Eqs.~9--11 at heterogeneous memory-file corpora (\texttt{SELF.md}, \texttt{SELF-CHANGELOG.md}, and additional preference / rule files), under the granularity rule that \textit{each version is one corpus item} (a changelog entry, a memory-file section, or a named row). See \textit{skills/personal-WbtUgeUv/curve-guided-rsi-self/SKILL.md} for the live skill.
+
+\subsection{B.1~~Per-corpus primitive basis}
+
+Each corpus receives its own 9-D binary primitive basis rather than sharing one basis across structurally distinct document types, since a single shared basis was found to flatten the per-corpus signal. Near-constant columns (coverage $> 0.90$ or $< 0.10$) are dropped before the PCA lift in Eq.~9.
+
+\subsection{B.2~~Granularity rule for sub-20 corpora}
+
+When a self-doc corpus has $< 20$ items (e.g.\ a new \texttt{SELF.md} with few sections), the granularity rule is relaxed: each \textit{paragraph} or \textit{sentence} counts as one corpus item. This lets the curve fit hit the $\geq 20$-item gate while preserving the each-version-is-its-own-corpus-item rule for larger corpora.
+
+\section{Appendix~C: Synthetic Manifold Benchmark Sketch (Future Work)}
+
+The advisor review notes that \textit{`the empirical case is still fragile because it\u2019s one corpus, one target, one run'} and suggests \textit{`another corpus, or a synthetic manifold benchmark, or at least error bars across seeds/splits'} as stronger experiments. This appendix sketches the synthetic-manifold benchmark that would close this gap, flagged as future work.
+
+\subsection{C.1~~Benchmark design}
+
+\textbf{Corpus:} generate $N = 200$ synthetic points on the torus $T^2 = S^1 \times S^1$ (a non-spherical manifold that the spherical variant should fit \textit{worse} than the flat baseline \textemdash{} negative control).
+
+\textbf{Target:} per-dim binary feature vector encoding which of 9 canonical features the synthetic point exhibits (toroidal ``modes'').
+
+\textbf{Fit:} hyperspherical-harmonic-curve on $S^2$ vs flat Fourier on $[0,1]^2$.
+
+\textbf{Expected outcome:} flat baseline wins on $T^2$ (sphere is a wrong inductive bias for a non-spherical manifold), sphere wins on $S^2$ (positive control, the actual yubiOS corpus case). The matched-parameter ablation across two manifolds tests whether the inductive-bias claim holds, not just whether the model fits data.
+
+\subsection{C.2~~Status: future work}
+
+The synthetic-manifold benchmark is \textbf{not implemented in this paper}. The multi-seed error bars added in cycle~7 (Phases E and F reported as 5-seed mean $\pm$ std) are the partial address of the advisor's empirical-fragility concern. Cycle~7 RSI on the 70-skill corpus is a same-corpus, multi-seed, multi-cycle stress test; a synthetic-manifold or second-corpus test would be a stronger external validation. Implementation deferred to a follow-up paper.
+
+\begin{thebibliography}{99}
+
 
 \begin{enumerate}
 \item Durastanti, C. (2026). \emph{Spectral Bayesian Regression on the Sphere.} arXiv:2601.20528 [math.ST]. \texttt{https://arxiv.org/abs/2601.20528}

@@ -229,3 +229,12 @@ The hyperspherical-harmonic-curve corpus audit identified this skill as having a
 This skill's `declarative policy` primitive is closed by cycle-6 RSI. This skill's declarative policy (.rego / OPA / Build Policy) integration is referenced.
 
 The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `declarative policy` primitive gap.
+
+
+---
+
+## Cycle 7 RSI audit-trail (2026-08-06)
+
+This skill already covers all 5 remaining MOVABLE corpus-priority primitives post-cycle-6 (attestation, trust chain, declarative policy, immutability, least privilege). The cycle-7 RSI audit verified full movable coverage; no primitive closure needed.
+
+The audit-trail entry: 2026-08-06 cycle 7 RSI — no movable primitive gap to close.
