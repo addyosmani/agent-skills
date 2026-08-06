@@ -528,3 +528,12 @@ This skill already covers all 10 canonical yubiOS primitives pre-cycle-5. The cy
 ## Changelog
 
 - **2026-08-06 cycle 5 RSI**: no primitive closure needed (already covers all 10 primitives). See `refs/cycle5-results-2026-08-06.md`.
+
+
+---
+
+## Cycle 6 RSI audit-trail (2026-08-06)
+
+This skill already covers all 6 movable corpus-priority primitives post-cycle-5. The cycle-6 RSI audit verified full coverage; no primitive closure needed.
+
+The audit-trail entry: 2026-08-06 cycle 6 RSI — no movable primitive gap to close.

@@ -175,3 +175,12 @@ The hyperspherical-harmonic-curve corpus audit identified this skill as having a
 ## Changelog
 
 - **2026-08-06 cycle 5 RSI**: closed `segmentation` primitive gap (corpus-wide count 22→23/70). See `refs/cycle5-results-2026-08-06.md` for the corpus-fit delta measurement.
+
+
+---
+
+## Cycle 6 RSI audit-trail (2026-08-06)
+
+This skill already covers all 6 movable corpus-priority primitives post-cycle-5. The cycle-6 RSI audit verified full coverage; no primitive closure needed.
+
+The audit-trail entry: 2026-08-06 cycle 6 RSI — no movable primitive gap to close.

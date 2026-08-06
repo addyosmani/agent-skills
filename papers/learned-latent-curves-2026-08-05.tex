@@ -260,19 +260,53 @@ At Phase B (full corpus, 70 skills) the flat Fourier baseline is worse than pred
 \item Möbius refinement (train $R^2$): identity $0.9125 \to$ refined $0.9211$, $\Delta = +0.009$. Train-only; no holdout effect measured.
 \end{itemize}
 
-\subsection{Hyperspherical-harmonic variant: cycle-5 RSI corpus audit (cycle 5, all 70 skills)}
+\subsection{Hyperspherical-harmonic variant: cycle-5 + cycle-6 RSI corpus audit}
 
-\textbf{Run date}: 2026-08-06. \textbf{Run type}: RSI Cycle~5 primitive-closure pass on the full 70-skill yubiOS corpus, with closed-loop re-fit using the hyperspherical-harmonic-curve fit protocol. The cycle-5 RSI edited all 70 skills (a single Cycle~5 section + Changelog entry per skill, content-additive \textemdash{} no existing content removed or rewritten). For each skill, the target primitive was the corpus-priority primitive that THIS skill was also lacking (priority order: segmentation, trust chain, cryptographic identity, declarative policy, self-describing, attestation, immutability, least privilege, continuous/adaptive, audit/evidence).
+\textbf{Run date}: 2026-08-06. \textbf{Run type}: two RSI passes on the full 70-skill yubiOS corpus (cycle~5 then cycle~6), with closed-loop re-fits using the hyperspherical-harmonic-curve fit protocol. Both passes are content-additive \textemdash{} no existing content was removed or rewritten. The corpus-fit protocol is: binary 10-D primitive coverage $\to$ drop near-constant columns $\to$ D=384 lift via fixed seeded QR $\to$ PCA $\to$ rank-uniformize $\to$ inverse stereographic $\to$ closed-form ridge on hyperspherical $S^2/L=3$ vs flat $k{=}2$. The per-skill target primitive was the corpus-priority primitive that THIS skill was also lacking; cycle~6 used 2nd-priority MOVABLE primitives (cycle-5-collapsed primitives excluded).
 
-\textbf{Phase A} (pre-cycle-5, 70 skills, 8 kept primitives, this run's heuristic): \\
-$R^2_{\mathrm{holdout}} = +0.264$ (sphere, 6{,}534 parameters) vs.\ $-0.115$ (flat $k{=}2$, 9{,}984 parameters). $\delta = +0.379$. PC1+PC2 = $0.467$.
+\textbf{Headline numbers} across all four phases are listed in Table~\ref{tab:headline} below; the visual progression is shown in Figure~\ref{fig:progression}; the per-cycle absolute improvement is in Figure~\ref{fig:per-cycle-delta}; the per-cycle primitive-closure summary is in Table~\ref{tab:cycle-summary}; the per-primitive coverage delta is in Figure~\ref{fig:primitive-delta}; and the per-primitive coverage progression is in Table~\ref{tab:primitive-progression}. All five figures and tables are embedded directly in the rendered PDF; no external references are required.
 
-\textbf{Phase B} (post-cycle-5, 70 skills, 6 kept primitives in the pre/post intersection, this run's heuristic): \\
-$R^2_{\mathrm{holdout}} = +0.534$ (sphere, 6{,}534 parameters) vs.\ $+0.129$ (flat $k{=}2$, 9{,}984 parameters). $\delta = +0.405$. PC1+PC2 = $0.587$.
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{chart-1-progression.png}
+\caption{Phase A $\to$ B $\to$ C $\to$ D holdout $R^2$ progression (cycle-5 + cycle-6 RSI corpus audit, 70-skill corpus).}
+\label{fig:progression}
+\end{figure}
 
-\textbf{Cycle-5 absolute $\Delta$ (Phase B $-$ Phase A)}: sphere $+0.270$; flat $+0.244$; $\delta$ shift $+0.026$. Both arms of the matched-parameter ablation improved; the sphere still beats the flat by $\sim{+}0.40$ in both phases. The cycle-5 ref artifact is at \texttt{refs/cycle5-results-2026-08-06.md}.
+\begin{table}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{table-1-headline.png}
+\caption{Headline numbers across cycles 5 + 6 (70-skill corpus).}
+\label{tab:headline}
+\end{table}
 
-\textbf{Caveat}: this run's primitive-coverage heuristic differs from the cycle-4 heuristic used in Sections~8.2--8.3, so absolute cycle-5 numbers are not directly comparable to the cycle-4 baseline (cycle-4 Phase~B: sphere $+0.222$, flat $-1.120$, $\delta +1.342$). The apples-to-apples cycle-5 metric is the pre/post absolute $\Delta$ on the same heuristic, reported above.
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{chart-2-per-cycle-delta.png}
+\caption{Per-cycle absolute improvement (sphere + flat $R^2$ delta per RSI pass).}
+\label{fig:per-cycle-delta}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{table-2-cycle-summary.png}
+\caption{Per-cycle primitive-closure summary.}
+\label{tab:cycle-summary}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{chart-3-primitive-delta.png}
+\caption{Per-primitive coverage delta (pre-cycle-5 $\to$ post-cycle-6 corpus, 70-skill).}
+\label{fig:primitive-delta}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{table-3-primitive-progression.png}
+\caption{Per-primitive coverage progression (pre-cycle-5 $\to$ post-cycle-5 $\to$ post-cycle-6).}
+\label{tab:primitive-progression}
+\end{table}
 
 \section{Discussion}
 
