@@ -104,17 +104,20 @@ This skill is **orthogonal by composition** — it composes three existing skill
 5. **`context-isolation`** (subagent discipline) — Stage 3 dispatches NSS via fresh-context subagents per `negative-skill-space`'s operational pattern; no context pollution.
 6. **`token-efficiency`** (audit scope) — Stage 3 reads only the gap candidate's SKILL.md + primitive coverage + `t` coordinate, not the full corpus.
 
-**Stage 3 redesign (atom-based dispatch, 2026-08-06)**: Stage 3 is now **atom-based, not self-archaeology-based**. Per `single-action-curve-rsi`'s `## Composition Rule`, Stage 3 is:
+**Stage 3 redesign (NSS-proposes / atom-disposes, 2026-08-06)**: Stage 3 is now a two-stage dispatch:
 
 ```
 For each sparse_cell in equal_area_partition:
     file_i = the file whose S² point lies in sparse_cell
-    d_pre_i, d_post_i = atom(file_i)             # one single-action cycle
-    Δ_corpus += (d_pre_i - d_post_i)             # always ≥ 0 by Lemma 1 + Theorem 1
-Return Δ_corpus
+    # Stage 3a: NSS proposes (default upstream gap-proposer)
+    gap_candidates = nss_gap_map(file_i)         # 12-axis qualitative sweep → Extend gaps only
+    # Stage 3b: atom disposes (only-positive-Δ executor)
+    d_pre_i, d_post_i, action_i = atom(file_i, gap_candidates)
+    Δ_corpus += (d_pre_i - d_post_i)            # always ≥ 0 by Lemma 1 + Theorem 1
+Return Δ_corpus, action_set
 ```
 
-The `negative-skill-space` dispatch remains an *option* (axis-12 sweep per gap candidate) when the user wants a deeper qualitative gap map; the default dispatch is the atom because it preserves the only-positive-Δ invariant at corpus level.
+**NSS stays in the loop as the upstream gap-proposer** (`negative-skill-space`'s 12-axis sweep → 5–10 real Extend gaps). The **atom stays as the only-positive-Δ executor** (single-action selection within NSS's gap set). The two compose without breaking either invariant: NSS adds no new actions to the atom — it filters the candidate set; the atom's argmin-Δ is computed within whatever set NSS passes. The atom-only fallback (no NSS upstream) uses "all missing primitives" as the constraint set, preserving Lemma 1 + Theorem 1.
 
 **Composition Rule reference**: Stage 5's verification metric (sparse_cell_count_post < sparse_cell_count_pre) is now derived from per-file atom Δs. **Every parent's run produces non-negative cumulative corpus Δ by construction.** See `single-action-curve-rsi`'s `## Composition Rule` section (Lemma 1, Theorem 1, Corollary 1).
 
@@ -253,17 +256,20 @@ This skill is **orthogonal by composition** — it composes three existing skill
 5. **`context-isolation`** (subagent discipline) — Stage 3 dispatches NSS via fresh-context subagents per `negative-skill-space`'s operational pattern; no context pollution.
 6. **`token-efficiency`** (audit scope) — Stage 3 reads only the gap candidate's SKILL.md + primitive coverage + `t` coordinate, not the full corpus.
 
-**Stage 3 redesign (atom-based dispatch, 2026-08-06)**: Stage 3 is now **atom-based, not self-archaeology-based**. Per `single-action-curve-rsi`'s `## Composition Rule`, Stage 3 is:
+**Stage 3 redesign (NSS-proposes / atom-disposes, 2026-08-06)**: Stage 3 is now a two-stage dispatch:
 
 ```
 For each sparse_cell in equal_area_partition:
     file_i = the file whose S² point lies in sparse_cell
-    d_pre_i, d_post_i = atom(file_i)             # one single-action cycle
-    Δ_corpus += (d_pre_i - d_post_i)             # always ≥ 0 by Lemma 1 + Theorem 1
-Return Δ_corpus
+    # Stage 3a: NSS proposes (default upstream gap-proposer)
+    gap_candidates = nss_gap_map(file_i)         # 12-axis qualitative sweep → Extend gaps only
+    # Stage 3b: atom disposes (only-positive-Δ executor)
+    d_pre_i, d_post_i, action_i = atom(file_i, gap_candidates)
+    Δ_corpus += (d_pre_i - d_post_i)            # always ≥ 0 by Lemma 1 + Theorem 1
+Return Δ_corpus, action_set
 ```
 
-The `negative-skill-space` dispatch remains an *option* (axis-12 sweep per gap candidate) when the user wants a deeper qualitative gap map; the default dispatch is the atom because it preserves the only-positive-Δ invariant at corpus level.
+**NSS stays in the loop as the upstream gap-proposer** (`negative-skill-space`'s 12-axis sweep → 5–10 real Extend gaps). The **atom stays as the only-positive-Δ executor** (single-action selection within NSS's gap set). The two compose without breaking either invariant: NSS adds no new actions to the atom — it filters the candidate set; the atom's argmin-Δ is computed within whatever set NSS passes. The atom-only fallback (no NSS upstream) uses "all missing primitives" as the constraint set, preserving Lemma 1 + Theorem 1.
 
 **Composition Rule reference**: Stage 5's verification metric (sparse_cell_count_post < sparse_cell_count_pre) is now derived from per-file atom Δs. **Every parent's run produces non-negative cumulative corpus Δ by construction.** See `single-action-curve-rsi`'s `## Composition Rule` section (Lemma 1, Theorem 1, Corollary 1).
 
