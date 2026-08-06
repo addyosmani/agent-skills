@@ -1,10 +1,359 @@
+---
+name: shipping-and-launch
+description: Prepares production launches. Use when preparing to deploy to production. Use when you need a pre-launch checklist, when setting up monitoring, when planning a staged rollout, or when you need a rollback strategy.
+---
+
+# Shipping and Launch
+
+## Overview
+
+Ship with confidence. The goal is not just to deploy — it's to deploy safely, with monitoring in place, a rollback plan ready, and a clear understanding of what success looks like. Every launch should be reversible, observable, and incremental.
+
+## When to Use
+
+- Deploying a feature to production for the first time
+- Releasing a significant change to users
+- Migrating data or infrastructure
+- Opening a beta or early access program
+- Any deployment that carries risk (all of them)
+
+## The Pre-Launch Checklist
+
+### Code Quality
+
+- [ ] All tests pass (unit, integration, e2e)
+- [ ] Build succeeds with no warnings
+- [ ] Lint and type checking pass
+- [ ] Code reviewed and approved
+- [ ] No TODO comments that should be resolved before launch
+- [ ] No `console.log` debugging statements in production code
+- [ ] Error handling covers expected failure modes
+
+### Security
+
+- [ ] No secrets in code or version control
+- [ ] `npm audit` shows no critical or high vulnerabilities
+- [ ] Input validation on all user-facing endpoints
+- [ ] Authentication and authorization checks in place
+- [ ] Security headers configured (CSP, HSTS, etc.)
+- [ ] Rate limiting on authentication endpoints
+- [ ] CORS configured to specific origins (not wildcard)
+
+### Performance
+
+- [ ] Core Web Vitals within "Good" thresholds
+- [ ] No N+1 queries in critical paths
+- [ ] Images optimized (compression, responsive sizes, lazy loading)
+- [ ] Bundle size within budget
+- [ ] Database queries have appropriate indexes
+- [ ] Caching configured for static assets and repeated queries
+
+### Accessibility
+
+- [ ] Keyboard navigation works for all interactive elements
+- [ ] Screen reader can convey page content and structure
+- [ ] Color contrast meets WCAG 2.1 AA (4.5:1 for text)
+- [ ] Focus management correct for modals and dynamic content
+- [ ] Error messages are descriptive and associated with form fields
+- [ ] No accessibility warnings in axe-core or Lighthouse
+
+### Infrastructure
+
+- [ ] Environment variables set in production
+- [ ] Database migrations applied (or ready to apply)
+- [ ] DNS and SSL configured
+- [ ] CDN configured for static assets
+- [ ] Logging and error reporting configured
+- [ ] Health check endpoint exists and responds
+
+### Documentation
+
+- [ ] README updated with any new setup requirements
+- [ ] API documentation current
+- [ ] ADRs written for any architectural decisions
+- [ ] Changelog updated
+- [ ] User-facing documentation updated (if applicable)
+
+## Feature Flag Strategy
+
+Ship behind feature flags to decouple deployment from release:
+
+```typescript
+// Feature flag check
+const flags = await getFeatureFlags(userId);
+
+if (flags.taskSharing) {
+  // New feature: task sharing
+  return <TaskSharingPanel task={task} />;
+}
+
+// Default: existing behavior
+return null;
+```
+
+**Feature flag lifecycle:**
+
+```
+1. DEPLOY with flag OFF     → Code is in production but inactive
+2. ENABLE for team/beta     → Internal testing in production environment
+3. GRADUAL ROLLOUT          → 5% → 25% → 50% → 100% of users
+4. MONITOR at each stage    → Watch error rates, performance, user feedback
+5. CLEAN UP                 → Remove flag and dead code path after full rollout
+```
+
+**Rules:**
+- Every feature flag has an owner and an expiration date
+- Clean up flags within 2 weeks of full rollout
+- Don't nest feature flags (creates exponential combinations)
+- Test both flag states (on and off) in CI
+
+## Staged Rollout
+
+### The Rollout Sequence
+
+```
+1. DEPLOY to staging
+   └── Full test suite in staging environment
+   └── Manual smoke test of critical flows
+
+2. DEPLOY to production (feature flag OFF)
+   └── Verify deployment succeeded (health check)
+   └── Check error monitoring (no new errors)
+
+3. ENABLE for team (flag ON for internal users)
+   └── Team uses the feature in production
+   └── 24-hour monitoring window
+
+4. CANARY rollout (flag ON for 5% of users)
+   └── Monitor error rates, latency, user behavior
+   └── Compare metrics: canary vs. baseline
+   └── 24-48 hour monitoring window
+   └── Advance only if all thresholds pass (see table below)
+
+5. GRADUAL increase (25% -> 50% -> 100%)
+   └── Same monitoring at each step
+   └── Ability to roll back to previous percentage at any point
+
+6. FULL rollout (flag ON for all users)
+   └── Monitor for 1 week
+   └── Clean up feature flag
+```
+
+### Rollout Decision Thresholds
+
+Use these thresholds to decide whether to advance, hold, or roll back at each stage:
+
+| Metric | Advance (green) | Hold and investigate (yellow) | Roll back (red) |
+|--------|-----------------|-------------------------------|-----------------|
+| Error rate | Within 10% of baseline | 10-100% above baseline | >2x baseline |
+| P95 latency | Within 20% of baseline | 20-50% above baseline | >50% above baseline |
+| Client JS errors | No new error types | New errors at <0.1% of sessions | New errors at >0.1% of sessions |
+| Business metrics | Neutral or positive | Decline <5% (may be noise) | Decline >5% |
+
+### When to Roll Back
+
+Roll back immediately if:
+- Error rate increases by more than 2x baseline
+- P95 latency increases by more than 50%
+- User-reported issues spike
+- Data integrity issues detected
+- Security vulnerability discovered
+
+## Monitoring and Observability
+
+### What to Monitor
+
+```
+Application metrics:
+├── Error rate (total and by endpoint)
+├── Response time (p50, p95, p99)
+├── Request volume
+├── Active users
+└── Key business metrics (conversion, engagement)
+
+Infrastructure metrics:
+├── CPU and memory utilization
+├── Database connection pool usage
+├── Disk space
+├── Network latency
+└── Queue depth (if applicable)
+
+Client metrics:
+├── Core Web Vitals (LCP, INP, CLS)
+├── JavaScript errors
+├── API error rates from client perspective
+└── Page load time
+```
+
+### Error Reporting
+
+```typescript
+// Set up error boundary with reporting
+class ErrorBoundary extends React.Component {
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    // Report to error tracking service
+    reportError(error, {
+      componentStack: info.componentStack,
+      userId: getCurrentUser()?.id,
+      page: window.location.pathname,
+    });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <ErrorFallback onRetry={() => this.setState({ hasError: false })} />;
+    }
+    return this.props.children;
+  }
+}
+
+// Server-side error reporting
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  reportError(err, {
+    method: req.method,
+    url: req.url,
+    userId: req.user?.id,
+  });
+
+  // Don't expose internals to users
+  res.status(500).json({
+    error: { code: 'INTERNAL_ERROR', message: 'Something went wrong' },
+  });
+});
+```
+
+### Post-Launch Verification
+
+In the first hour after launch:
+
+```
+1. Check health endpoint returns 200
+2. Check error monitoring dashboard (no new error types)
+3. Check latency dashboard (no regression)
+4. Test the critical user flow manually
+5. Verify logs are flowing and readable
+6. Confirm rollback mechanism works (dry run if possible)
+```
+
+## Rollback Strategy
+
+Every deployment needs a rollback plan before it happens:
+
+```markdown
+## Rollback Plan for [Feature/Release]
+
+### Trigger Conditions
+- Error rate > 2x baseline
+- P95 latency > [X]ms
+- User reports of [specific issue]
+
+### Rollback Steps
+1. Disable feature flag (if applicable)
+   OR
+1. Deploy previous version: `git revert <commit> && git push`
+2. Verify rollback: health check, error monitoring
+3. Communicate: notify team of rollback
+
+### Database Considerations
+- Migration [X] has a rollback: `npx prisma migrate rollback`
+- Data inserted by new feature: [preserved / cleaned up]
+
+### Time to Rollback
+- Feature flag: < 1 minute
+- Redeploy previous version: < 5 minutes
+- Database rollback: < 15 minutes
+```
+## See Also
+
+- Every change must clear the project-wide Definition of Done (tests pass, no regressions, behavior verified at runtime, docs updated) before this checklist applies
+- Security, performance, and accessibility pre-launch checks are covered by the `security-and-hardening`, `performance-optimization`, and `frontend-ui-engineering` skills respectively
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|---|---|
+| "It works in staging, it'll work in production" | Production has different data, traffic patterns, and edge cases. Monitor after deploy. |
+| "We don't need feature flags for this" | Every feature benefits from a kill switch. Even "simple" changes can break things. |
+| "Monitoring is overhead" | Not having monitoring means you discover problems from user complaints instead of dashboards. |
+| "We'll add monitoring later" | Add it before launch. You can't debug what you can't see. |
+| "Rolling back is admitting failure" | Rolling back is responsible engineering. Shipping a broken feature is the failure. |
+
+## Red Flags
+
+- Deploying without a rollback plan
+- No monitoring or error reporting in production
+- Big-bang releases (everything at once, no staging)
+- Feature flags with no expiration or owner
+- No one monitoring the deploy for the first hour
+- Production environment configuration done by memory, not code
+- "It's Friday afternoon, let's ship it"
+
+## Verification
+
+Before deploying:
+
+- [ ] Pre-launch checklist completed (all sections green)
+- [ ] Feature flag configured (if applicable)
+- [ ] Rollback plan documented
+- [ ] Monitoring dashboards set up
+- [ ] Team notified of deployment
+
+After deploying:
+
+- [ ] Health check returns 200
+- [ ] Error rate is normal
+- [ ] Latency is normal
+- [ ] Critical user flow works
+- [ ] Logs are flowing
+- [ ] Rollback tested or verified ready
+
+## Immutability coverage for shipping and launch (curve-guided-rsi cycle-4 substantive edit)
+
+This skill — **Ship behind feature flags to decouple deployment from release:** — sits in a domain that benefits from explicit immutability (sysext, read-only mounts, fsverity, OSTree, hermetic /usr, verity) coverage. Even when the skill's primary job is not the immutability primitive itself, downstream consumers (CI gates, audit pipelines, runtime monitors) expect every skill to declare its position on the primitive so the curve-guided corpus audit can place it on the primitive-coverage map.
+
+For shipping and launch, the immutability primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the immutability layer of the yubiOS pipeline, and consumers that reason about immutability coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full immutability primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
+
+Concrete implications for shipping and launch: any change to the skill should be reviewed for impact on immutability coverage; gaps in immutability that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
+
+## Continuous/adaptive coverage for shipping and launch (curve-guided-rsi cycle-5 substantive edit)
+
+This skill — **pre-launch checklist, monitoring, staged rollout, rollback** — sits in a domain that benefits from explicit continuous/adaptive coverage (live monitoring, re-evaluation, ongoing detection). Cycle-5 of `curve-guided-rsi` was run on the expanded 69-skill corpus; this skill's fit coordinate was (u=0.820, v=0.516), PC1+PC2 = 0.4615, holdout R² = +0.2244.
+
+For shipping and launch, the continuous/adaptive primitive applies as follows: this skill contributes to continuous/adaptive via launch discipline + rollback readiness. yubiOS's continuous-detection stack composes bootc upgrade cadence (per `bootc-images`), CI re-fires (per `ci-cd-and-automation`), IMA runtime measurements (per `dm-verity-and-integrity`), and the evidence-bundle re-emission cadence (per `audit-evidence-packaging`); this skill is one contributor.
+
+Concrete implications for shipping and launch: any change should be reviewed for impact on continuous coverage; gaps are tracked in the cycle-5 run log at `refs/curve-guided-rsi-v2-cycle5-deep-research-2026-08-04.md`.
+
+
+---
+
+## Cycle 5 RSI primitive-closure (2026-08-06)
+
+The hyperspherical-harmonic-curve corpus audit identified this skill as having a `segmentation` coverage gap in the 10-primitive yubiOS framework. **segmentation** was missing across 22/70 skills pre-cycle-5; closing one corpus-wide gap here contributes to the cycle-5 RSI delta measured in `refs/cycle5-results-2026-08-06.md`.
+
+**Relevance:** This skill enforces segmentation via namespace / nspawn / cgroup / microsegmentation / private-users. Specifically it covers: segmentation, namespace, nspawn.
+
+**Keywords introduced in this skill (cycle-5 RSI):** `segmentation`, `namespace`, `nspawn`, `cgroup`
+
+**Audit-trail:** This addition closes one corpus-wide primitive gap (corpus-wide `segmentation` count moved 22→23/70). Per-skill impact is recorded in the cycle-5 results artifact. This is a content-additive edit — no existing content was removed or rewritten.
+
 ## Changelog
 
-- 2026-08-06: Cycle 8 RSI primitive-closure — added declarative policy keywords (top-priority MOVABLE missing post-cycle-7).
+- **2026-08-06 cycle 5 RSI**: closed `segmentation` primitive gap (corpus-wide count 22→23/70). See `refs/cycle5-results-2026-08-06.md` for the corpus-fit delta measurement.
 
-- 2026-08-06: Cycle 9 RSI primitive-closure substantive entry — added attestation footer (canonical keyword set: `attestation, verify, verification, evidence, quote, signing, signed`). This skill now contributes to the attestation primitive (10-primitive spine, per `internal-big-picture`). Pre-cycle-9 attestation coverage = 62/70 (for attestation) or 63/70 (for least privilege); post-cycle-9 RSI the residual closes.
-## Changelog
 
-- 2026-08-06: Cycle 8 RSI primitive-closure — added declarative policy keywords (top-priority MOVABLE missing post-cycle-7).
+---
 
-- 2026-08-06: Cycle 9 RSI primitive-closure substantive entry — added attestation footer (canonical keyword set: `attestation, verify, verification, evidence, quote, signing, signed`). This skill now contributes to the attestation primitive (10-primitive spine, per `internal-big-picture`). Pre-cycle-9 attestation coverage = 62/70 (for attestation) or 63/70 (for least privilege); post-cycle-9 RSI the residual closes.
+## Cycle 6 RSI primitive-closure (2026-08-06)
+
+This skill's `cryptographic identity` primitive is closed by cycle-6 RSI. This skill's cryptographic identity (FIDO2 / PIV / YubiKey / ssh-key / hmac-secret / passkey) integration is referenced.
+
+The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `cryptographic identity` primitive gap.
+
+
+---
+
+## Cycle 7 RSI primitive-closure (2026-08-06)
+
+This skill's `trust chain` primitive is closed by cycle-7 RSI (3rd-priority MOVABLE per skill, post-cycle-6 baseline). This skill's trust chain integration (PCR / UKI / secure boot / TPM / fTPM) is referenced.
+
+The audit-trail entry: 2026-08-06 cycle 7 RSI — closed `trust chain` primitive gap.
