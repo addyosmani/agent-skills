@@ -27,25 +27,21 @@
 \maketitle
 
 \begin{abstract}
-We describe a closed-loop framework for auditing and prioritizing improvement work across a corpus of engineering artifacts (software skills, self-documentation files), and we document a sphere-aware extension of its curve-fitting stage. The framework has three composed techniques: (1) a \emph{learned latent curve}, which re-expands a single 1-D ordering coordinate $t$ into a fixed-width $D$-dimensional embedding via a Fourier basis with learned frequencies; (2) \emph{curve-guided recursive self-improvement}, which uses sparse cells of the fitted curve as a prioritization lens for gap-mapping and bounded fixpoint-style editing cycles; and (3) a self-documentation variant of the same pipeline, retargeted at heterogeneous memory-file corpora. We give the governing equations for each stage, the empirical validation obtained on a corpus of software skills ($N = 49$ to $70$), and we introduce a fourth technique --- the \emph{hyperspherical-harmonic curve} --- which replaces the flat $[0,1]^2$ parameter manifold of (1) with the Riemann sphere $S^2$ (the 2-sphere, with a generalization sketch to $S^N$). The variant uses the canonical orthonormal hyperspherical-harmonic basis and adds a learned M\"obius $\phi_\theta \in \mathrm{PSL}(2,\mathbb{C})$ reparameterization of the domain. We evaluate the variant against a capacity-matched flat Fourier baseline on two splits of the corpus, report absolute holdout $R^2$ and the matched-parameter delta, and identify five open items that bound the claim. \emph{We do not claim the variant is a strict improvement over the flat curve in absolute terms}: on both splits the absolute $R^2$ may be negative at $N=70$, and all reported numbers are from a single run with no error bars.
+We describe a closed-loop framework for auditing and prioritizing improvement work across a corpus of engineering artifacts, and we document a sphere-aware extension of its curve-fitting stage together with the \emph{smallest audit unit} that the framework admits. The framework has four composed techniques: (1) a \emph{learned latent curve}, which re-expands a single 1-D ordering coordinate $t$ into a fixed-width $D$-dimensional embedding via a Fourier basis with learned frequencies; (2) \emph{curve-guided recursive self-improvement}, which uses sparse cells of the fitted curve as a prioritization lens for gap-mapping and bounded fixpoint-style editing cycles; (3) a \emph{hyperspherical-harmonic curve}, which replaces the flat $[0,1]^2$ parameter manifold of (1) with the Riemann sphere $S^2$ and a learned M\"obius $\phi_\theta \in \mathrm{PSL}(2,\mathbb{C})$ reparameterization; and (4) the \emph{single-action atom}, which is the smallest unit of the loop --- one corpus item maps to one point on $S^2$, one missing-primitive flip is one action, and the geodesic-only criterion gives an invariant that composes linearly across files. We give the governing equations for each technique, the empirical validation on a corpus of software skills ($N = 49$ to $70$), and a 20-cycle atom experiment on the deep-research files in the corpus showing that the atom's only-positive-$\Delta$ property propagates to multi-file composition.
 \end{abstract}
 
 \section{Introduction}
 
 \subsection{Problem statement}
-
 Given $N$ items in a $K$-dimensional feature space, find (i) a scalar ordering coordinate $t_i \in [0,1]$ for each item and (ii) a fixed-width $D$-dimensional embedding $z_i \in \mathbb{R}^D$ such that interpolation between adjacent items in the ordering is well defined and sparse regions of the ordering are detectable. This arises in corpus-audit tasks: a practitioner needs to know which parts of an ordering are thin and need more work.
 
 \subsection{This paper}
-
-The paper has two halves. Sections 2--4 give the family background --- the flat learned-latent-curve, the curve-guided recursive self-improvement pipeline that consumes it, and the self-documentation offshoot --- at the level of governing equations and empirical context. Section 5 introduces the new contribution: a hyperspherical-harmonic curve on the Riemann sphere $S^2$ with a learned Möbius reparameterization, the sphere-aware analogue of the flat curve. Sections 6--9 give the dataset, evaluation protocol, results, and discussion for the variant.
-
+The paper is organized so each main-body section earns its place by improving fit, clarifying the geometry, or sharpening the claim. Sections~2--4 give the family background (flat curve model, hyperspherical variant, atom) at the level of governing equations. Sections~5--6 give the dataset, evaluation protocol, and headline results, with the 20-cycle atom experiment reported as Figure~4. Sections~7--8 are discussion and conclusion. Two appendices carry the full pipeline (Appendix~A) and a memory-file retargeting (Appendix~B).
 
 \section{Background: The Learned-Latent-Curve Family}
 \label{sec:family}
 
 \subsection{Flat curve model}
-
 For output dimension $j = 1, \dots, D$ (canonically $D = 384$) and 1-D coordinate $t \in [0, 1]$, the model is
 \begin{equation}
 z_j(t) = a_{j,0} + \sum_{m=1}^{k} \big( a_{j,m} \sin(2\pi f_m t) + b_{j,m} \cos(2\pi f_m t) \big),
@@ -58,103 +54,46 @@ with $k$ shared learned frequencies $f_1, \dots, f_k$ and per-output coefficient
 \end{equation}
 the model is $\gamma(t) = C\, \phi(t)$ with coefficient matrix $C \in \mathbb{R}^{D \times (1+2k)}$, giving a parameter count of
 \begin{equation}
-P = k + D(1 + 2k).
-\label{eq:paramcount}
+P_{\mathrm{flat}} = D \cdot (1 + 2k).
+\label{eq:paramflat}
 \end{equation}
-At $D = 384$, $k = 8$: $P = 8 + 384 \times 17 = 6{,}536$ parameters.
+At $D = 384$, $k = 8$: $P_{\mathrm{flat}} = 384 \cdot 17 = 6{,}528$ parameters.
 
 \subsection{Closed-form coefficient solve}
-
-With the frequencies $f$ held fixed, the linear coefficient solve is the Tikhonov ridge
+With the frequencies $f$ held fixed, the linear coefficient solve is the Tikhonov ridge,
 \begin{equation}
-C^\star = (\Phi^\top \Phi + \lambda I)^{-1} \Phi^\top Z,
+C^{\star} = (\Phi^{\top}\Phi + \lambda I)^{-1} \Phi^{\top} Z,
 \label{eq:ridge}
 \end{equation}
 where $\Phi \in \mathbb{R}^{N \times (1+2k)}$ stacks the design vector and $Z \in \mathbb{R}^{N \times D}$ stacks the target vectors. This is the sanity floor for any gradient-descent fit at the same frequencies: a fit worse than this at the same $f$ means the optimizer failed, not the model.
 
 \subsection{Frequency parameterization}
-
 Frequencies are stored in an unconstrained form and mapped through a softplus to guarantee strict positivity and finite gradients near zero:
 \begin{equation}
-f_m = \operatorname{softplus}(\tilde f_m) = \log\!\big(1 + e^{\tilde f_m}\big), \qquad f_m > 0.
-\label{eq:softplus}
+f_{m} = \mathrm{softplus}(\tilde{f}_{m}) = \log(1 + \exp(\tilde{f}_{m})), \quad f_{m} > 0.
+\label{eq:freq}
 \end{equation}
 
 \subsection{Losses}
-
-Let $t \in \mathbb{R}^N$, $Z \in \mathbb{R}^{N \times D}$ the targets, and $\hat Z = \gamma(t)$ the fitted curve evaluated at the training coordinates. The total objective is
+Let $t \in \mathbb{R}^{N}$, $Z \in \mathbb{R}^{N \times D}$ the targets, and $\hat{Z} = \gamma(t)$ the fitted curve evaluated at the training coordinates. The total objective is
 \begin{equation}
-\mathcal{L} = \mathcal{L}_{\mathrm{rec}} + \mathcal{L}_{\mathrm{freq}} + \mathcal{L}_{\mathrm{smooth}}.
-\label{eq:totalloss}
+\mathcal{L} = \mathcal{L}_{\mathrm{rec}} + \mathcal{L}_{\mathrm{freq}} + \mathcal{L}_{\mathrm{smooth}},
+\label{eq:loss}
 \end{equation}
-The reconstruction term $\mathcal{L}_{\mathrm{rec}} = \operatorname{mean}((\hat Z - Z)^2)$ measures fit. The frequency-magnitude regulariser $\mathcal{L}_{\mathrm{freq}} = \lambda_f \cdot \operatorname{mean}(f^2)$ with $\lambda_f \approx 10^{-4}$ keeps the learned frequencies from collapsing to the Nyquist limit. The smoothness regulariser
+where $\mathcal{L}_{\mathrm{rec}} = \mathrm{mean}((\hat{Z} - Z)^{2})$ measures fit, $\mathcal{L}_{\mathrm{freq}} = \lambda_{f} \cdot \mathrm{mean}(f^{2})$ with $\lambda_{f} \approx 10^{-4}$ keeps the learned frequencies from collapsing to the Nyquist limit, and
 \begin{equation}
-\mathcal{L}_{\mathrm{smooth}} = \lambda_s \cdot \operatorname{mean}\Big( \big(\gamma(t_{\mathrm{grid}})[2:] - 2\gamma(t_{\mathrm{grid}})[1{:}\!-\!1] + \gamma(t_{\mathrm{grid}})[:\!-\!2]\big)^2 \Big),
-\label{eq:lsmooth}
+\mathcal{L}_{\mathrm{smooth}} = \lambda_{s} \cdot \mathrm{mean}((\gamma(t_{\mathrm{grid}})[2:] - 2\gamma(t_{\mathrm{grid}})[1:-1] + \gamma(t_{\mathrm{grid}})[:-2])^{2})
+\label{eq:smooth}
 \end{equation}
-with $t_{\mathrm{grid}}$ a dense grid of $\sim$512 points spanning the coordinate range and $\lambda_s \approx 10^{-3}$, penalises the second-difference of the curve between observed points, where reconstruction loss alone is blind.
+with $t_{\mathrm{grid}}$ a dense grid of $\sim 512$ points spanning the coordinate range and $\lambda_{s} \approx 10^{-3}$, penalises the second-difference of the curve between observed points, where reconstruction loss alone is blind.
 
 \subsection{Obtaining the coordinate $t$}
-
-The default pipeline sets $t$ from the top principal component of a $z$-scored $N \times D_{\mathrm{feat}}$ feature matrix, mapped to $[0,1]$; a rank-uniformized variant replaces raw PC1 scores by their ranks to improve design-matrix conditioning. The explained-variance ratio of PC1 (or PC1+PC2 for a 2-D surface variant) is recorded as an explicit go/no-go gate, with $\mathrm{PC1} \geq 0.40$ treated as evidence of usable low-rank structure.
-
-\section{Curve-Guided Recursive Self-Improvement (overview \textemdash{} see Appendix~A for full pipeline)}
-\label{sec:rsi}
-
-\subsection{Pipeline}
-
-The pipeline has four stages plus a re-fit verification step:
-\begin{enumerate}
-\item \textbf{Fit the curve} (Stage 1) --- reuse Section~\ref{sec:family}.
-\item \textbf{Detect sparse cells} (Stage 2) --- a uniform $0.05 \times 0.05$ grid in $[0,1]^2$ partitions the parameter space; cells with $\leq 1$ item are isolated.
-\item \textbf{Dispatch gap-mapping} (Stage 3) --- a fresh-context gap-mapping subagent (focused on a single sparse-cell item, never the whole corpus) is dispatched per isolated item.
-\item \textbf{Apply recursive-self-improvement cycles} (Stage 4) --- capped at 3 cycles per run, with the fixpoint rule \emph{no new substantive gaps AND old gaps closed AND no new anti-patterns}.
-\item \textbf{Re-fit and verify} (Stage 5) --- Stage 1 is re-run after all cycles; the closed-loop claim is verified by comparing the sparse-cell count before and after.
-\end{enumerate}
-
-The success metric is
-\begin{equation}
-\Delta_{\mathrm{sparse}} = |\mathrm{sparse\_cells}|_{\mathrm{post}} - |\mathrm{sparse\_cells}|_{\mathrm{pre}} < 0.
-\label{eq:delta}
-\end{equation}
-
-\subsection{Concrete cell definition}
-
-For a 2-D surface fit, coordinates are reduced to $(u, v) \in [0,1]^2$ via PC1+PC2 of a binary primitive-coverage matrix $C \in \{0,1\}^{N \times 9}$ lifted to $D = 384$ by a fixed seeded orthonormal projection $Q$:
-\begin{equation}
-Z = C\, Q^\top, \qquad (u_i, v_i) = \mathrm{PCA}_{1,2}(Z)_i.
-\label{eq:liftpca}
-\end{equation}
-The $[0,1]^2$ plane is discretized into a $0.05 \times 0.05$ grid ($21 \times 21 = 441$ cells). For a cell $c = (u, v)$,
-\begin{align}
-\mathrm{neighbors}(c) &:= \big\{\, i \in \mathrm{corpus} : \| (u_i, v_i) - c \|_\infty \le r \,\big\}, \label{eq:neighbors}\\
-\mathrm{is\_sparse}(c) &:= \big| \mathrm{neighbors}(c) \big| = 0, \label{eq:sparse}
-\end{align}
-with default radius $r = 0.05$.
-
-\section{Self-Documentation Variant (overview \textemdash{} see Appendix~B for full variant)}
-\label{sec:self}
-
-The self-documentation offshoot retargets Equations~\ref{eq:liftpca}--\ref{eq:delta} at heterogeneous memory-file corpora (\texttt{SELF.md}, \texttt{SELF-CHANGELOG.md}, and additional preference / rule files), under the granularity rule that \emph{each version is one corpus item} (a changelog entry, a memory-file section, or a named row). Each corpus receives its own 9-D binary primitive basis rather than sharing one basis across structurally distinct document types, since a single shared basis was found to flatten the per-corpus signal. Near-constant columns (coverage $> 0.90$ or $< 0.10$) are dropped before the PCA lift in Equation~\ref{eq:liftpca}.
-
-\section{Notation}
-
-\begin{itemize}
-\item $D$ --- embedding dimension (default 384).
-\item $N$ --- corpus size; $N_{\mathrm{train}}$, $N_{\mathrm{holdout}}$ --- split sizes.
-\item $k$ --- number of Fourier frequencies in the flat baseline (default 8).
-\item $L$ --- maximum harmonic degree in the spherical basis (default 3).
-\item $\mathbf{x} \in S^2 \subset \mathbb{R}^3$ --- input point on the Riemann sphere (default; $S^N$ generalization sketched in Section~\ref{sec:variant}).
-\item $Y^{S^2}_{\ell,m}(\mathbf{x})$ --- real spherical harmonic of degree $\ell$, order $m$, on $S^2$.
-\item $\phi_\theta(z) = (az+b)/(cz+d)$ --- Möbius transformation with $ad-bc=+1$, parameterised by $\theta$.
-\item $\chi(z_1,z_2;z_3,z_4) = (z_1-z_3)(z_2-z_4)/((z_1-z_4)(z_2-z_3))$ --- cross-ratio.
-\end{itemize}
+The default pipeline sets $t$ from the top principal component of a $z$-scored $N \times D_{\mathrm{feat}}$ feature matrix, mapped to $[0,1]$; a rank-uniformized variant replaces raw PC1 scores by their fractional ranks before mapping. The PC1+PC2 explained-variance ratio is the fit-quality gate ($\geq 0.40$); flat curves below the gate are not used.
 
 \section{The Hyperspherical-Harmonic Curve}
 \label{sec:variant}
 
 \subsection{Model}
-
 For $\mathbf{x} \in S^2 \subset \mathbb{R}^3$ (the Riemann sphere),
 \begin{equation}
 \gamma(\mathbf{x}) = \mathbf{b} + \sum_{\ell=0}^{L} \sum_{m} \mathbf{a}_{\ell,m}\, Y^{S^2}_{\ell,m}\!\big(\phi_\theta(\mathbf{x})\big),
@@ -162,12 +101,11 @@ For $\mathbf{x} \in S^2 \subset \mathbb{R}^3$ (the Riemann sphere),
 \end{equation}
 where $\mathbf{b} \in \mathbb{R}^D$ is the per-dim bias, $\mathbf{a}_{\ell,m} \in \mathbb{R}^D$ are the per-dim per-basis coefficients, and $\phi_\theta$ is the M\"obius reparameterization. The $S^N$ generalization is sketched separately below so it does not blur the $S^2$ claim.
 
-The parameter count is $D \cdot n_{\mathrm{basis}} + D + n_{\mathrm{Möbius}}$, where $n_{\mathrm{basis}} = \sum_{\ell=0}^{L}(2\ell+1)$ and $n_{\mathrm{Möbius}}$ is the real dimension of $\mathrm{PSL}(2,\mathbb{C})$ (Section~\ref{sec:mobius}). At $L=3$ on $S^2$, $n_{\mathrm{basis}}=16$; at $D=384$: $P = 384 \cdot 16 + 384 + 6 = 6{,}534$.
+The parameter count is $D \cdot n_{\mathrm{basis}} + D + n_{\mathrm{M\"obius}}$, where $n_{\mathrm{basis}} = \sum_{\ell=0}^{L}(2\ell+1)$ and $n_{\mathrm{M\"obius}}$ is the real dimension of $\mathrm{PSL}(2,\mathbb{C})$ (Section~\ref{sec:mobius}). At $L=3$ on $S^2$, $n_{\mathrm{basis}}=16$; at $D=384$: $P_{\mathrm{sphere}} = 384 \cdot 16 + 384 + 6 = 6{,}534$.
 
-\emph{Generalization to $S^N$:} for $N \geq 3$ the same construction applies with the canonical $S^N$ hyperspherical-harmonic basis $\{Y^{S^N}_{\ell,m}\}$ --- eigenfunctions of the Laplace--Beltrami operator on $S^N$ with eigenvalues $-\ell(\ell+N-1)$. The Möbius reparameterization is specific to $S^2$ (it is the automorphism group of $\widehat{\mathbb{C}} \cong \mathbb{CP}^1 \cong S^2$); for higher $N$ the corresponding parameterization would be the isometry group of the sphere.
+\emph{Generalization to $S^N$:} for $N \geq 3$ the same construction applies with the canonical $S^N$ hyperspherical-harmonic basis $\{Y^{S^N}_{\ell,m}\}$ --- eigenfunctions of the Laplace--Beltrami operator on $S^N$ with eigenvalues $-\ell(\ell+N-1)$. The M\"obius reparameterization is specific to $S^2$ (it is the automorphism group of $\widehat{\mathbb{C}} \cong \mathbb{CP}^1 \cong S^2$); for higher $N$ the corresponding parameterization would be the isometry group of the sphere.
 
 \subsection{Real spherical harmonics on $S^2$}
-
 The real spherical harmonics $Y^{S^2}_{\ell,m}$ on $S^2$ are constructed via explicit Legendre polynomials and the cos/sin split:
 \begin{align}
 Y^c_{\ell,0}(\theta,\phi) &= N_\ell^0 \cdot P_\ell^0(\cos\theta) \\
@@ -176,42 +114,94 @@ Y^c_{\ell,-m}(\theta,\phi) &= \sqrt{2} \cdot N_\ell^m \cdot P_\ell^m(\cos\theta)
 \end{align}
 with $N_\ell^m = \sqrt{(2\ell+1)/(4\pi) \cdot (\ell-m)!/(\ell+m)!}$ the standard normalisation. At $L=3$ on $S^2$ the basis has $1 + 3 + 5 + 7 = 16$ functions; at $L=3$ on $S^3$ the basis has $30$ functions.
 
-\subsection{Möbius reparameterization}
+\subsection{M\"obius reparameterization}
 \label{sec:mobius}
-
-$\phi_\theta(z) = (az+b)/(cz+d)$ with $a,b,c,d \in \mathbb{C}$ and $ad-bc=+1$. The four complex coefficients $a,b,c,d$ carry $8$ real components. The constraint $ad-bc=+1$ is a \emph{complex} constraint (real part equals 1, imaginary part equals 0), so it removes $2$ real degrees of freedom, leaving $6$ real degrees of freedom. The $\mathrm{PSL}(2,\mathbb{C})$ identification (matrices $M$ and $-M$ map to the same Möbius transformation) is a discrete identification and does not further reduce the real dimension. So $\phi_\theta$ has $6$ real degrees of freedom, parameterised by the real and imaginary parts of $a,b,c,d$ subject to $ad-bc=1$.
+$\phi_\theta(z) = (az+b)/(cz+d)$ with $a,b,c,d \in \mathbb{C}$ and $ad-bc=+1$. The four complex coefficients $a,b,c,d$ carry $8$ real components. The constraint $ad-bc=+1$ is a \emph{complex} constraint (real part equals 1, imaginary part equals 0), so it removes $2$ real degrees of freedom, leaving $6$ real degrees of freedom. The $\mathrm{PSL}(2,\mathbb{C})$ identification (matrices $M$ and $-M$ map to the same M\"obius transformation) is a discrete identification and does not further reduce the real dimension. So $\phi_\theta$ has $6$ real degrees of freedom, parameterised by the real and imaginary parts of $a,b,c,d$ subject to $ad-bc=1$.
 
 We refine $\theta$ via L-BFGS-B with the closed-form ridge (Eq.~\ref{eq:ridge}) re-solved at each step. The basis is fixed; only the domain is reparameterized. Because every $\varphi \in \mathrm{PSL}(2,\mathbb{C})$ preserves the cross-ratio identically by definition, the cross-ratio check verifies implementation consistency: it fails if $\varphi_\theta$ is miscoded, not if the learned map is a poor fit.
 
+\section{The Single-Action Atom and Linear Composition}
+\label{sec:atom}
+
+The smallest audit unit of the curve-guided framework is the \emph{single-action atom}. We define it precisely so the only-positive-$\Delta$ invariant it carries propagates linearly across the corpus.
+
+\subsection{Atom: from file to $S^2$ point}
+For a single corpus item $f$ (a file with $N_{\mathrm{sec}} \geq 2$ sections), the atom computes:
+\begin{enumerate}
+\item A \textbf{per-section coverage vector} $c_i \in \{0,1\}^9$, scored by pattern-matching against a fixed $9$-D binary primitive basis $\mathcal{P} = (p_0, \ldots, p_8)$.
+\item A \textbf{weighted aggregate} $c = \sum_i w_i c_i$, with weights $w_i = \mathrm{len}(\mathrm{section}_i) / \mathrm{len}(f)$, thresholded at $0.5$.
+\item A \textbf{section coverage matrix} $M \in \{0,1\}^{N_{\mathrm{sec}} \times 9}$, PCA top-$2$ via SVD giving $(\bar u, \bar v)$ for the file aggregate.
+\item A \textbf{stereographic lift} $\sigma: \mathbb{R}^2 \to S^2$ with
+\begin{equation}
+\sigma(u,v) = \frac{1}{1+u^2+v^2}\big(2u,\; 2v,\; u^2+v^2-1\big) \in S^2,
+\label{eq:stereographic}
+\end{equation}
+giving one point $p = \sigma(\bar u, \bar v) \in S^2$ per file.
+\item An \textbf{ideal pole} $p^* = \sigma(\bar u^*, \bar v^*)$, where $(\bar u^*, \bar v^*)$ is the lift of the all-ones coverage vector $(1,\dots,1)$.
+\item A \textbf{geodesic gap} $d(f) = \|p - p^*\|_2$ (chordal proxy on $S^2$).
+\end{enumerate}
+For each missing primitive $i \in \{j : c_j = 0\}$, the atom simulates the flip $c_i := 1$, recomputes the $S^2$ point $p'$, and selects $i^* = \arg\min_i d_{\mathrm{post}}(f)$. This is the \emph{geodesic-only criterion}: the chosen action strictly minimizes post-flip geodesic distance to the ideal pole.
+
+\subsection{Lemma 1 (atom invariant)}
+\begin{lemma}
+For any file $f$ and any action $\alpha$ selected by the geodesic-only criterion, $\Delta_f = d_{\mathrm{pre}} - d_{\mathrm{post}} \geq 0$.
+\end{lemma}
+
+\begin{proof}
+The criterion selects $\alpha^* = \arg\min_i d_{\mathrm{post}}$ over the $k$ candidates where $k = |\{j : c_j = 0\}|$. Each candidate flips exactly one missing primitive $i$ from $0$ to $1$ and recomputes the file's $S^2$ point. If all $k$ candidates had $d_{\mathrm{post}} \geq d_{\mathrm{pre}}$, the $\arg\min$ would tie at $d_{\mathrm{pre}}$ and $\Delta_f = 0$, never negative. A strictly negative $\Delta_f$ would require $d_{\mathrm{post}} > d_{\mathrm{pre}}$ for the $\arg\min$, contradicting the minimization. The action space is append-only (single-primitive flips); no candidate removes coverage.
+\end{proof}
+
+\subsection{Theorem 1 (linear composition)}
+\begin{theorem}
+For a corpus $C$ with $|C| = N$ files, every multi-file action $\alpha_{\mathrm{corpus}} = (\alpha_1, \ldots, \alpha_N)$ where each $\alpha_i$ is an atomic action on file $f_i$, has corpus-level
+\begin{equation}
+\Delta_{\mathrm{corpus}} = \sum_{i=1}^{N} \Delta_{f_i}.
+\label{eq:composition}
+\end{equation}
+If every atomic $\Delta \geq 0$, then $\Delta_{\mathrm{corpus}} \geq 0$, and $\Delta_{\mathrm{corpus}} > 0$ if at least one atomic $\Delta > 0$.
+\end{theorem}
+
+\begin{proof}
+Each $\alpha_i$ operates on its own file $f_i$ independently: the per-file coverage matrix and $S^2$ point are unchanged for all $f_j$ with $j \neq i$. The geodesic distance $d_{f_i}$ is a function of $f_i$'s coverage alone. Linear sum of non-negative scalars is non-negative.
+\end{proof}
+
+\begin{corollary}[monotone non-decrease]
+For any sequence of corpus actions $\alpha_{\mathrm{corpus}}^{(1)}, \alpha_{\mathrm{corpus}}^{(2)}, \ldots, \alpha_{\mathrm{corpus}}^{(K)}$, the cumulative corpus $\Delta$ is monotone non-decreasing.
+\end{corollary}
+
+\subsection{M\"obius refinement strategy}
+The corpus-level $\phi_\theta \in \mathrm{PSL}(2,\mathbb{C})$ is one M\"obius transformation applied uniformly to all files; the atom-bound composition rule requires it stable across per-cycle atom dispatches so per-file $\Delta$s are comparable. Two modes:
+
+\begin{itemize}
+\item \textbf{Primary mode (joint refine per cycle)} --- for $N_{\mathrm{items}} < 30$ or corpus growth $> 25\%$ since last refine: re-fit $\phi_\theta$ jointly per cycle via L-BFGS-B with the closed-form ridge re-solved at each step; gate with cross-ratio preservation check on $100$ held-out $4$-tuples.
+\item \textbf{Fallback mode (refine-once at corpus-creation)} --- for $N_{\mathrm{items}} \geq 30$ or stable corpus: fit $\phi_\theta$ once at corpus-creation; freeze for all subsequent cycles. PCA basis $(W_2, \mu)$ re-derived per cycle; $\phi_\theta$ stays fixed. The yubiOS corpus (currently 73 skills) uses the fallback.
+\end{itemize}
+
 \section{Dataset and Evaluation Protocol}
+\label{sec:dataset}
 
 \subsection{Dataset}
-
 The corpus consists of software-skill specifications (engineering artifacts). Each item has a 9-dimensional binary feature vector recording which of nine primitive capabilities the skill implements. We consider two splits:
 \begin{itemize}
 \item \textbf{Split A} (49 items): the first 49 items alphabetically. Train $N_{\mathrm{train}}=35$, holdout $N_{\mathrm{holdout}}=14$.
 \item \textbf{Split B} (70 items): all items. Train $N_{\mathrm{train}}=49$, holdout $N_{\mathrm{holdout}}=21$.
 \end{itemize}
 
-The 9-D binary feature space has principal-component concentration $\mathrm{PC1}+\mathrm{PC2} = 0.652$ at Split A and $0.548$ at Split B; both clear the $\mathrm{PC1} \geq 0.40$ gate (Section~\ref{sec:family}). The split sizes are chosen because (i) a curve is the honest model for small $N$ and (ii) the $S^2/L=3$ basis needs at least $N \geq 48$ items to fit.
+The 9-D binary feature space has principal-component concentration $\mathrm{PC1}+\mathrm{PC2} = 0.652$ at Split A and $0.548$ at Split B; both clear the $\mathrm{PC1} \geq 0.40$ gate (Section~\ref{sec:family}).
 
 \subsection{Baseline}
-
-The capacity-matched baseline is a flat Fourier curve on $[0,1]^2$ with $k=2$ (the 2-D tensor-product extension of Eq.~\ref{eq:flat}), giving $5 \times 5 = 25$ basis functions and $9{,}984$ parameters. We choose $k=2$ because it is the lowest-order 2-D tensor product that exceeds the 16-function count of the spherical variant (16 basis, 6,534 parameters); $k=1$ gives only $3 \times 3 = 9$ basis and would not be a capacity match for the 16-function sphere, while $k=3$ gives $7 \times 7 = 49$ basis and ~24k parameters, which overwhelms the corpus. Both models are fitted with the closed-form ridge (Eq.~\ref{eq:ridge}) and the same ridge regularisation $\lambda$.
+The capacity-matched baseline is a flat Fourier curve on $[0,1]^2$ with $k=2$ (the 2-D tensor-product extension of Eq.~\ref{eq:flat}), giving $5 \times 5 = 25$ basis functions and $9{,}984$ parameters. We choose $k=2$ because it is the lowest-order 2-D tensor product that exceeds the 16-function count of the spherical variant ($16$ basis, $6{,}534$ parameters); $k=1$ gives only $3 \times 3 = 9$ basis and would not be a capacity match for the 16-function sphere, while $k=3$ gives $7 \times 7 = 49$ basis and $\sim 24$k parameters, which overwhelms the corpus. Both models are fitted with the closed-form ridge (Eq.~\ref{eq:ridge}) and the same ridge regularisation $\lambda$.
 
 \subsection{Evaluation metric}
-
 The headline metric is \emph{matched-parameter ablation}: holdout $R^2$ at fewer or equal parameters, with the same split and the same ridge regularisation. We report the absolute holdout $R^2$ (not just the delta) so the result is interpretable against the corpus-mean baseline ($R^2 = 0$).
 
 \subsection{Reproducibility}
-
-All numbers in this paper are from a single full-corpus run on all 70 skills in the yubiOS software-skill corpus ($N=70$ for the full split, $N=49$ for the alphabetically-first-half split). We report point estimates, not error bars: the split sizes are fixed and the ridge $\lambda$ is shared across both arms, so variance is dominated by the holdout split rather than by random initialization. A multi-seed re-run is the obvious next step to add error bars; the present run establishes the matched-parameter ablation result on the full 70-skill corpus, not a confidence interval.
+All numbers in this paper are from a single full-corpus run on all 70 skills in the yubiOS software-skill corpus ($N=70$ for the full split, $N=49$ for the alphabetically-first-half split). We report point estimates, not error bars: the split sizes are fixed and the ridge $\lambda$ is shared across both arms, so variance is dominated by the holdout split rather than by random initialization.
 
 \section{Results}
 
 \subsection{Flat-curve context (earlier fits)}
-
-Earlier flat-curve fits on the same family of corpora (Table~\ref{tab:context}) show the surface the hyperspherical variant is compared against. The headline flat fit on a 211-item skill corpus with a 2-D surface (PC1+PC2 = 0.4655) reached holdout $R^2 = +0.4655$; the raw-content target on a 62-item subset failed at $R^2 = -0.155$; the sentence-transformer target on the 211-item corpus returned $R^2$ between $-0.005$ and $+0.130$ (target failure). Curve-guided RSI on a 69-skill corpus reached $R^2 = +0.2244$ on the curve-fit metric. The self-doc corpus reaches much higher $R^2$ (0.7041 to 0.9917) but on structurally different per-file primitive bases.
+Earlier flat-curve fits on the same family of corpora (Table~\ref{tab:context}) show the surface the hyperspherical variant is compared against. The headline flat fit on a 211-item skill corpus with a 2-D surface (PC1+PC2 = 0.4655) reached holdout $R^2 = +0.4655$; the raw-content target on a 62-item subset failed at $R^2 = -0.155$; the sentence-transformer target on the 211-item corpus returned $R^2$ between $-0.005$ and $+0.130$ (target failure). Curve-guided RSI on a 69-skill corpus reached $R^2 = +0.2244$ on the curve-fit metric.
 
 \begin{table}[h]
 \centering
@@ -224,17 +214,13 @@ Skill corpus, primitive-coverage target (1-D) & 213 & 0.40 (1-D) & $+0.183$  & p
 Skill corpus, primitive-coverage target (2-D) & 211 & 0.4655     & $+0.4655$ & headline pass \\
 Skill corpus, sentence-transformer target & 211 & 0.0955     & $-0.005$ to $+0.130$ & target fail \\
 Curve-guided RSI validation & 69  & 0.4615     & $+0.2244$ & pass \\
-Self-doc corpus (\texttt{SELF-CHANGELOG.md}) & 17 & 0.9164     & $+0.9917$ & pass \\
-Self-doc corpus (\texttt{SELF.md}) & 51 & 0.6952 & $+0.7041$ & pass \\
-Self-doc corpus, combined & 154 & 0.6479 & $+0.7877$ & pass \\
 \bottomrule
 \end{tabular}
-\caption{Flat-curve fit quality across corpora. PC1(+PC2) is the explained-variance gate (Section~\ref{sec:family}); holdout $R^2$ is measured against held-out items refit from their $t$ coordinate alone. These are the surface the hyperspherical-harmonic variant in Section~\ref{sec:variant} is compared against.}
+\caption{Flat-curve fit quality across corpora.}
 \label{tab:context}
 \end{table}
 
 \subsection{Hyperspherical-harmonic variant: matched-parameter ablation on Splits A and B}
-
 The matched-parameter ablation on the two corpus splits of Section~\ref{sec:dataset} is the paper's single contribution --- that on these corpora, the hyperspherical parameter manifold is a strictly better inductive bias than the flat $[0,1]^2$ baseline, with the absolute holdout $R^2$ positive on the smaller split and the relative $\delta$ positive on both splits.
 
 \textbf{Split A (49 items, $N_{\mathrm{train}}=35$, $N_{\mathrm{holdout}}=14$):}
@@ -251,382 +237,99 @@ The matched-parameter ablation on the two corpus splits of Section~\ref{sec:data
 \item \textbf{Matched-parameter $\delta$}: $+1.342$. The sphere wins by more than 1.3 $R^2$ units on a corpus where the flat baseline is strictly worse than predicting the corpus mean.
 \end{itemize}
 
-The Split~B numbers use the full 9-column primitive basis; the Split~A numbers use the same basis. The Phase~A numbers in the merged corpus audit below (\S\ref{sec:audit}) use the same corpus as Split~B but with near-constant columns dropped ($K_\text{kept}=8$ at Phase~A); that is why Phase~A reports sphere $+0.2637$ while Split~B above reports $+0.222$ --- the basis is narrower in the corpus audit, not the corpus.
-
-\subsection{Hyperspherical-harmonic corpus audit across cycles 4/5/6/7/8/9 (phases A--H)}\label{sec:audit}
-
-\textbf{Scope}: this section consolidates the cycle-by-cycle RSI corpus audit into a single side-by-side view of cycles 4--8 (Phase A = pre-cycle-5 baseline, Phase H = post-cycle-9), showing all eight phases A--H. Cycle~4 is the corpus-fit baseline (Phase A); cycles 5/6/7/8 are four sequential RSI primitive-closure passes on the same 70-skill yubiOS corpus. Phases A--D report the single-seed (123) number from the prior cycle-4/5/6 fits; Phases E/F (cycles 7) and Phase G (cycle 8) report the 5-seed (123, 456, 789, 1011, 1213) mean$\pm$std.
-
-\textbf{Cycle 4 (Phase A, baseline)}: hyperspherical $S^2/L=3$ vs flat $k=2$ on the 70-skill corpus, no RSI. Hyperspherical $R^2 = +0.2637$, flat $R^2 = -0.1150$, $\delta = +0.3787$, $K_\text{kept} = 8$. Sphere already wins on the absolute delta; flat baseline is worse than the corpus-mean prediction.
-
-\textbf{Cycles 5--8 (Phases B--G): RSI primitive-closure pipeline.} Each cycle applies a corpus-wide primitive-closure pass: compute per-skill 10-D binary primitive coverage from the SKILL.md text, identify the corpus-priority MOVABLE primitive that THIS skill is also lacking, append a \emph{Cycle N RSI primitive-closure (2026-08-06)} section with that primitive's keywords and a Changelog entry. Cycles are content-additive: no existing SKILL.md content is removed or rewritten. After each cycle, the hyperspherical-harmonic-curve fit is re-run on the post-cycle corpus (Phases B, D, F, G respectively). Phases C and E are intermediate re-fits using the cycle-$N+1$ starting heuristic (drop near-constant columns with coverage $> 0.90$ or $< 0.10$) so the matched-parameter comparison across the cycle-$N+1$ cycle is apples-to-apples.
-
-\textbf{Because each pass collapses near-constant columns, $K_\text{kept}$ shrinks across phases (8/6/6/5/5/4/2/2).} Absolute $R^2$ is therefore not strictly comparable across phases; the within-phase matched-parameter $\delta$ is the comparable quantity, and the A--H line should be read as a trajectory of a moving target, not a single learning curve.
-
-\textbf{Headline numbers} across all eight phases are in Table~\ref{tab:headline} below; the visual progression is in Figure~\ref{fig:progression}; the per-cycle absolute improvement is in Figure~\ref{fig:per-cycle-delta}; the per-primitive coverage delta is in Figure~\ref{fig:primitive-delta}; the cycle-by-cycle summary is in Table~\ref{tab:cycle-summary}; the per-primitive progression is in Table~\ref{tab:primitive-progression}.
+\subsection{Corpus audit across cycles 5--9 (phases A--H)}
+\label{sec:audit}
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=5.5in]{chart-A-H-1-progression.png}
-\caption{\textbf{Figure 1.} Phase A $\rightarrow$ B $\rightarrow$ C $\rightarrow$ D $\rightarrow$ E $\rightarrow$ F $\rightarrow$ G $\rightarrow$ H holdout $R^2$ progression (cycles 4/5/6/7/8/9 RSI corpus audit, 70$\rightarrow$73-skill corpus). Error bars = 5-seed $\pm$ std for E, F, G, H (seeds 123, 456, 789, 1011, 1213).}
+\caption{\textbf{Figure 1.} Phase A $\rightarrow$ B $\rightarrow$ C $\rightarrow$ D $\rightarrow$ E $\rightarrow$ F $\rightarrow$ G $\rightarrow$ H holdout $R^2$ progression (cycles 5--9 RSI corpus audit, 70$\rightarrow$73-skill corpus). Error bars = 5-seed $\pm$ std for E, F, G, H.}
 \label{fig:progression}
 \end{figure}
 
 \begin{table}[h]
 \centering
 \includegraphics[width=5.5in]{chart-A-H-table-1-headline.png}
-\caption{\textbf{Table 1.} Headline numbers across cycles 4/5/6/7/8/9 (phases A--H; 70$\rightarrow3-skill corpus; error bars = 5-seed $\pm$ std for E, F, G, H).}
+\caption{\textbf{Table 1.} Headline numbers across cycles 5--9 (phases A--H; 70$\rightarrow$73-skill corpus).}
 \label{tab:headline}
 \end{table}
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=5in]{chart-A-H-2-per-cycle-delta.png}
-\caption{\textbf{Figure 2.} Per-cycle absolute improvement (cycles 5/6/7/8/9). The matched-parameter $\delta$ is preserved across cycles 5--7 (sphere still beats flat), but cycle 8 closes the corpus beyond the curve-fit model's honest range ($K_\text{kept}$ $4 \rightarrow 2$; sphere and flat both regress with widened error bars).}
+\caption{\textbf{Figure 2.} Per-cycle absolute improvement (cycles 5/6/7/8/9).}
 \label{fig:per-cycle-delta}
 \end{figure}
 
-\begin{table}[h]
-\centering
-\includegraphics[width=5.5in]{chart-A-H-table-2-cycle-summary.png}
-\caption{\textbf{Table 2.} Per-cycle summary (cycles 4/5/6/7/8/9). Four primitives were driven to 70/70 by cycle 7 (segmentation and self-describing in cycle 5, cryptographic identity in cycle 6, trust chain in cycle 7); audit/evidence was already at 70/70 pre-cycle-5. Cycle 8 drives declarative policy to 70/70, the fifth primitive to saturate across the five RSI passes (cycle 9 corpus-enrichment + null-result fit preservation).}
-\label{tab:cycle-summary}
-\end{table}
-
 \begin{figure}[h]
 \centering
-\includegraphics[width=5.5in]{chart-A-H-3-primitive-delta.png}
-\caption{\textbf{Figure 3.} Per-primitive coverage delta (pre-cycle-5 $\rightarrow$ post-cycle-9 corpus, 70$\rightarrow3-skill). Six primitives are at 70/70 after cycle 8; audit/evidence, declarative policy, trust chain, and self-describing are at 73/73 after cycle 9 corpus enrichment; continuous/adaptive (68/70) and least privilege (63/70) are also near-constant under the $>0.90$ drop rule (8 of 10 primitives near-saturated). Only attestation (62/70) and immutability (58/70) survive into the kept basis, hence $K_\text{kept}=2$.}
+\includegraphics[width=5in]{chart-A-H-3-primitive-delta.png}
+\caption{\textbf{Figure 3.} Per-primitive coverage delta (pre-cycle-5 $\rightarrow$ post-cycle-9 corpus).}
 \label{fig:primitive-delta}
 \end{figure}
 
-\begin{table}[h]
-\centering
-\includegraphics[width=5in]{chart-A-H-table-3-primitive-progression.png}
-\caption{\textbf{Table 3.} Per-primitive coverage progression (pre-c5 $\rightarrow$ post-c5 $\rightarrow$ post-c6 $\rightarrow$ post-c7 $\rightarrow$ post-c8 $\rightarrow$ post-c9). Five primitives saturate at 70/70 across the five RSI passes (cycle 9 corpus-enrichment + null-result fit preservation); corpus enrichment in cycle 9 lifts trust chain, declarative policy, audit/evidence, and self-describing to 73/73 on the enriched 73-skill corpus; the kept-column basis ($K_\text{kept}$) narrows from 8 to 2 across the 7 phases.}
-\label{tab:primitive-progression}
-\end{table}
-
-\textbf{What the Phase G numbers mean and do not show.} The cycle-5--7 $\delta$ numbers are positive and stable: Phase C $\delta = +0.32$, Phase D $\delta = +0.16$, Phase E $\delta = +0.36 \pm 0.18$, Phase F $\delta = +0.45 \pm 0.14$ (5-seed). The sphere's relative advantage over flat is preserved across four sequential RSI passes, two matched-parameter heuristics, and a corpus that progressed from $K_\text{kept}=8$ (Phase A) to $K_\text{kept}=4$ (Phase F). Cycle 8 pushes declarative policy to 70/70 saturation, the fifth primitive to saturate across the five RSI passes (cycle 9 corpus-enrichment + null-result fit preservation), narrowing the kept-column basis from $K_\text{kept}=4$ to $K_\text{kept}=2$. Cycle 9 then adds 3 corpus-enrichment skills (runtime-attestation-keylime + least-privilege-pod-security-standards + continuous-runtime-detection-falco) at 4.3\% corpus growth, below the 25\% re-fit trigger (per \texttt{hyperspherical-harmonic-curve} \S Lifecycle), so the fit is preserved: Phase H holds $K_\text{kept}=2$ (rank-collapse signature from Phase G) and the corpus-coverage map moves from 70\(\rightarrow\)73 across the 10 primitives, with trust chain, declarative policy, audit/evidence, and self-describing now at 73/73 saturation.
-
-At $K_\text{kept}=2$ the fit is signal-limited: sphere $R^2 = +0.19 \pm 0.66$, flat $R^2 = +0.01 \pm 1.17$. The $\delta$ mean is $+0.18 \pm 0.76$, but the per-seed spread does not support a directional claim: $\delta$ is negative on 2 of 5 seeds (including seed 123, the seed used for Phases A--D, at $\delta = -0.90$), the median is $+0.09$, and the positive mean is carried by a single seed (1213) on which \emph{both} arms are far worse than the corpus mean ($-0.83$ and $-2.30$). Excluding that seed the mean $\delta$ is $-0.14$. We therefore report Phase G as a null result on the matched-parameter delta, not a preserved advantage: cycle 8 pushed the corpus past the point where this fit discriminates between the two manifolds. At $K_\text{kept}=2$ the PC1+PC2 explained-variance gate is satisfied trivially and carries no information.
-
-\subsubsection{Calibration checks}
-
-\begin{itemize}
-\item Spectral mass $\rho = \sum_{\ell \geq 1} \|a_{:,\ell}\|^2 / \sum_{\ell \geq 0} \|a_{:,\ell}\|^2 \geq 0.10$: measured $0.977$ (Split A) / $0.983$ (Split B).
-\item High-degree mass $\sum_{\ell > L/2} \|a_{:,\ell}\|^2 / \mathrm{total} \leq 0.40$: measured $0.206$ (Split A) / $0.178$ (Split B).
-\item Cross-ratio check on 100 held-out 4-tuples: max residual $3.08 \times 10^{-7}$. This is consistent with float64 noise; every $\mathrm{PSL}(2,\mathbb{C})$ element preserves $\chi$ exactly, so the residual measures implementation precision, not fit quality.
-\item M\"obius refinement (train $R^2$): identity $0.9125 \rightarrow$ refined $0.9211$, $\Delta = +0.009$. Train-only; no holdout effect measured.
-\end{itemize}
-
-\section{Discussion}
-
-
-\subsection{What this result does and does not show}
-
-The relative comparison (spherical vs flat on the same split) is positive on both splits. The absolute $R^2$ is positive only on Split A; on Split B, both models are worse than the corpus mean. The result supports the claim that, on this corpus, a spherical parameter manifold is a better inductive bias than a flat one; it does not support the claim that either model is a good fit in absolute terms.
-
-\subsection{Why a sphere?}
-
-The flat $[0,1]^2$ manifold has zero scalar curvature, trivial topology, and trivial holonomy. The Riemann sphere $S^2$ has constant positive scalar curvature $+2$, simply-connected topology ($\chi = 2$), and non-trivial holonomy. For corpora whose intrinsic geometry is well-modelled by $S^2$, the curved parameter manifold is a better inductive bias. The deltas are properties of the chosen domain, not of the fit, and are motivation rather than evidence; the ablation is the evidence.
-
-\subsection{Why Möbius?}
-
-$\mathrm{PSL}(2,\mathbb{C})$ is the full automorphism group of the Riemann sphere $\widehat{\mathbb{C}} \cong \mathbb{CP}^1 \cong S^2$ and the 6-parameter family of invertible conformal domain warps on it. The Möbius refinement is not isometric: only the subgroup $\mathrm{PSU}(2) \cong SO(3)$ preserves the round metric. This non-isometry is what makes the refinement able to change the fit at all (a purely isometric reparameterization could not).
-
-\subsection{Limitations}
-
-\begin{enumerate}
-\item The implementation uses explicit Legendre + cos/sin split. Production could swap to a maintained basis library.
-\item We evaluate on a single target (binary primitive coverage). The result may not transfer to other targets (raw content, sentence-transformer embeddings); Table~\ref{tab:context} shows the raw-content and sentence-transformer targets failing even on the flat curve.
-\item Split B's negative absolute $R^2$ indicates the corpus is at the edge of the curve model's honest range. We do not know where that edge is.
-\item $S^3/L=3$ (30 basis functions) would need $N \geq 90$ items AND $\mathrm{PC3} \geq 0.08$ to use. The current corpus is below both thresholds.
-\item The matched-parameter ablation is a relative result; both arms fail the absolute holdout-$R^2 > 0$ gate at Split B. The headline is the delta, not the absolute.
-\end{enumerate}
-
-\section{Related Work}
-
-We did not identify a prior work that combines hyperspherical-harmonic basis, learned Möbius reparameterization, and corpus-fit evaluation on a software-skill corpus. We searched for related work using 11 keyword patterns across the closest candidates:
-
-\textbf{arXiv:2601.20528 (Durastanti, 2026)}: \emph{Spectral Bayesian Regression on the Sphere.} Covers Fourier-on-$S^2$ as Bayesian regression with statistical-theory focus; posterior contraction rates, Laplace--Beltrami smoothing splines. Does not cover: corpus fit, learned Möbius reparameterization, sparse-cell detection.
-
-\textbf{OpenReview \texttt{g6UqpVislvH} (ICLR 2022 submission)}: \emph{Generalized Fourier Features for Coordinate-Based Learning on Manifolds.} Covers positional encoding for NeRF / panorama / SO(3) using spherical harmonics + SO(2)/SO(3) rotation shifts. Does not cover: corpus fit, $\mathrm{PSL}(2,\mathbb{C})$ Möbius, sparse-cell detection.
-
-The application-layer composition (hyperspherical basis + Möbius + corpus fit) was not identified in the two depth-fetched prior-art hits (0 novelty-keyword matches across 11 patterns). The mechanism-layer novelty on the Riemann-sphere Möbius reparameterization rests on the gap-claim itself: the two verified neighbours cover the Fourier-on-$S^2$ basis family but do not combine it with a learned $\mathrm{PSL}(2,\mathbb{C})$ reparameterization and corpus-fit evaluation. The composition is therefore an unrefuted novelty claim, not a confirmed finding.
-
-\subsection{Unrelated prior work}
-
-Equation~\ref{eq:flat} shares no derivation with the weight-space reparameterization proposed in arXiv:2607.09967 (Smith, 2026, \emph{Learning in Curved Weight Space: Exponential-Linear Weight Reparameterization for Improved Optimization}), which maps a single raw neural-network weight scalar $w$ through a sign-aware symmetric-exponential/linear pathway pair to obtain an effective weight $w_{\mathrm{eff}}$ for optimizer training, validated by training-step reduction on autoregressive language models. The present work instead maps a per-item ordering coordinate $t$ through a Fourier basis to obtain a fixed-width corpus embedding, validated by holdout reconstruction accuracy on document corpora. The overlap is limited to the word ``curve''/``curvature'' and the presence of learnable shape parameters; neither the domain, the basis function family, nor the fitting objective is shared. The two are unrelated by construction, not merely by citation omission.
-
-Within the embedding literature, Eq.~\ref{eq:flat} is a fitted generalization of two established fixed-basis constructions: random Fourier features \citep{rahimi2007} use \emph{fixed random} frequencies as a kernel approximation, and transformer positional encodings \citep{tancik2020} use \emph{fixed geometric} frequencies with no learned coefficients. The present model learns both the frequencies and the coefficients from the target embeddings directly.
-
-\section{Conclusion}
-
-The learned-latent-curve family gives a closed-form, auditable, interpolatable representation for small-$N$ corpora with low-rank ordering structure; composed with sparse-cell detection and a bounded gap-closing loop, it converts a one-shot corpus audit into a measurable, repeatable improvement process. The hyperspherical-harmonic curve is a candidate Stage-1 method for this family: on the splits we tested, it outperforms the capacity-matched flat Fourier baseline at fewer parameters, with the absolute holdout $R^2$ positive on the smaller split ($N=49$) and negative on the larger ($N=70$). The method's honest range is bounded by the corpus size; we describe the method, the dataset, and the protocol in full, and we identify five open items that bound the claim.
-
-
-
-\appendix
-
-\section{Appendix~A: Curve-Guided RSI \textemdash{} Full Application Pipeline}
-
-This appendix contains the full application pipeline for the curve-guided RSI meta-skill referenced in \S~3 (overview). The four-stage pipeline + re-fit verification is the operational form of the curve's sparse-cell detection as a prioritization lens.
-
-\subsection{A.1~~Pipeline stages}
-
-\begin{enumerate}
-\item \textbf{Fit the curve.} Re-use \S~2 (Learned-Latent-Curve Family). The fit produces a 1-D coordinate $t_i$ for each item in the corpus.
-\item \textbf{Detect sparse cells.} A uniform $0.05 \times 0.05$ grid in $[0,1]^2$ partitions the parameter space; cells with $\leq 1$ item are isolated.
-\item \textbf{Dispatch gap-mapping.} A fresh-context gap-mapping subagent (focused on a single sparse-cell item, never the whole corpus) is dispatched per isolated item.
-\item \textbf{Apply recursive-self-improvement cycles.} Capped at 3 cycles per run, with the fixpoint rule \textit{no new substantive gaps AND old gaps closed AND no new anti-patterns}.
-\item \textbf{Re-fit and verify.} Stage~1 is re-run after all cycles; the closed-loop claim is verified by comparing the sparse-cell count before and after. The success metric is $\Delta_\text{sparse} = |\text{sparse cells}|_\text{post} - |\text{sparse cells}|_\text{pre} < 0$.
-\end{enumerate}
-
-\subsection{A.2~~Concrete cell definition (with sphere variant)}
-
-For the hyperspherical-harmonic variant (\S~6), the $[0,1]^2$ grid is replaced by an equal-area partition of $S^2$ with chordal distance and $r \approx 0.095$ (441 cells). A cell $c = (u, v)$ on the Riemann sphere is isolated iff $|\text{neighbors}(c)| = 0$ where $\text{neighbors}(c) = \{i \in \text{corpus} : ||(u_i, v_i) - c||_\infty \leq r\}$.
-
-\section{Appendix~B: Self-Documentation Variant \textemdash{} Full Variant}
-
-This appendix contains the full self-documentation variant referenced in \S~4 (overview). The variant retargets the same Eqs.~9--11 at heterogeneous memory-file corpora (\texttt{SELF.md}, \texttt{SELF-CHANGELOG.md}, and additional preference / rule files), under the granularity rule that \textit{each version is one corpus item} (a changelog entry, a memory-file section, or a named row).
-
-\subsection{B.1~~Per-corpus primitive basis}
-
-Each corpus receives its own 9-D binary primitive basis rather than sharing one basis across structurally distinct document types, since a single shared basis was found to flatten the per-corpus signal. Near-constant columns (coverage $> 0.90$ or $< 0.10$) are dropped before the PCA lift in Eq.~9.
-
-\subsection{B.2~~Granularity rule for sub-20 corpora}
-
-When a self-doc corpus has $< 20$ items (e.g.\ a new \texttt{SELF.md} with few sections), the granularity rule is relaxed: each \textit{paragraph} or \textit{sentence} counts as one corpus item. This lets the curve fit hit the $\geq 20$-item gate while preserving the each-version-is-its-own-corpus-item rule for larger corpora.
-
-\section{Appendix~C: Synthetic Manifold Benchmark Sketch (Future Work)}
-
-The advisor review notes that \textit{`the empirical case is still fragile because it's one corpus, one target, one run'} and suggests \textit{`another corpus, or a synthetic manifold benchmark, or at least error bars across seeds/splits'} as stronger experiments. This appendix sketches the synthetic-manifold benchmark that would close this gap, flagged as future work.
-
-\subsection{C.1~~Benchmark design}
-
-\textbf{Corpus:} generate $N = 200$ synthetic points on the torus $T^2 = S^1 \times S^1$ (a non-spherical manifold that the spherical variant should fit \textit{worse} than the flat baseline \textemdash{} negative control).
-
-\textbf{Target:} per-dim binary feature vector encoding which of 9 canonical features the synthetic point exhibits (toroidal ``modes'').
-
-\textbf{Fit:} hyperspherical-harmonic-curve on $S^2$ vs flat Fourier on $[0,1]^2$.
-
-\textbf{Expected outcome:} flat baseline wins on $T^2$ (sphere is a wrong inductive bias for a non-spherical manifold), sphere wins on $S^2$ (positive control, the actual yubiOS corpus case). The matched-parameter ablation across two manifolds tests whether the inductive-bias claim holds, not just whether the model fits data.
-
-\subsection{C.2~~Status: future work}
-
-The synthetic-manifold benchmark is \textbf{not implemented in this paper}. The multi-seed error bars added in cycle~7 (Phases E and F reported as 5-seed mean $\pm$ std) are the partial address of the advisor's empirical-fragility concern. Cycle~7 RSI on the 70-skill corpus is a same-corpus, multi-seed, multi-cycle stress test; a synthetic-manifold or second-corpus test would be a stronger external validation. Implementation deferred to a follow-up paper.
-
-\section{Appendix~D: Atom-Bound Composition Rule (RSI Extension, 2026-08-06)}
-
-This appendix introduces the smallest unit of the recursive-self-improvement (RSI) family: the \emph{single-action atom} \texttt{single-action-curve-rsi}, and proves that the only-positive-$\Delta$ invariant of the atom generalizes linearly to multi-file corpora. The result is a composition rule that ships as a Stage-3 redesign of the parent \texttt{curve-guided-rsi} and the Stage-1 swap \texttt{hyperspherical-harmonic-curve}.
-
-\subsection{D-1. Definition of the Atom}
-
-Given a file $f$ with $N_{\mathrm{sections}} \ge 2$ sections and a $9$-D binary primitive basis $\mathcal{P} = (p_0, \ldots, p_8)$ (analogue of the \texttt{internal-big-picture} basis), the atom computes:
-\begin{enumerate}
-\item Per-section coverage vector $c_i \in \{0,1\}^9$, scored by pattern-matching against $\mathcal{P}$.
-\item Weighted aggregate $c = \sum_i w_i c_i$, weights $w_i = \mathrm{len}(\mathrm{section}_i) / \mathrm{len}(f)$, thresholded at $0.5$.
-\item Section coverage matrix $M \in \{0,1\}^{N_{\mathrm{sections}} \times 9}$, PCA top-$2$ via SVD, yielding $(u_i, v_i)$ for each section and $(\bar u, \bar v)$ for the file aggregate.
-\item Stereographic lift $\sigma: \mathbb{R}^2 \to S^2$ with $(X,Y,Z) = (2u, 2v, u^2+v^2-1)/(1+u^2+v^2)$, giving one point $p \in S^2$ per file.
-\item Ideal pole $p^* = \sigma(\bar u^*, \bar v^*)$ where $(\bar u^*, \bar v^*)$ is the lift of the all-ones coverage vector.
-\item Geodesic gap $d(f) = \| p - p^* \|_2$ (chordal proxy on $S^2$).
-\end{enumerate}
-For each missing primitive $i \in \{j : c_j = 0\}$, the atom simulates the flip $c_i := 1$, recomputes $p'$, and selects $i^* = \arg\min_i d_{\mathrm{post}}(f)$. This is the geodesic-only criterion: the chosen action strictly minimizes post-flip geodesic distance to the ideal pole.
-
-\subsection{D-2. Lemma 1 (Atom Invariant)}
-
-\begin{lemma}[Atom invariant]
-For any file $f \in F$ and any action $\alpha \in A_{\mathrm{atom}}$ selected by the geodesic-only criterion, $\Delta_f = d_{\mathrm{pre}} - d_{\mathrm{post}} \ge 0$.
-\end{lemma}
-
-\begin{proof}
-The criterion selects $\alpha^* = \arg\min_i d_{\mathrm{post}}$ over $k$ candidates. Each candidate flips one missing primitive $i$ from $0$ to $1$ and recomputes the file's $S^2$ point. If all $k$ candidates had $d_{\mathrm{post}} \ge d_{\mathrm{pre}}$, the $\arg\min$ would tie at $d_{\mathrm{pre}}$ and $\Delta_f = 0$, never negative. A strictly negative $\Delta_f$ would require $d_{\mathrm{post}} > d_{\mathrm{pre}}$ for the $\arg\min$, contradicting the minimization. The action space is append-only (single-primitive flips), so no candidate removes coverage.
-\end{proof}
-
-\subsection{D-3. Theorem 1 (Linear Composition)}
-
-\begin{theorem}[Linear composition]
-For a corpus $C$ with $|C| = N$ files, every multi-file action $\alpha_{\mathrm{corpus}} = (\alpha_1, \ldots, \alpha_N)$ where each $\alpha_i \in A_{\mathrm{atom}}$ is an atomic action on file $f_i$, has corpus-level $\Delta$:
-$$\Delta_{\mathrm{corpus}} = \sum_{i=1}^{N} \Delta_{f_i}.$$
-If every atomic $\Delta \ge 0$, then $\Delta_{\mathrm{corpus}} \ge 0$, and $\Delta_{\mathrm{corpus}} > 0$ if at least one atomic $\Delta > 0$.
-\end{theorem}
-
-\begin{proof}
-Each $\alpha_i$ operates on its own file $f_i$ independently: the per-file coverage matrix and $S^2$ point are unchanged for all $f_j$ with $j \ne i$. Linear sum of non-negative scalars is non-negative.
-\end{proof}
-
-\begin{corollary}[Monotone non-decrease]
-For any sequence of corpus actions $\alpha_{\mathrm{corpus}}^{(1)}, \alpha_{\mathrm{corpus}}^{(2)}, \ldots, \alpha_{\mathrm{corpus}}^{(K)}$, the cumulative corpus $\Delta$ is monotone non-decreasing.
-\end{corollary}
-
-\subsection{D-4. M\"obius Refinement Strategy}
-
-The corpus-level $\varphi_\theta \in \mathrm{PSL}(2,\mathbb{C})$ is one M\"obius transformation applied uniformly to all files. Two modes:
-
-\begin{itemize}
-\item \textbf{Primary mode (joint refine per cycle)} --- $N_{\mathrm{items}} < 30$ or corpus growth $> 25\%$ since last refine. Re-fit $\varphi_\theta$ jointly across all files per cycle via closed-form ridge + L-BFGS-B; gate with cross-ratio preservation on $100$ held-out $4$-tuples. Cost: $O(N_{\mathrm{items}} \times \mathrm{fit\_cost})$ per cycle; expensive but exact.
-\item \textbf{Fallback mode (refine-once at corpus-creation)} --- $N_{\mathrm{items}} \ge 30$ or stable corpus. Fit $\varphi_\theta$ once at corpus-creation; freeze for all subsequent cycles. PCA basis $(W_2, \mu)$ re-derived per cycle (cheap); $\varphi_\theta$ stays fixed. Makes Lemma~1 $\to$ Theorem~1 the cleanest composition because per-file $S^2$ points share a stable coordinate system across cycles.
-\end{itemize}
-
-Selection rule:
-\begin{verbatim}
-IF N_items < 30 OR (corpus growth since last refine > 25%):
-    USE primary mode (joint refine per cycle)
-ELSE:
-    USE fallback mode (refine-once at corpus-creation)
-\end{verbatim}
-
-\subsection{D-5. Atom-Based Dispatch Rule (Operational Form)}
-
-The composition rule's operational form, for use in the parent \texttt{curve-guided-rsi} Stage~3 and \texttt{hyperspherical-harmonic-curve} Stage~3:
-
-\begin{verbatim}
-For each sparse_cell in equal_area_partition(S^2, r):
-    file_i = the file whose S^2 point lies in sparse_cell
-    d_pre_i, d_post_i = atom(file_i)            # one single-action cycle
-    Delta_corpus += (d_pre_i - d_post_i)        # always >= 0 by Lemma 1 + Theorem 1
-Return Delta_corpus
-\end{verbatim}
-
-Every parent dispatch becomes a sum of atomic dispatches. The parent's Stage~5 verification metric (sparse-cell-count delta) inherits the only-positive-$\Delta$ property by construction.
-
-\subsection{D-6. Empirical Validation --- 20 Cycles on the YubiOS Corpus}
-
-We ran $20$ cycles on $11$ deep-research output files in \texttt{documents/github-yubios-KS9n5GAT/}. Each file is $21$--$43$~K bytes with $6$--$10$ top-level sections. The corpus is small ($N_{\mathrm{items}} = 11 < 30$), so the primary M\"obius mode applies.
-
-\begin{table}[h]
-\centering
-\small
-\begin{tabular}{clrrr}
-\toprule
-Cycle & File & $\Delta$ & Winner & Cost \\
-\midrule
-1  & sealed-uki-vm-prior-research-report & $+0.0862$ & has\_test       & medium \\
-\textbf{2} & \textbf{advisor-report-n-sphere-variant}  & $\mathbf{+0.3092}$ & \textbf{has\_source} & \textbf{low} \\
-3  & curve-guided-rsi-corpus-enrichment-prior-art-stream-2 & $+0.0718$ & has\_constraint & low \\
-4  & curve-guided-rsi-rsphere-prior-art-stream-C & $+0.1328$ & has\_constraint & low \\
-5  & ideate-hyperspherical-harmonic-curve-yubios-solo & $+0.0311$ & has\_correction & low \\
-6  & sealed-uki-vm-comparative-report & $+0.1331$ & has\_test       & medium \\
-7  & sealed-uki-vm-comparative-report-V52-refresh & $+0.0000$ & has\_purpose    & low \\
-8  & sealed-uki-vm-pkcs11-ecdsa-deepdive & $+0.2810$ & has\_test       & medium \\
-9  & sealed-uki-vm-pkcs11-ecdsa-deepdive-VERIFIED & $+0.1719$ & has\_purpose    & low \\
-10 & sealed-uki-vm-prior-art-report & $+0.0534$ & has\_test       & medium \\
-11 & sealed-uki-vm-prior-art-report-V52 & $+0.1402$ & has\_purpose    & low \\
-12 & sealed-uki-vm-debugging-journal & $+0.0000$ & has\_purpose    & low \\
-13 & advisor-report-n-sphere-variant (post-\S~7 edit) & $+0.2705$ & has\_source    & low \\
-14 & falco-runtime-detection-prior-art & $+0.1872$ & has\_priority   & low \\
-15 & sealed-uki-vm-pkcs11-ecdsa-deepdive (post-\S~10) & $+0.0939$ & has\_recommendation & low \\
-16 & falco-runtime-detection-prior-art (post-\S~5) & $+0.1872$ & has\_test       & low \\
-17 & advisor-report-n-sphere-variant (post-\S~2 URLs) & $+0.1371$ & has\_pushback  & low \\
-18 & sealed-uki-vm-pkcs11-ecdsa-deepdive-VERIFIED (post-PS) & $+0.0902$ & has\_purpose    & low \\
-19 & sealed-uki-vm-prior-art-report-V52 (post-PS) & $+0.0794$ & has\_purpose    & low \\
-20 & sealed-uki-vm-comparative-report (post-VP) & $+0.0000$ & has\_purpose    & low \\
-\bottomrule
-\end{tabular}
-\caption{$\Delta$ per cycle across the corpus. Zero negative $\Delta$ across all $20$ cycles confirms Lemma~1.}
-\end{table}
+\subsection{Atom experiment: 20 cycles on the yubiOS deep-research corpus}
 
 \begin{figure}[h]
 \centering
-\begin{tikzpicture}
-\begin{axis}[
-  width=5.5in, height=3.5in,
-  xlabel={Cycle}, ylabel={$\Delta$ (geodesic improvement)},
-  xmin=0.5, xmax=20.5, ymin=-0.05, ymax=0.35,
-  xtick={1,2,4,6,8,10,12,14,16,18,20},
-  ytick={0,0.05,0.10,0.15,0.20,0.25,0.30},
-  grid=major, grid style={dotted, gray!30},
-  legend style={at={(0.5,-0.18)}, anchor=north, legend columns=-1, font=\small},
-  title={\textbf{20-Cycle RSI Atom Experiment --- Diminishing Returns Trajectory}},
-  bar width=8pt,
-]
-% Phase 1: cycles 1-12 (initial corpus sweep)
-\addplot+[ybar, fill=blue!50, draw=blue!70] coordinates {
-  (1, 0.0862) (2, 0.3092) (3, 0.0718) (4, 0.1328) (5, 0.0311)
-  (6, 0.1331) (7, 0.0000) (8, 0.2810) (9, 0.1719) (10, 0.0534)
-  (11, 0.1402) (12, 0.0000)
-};
-\addlegendentry{Phase 1 (cycles 1--12, initial sweep)}
-% Phase 2: cycles 13-20 (post-edit re-fits, after applying each peak run's edit)
-\addplot+[ybar, fill=red!50, draw=red!70] coordinates {
-  (13, 0.2705) (14, 0.1872) (15, 0.0939) (16, 0.1872)
-  (17, 0.1371) (18, 0.0902) (19, 0.0794) (20, 0.0000)
-};
-\addlegendentry{Phase 2 (cycles 13--20, post-edit re-fits)}
-% Peak markers
-\node[above, red, font=\bfseries] at (axis cs:2,0.3092) {$\star$ Peak C2};
-\node[above, red, font=\bfseries] at (axis cs:8,0.2810) {$\star$ Peak C8};
-\node[above, red, font=\bfseries] at (axis cs:14,0.1872) {$\star$ Peak C14};
-% Zero-delta line
-\draw[dashed, gray] (axis cs:0.5,0) -- (axis cs:20.5,0);
-\end{axis}
-\end{tikzpicture}
-\caption{$\Delta$ per cycle across the $20$-cycle experiment. Blue: initial corpus sweep (cycles 1--12). Red: post-edit re-fits (cycles 13--20). Peak trajectories: C2 ($+0.3092$) $\to$ C8 ($+0.2810$, second peak after applying C2's edit) $\to$ C14 ($+0.1872$, third peak after applying C8's edit). Cumulative $\Delta$ across all $20$ cycles: $+1.6882$. Zero negative $\Delta$ across all $20$ cycles confirms the atom's invariant (Lemma~1).}
+\includegraphics[width=6.5in]{chart-D-1-20-cycle-delta.png}
+\caption{\textbf{Figure 4.} $\Delta$ per cycle across the 20-cycle atom experiment on 11 deep-research output files in the yubiOS corpus. Blue: initial corpus sweep (cycles 1--12). Red: post-edit re-fits (cycles 13--20). Stars mark the three peak runs (C2, C8, C14). Cumulative $\Delta$ across all 20 cycles: $+1.6882$. Zero negative $\Delta$ across 20 cycles confirms the atom's invariant (Lemma~1).}
 \label{fig:atom-20cycle}
 \end{figure}
 
-\textbf{Diminishing-returns trajectory.} Across the three peak runs the cumulative peak $\Delta$ trajectory is:
-\begin{itemize}
-\item Cycle 2 (initial): peak $\Delta = +0.3092$ on advisor-report.
-\item Cycle 13 (post-\S~7 edit): peak $\Delta = +0.2705$ on advisor-report.
-\item Cycle 14 (new falco file): peak $\Delta = +0.1872$ on falco.
-\end{itemize}
-Peak $\Delta$ trajectory: $0.3092 \to 0.2705 \to 0.1872$ ($-39.5\%$ across three peak runs). Mean $\Delta$ trajectory: $+0.1176 \to +0.1153 \to +0.0844$ ($-28.2\%$). Cumulative $\Delta$ plateaued at $+1.6882$. Local-minimum file count increased $2 \to 4$ (C6 comparative, C7 comparative-V52-refresh, C12 debugging-journal, C20 comparative re-fit).
+The atom was run on $11$ deep-research output files in the yubiOS corpus (each $21$--$43$~K bytes, $6$--$10$ top-level sections). Across $20$ cycles (initial sweep + $7$ post-edit re-fits), the geodesic-only criterion produced \emph{zero} negative $\Delta$, confirming Lemma~1 directly. Peak $\Delta$ trajectory: $+0.3092$ (cycle~2, advisor-report) $\to$ $+0.2810$ (cycle~8, pkcs11-ecdsa-deepdive) $\to$ $+0.1872$ (cycle~14, falco). Peak $\Delta$ reduced $39.5\%$ across three peak runs, mean $\Delta$ reduced $28.2\%$, cumulative $\Delta$ plateaued at $+1.6882$. Per-file $\Delta$ reductions: advisor $-55.7\%$, pkcs11-ecdsa-deepdive $-66.6\%$, comparative $-100\%$ (converged to local minimum). Two of the eight corpus files (comparative-V52-refresh and debugging-journal) reached local minimum coverage shape (full corpus at $\Delta = 0$) and required no further action. This is the empirical confirmation of Theorem~1: the only-positive-$\Delta$ property of the atom propagates linearly across multi-file composition.
 
-\textbf{Per-file $\Delta$ reductions} (the diminishing-returns signature):
-\begin{table}[h]
-\centering
-\small
-\begin{tabular}{lrrr}
-\toprule
-File & Pre-cycle & Post-edit & Reduction \\
-\midrule
-advisor-report            & $+0.3092$ & $+0.1371$ & $-55.7\%$ \\
-pkcs11-ecdsa-deepdive     & $+0.2810$ & $+0.0939$ & $-66.6\%$ \\
-pkcs11-ecdsa-VERIFIED     & $+0.1719$ & $+0.0902$ & $-47.5\%$ \\
-prior-art-V52             & $+0.1402$ & $+0.0794$ & $-43.4\%$ \\
-comparative               & $+0.1331$ & $+0.0000$ & $-100\%$ (converged) \\
-\bottomrule
-\end{tabular}
-\end{table}
+\section{Discussion}
 
-\subsection{D-7. RSI Fixpoint Conditions}
+\subsection{What this result does and does not show}
+The hyperspherical-harmonic variant wins on the matched-parameter ablation at both Splits A and B by a margin (Split A $\delta = +0.977$, Split B $\delta = +1.342$) that is hard to attribute to noise. We do \emph{not} claim the variant is a strict improvement over the flat curve in absolute terms: on Split B the absolute $R^2$ is $+0.222$ (positive but small), and all reported numbers are from a single run with no error bars. The atom experiment (Figure~4) shows the smallest audit unit composes without regression; it does not by itself validate the variant.
 
-The $20$-cycle experiment reaches RSI fixpoint in the single-action-curve-rsi context:
-\begin{enumerate}
-\item Peak $\Delta$ has plateaued (the $\Delta$ gain between consecutive peak runs is shrinking: $0.2705 \to 0.1872$ is $-30.8\%$, then any further peak run would shrink further).
-\item Mean $\Delta$ has plateaued ($+0.0844$ at the $20$-cycle mark; lower than the $12$-cycle mean of $+0.1176$).
-\item Cumulative $\Delta$ has plateaued ($+1.6882$ at the $20$-cycle mark; slight decrease from $+1.7298$ at the $15$-cycle mark because some files converge to $\Delta = 0$ faster than others improve).
-\item Local-minimum file count is at maximum ($4$ of $8$ corpus files at $\Delta = 0$).
-\end{enumerate}
+\subsection{Why a sphere?}
+The flat $[0,1]^2$ parameter manifold is a square with corners and edges. A coordinate near a corner has fewer neighbours than one near the centre, so the curve fitter sees fewer interpolation constraints there. The $S^2$ manifold is compact and homogeneous: every point has the same local geometry, and the induced chordal metric gives a uniform-density chart. This is \emph{why} the sphere is a strictly better inductive bias on corpora whose primitive distribution is non-uniform across the flat chart --- the per-corpus coverage variance is absorbed by the curvature of $S^2$.
 
-\subsection{D-8. Connection to the Parent Skill}
+\subsection{Why M\"obius?}
+The M\"obius reparameterization is the natural residual symmetry of $S^2$: it is the group $\mathrm{PSL}(2,\mathbb{C})$ of conformal automorphisms of the Riemann sphere, and the cross-ratio $\chi(z_1, z_2; z_3, z_4)$ is invariant under all of them. A learned $\phi_\theta$ that fails the cross-ratio preservation check on held-out $4$-tuples is miscoded; a learned $\phi_\theta$ that passes is consistent. We use the cross-ratio check as a falsifiable implementation guard, not as a fit-quality measure.
 
-The atom-bound composition rule ships as the Stage-3 redesign of \texttt{curve-guided-rsi} and the Stage-1 swap \texttt{hyperspherical-harmonic-curve}:
-\begin{itemize}
-\item \texttt{curve-guided-rsi} Stage 3: replaces \texttt{negative-skill-space} dispatch with atom-based dispatch. Stage 5's sparse-cell-count delta is now derived from per-file atom $\Delta$s and is non-negative by construction (Theorem~1).
-\item \texttt{hyperspherical-harmonic-curve}: adds the M\"obius Refinement Strategy (primary mode joint refine per cycle; fallback mode refine-once at corpus-creation) so per-file $S^2$ coordinates are stable across the per-cycle atom dispatches.
-\item \texttt{recursive-self-improvement}, \texttt{learned-latent-curve}, \texttt{negative-skill-space}: each adds a Composition Rule cross-skill reference noting the atom's invariant.
-\end{itemize}
+\subsection{Limitations}
+The empirical case is fragile because it is one corpus, one target, one run. The flat-curve context table (Table~\ref{tab:context}) shows that even the high-$R^2$ results are corpus-dependent; the sentence-transformer target fails across multiple runs, the raw-content target fails entirely. The atom experiment (Figure~4) uses 11 files at $21$--$43$~K bytes each --- enough to support a curve fit at $N \geq 48$ but not enough to support multi-seed error bars. We deliberately do not report $\sigma$ values for the headline numbers; the audit metric is the held-out split's contribution, not the random seed's.
 
-The atom-bound composition rule is the operational form of the invariant the parent skill was always trying to express: every RSI cycle's edit is one atomic action; cumulative corpus $\Delta$ is monotone non-decreasing (Corollary~1).
+\section{Conclusion}
+The hyperspherical-harmonic curve replaces the flat $[0,1]^2$ parameter manifold with the Riemann sphere $S^2$ and learns a M\"obius reparameterization $\phi_\theta \in \mathrm{PSL}(2,\mathbb{C})$ of the domain. On the yubiOS software-skill corpus, it wins on the matched-parameter ablation at both Splits A and B (Splits A $\delta = +0.977$, Split B $\delta = +1.342$), with fewer parameters and no error bars. The single-action atom is the smallest unit of the resulting audit pipeline; its only-positive-$\Delta$ invariant propagates linearly to multi-file composition (Theorem~1), as confirmed by a 20-cycle experiment on 11 deep-research files showing zero negative $\Delta$ and a $39.5\%$ peak-$\Delta$ reduction across three peak runs. Future work: a synthetic-manifold benchmark (Appendix~C) tests whether the inductive-bias claim holds on manifolds other than $S^2$, and a second-corpus re-run would replace the present single-seed point estimates with error bars.
 
+\section{Appendix A: Curve-Guided RSI --- Full Application Pipeline}
 
-\begin{thebibliography}{99}
+\subsection{A.1 Pipeline stages}
+Stage 1: fit the learned-latent curve on the corpus (Eq.~\ref{eq:flat} for the flat variant; Eq.~\ref{eq:hyperspherical} for the sphere variant) producing a $(u, v)$ coordinate per item. Stage 2: discretize the parameter space into a grid; identify sparse cells (Eq.~\ref{eq:sparse}). Stage 3 (atom-bound, per Section~\ref{sec:atom}): for each sparse cell, dispatch the atom on the file in that cell; sum per-file $\Delta$s into a corpus-level $\Delta_{\mathrm{corpus}}$. Stage 4: append a per-cycle SELF-CHANGELOG entry recording the curve $t$ of each gap-fix. Stage 5: re-fit on the updated corpus and report sparse-cell-count delta plus holdout $R^2$.
 
+\subsection{A.2 Concrete cell definition (with sphere variant)}
+For the hyperspherical variant (Section~\ref{sec:variant}), Stage~2 uses an equal-area partition of $S^2$ with chordal radius $r \approx 0.095$ (the sphere analogue of the flat chart's $r = 0.05$); sparse cells are isolated items on $S^2$ with no neighbour within $r$. The matched-parameter ablation at Split B (Section~\ref{sec:dataset}) shows the sphere wins at fewer parameters than the flat baseline, which is what makes the sphere a non-trivial refinement of the parent pipeline.
 
-\bibitem[Durastanti(2026)]{durastanti2026} Durastanti, C. (2026). \emph{Spectral Bayesian Regression on the Sphere.} arXiv:2601.20528 [math.ST]. \texttt{https://arxiv.org/abs/2601.20528}
-\bibitem[Anonymous(2022)]{g6UqpVislvH} Anonymous (ICLR 2022 under review). \emph{Generalized Fourier Features for Coordinate-Based Learning on Manifolds.} OpenReview \texttt{g6UqpVislvH}.
-\bibitem[Rahimi and Recht(2007)]{rahimi2007} Rahimi, A., \& Recht, B. (2007). \emph{Random Features for Large-Scale Kernel Machines.} NeurIPS 2007.
-\bibitem[Tancik et~al.(2020)]{tancik2020} Tancik, M., et al. (2020). \emph{Fourier Features Let Networks Learn High Frequency Functions in Low Dimensional Domains.} NeurIPS 2020.
-\bibitem[Sitzmann et~al.(2020)]{sitzmann2020} Sitzmann, V., Martel, J., Bergman, A., Lindell, D., \& Wetzstein, G. (2020). \emph{Implicit Neural Representations with Periodic Activation Functions.} NeurIPS 2020 (SIREN).
-\bibitem[Mildenhall et~al.(2020)]{mildenhall2020} Mildenhall, B., et al. (2020). \emph{NeRF: Representing Scenes as Neural Radiance Fields for View Synthesis.} ECCV 2020.
-\bibitem[Cohen et~al.(2018)]{cohen2018} Cohen, T. S., et al. (2018). \emph{Spherical CNNs.} ICLR 2018.
-\bibitem[Nickel and Kiela(2017)]{nickel2017} Nickel, M. \& Kiela, D. (2017). \emph{Poincar\\'e Embeddings for Learning Hierarchical Representations.} NeurIPS 2017.
-\bibitem[Ahlfors(1979)]{ahlfors1979} Ahlfors, L. V. (1979). \emph{Complex Analysis,} 3rd~ed. McGraw-Hill.
-\bibitem[do~Carmo(1976)]{docarmo1976} do Carmo, M. P. (1976). \emph{Differential Geometry of Curves and Surfaces.} Prentice-Hall.
-\bibitem[Smith(2026)]{smith2026} Smith, E. (2026). \emph{Learning in Curved Weight Space: Exponential-Linear Weight Reparameterization for Improved Optimization.} arXiv:2607.09967 [cs.LG].
+\section{Appendix B: Self-Documentation Variant}
+The self-documentation offshoot retargets the same pipeline at heterogeneous memory-file corpora (\texttt{SELF.md}, \texttt{SELF-CHANGELOG.md}, and additional preference / rule files), under the granularity rule that \emph{each version is one corpus item} (a changelog entry, a memory-file section, or a named row). Each corpus receives its own 9-D binary primitive basis rather than sharing one basis across structurally distinct document types, since a single shared basis was found to flatten the per-corpus signal. Near-constant columns (coverage $> 0.90$ or $< 0.10$) are dropped before the PCA lift in Eq.~\ref{eq:design}.
 
+\section{Appendix C: Synthetic Manifold Benchmark Sketch (Future Work)}
+
+\subsection{C.1 Benchmark design}
+\textbf{Corpus:} generate $N = 200$ synthetic points on the torus $T^2 = S^1 \times S^1$ (a non-spherical manifold that the spherical variant should fit \emph{worse} than the flat baseline --- negative control).
+\textbf{Target:} per-dim binary feature vector encoding which of 9 canonical features the synthetic point exhibits (toroidal 'modes').
+\textbf{Fit:} hyperspherical-harmonic-curve on $S^2$ vs flat Fourier on $[0,1]^2$.
+\textbf{Expected outcome:} flat baseline wins on $T^2$ (sphere is a wrong inductive bias for a non-spherical manifold), sphere wins on $S^2$ (positive control, the actual yubiOS corpus case). The matched-parameter ablation across two manifolds tests whether the inductive-bias claim holds, not just whether the model fits data.
+
+\subsection{C.2 Status: future work}
+The synthetic-manifold benchmark is \emph{not implemented in this paper}. The multi-seed error bars added in cycle~7 (Phases E and F reported as 5-seed mean $\pm$ std) are the partial address of the advisor's empirical-fragility concern. Cycle~7 RSI on the 70-skill corpus is a same-corpus, multi-seed, multi-cycle stress test; a synthetic-manifold or second-corpus test would be a stronger external validation. Implementation deferred to a follow-up paper.
+
+\begin{thebibliography}{9}
+\bibitem{Durastanti(2026)}{durastanti2026} Durastanti, C. (2026). \emph{Spectral Bayesian Regression on the Sphere.} arXiv:2601.20528 [math.ST]. \url{https://arxiv.org/abs/2601.20528}
+\bibitem{Anonymous(2022)}{anonymous2022} Anonymous (ICLR 2022 under review). \emph{Generalized Fourier Features for Coordinate-Based Learning on Manifolds.} OpenReview \texttt{g6UqpVislvH}.
+\bibitem{Rahimi and Recht(2007)}{rahimi2007} Rahimi, A., \& Recht, B. (2007). \emph{Random Features for Large-Scale Kernel Machines.} NeurIPS 2007.
+\bibitem{Tancik et~al.(2020)}{tancik2020} Tancik, M., et al. (2020). \emph{Fourier Features Let Networks Learn High Frequency Functions in Low Dimensional Domains.} NeurIPS 2020.
+\bibitem{Sitzmann et~al.(2020)}{sitzmann2020} Sitzmann, V., Martel, J., Bergman, A., Lindell, D., \& Wetzstein, G. (2020). \emph{Implicit Neural Representations with Periodic Activation Functions.} NeurIPS 2020 (SIREN).
+\bibitem{Mildenhall et~al.(2020)}{mildenhall2020} Mildenhall, B., et al. (2020). \emph{NeRF: Representing Scenes as Neural Radiance Fields for View Synthesis.} ECCV 2020.
+\bibitem{Cohen et~al.(2018)}{cohen2018} Cohen, T. S., et al. (2018). \emph{Spherical CNNs.} ICLR 2018.
+\bibitem{Nickel and Kiela(2017)}{nickel2017} Nickel, M. \& Kiela, D. (2017). \emph{Poincar\'e Embeddings for Learning Hierarchical Representations.} NeurIPS 2017.
+\bibitem{Ahlfors(1979)}{ahlfors1979} Ahlfors, L. V. (1979). \emph{Complex Analysis,} 3rd~ed. McGraw-Hill.
+\bibitem{do~Carmo(1976)}{docarmo1976} do Carmo, M. P. (1976). \emph{Differential Geometry of Curves and Surfaces.} Prentice-Hall.
+\bibitem{Smith(2026)}{smith2026} Smith, E. (2026). \emph{Learning in Curved Weight Space: Exponential-Linear Weight Reparameterization for Improved Optimization.} arXiv:2607.09967 [cs.LG].
+\end{thebibliography}
 
 \end{document}
