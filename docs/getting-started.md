@@ -140,6 +140,14 @@ The `references/` directory contains supplementary checklists:
 
 Load a reference when you need detailed patterns beyond what the skill covers.
 
+If you install one skill with `npx skills add ... --skill <name>`, only the
+selected `skills/<name>/` directory is copied. The skill still works, but paths
+to supplementary checklists in the repo-level `references/` directory are
+unavailable. Use a whole-repo integration, clone the repository, or copy the
+needed checklist into a `references/` directory inside the installed skill.
+This portability gap is tracked in
+[addyosmani/agent-skills#361](https://github.com/addyosmani/agent-skills/issues/361).
+
 ## Spec and task artifacts
 
 The `/spec` and `/plan` commands create working artifacts (`SPEC.md`, `tasks/plan.md`, `tasks/todo.md`). Treat them as **living documents** while the work is in progress:

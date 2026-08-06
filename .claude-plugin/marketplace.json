@@ -9,6 +9,7 @@
   "plugins": [
     {
       "name": "agent-skills",
+      "version": "0.6.6",
       "source": {
         "source": "github",
         "repo": "addyosmani/agent-skills"

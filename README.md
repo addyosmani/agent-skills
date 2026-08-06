@@ -57,6 +57,13 @@ npx skills add addyosmani/agent-skills --skill interview-me              # requi
 npx skills add addyosmani/agent-skills --skill test-driven-development   # red-green-refactor, enforced
 ```
 
+> **Installing one skill?** A per-skill `npx` install copies only
+> `skills/<name>/`, not the repo-level `references/` directory. The skill still
+> works, but paths to supplementary shared checklists are unavailable. Use a
+> whole-repo integration, clone the repository, or copy the needed checklist into
+> a `references/` directory inside the installed skill. This portability gap is
+> tracked in [#361](https://github.com/addyosmani/agent-skills/issues/361).
+
 Prefer a native integration? Pick your tool below.
 
 <details>
@@ -170,9 +177,25 @@ Install as a native Codex plugin (Codex CLI v0.122+):
 
 ```bash
 codex plugin marketplace add addyosmani/agent-skills
+codex plugin add agent-skills@agent-skills
 ```
 
-Codex reads the root `skills/` directory directly through `.codex-plugin/plugin.json`. Once installed, invoke skills in chat using `@` (e.g., `@spec-driven-development`). See [docs/codex-setup.md](docs/codex-setup.md) for local installation and troubleshooting.
+The first command registers the marketplace; the second installs the plugin. Codex reads the root `skills/` directory directly through `.codex-plugin/plugin.json`. Once installed, invoke skills in chat using `@` (e.g., `@spec-driven-development`). See [docs/codex-setup.md](docs/codex-setup.md) for local installation and troubleshooting.
+
+</details>
+
+<details>
+<summary><b>Command Code</b></summary>
+
+Install natively with the built-in `cmd skills` command. Command Code clones the repo, discovers every `SKILL.md`, and installs into `.commandcode/skills/`:
+
+```bash
+cmd skills add addyosmani/agent-skills            # pick skills to install (project)
+cmd skills add addyosmani/agent-skills --global   # install for all projects (~/.commandcode/skills/)
+cmd skills add addyosmani/agent-skills -s spec-driven-development  # install a specific skill
+```
+
+Installed skills show up in the TUI slash menu, e.g. `/spec-driven-development`. See [docs/commandcode-setup.md](docs/commandcode-setup.md).
 
 </details>
 

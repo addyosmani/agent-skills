@@ -443,7 +443,16 @@ function parseGrading(raw) {
   return ok ? g : null;
 }
 
+// Skill name must be a valid kebab-case identifier — no path separators,
+// no "..", no absolute paths. Without this, --behavioral "../../x" would
+// resolve to files outside the project tree for both reads and writes.
+const VALID_SKILL_NAME = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
 function runBehavioral(skillName, dryRun) {
+  if (!skillName || !VALID_SKILL_NAME.test(skillName)) {
+    console.error(`Invalid skill name: "${skillName}" — must be kebab-case (e.g. "my-skill")`);
+    process.exit(1);
+  }
   const caseFile = path.join(CASES_DIR, `${skillName}.json`);
   if (!fs.existsSync(caseFile)) {
     console.error(`No eval case file for "${skillName}"`);
@@ -489,6 +498,7 @@ function runBehavioral(skillName, dryRun) {
     // edit files and run commands in the throwaway workspace; without it,
     // headless denials would force the exact narrate-instead-of-perform
     // failure mode that trace grading exists to catch.
+    try {
     const trace = execFileSync(
       'claude',
       ['-p', '--verbose', '--output-format', 'stream-json',
@@ -527,6 +537,11 @@ function runBehavioral(skillName, dryRun) {
     fs.writeFileSync(`${base}.grading.json`, JSON.stringify(grading, null, 2) + '\n');
     console.log(`eval ${ev.id}: ${grading.summary.passed}/${grading.summary.total} expectations passed -> ${path.relative(ROOT, base)}.grading.json`);
     if (grading.summary.passed < grading.summary.total) failures++;
+    } finally {
+      // Clean up throwaway workspace to prevent leaking fixture data
+      // into world-readable temp directories.
+      try { fs.rmSync(workspace, { recursive: true, force: true }); } catch { /* best-effort */ }
+    }
   }
   process.exit(failures ? 1 : 0);
 }
