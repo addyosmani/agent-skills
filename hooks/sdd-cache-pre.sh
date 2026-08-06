@@ -31,10 +31,19 @@ is_url_safe() {
   # Extract host (strip scheme, path, port)
   local host="${url#https://}"
   host="${host%%/*}"
-  host="${host%%:*}"
-  # Reject common internal/loopback/metadata hosts
+  # Handle bracketed IPv6 literal: https://[2001:db8::1]:443/path
+  case "$host" in \[*)
+    host="${host#[}"
+    host="${host%%]*}"
+    ;; *)
+    host="${host%%:*}"
+    ;;
+  esac
+  # Reject common internal/loopback/metadata hosts. IPv6 literals are
+  # rejected wholesale (curl would need -g handling we don't want to trust);
+  # any bracket form reaching here has been de-bracketed to its raw address.
   case "$host" in
-    localhost|127.*|0.0.0.0|169.254.169.254|10.*|172.1[6-9].*|172.2[0-9].*|172.3[01].*|192.168.*|::1|[fF][cCdD]??:*) return 1 ;;
+    localhost|127.*|0.0.0.0|169.254.169.254|10.*|172.1[6-9].*|172.2[0-9].*|172.3[01].*|192.168.*|::1|[fF][cCdD]??:*|*:*) return 1 ;;
   esac
   return 0
 }
