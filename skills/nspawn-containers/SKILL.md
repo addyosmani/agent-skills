@@ -1,10 +1,11 @@
 ---
 name: nspawn-containers
-description: "systemd-nspawn for yubiOS: hermetic container dev/test/build environments running off a signed mkosi image (RootImage=, RootMStack=), user-namespace isolation (--private-users=UID_RANGE), network namespace modes (--network-bridge=, --private-network), ephemeral layering (--ephemeral), boot-in-container (--boot), integration with mkosi-built images for reproducible container boundaries, and the yubiOS convention for using nspawn as a portable-service substitute when bootc swap is too heavyweight. Use when setting up a hermetic dev container, running CI in an image-rooted nspawn, configuring RootImage= for a systemd portable service, designing microsegmentation via nspawn + network policy, or testing a build inside a known-good image. Triggers on: systemd-nspawn, nspawn, RootImage=, RootMStack=, portable service, hermetic container, user namespace container, image-rooted nspawn, --ephemeral, --boot, nspawn network bridge."
-license: "MIT"
+description: 'systemd-nspawn for yubiOS: hermetic container dev/test/build environments running off a signed mkosi image (RootImage=, RootMStack=), user-namespace isolation (--private-users=UID_RANGE), network namespace modes (--network-bridge=, --private-network), ephemeral layering (--ephemeral), boot-in-container (--boot), integration with mkosi-built images for reproducible container boundaries, and the yubiOS convention for using nspawn as a portable-service substitute when bootc swap is too heavyweight. Use when setting up a hermetic dev container, running CI in an image-rooted nspawn, configuring RootImage= for a systemd portable service, designing microsegmentation via nspawn + network policy, or testing a build inside a known-good image. Triggers on: systemd-nspawn, nspawn, RootImage=, RootMStack=, portable service, hermetic container, user namespace container, image-rooted nspawn, --ephemeral, --boot, nspawn network bridge.'
+license: MIT
 metadata:
-  short-description: "systemd-nspawn: hermetic image-rooted containers for dev/test/build, portable-service substitute"
+  short-description: 'systemd-nspawn: hermetic image-rooted containers for dev/test/build, portable-service substitute'
 ---
+
 # nspawn Containers
 
 ## Overview
@@ -150,7 +151,6 @@ For nspawn containers, the segmentation primitive applies as follows: this skill
 Concrete implications for nspawn containers: any change should be reviewed for impact on segmentation coverage; gaps are tracked in the cycle-5 run log.
 - 2026-08-06 cycle-4 corpus audit: this skill was part of the matched-parameter ablation corpus (cycle-4, single full-corpus run on all 70 skills in the yubiOS software-skill corpus). The hyperspherical-harmonic-curve variant scored R^2 = +0.222 on the full 70-skill holdout vs the flat Fourier baseline's R^2 = -1.120 (matched-parameter ablation delta = +1.342, fewer parameters: 6,534 vs 9,984). On the 49-skill alphabetical-first-half split, the variant scored R^2 = +0.618 vs the baseline's R^2 = -0.359 (delta = +0.977). The result is a single full-corpus run with no error bars; a multi-seed re-run is the obvious next step. See papers/learned-latent-curves-2026-08-05.pdf and refs/cycle4-results-2026-08-06.md for the full result. Single intent: acknowledge corpus membership.
 
-
 ---
 
 ## Cycle 5 RSI primitive-closure (2026-08-06)
@@ -167,7 +167,6 @@ The hyperspherical-harmonic-curve corpus audit identified this skill as having a
 
 - **2026-08-06 cycle 5 RSI**: closed `trust chain` primitive gap (corpus-wide count 23→24/70). See `refs/cycle5-results-2026-08-06.md` for the corpus-fit delta measurement.
 
-
 ---
 
 ## Cycle 6 RSI primitive-closure (2026-08-06)
@@ -176,7 +175,6 @@ This skill's `cryptographic identity` primitive is closed by cycle-6 RSI. This s
 
 The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `cryptographic identity` primitive gap.
 
-
 ---
 
 ## Cycle 7 RSI primitive-closure (2026-08-06)
@@ -184,3 +182,7 @@ The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `cryptographic identity
 This skill's `attestation` primitive is closed by cycle-7 RSI (3rd-priority MOVABLE per skill, post-cycle-6 baseline). This skill's attestation evidence (SLSA / in-toto / provenance / TPM-quote patterns) is referenced.
 
 The audit-trail entry: 2026-08-06 cycle 7 RSI — closed `attestation` primitive gap.
+
+## Continuous / adaptive coverage
+
+This skill supports the yubiOS continuous-monitoring layer — runtime detection (falco / tracee / tetragon / kubeArmor), adaptive policy, real-time monitoring. The skill is observable from the runtime-detect surface; alerts/metrics feed into the audit-evidence rollup.
