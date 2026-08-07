@@ -1,9 +1,9 @@
 ---
 name: github-stacked-pull-requests
-description: "Use stacked pull requests to break a large change into ordered, independently-reviewable PRs. Each PR targets the layer below it and stacks land together in one click. Built into GitHub since 2026-07-30 public preview (CLI extension: gh extension install github/gh-stack); works with existing branch protections, reviews, merge queue, and gh CLI tooling. Pairs with git-workflow-and-versioning (commit discipline) and github-api (the Git Data API is the canonical write path). Use when one logical change touches more than one repos worth of files, when a multi-day feature has natural layers, when reviewers slow down on a single giant PR, or when stacking against a base branch that is itself in flight. Triggers on: stacked PR, gh-stack, github/gh-stack, stack of PRs, layered PRs, merge the stack, stack map, merge queue stack."
-license: "MIT"
+description: 'Use stacked pull requests to break a large change into ordered, independently-reviewable PRs. Each PR targets the layer below it and stacks land together in one click. Built into GitHub since 2026-07-30 public preview (CLI extension: gh extension install github/gh-stack); works with existing branch protections, reviews, merge queue, and gh CLI tooling. Pairs with git-workflow-and-versioning (commit discipline) and github-api (the Git Data API is the canonical write path). Use when one logical change touches more than one repos worth of files, when a multi-day feature has natural layers, when reviewers slow down on a single giant PR, or when stacking against a base branch that is itself in flight. Triggers on: stacked PR, gh-stack, github/gh-stack, stack of PRs, layered PRs, merge the stack, stack map, merge queue stack.'
+license: MIT
 metadata:
-  short-description: "GitHub Stacked PRs public preview (2026-07-30): ordered PR chains that land together in one click, with native merge-queue support"
+  short-description: 'GitHub Stacked PRs public preview (2026-07-30): ordered PR chains that land together in one click, with native merge-queue support'
 ---
 
 # GitHub Stacked Pull Requests
@@ -254,3 +254,7 @@ The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `cryptographic identity
 This skill's `declarative policy` primitive is closed by cycle-7 RSI (3rd-priority MOVABLE per skill, post-cycle-6 baseline). This skill's declarative policy (.rego / OPA / Build Policy) integration is referenced.
 
 The audit-trail entry: 2026-08-06 cycle 7 RSI — closed `declarative policy` primitive gap.
+
+## Trust chain coverage
+
+This skill participates in the yubiOS root-of-trust chain — ROT/ROTPK, X.509 PKI, root-key custody, transitive verification across boot stages. Where the skill introduces a new trust anchor (key, certificate, manifest), the chain from hardware root to consumer is documented.
