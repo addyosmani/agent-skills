@@ -1,6 +1,6 @@
 ---
 name: fedora-bootc-base-images
-description: "Working with official Fedora and CentOS Stream bootc base images: image tiers (standard/minimal/minimal-plus), source repos, digest pinning, bootc-base-imagectl, upstream tracking. Use when deriving yubiOS from fedora-bootc, sourcing digests, understanding tier differences, or tracking upstream package changes. Triggers on: fedora-bootc, centos-bootc, quay.io/fedora/fedora-bootc, quay.io/centos-bootc, base image tiers, rpm-ostree compose, bootc-base-imagectl, minimal-plus, standard tier."
+description: 'Working with official Fedora and CentOS Stream bootc base images: image tiers (standard/minimal/minimal-plus), source repos, digest pinning, bootc-base-imagectl, upstream tracking. Use when deriving yubiOS from fedora-bootc, sourcing digests, understanding tier differences, or tracking upstream package changes. Triggers on: fedora-bootc, centos-bootc, quay.io/fedora/fedora-bootc, quay.io/centos-bootc, base image tiers, rpm-ostree compose, bootc-base-imagectl, minimal-plus, standard tier.'
 ---
 
 # Fedora/CentOS bootc Base Images
@@ -193,3 +193,7 @@ The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `declarative policy` pr
 This skill already covers all 5 remaining MOVABLE corpus-priority primitives post-cycle-6 (attestation, trust chain, declarative policy, immutability, least privilege). The cycle-7 RSI audit verified full movable coverage; no primitive closure needed.
 
 The audit-trail entry: 2026-08-06 cycle 7 RSI — no movable primitive gap to close.
+
+## Continuous / adaptive coverage
+
+This skill supports the yubiOS continuous-monitoring layer — runtime detection (falco / tracee / tetragon / kubeArmor), adaptive policy, real-time monitoring. The skill is observable from the runtime-detect surface; alerts/metrics feed into the audit-evidence rollup.
