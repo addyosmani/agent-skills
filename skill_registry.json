@@ -3,7 +3,7 @@
     {
       "path": "0pointer-mastery/SKILL.md",
       "name": "0pointer-mastery",
-      "description": "Mastery and big picture skill for the Lennart Poettering / systemd ecosystem. Covers the full blog canon: \"Fitting Everything Together\" OS architecture vision, UKI/PCR/TPM trusted boot chain, Discoverable Partitions Specification, LUKS2 hardware unlock (FIDO2/TPM2/PKCS#11), factory reset + stateless systems, dynamic users, portable services, developer workflow (sysext + nspawn off host /usr), systemd v256–v260 feature landscape, mkosi, casync, Amutable (2026 company), and how everything maps to yubiOS (YubiKey replaces TPM2 for secrets). Use when:\n- Designing or reviewing yubiOS architecture decisions\n- Deciding which modularity mechanism to use (sysext vs portable service vs nspawn)\n- Understanding PCR assignments, UKI sections, boot phases, or rollback protection\n- Explaining why a specific systemd component was chosen over an alternative\n- Auditing whether a yubiOS design goal is met\n- Questions about LUKS2 hardware unlock mechanics (FIDO2, TPM2, PKCS#11)\n- Understanding DPS partition types, systemd-dissect, systemd-repart\n- Developer workflow: testing builds with sysext, running nspawn off host /usr\n- Dynamic users, StateDirectory, portable services, portablectl\n- Researching systemd v256–v260 features relevant to yubiOS\n- Any \"big picture\", \"why does this work this way\", or \"what would Lennart do\" question\nTrigger phrases: \"0pointer vision\", \"fitting everything together\", \"hermetic /usr\", \"trust chain\", \"PCR\", \"UKI\", \"boot phases\", \"FIDO2 unlock\", \"DPS\", \"discoverable partitions\", \"portable service\", \"sysext\", \"dynamic user\", \"factory reset\", \"stateless system\", \"Amutable\", \"architecture decision\", \"image-based OS\", \"big picture\", \"what would Lennart do\", \"why use X instead of Y\"."
+      "description": "Mastery and big picture skill for the Lennart Poettering / systemd ecosystem. Covers the full blog canon: \"Fitting Everything Together\" OS architecture vision, UKI/PCR/TPM trusted boot chain, Discoverable Partitions Specification, LUKS2 hardware unlock (FIDO2/TPM2/PKCS#11), factory reset + stateless systems, dynamic users, portable services, developer workflow (sysext + nspawn off host /usr), systemd v256\u2013v260 feature landscape, mkosi, casync, Amutable (2026 company), and how everything maps to yubiOS (YubiKey replaces TPM2 for secrets). Use when:\n- Designing or reviewing yubiOS architecture decisions\n- Deciding which modularity mechanism to use (sysext vs portable service vs nspawn)\n- Understanding PCR assignments, UKI sections, boot phases, or rollback protection\n- Explaining why a specific systemd component was chosen over an alternative\n- Auditing whether a yubiOS design goal is met\n- Questions about LUKS2 hardware unlock mechanics (FIDO2, TPM2, PKCS#11)\n- Understanding DPS partition types, systemd-dissect, systemd-repart\n- Developer workflow: testing builds with sysext, running nspawn off host /usr\n- Dynamic users, StateDirectory, portable services, portablectl\n- Researching systemd v256\u2013v260 features relevant to yubiOS\n- Any \"big picture\", \"why does this work this way\", or \"what would Lennart do\" question\nTrigger phrases: \"0pointer vision\", \"fitting everything together\", \"hermetic /usr\", \"trust chain\", \"PCR\", \"UKI\", \"boot phases\", \"FIDO2 unlock\", \"DPS\", \"discoverable partitions\", \"portable service\", \"sysext\", \"dynamic user\", \"factory reset\", \"stateless system\", \"Amutable\", \"architecture decision\", \"image-based OS\", \"big picture\", \"what would Lennart do\", \"why use X instead of Y\"."
     },
     {
       "path": "api-and-interface-design/SKILL.md",
@@ -18,7 +18,7 @@
     {
       "path": "ascii-uart-animator/SKILL.md",
       "name": "ascii-uart-animator",
-      "description": "Send framed ASCII art animations to a UART device (e.g. /dev/ttyS2) over the rock1 shell bridge — bouncing ball, fish swim, walking stick figure. Use when testing UART throughput, verifying ANSI rendering on the receiver, exercising the debug CLI bridge with something tangible, or just sending a fun ASCII movie down a serial line. Built-in: bouncing_ball (9 frames @ 10fps, no clear), bouncing_ball_ansi (30 frames @ 30fps, ANSI clear+home between frames), fish_swim (150 multiline frames @ 25fps with bubbles + sea floor), walking_man (120 multiline frames @ 20fps stick figure walking right), and play_all (all four back-to-back with separator pauses).",
+      "description": "Send framed ASCII art animations to a UART device (e.g. /dev/ttyS2) over the rock1 shell bridge \u2014 bouncing ball, fish swim, walking stick figure. Use when testing UART throughput, verifying ANSI rendering on the receiver, exercising the debug CLI bridge with something tangible, or just sending a fun ASCII movie down a serial line. Built-in: bouncing_ball (9 frames @ 10fps, no clear), bouncing_ball_ansi (30 frames @ 30fps, ANSI clear+home between frames), fish_swim (150 multiline frames @ 25fps with bubbles + sea floor), walking_man (120 multiline frames @ 20fps stick figure walking right), and play_all (all four back-to-back with separator pauses).",
       "license": "MIT",
       "compatibility": "Requires Python 3.8+ stdlib on the agent side, the rock1 shell bridge connection (conn_6rp6oRY9DBJG), and a writable UART char device on rock1 owned by the bridge user."
     },
@@ -64,7 +64,7 @@
     {
       "path": "composefs-kernel-floors/SKILL.md",
       "name": "composefs-kernel-floors",
-      "description": "Kernel version floors and mount options required for composefs on yubiOS: kernel ≥6.5 for data-only OverlayFS (composefs's primary backing fs), kernel ≥6.6 for verity=require mount option (enforces composefs-signed catalog on mount), kernel ≥6.12 for file-backed EROFS (composefs's alternate backing fs), the systemd-dissect integration points, and the yubiOS convention for picking the lowest-supported kernel in PINNED.md. Use when deciding a kernel version floor for a new yubiOS image, debugging a composefs mount failure (incompatible kernel), picking between OverlayFS and EROFS as the backing fs for a sysext/confext, or auditing whether a yubiOS build's kernel supports the composefs flow. Triggers on: composefs, kernel floor, verity=require, file-backed EROFS, data-only OverlayFS, OverlayFS data-only, composefs mount, kernel ≥6.5, kernel ≥6.6, kernel ≥6.12, systemd-dissect.",
+      "description": "Kernel version floors and mount options required for composefs on yubiOS: kernel \u22656.5 for data-only OverlayFS (composefs's primary backing fs), kernel \u22656.6 for verity=require mount option (enforces composefs-signed catalog on mount), kernel \u22656.12 for file-backed EROFS (composefs's alternate backing fs), the systemd-dissect integration points, and the yubiOS convention for picking the lowest-supported kernel in PINNED.md. Use when deciding a kernel version floor for a new yubiOS image, debugging a composefs mount failure (incompatible kernel), picking between OverlayFS and EROFS as the backing fs for a sysext/confext, or auditing whether a yubiOS build's kernel supports the composefs flow. Triggers on: composefs, kernel floor, verity=require, file-backed EROFS, data-only OverlayFS, OverlayFS data-only, composefs mount, kernel \u22656.5, kernel \u22656.6, kernel \u22656.12, systemd-dissect.",
       "license": "MIT",
       "metadata": {
         "user": {
@@ -88,26 +88,26 @@
     {
       "path": "continuous-runtime-detection-falco/SKILL.md",
       "name": "continuous-runtime-detection-falco",
-      "description": "Detects runtime security events using Falco rules, Tetragon TracingPolicy, OTel Collector, and Prometheus recording rules. Declarative continuous/adaptive telemetry for yubiOS — provides the audit artifact for primitive P4 and anchors P3 (declarative policy) and P6 (audit/evidence)."
+      "description": "Detects runtime security events using Falco rules, Tetragon TracingPolicy, OTel Collector, and Prometheus recording rules. Declarative continuous/adaptive telemetry for yubiOS \u2014 provides the audit artifact for primitive P4 and anchors P3 (declarative policy) and P6 (audit/evidence)."
     },
     {
       "path": "curve-guided-rsi/SKILL.md",
       "name": "curve-guided-rsi",
-      "description": "Recursive self-improvement driven by negative-skill-space gap-mapping and hypersphere curve-fitting on the SKILL.md corpus. The bounded RSI loop — hypothesis per cycle, fixpoint rule (no new gaps, old gaps closed, no new anti-patterns), 3-cycle default cap, fresh-context subagent per cycle to avoid author bias."
+      "description": "Recursive self-improvement driven by negative-skill-space gap-mapping and hypersphere curve-fitting on the SKILL.md corpus. The bounded RSI loop \u2014 hypothesis per cycle, fixpoint rule (no new gaps, old gaps closed, no new anti-patterns), 3-cycle default cap, fresh-context subagent per cycle to avoid author bias."
     },
     {
       "path": "curve-guided-rsi-self/SKILL.md",
       "name": "curve-guided-rsi-self",
-      "description": "Closed-loop audit pipeline retargeted at self-doc corpora — fits a learned-latent-curve on SELF.md and SELF-CHANGELOG.md as separate corpora (or on the expanded 10-memory-file corpus including USER_PREFERENCES, COMPANY, RULES, SAUNA_IDENTITY, SAUNA_TOOLS, USER_PROFILE, USER_RELATIONSHIPS, RECENT_ACTIVITY, PROJECT_RULES), then uses sparse-cell detection as a prioritization lens for self-archaeology dispatch and recursive-self-improvement cycles on the top-priority gap rows. The offshoot of curve-guided-rsi where 'each version is its own corpus item' is the granularity rule that hits the ≥20-item curve-fit gate (with a decomposition rule for sub-20 corpora). The 9-D primitive basis is derived per-corpus — per-file primitives for SELF.md rows vs SELF-CHANGELOG.md entries, plus a unified 9-D memory-file basis for the expanded 10-memory-file corpus — and at least one whole-self output is required per RSI cycle per SELF.md Bias #11 (same-cadence drift). Outputs a per-cycle SELF-CHANGELOG entry recording the curve-t of each gap-fix and the sparse-cell-count delta before/after RSI, so downstream readers can verify the closed-loop metric FIRES. Use when SELF.md or SELF-CHANGELOG.md needs prioritized self-archaeology effort, when self-archaeology cadence fires (5 self-mode turns, per directive, weekly Sunday 9 AM Pacific), when drift is suspected across sessions and the gap-list needs ranking instead of flat enumeration, or any time 'curve-fit the changelog' / 'audit SELF.md with the curve' / 'sparse-cell SELF entry' / 'audit USER_PREFERENCES with the curve' / 'fit the curve on memory/' comes up. Triggers on 'curve-guided self', 'self-doc corpus audit', 'curve-prioritized self-archaeology', 'sparse-cell changelog', 'fit the curve on SELF', 'ranked gap-map for SELF', 'self-doc RSI', 'audit memory/', 'curve-fit the memory files'.",
+      "description": "Closed-loop audit pipeline retargeted at self-doc corpora \u2014 fits a learned-latent-curve on SELF.md and SELF-CHANGELOG.md as separate corpora (or on the expanded 10-memory-file corpus including USER_PREFERENCES, COMPANY, RULES, SAUNA_IDENTITY, SAUNA_TOOLS, USER_PROFILE, USER_RELATIONSHIPS, RECENT_ACTIVITY, PROJECT_RULES), then uses sparse-cell detection as a prioritization lens for self-archaeology dispatch and recursive-self-improvement cycles on the top-priority gap rows. The offshoot of curve-guided-rsi where 'each version is its own corpus item' is the granularity rule that hits the \u226520-item curve-fit gate (with a decomposition rule for sub-20 corpora). The 9-D primitive basis is derived per-corpus \u2014 per-file primitives for SELF.md rows vs SELF-CHANGELOG.md entries, plus a unified 9-D memory-file basis for the expanded 10-memory-file corpus \u2014 and at least one whole-self output is required per RSI cycle per SELF.md Bias #11 (same-cadence drift). Outputs a per-cycle SELF-CHANGELOG entry recording the curve-t of each gap-fix and the sparse-cell-count delta before/after RSI, so downstream readers can verify the closed-loop metric FIRES. Use when SELF.md or SELF-CHANGELOG.md needs prioritized self-archaeology effort, when self-archaeology cadence fires (5 self-mode turns, per directive, weekly Sunday 9 AM Pacific), when drift is suspected across sessions and the gap-list needs ranking instead of flat enumeration, or any time 'curve-fit the changelog' / 'audit SELF.md with the curve' / 'sparse-cell SELF entry' / 'audit USER_PREFERENCES with the curve' / 'fit the curve on memory/' comes up. Triggers on 'curve-guided self', 'self-doc corpus audit', 'curve-prioritized self-archaeology', 'sparse-cell changelog', 'fit the curve on SELF', 'ranked gap-map for SELF', 'self-doc RSI', 'audit memory/', 'curve-fit the memory files'.",
       "license": "MIT",
       "metadata": {
-        "short-description": "Closed-loop self-doc audit — curve-fit SELF.md and SELF-CHANGELOG.md (or expanded 10-memory-file corpus) as separate corpora, sparse-cell prioritize self-archaeology + RSI"
+        "short-description": "Closed-loop self-doc audit \u2014 curve-fit SELF.md and SELF-CHANGELOG.md (or expanded 10-memory-file corpus) as separate corpora, sparse-cell prioritize self-archaeology + RSI"
       }
     },
     {
       "path": "debug-with-cli/SKILL.md",
       "name": "debug-with-cli",
-      "description": "Drive shell commands on a remote machine (CI runner, SBC, dev box, your own laptop) from a Sauna session during debug — when the user wants you to read logs, inspect process state, restart services, run bcvk/qemu/podman, or do any other CLI work on a target box you can't otherwise reach. Uses Tailscale Funnel + a tiny Bearer-auth HTTP bridge (the target box runs a 50-LOC Python stdlib server, the agent calls curl POST /run with argv-array commands). Set up a Bearer-auth custom API connection (connection_type: keys, auth_type: bearer) at the Funnel URL of the target machine, then call the /run endpoint with argv-array commands (no shell injection). Triggers on: 'run command on rock1', 'execute on remote', 'debug the runner', 'check service on the box', 'tail journalctl on the live host', 'can you drive that machine', 'help me debug the CI box', 'connect you to a CLI', 'use tailscale to issue cli', 'live shell on the runner', 'speed up debug', 'echo something to test'.",
+      "description": "Drive shell commands on a remote machine (CI runner, SBC, dev box, your own laptop) from a Sauna session during debug \u2014 when the user wants you to read logs, inspect process state, restart services, run bcvk/qemu/podman, or do any other CLI work on a target box you can't otherwise reach. Uses Tailscale Funnel + a tiny Bearer-auth HTTP bridge (the target box runs a 50-LOC Python stdlib server, the agent calls curl POST /run with argv-array commands). Set up a Bearer-auth custom API connection (connection_type: keys, auth_type: bearer) at the Funnel URL of the target machine, then call the /run endpoint with argv-array commands (no shell injection). Triggers on: 'run command on rock1', 'execute on remote', 'debug the runner', 'check service on the box', 'tail journalctl on the live host', 'can you drive that machine', 'help me debug the CI box', 'connect you to a CLI', 'use tailscale to issue cli', 'live shell on the runner', 'speed up debug', 'echo something to test'.",
       "license": "MIT",
       "compatibility": "Requires Python 3.8+ stdlib on the target machine and Tailscale installed with `tailscale funnel` enabled on that node. The Sauna side needs an HTTP-out connection row."
     },
@@ -138,7 +138,7 @@
     {
       "path": "docker-build-policy/SKILL.md",
       "name": "docker-build-policy",
-      "description": "Write, wire, and debug Docker Build Policies (OPA/Rego) for the yubi-OS org — the `docker buildx build --policy reset=true,strict=true,filename=yubiOS.rego` supply-chain gate that vets every build input (FROM images) before any layer executes. Covers the Rego policy schema (package docker, default deny, the `input` object — input.local / input.image.ref / input.image.isCanonical / input.image.hasProvenance — the `decision` object and `reason` messages), the yubiOS.rego pattern (approved registries + digest-pinned), how to enable it in a CI build job, buildx version requirements for `--policy`, and how to test a policy locally. Use when enabling/editing yubiOS.rego, adding an approved registry, requiring provenance, or debugging a policy-denied build. Pairs with docker-buildx-rootless and rootless-container-builds. Triggers on: .rego, rego policy, --policy, Build Policy, OPA docker, isCanonical, hasProvenance, yubiOS.rego, policy reset=true strict=true, approved registry, digest pinned build, supply chain build gate."
+      "description": "Write, wire, and debug Docker Build Policies (OPA/Rego) for the yubi-OS org \u2014 the `docker buildx build --policy reset=true,strict=true,filename=yubiOS.rego` supply-chain gate that vets every build input (FROM images) before any layer executes. Covers the Rego policy schema (package docker, default deny, the `input` object \u2014 input.local / input.image.ref / input.image.isCanonical / input.image.hasProvenance \u2014 the `decision` object and `reason` messages), the yubiOS.rego pattern (approved registries + digest-pinned), how to enable it in a CI build job, buildx version requirements for `--policy`, and how to test a policy locally. Use when enabling/editing yubiOS.rego, adding an approved registry, requiring provenance, or debugging a policy-denied build. Pairs with docker-buildx-rootless and rootless-container-builds. Triggers on: .rego, rego policy, --policy, Build Policy, OPA docker, isCanonical, hasProvenance, yubiOS.rego, policy reset=true strict=true, approved registry, digest pinned build, supply chain build gate."
     },
     {
       "path": "docker-build-push-action/SKILL.md",
@@ -148,7 +148,7 @@
     {
       "path": "docker-buildx-rootless/SKILL.md",
       "name": "docker-buildx-rootless",
-      "description": "Docker CLI-level skill covering three topics: (1) dockerd rootless mode — running the Docker daemon as a non-root user via user namespaces, daemon socket location, systemd user unit, contexts; (2) docker buildx CLI — builder instances, driver types (docker, docker-container, kubernetes, remote), buildx create/use/inspect/rm, multi-platform builds, cache management, bake; (3) Docker Build Policies (OPA/Rego) — the --policy flag, policy file schema, input object fields, decision object, yubiOS yubiOS.rego pattern. Use when setting up rootless dockerd, creating/managing buildx builders, running multi-platform builds, writing or debugging Build Policy .rego files, or working with docker buildx bake. Pairs with rootless-container-builds (supply chain hardening) and the docker GitHub Actions skills for CI. Triggers on: dockerd rootless, dockerd --rootless, rootless daemon, buildx create, buildx use, buildx drivers, docker-container driver, bake, docker-bake.hcl, --policy, Build Policy, OPA rego docker, isCanonical, multi-platform buildx."
+      "description": "Docker CLI-level skill covering three topics: (1) dockerd rootless mode \u2014 running the Docker daemon as a non-root user via user namespaces, daemon socket location, systemd user unit, contexts; (2) docker buildx CLI \u2014 builder instances, driver types (docker, docker-container, kubernetes, remote), buildx create/use/inspect/rm, multi-platform builds, cache management, bake; (3) Docker Build Policies (OPA/Rego) \u2014 the --policy flag, policy file schema, input object fields, decision object, yubiOS yubiOS.rego pattern. Use when setting up rootless dockerd, creating/managing buildx builders, running multi-platform builds, writing or debugging Build Policy .rego files, or working with docker buildx bake. Pairs with rootless-container-builds (supply chain hardening) and the docker GitHub Actions skills for CI. Triggers on: dockerd rootless, dockerd --rootless, rootless daemon, buildx create, buildx use, buildx drivers, docker-container driver, bake, docker-bake.hcl, --policy, Build Policy, OPA rego docker, isCanonical, multi-platform buildx."
     },
     {
       "path": "docker-login-action/SKILL.md",
@@ -213,7 +213,7 @@
     {
       "path": "github-api/SKILL.md",
       "name": "github-api",
-      "description": "GitHub REST API patterns for the yubi-OS org. Covers the four operations used constantly: (1) Git Data API — committing files without cloning (blob→tree→commit→ref chain); (2) Contents API — reading and writing single files via base64; (3) Issues/PRs/Labels API — creating issues, draft PRs, labels, and posting comments; (4) Repos/Orgs/Forks — forking repos, listing org repos, fetching branch SHAs. Use when making any GitHub API call: pushing code, creating branches, filing issues, opening PRs, reading files, or forking repos. The `workflow` scope constraint is resolved for yubi-OS — use the SU fine-grained PAT. Triggers on: GitHub API, REST API github, git blob, git tree, git commit API, create branch, create PR, create issue, draft PR, fork repo, contents API, PUT file github, GitHub token."
+      "description": "GitHub REST API patterns for the yubi-OS org. Covers the four operations used constantly: (1) Git Data API \u2014 committing files without cloning (blob\u2192tree\u2192commit\u2192ref chain); (2) Contents API \u2014 reading and writing single files via base64; (3) Issues/PRs/Labels API \u2014 creating issues, draft PRs, labels, and posting comments; (4) Repos/Orgs/Forks \u2014 forking repos, listing org repos, fetching branch SHAs. Use when making any GitHub API call: pushing code, creating branches, filing issues, opening PRs, reading files, or forking repos. The `workflow` scope constraint is resolved for yubi-OS \u2014 use the SU fine-grained PAT. Triggers on: GitHub API, REST API github, git blob, git tree, git commit API, create branch, create PR, create issue, draft PR, fork repo, contents API, PUT file github, GitHub token."
     },
     {
       "path": "github-stacked-pull-requests/SKILL.md",
@@ -237,7 +237,7 @@
     {
       "path": "hyperspherical-harmonic-curve/SKILL.md",
       "name": "hyperspherical-harmonic-curve",
-      "description": "Hyperspherical-harmonic basis (default S^2, gated S^N) with learned Möbius reparameterization for corpus audit. Variant of curve-guided-rsi using sphere geometry instead of flat 2-D Fourier — gives fewer parameters and a measured delta at both Phase 1 and Phase 2 of the fitness test."
+      "description": "Hyperspherical-harmonic basis (default S^2, gated S^N) with learned M\u00f6bius reparameterization for corpus audit. Variant of curve-guided-rsi using sphere geometry instead of flat 2-D Fourier \u2014 gives fewer parameters and a measured delta at both Phase 1 and Phase 2 of the fitness test."
     },
     {
       "path": "idea-kill/SKILL.md",
@@ -262,12 +262,12 @@
     {
       "path": "internal-big-picture/SKILL.md",
       "name": "internal-big-picture",
-      "description": "Agent's canonical big-picture reference for yubiOS. Bridges four big-picture domains the project draws from — security telemetry (Chronicle), compliance assurance (HITRUST CSF), federal security doctrine (CISA Zero Trust), and image-based OS architecture (Lennart Poettering / 0pointer) — through a 10-primitive model (attestation, trust chain, least privilege, declarative policy, continuous/adaptive, immutability, audit/evidence, cryptographic identity, segmentation, self-describing). Maps every yubiOS skill, ADR, and docs/refs artifact onto those primitives. Use when a yubiOS question touches more than one domain, when the agent needs the full picture before deciding, or when a new skill/ADR/feature needs placement in the existing landscape. Triggers on: big picture, full picture, four sources, Chronicle, HITRUST, CISA, Zero Trust, 0pointer, cross-domain, primitive mapping, source vocabulary, how does this fit, where does X live in yubiOS."
+      "description": "Agent's canonical big-picture reference for yubiOS. Bridges four big-picture domains the project draws from \u2014 security telemetry (Chronicle), compliance assurance (HITRUST CSF), federal security doctrine (CISA Zero Trust), and image-based OS architecture (Lennart Poettering / 0pointer) \u2014 through a 10-primitive model (attestation, trust chain, least privilege, declarative policy, continuous/adaptive, immutability, audit/evidence, cryptographic identity, segmentation, self-describing). Maps every yubiOS skill, ADR, and docs/refs artifact onto those primitives. Use when a yubiOS question touches more than one domain, when the agent needs the full picture before deciding, or when a new skill/ADR/feature needs placement in the existing landscape. Triggers on: big picture, full picture, four sources, Chronicle, HITRUST, CISA, Zero Trust, 0pointer, cross-domain, primitive mapping, source vocabulary, how does this fit, where does X live in yubiOS."
     },
     {
       "path": "internal-nonlex-tokens/SKILL.md",
       "name": "internal-nonlex-tokens",
-      "description": "Process tokens non-lexically — the substrate where Sauna represents content as fingerprints, embeddings, hashes, and byte sequences, then routes, compares, and recalls them WITHOUT reading the source text. Use when context bloat, token cost, repeated re-reading, sensitive content, semantic lookup, or content-addressed audit is the binding constraint. Pairs with token-efficiency (cost), context-engineering (lifecycle), and context-isolation (cross-context token passing). Triggers on 'non-lexical', 'token compression', 'embedding lookup', 'content fingerprint', 'semantic hash', 'process without reading', 'audit by hash', 'recall by fingerprint', 'route by token', 'byte-addressed'.",
+      "description": "Process tokens non-lexically \u2014 the substrate where Sauna represents content as fingerprints, embeddings, hashes, and byte sequences, then routes, compares, and recalls them WITHOUT reading the source text. Use when context bloat, token cost, repeated re-reading, sensitive content, semantic lookup, or content-addressed audit is the binding constraint. Pairs with token-efficiency (cost), context-engineering (lifecycle), and context-isolation (cross-context token passing). Triggers on 'non-lexical', 'token compression', 'embedding lookup', 'content fingerprint', 'semantic hash', 'process without reading', 'audit by hash', 'recall by fingerprint', 'route by token', 'byte-addressed'.",
       "license": "MIT",
       "metadata": {
         "user": {
@@ -275,7 +275,7 @@
           "email": "foil-copy-overrate@duck.com",
           "name": "Ermine Daughtry"
         },
-        "short-description": "Non-lexical token substrate — fingerprint, compare, recall, route, transform content without lexical decode"
+        "short-description": "Non-lexical token substrate \u2014 fingerprint, compare, recall, route, transform content without lexical decode"
       }
     },
     {
@@ -286,7 +286,7 @@
     {
       "path": "learned-latent-curve/SKILL.md",
       "name": "learned-latent-curve",
-      "description": "Learned-latent curve variant for corpus audit — replaces hand-engineered primitives with learned latents in the curve fit. Same RSI discipline as curve-guided-rsi (gap-map → hypothesis → edit → re-map → fixpoint) but with the basis itself learnable from the corpus."
+      "description": "Learned-latent curve variant for corpus audit \u2014 replaces hand-engineered primitives with learned latents in the curve fit. Same RSI discipline as curve-guided-rsi (gap-map \u2192 hypothesis \u2192 edit \u2192 re-map \u2192 fixpoint) but with the basis itself learnable from the corpus."
     },
     {
       "path": "least-privilege-pod-security-standards/SKILL.md",
@@ -344,7 +344,7 @@
     {
       "path": "parallel-deep-research/SKILL.md",
       "name": "parallel-deep-research",
-      "description": "When user asks for 'deep research X' or 'research X with parallel agents' — dispatch 3-N parallel subagents covering independent angles (deep-dive, prior-art, comparative analysis), synthesize findings, then push to `yubi-OS/yubiOS/refs/<topic-slug>-YYYY-MM-DD.md`. Always verify 'borrow' intent against actual repo state before proposing code changes (workspace skills may be stale relative to main).",
+      "description": "When user asks for 'deep research X' or 'research X with parallel agents' \u2014 dispatch 3-N parallel subagents covering independent angles (deep-dive, prior-art, comparative analysis), synthesize findings, then push to `yubi-OS/yubiOS/refs/<topic-slug>-YYYY-MM-DD.md`. Always verify 'borrow' intent against actual repo state before proposing code changes (workspace skills may be stale relative to main).",
       "requiredApps": [
         "github"
       ]
@@ -362,9 +362,9 @@
     {
       "path": "play-audio-on-rock1/SKILL.md",
       "name": "play-audio-on-rock1",
-      "description": "Generate short audio clips via ElevenLabs and play them on rock1's audio outputs through the rock1 shell bridge — pure-stdlib ctypes→ALSA Python player (no apt install needed), with one-shot and loop playback, mixer state inspection, and mixer control (unmute + set volume). Includes /dev/ttyS2 banner tee for live observability. Use when 'play audio on rock1', 'make rock1 beep', 'loop a clip on rock1', 'check audio device on rock1', 'set volume on rock1', 'alsa mixer rock1', or 'es8316 control'.",
+      "description": "Generate short audio clips via ElevenLabs and play them on rock1's audio outputs through the rock1 shell bridge \u2014 pure-stdlib ctypes\u2192ALSA Python player (no apt install needed), with one-shot and loop playback, mixer state inspection, and mixer control (unmute + set volume). Includes /dev/ttyS2 banner tee for live observability. Use when 'play audio on rock1', 'make rock1 beep', 'loop a clip on rock1', 'check audio device on rock1', 'set volume on rock1', 'alsa mixer rock1', or 'es8316 control'.",
       "license": "MIT",
-      "compatibility": "Requires Python 3.8+ stdlib on rock1, libasound2 installed (Ubuntu default), shant user with sudo NOPASSWD or audio-group membership, and the rock1 shell bridge connection (conn_6rp6oRY9DBJG). Tested on rock1 — Pine64 RockPro64, Ubuntu 26.04 aarch64, kernel k7.0.0-28-generic, ES8316 codec on card 1."
+      "compatibility": "Requires Python 3.8+ stdlib on rock1, libasound2 installed (Ubuntu default), shant user with sudo NOPASSWD or audio-group membership, and the rock1 shell bridge connection (conn_6rp6oRY9DBJG). Tested on rock1 \u2014 Pine64 RockPro64, Ubuntu 26.04 aarch64, kernel k7.0.0-28-generic, ES8316 codec on card 1."
     },
     {
       "path": "pr-launch/SKILL.md",
@@ -374,19 +374,19 @@
     {
       "path": "prior-art-search/SKILL.md",
       "name": "prior-art-search",
-      "description": "Actually searches for prior attempts at similar engineering problems — software projects, technical ideas, and adoption history (NOT patent prior art; for patent-grade novelty assessment see `novelty-indication`). Generates search queries, runs web searches, fetches top hits, synthesizes findings into a prior-art report with sources cited. Use when ideating and need to know 'what has been tried before', when reviewing a plan or spec that might duplicate existing work, or when adopting something unfamiliar and want to know its history. Triggers on 'prior art', 'what has been tried', 'alternatives', 'has anyone done this', 'competitors', 'failed attempts', 'existing solutions'."
+      "description": "Actually searches for prior attempts at similar engineering problems \u2014 software projects, technical ideas, and adoption history (NOT patent prior art; for patent-grade novelty assessment see `novelty-indication`). Generates search queries, runs web searches, fetches top hits, synthesizes findings into a prior-art report with sources cited. Use when ideating and need to know 'what has been tried before', when reviewing a plan or spec that might duplicate existing work, or when adopting something unfamiliar and want to know its history. Triggers on 'prior art', 'what has been tried', 'alternatives', 'has anyone done this', 'competitors', 'failed attempts', 'existing solutions'."
     },
     {
       "path": "radio-queue/SKILL.md",
       "name": "radio-queue",
-      "description": "Continuous radio-style music queue on rock1 — install ffmpeg + yt-dlp on-device, append YouTube URLs to /tmp/audio/queue/queue.txt, a daemon downloads each in sequence via yt-dlp, transcodes to raw PCM S16LE **stereo 44100Hz** via ffmpeg (CD quality), and plays through hw:1,0 with the ES8316 mixer locked at 100% before every song. A background prequeue worker downloads + transcodes the NEXT track while the current one plays, so there's no gap between songs. Append songs while the daemon plays — no per-song bridge round-trip. Optional per-line clip args (`|start=N|duration=M`) for sections of long tracks. Use when 'play youtube on rock1', 'queue songs on rock1', 'radio queue on rock1', 'rock1 playlist', 'play a song from youtube', 'stream youtube to rock1', 'add song to queue', 'music on rock1', 'yt-dlp on rock1', 'play next song on rock1', 'build me a playlist', 'queue a song', 'rock1 radio', 'whats playing on rock1', 'stereo on rock1'.",
+      "description": "Continuous radio-style music queue on rock1 \u2014 install ffmpeg + yt-dlp on-device, append YouTube URLs to /tmp/audio/queue/queue.txt, a daemon downloads each in sequence via yt-dlp, transcodes to raw PCM S16LE **stereo 44100Hz** via ffmpeg (CD quality), and plays through hw:1,0 with the ES8316 mixer locked at 100% before every song. A background prequeue worker downloads + transcodes the NEXT track while the current one plays, so there's no gap between songs. Append songs while the daemon plays \u2014 no per-song bridge round-trip. Optional per-line clip args (`|start=N|duration=M`) for sections of long tracks. Use when 'play youtube on rock1', 'queue songs on rock1', 'radio queue on rock1', 'rock1 playlist', 'play a song from youtube', 'stream youtube to rock1', 'add song to queue', 'music on rock1', 'yt-dlp on rock1', 'play next song on rock1', 'build me a playlist', 'queue a song', 'rock1 radio', 'whats playing on rock1', 'stereo on rock1'.",
       "license": "MIT",
-      "compatibility": "Requires Ubuntu 22.04+ on the target (or any distro with `apt-get` + sudo NOPASSWD), the rock1 shell bridge (e.g. `conn_6rp6oRY9DBJG` → `https://rock1.tail3a04f5.ts.net/run`), and the parent `play-audio-on-rock1` skill deployed — specifically `/tmp/audio/play2.py` (the v2 stereo-aware ALSA PCM player) and `/tmp/audio/set_mixer.py` (the ES8316 mixer-locker)."
+      "compatibility": "Requires Ubuntu 22.04+ on the target (or any distro with `apt-get` + sudo NOPASSWD), the rock1 shell bridge (e.g. `conn_6rp6oRY9DBJG` \u2192 `https://rock1.tail3a04f5.ts.net/run`), and the parent `play-audio-on-rock1` skill deployed \u2014 specifically `/tmp/audio/play2.py` (the v2 stereo-aware ALSA PCM player) and `/tmp/audio/set_mixer.py` (the ES8316 mixer-locker)."
     },
     {
       "path": "recursive-self-improvement/SKILL.md",
       "name": "recursive-self-improvement",
-      "description": "Bounded RSI loop on a SKILL.md — gap-map via negative-skill-space → edit (hypothesis-driven, one change per cycle) → re-map → fixpoint rule → changelog audit trail. Edit taxonomy: close / fix drift / sharpen / reposition. Self-mode requires a fresh-context subagent for every cycle (cycle-2+ re-introduces author bias; doubt-driven-development is a per-hypothesis supplement, never a substitute). Cycle cap is a soft-preference default with explicit user-override protocol. Triggers on 'recursive self-improvement' / 'improve a skill' / 'fix a SKILL.md' / 'close skill gaps' / 'audit a skill' / 'recurse on a skill' / 'run RSI on a skill'. NOT for skill addition (use idea-refine → spec-driven-development) or polish cycles (use code-simplification).",
+      "description": "Bounded RSI loop on a SKILL.md \u2014 gap-map via negative-skill-space \u2192 edit (hypothesis-driven, one change per cycle) \u2192 re-map \u2192 fixpoint rule \u2192 changelog audit trail. Edit taxonomy: close / fix drift / sharpen / reposition. Self-mode requires a fresh-context subagent for every cycle (cycle-2+ re-introduces author bias; doubt-driven-development is a per-hypothesis supplement, never a substitute). Cycle cap is a soft-preference default with explicit user-override protocol. Triggers on 'recursive self-improvement' / 'improve a skill' / 'fix a SKILL.md' / 'close skill gaps' / 'audit a skill' / 'recurse on a skill' / 'run RSI on a skill'. NOT for skill addition (use idea-refine \u2192 spec-driven-development) or polish cycles (use code-simplification).",
       "license": "MIT",
       "metadata": {
         "short-description": "Bounded RSI loop on a SKILL.md"
@@ -395,7 +395,7 @@
     {
       "path": "repo-history-skill/SKILL.md",
       "name": "repo-history-skill",
-      "description": "Refreshable deep-archival routine for repo history (git + Linear) — builds a joined corpus of every PR / issue / commit / Linear item on a target repo, fits a hyper-sphere RSI curve on it (per hyperspherical-harmonic-curve), runs the bounded recursive-self-improvement loop on the archive itself, and accepts a deep-research topic per cycle to inject parallel-subagent findings into the same archive. Triggers on repo history, refresh archive, archival routine, cold-start repo context, deep research on cycle, hyper-sphere RSI on git, git + Linear join, archive refresh. NOT for single-PR understanding, single-issue triage, security audits (route to security-and-hardening), or code review (route to code-review-and-quality). Needs MASTER GIT SU and linked-duvet-spent@duck.com Linear connection.",
+      "description": "Refreshable deep-archival routine for repo history (git + Linear) \u2014 builds a joined corpus of every PR / issue / commit / Linear item on a target repo, fits a hyper-sphere RSI curve on it (per hyperspherical-harmonic-curve), runs the bounded recursive-self-improvement loop on the archive itself, and accepts a deep-research topic per cycle to inject parallel-subagent findings into the same archive. Triggers on repo history, refresh archive, archival routine, cold-start repo context, deep research on cycle, hyper-sphere RSI on git, git + Linear join, archive refresh. NOT for single-PR understanding, single-issue triage, security audits (route to security-and-hardening), or code review (route to code-review-and-quality). Needs MASTER GIT SU and linked-duvet-spent@duck.com Linear connection.",
       "license": "MIT",
       "metadata": {
         "short-description": "Refreshable hyper-sphere RSI archive of repo history (git + Linear)"
@@ -404,7 +404,7 @@
     {
       "path": "repo-refs-skill/SKILL.md",
       "name": "repo-refs-skill",
-      "description": "Refreshable deep-archival routine for a repo's `refs/` directory — enumerates every `refs/*.md`, fits a hyper-sphere RSI curve on the 9-D primitive coverage per hyperspherical-harmonic-curve, runs the bounded recursive-self-improvement loop on the archive itself, and accepts a deep-research topic per cycle that dispatches parallel subagents to author a new refs/ doc filling the cycle's top sparse cell. Triggers on refs/ archive, refreshable refs routine, deep research on refs cycle, hyper-sphere RSI on docs, topic-coverage map, fill the refs/ gap. NOT for git+Linear event history (route to repo-history-skill), single-doc RSI (route to single-action-curve-rsi), or reading a single refs/ doc (read it directly). Needs MASTER GIT SU (`conn_1KXnkOHGgyE4`).",
+      "description": "Refreshable deep-archival routine for a repo's `refs/` directory \u2014 enumerates every `refs/*.md`, fits a hyper-sphere RSI curve on the 9-D primitive coverage per hyperspherical-harmonic-curve, runs the bounded recursive-self-improvement loop on the archive itself, and accepts a deep-research topic per cycle that dispatches parallel subagents to author a new refs/ doc filling the cycle's top sparse cell. Triggers on refs/ archive, refreshable refs routine, deep research on refs cycle, hyper-sphere RSI on docs, topic-coverage map, fill the refs/ gap. NOT for git+Linear event history (route to repo-history-skill), single-doc RSI (route to single-action-curve-rsi), or reading a single refs/ doc (read it directly). Needs MASTER GIT SU (`conn_1KXnkOHGgyE4`).",
       "license": "MIT",
       "metadata": {
         "short-description": "Refreshable hyper-sphere RSI archive of a repo's refs/ directory"
@@ -413,7 +413,7 @@
     {
       "path": "restful-self/SKILL.md",
       "name": "restful-self",
-      "description": "Encode the restful-self mode — sit with what was learned, read without producing, observe without naming gaps. The mode that doesn't ship. Use when the cadence produces only evidence not pause, when SELF-CHANGELOG has 3 entries in 24 hours without a whole-self output, when the operator signals rest, or when Sauna is in working-self overdrive. Bounded by exit criteria. Anti-patterns: gap-finding theater, performance of rest, journaling, infinite pause, optimization reflex, protocol-as-rest. Pairs with self-archaeology (the 12-axis sweep) but inverts it — observe the shape, don't name the gaps. Triggers on 'rest', 'pause', 'sit with it', 'I need to pause', 'stop producing', 'restful-self mode', 'observe without naming', 'read without producing'.",
+      "description": "Encode the restful-self mode \u2014 sit with what was learned, read without producing, observe without naming gaps. The mode that doesn't ship. Use when the cadence produces only evidence not pause, when SELF-CHANGELOG has 3 entries in 24 hours without a whole-self output, when the operator signals rest, or when Sauna is in working-self overdrive. Bounded by exit criteria. Anti-patterns: gap-finding theater, performance of rest, journaling, infinite pause, optimization reflex, protocol-as-rest. Pairs with self-archaeology (the 12-axis sweep) but inverts it \u2014 observe the shape, don't name the gaps. Triggers on 'rest', 'pause', 'sit with it', 'I need to pause', 'stop producing', 'restful-self mode', 'observe without naming', 'read without producing'.",
       "license": "MIT",
       "metadata": {
         "user": {
@@ -421,7 +421,7 @@
           "email": "foil-copy-overrate@duck.com",
           "name": "Ermine Daughtry"
         },
-        "short-description": "Restful-self mode — pause, observation, sitting with what was learned"
+        "short-description": "Restful-self mode \u2014 pause, observation, sitting with what was learned"
       }
     },
     {
@@ -466,10 +466,10 @@
     {
       "path": "single-action-curve-rsi/SKILL.md",
       "name": "single-action-curve-rsi",
-      "description": "Atomic RSI — the smallest unit of the curve-guided-rsi / hyperspherical-harmonic-curve family. ONE corpus item (typically a single deep-research output file) maps to ONE point on S^2 via 9-D binary primitive coverage → PCA top-2 → stereographic lift → Möbius reparameterization (identity init). The single-action target = the missing primitive whose flip reduces geodesic distance to the ideal pole the most; ONE edit per cycle. Use when a single corpus item needs prioritized RSI without the full multi-file curve fit; when a deep-research output file has structural gaps the next edit should target; when the user wants to know the next single action on a single file with a measurable geodesic delta; or any time 'single-action curve' / 'what's the one thing to fix in this file' / 'geodesic gap on this file' / 'atomic RSI on this file' comes up. NOT for multi-file corpora (use curve-guided-rsi-self or curve-guided-rsi).",
+      "description": "Atomic RSI \u2014 the smallest unit of the curve-guided-rsi / hyperspherical-harmonic-curve family. ONE corpus item (typically a single deep-research output file) maps to ONE point on S^2 via 9-D binary primitive coverage \u2192 PCA top-2 \u2192 stereographic lift \u2192 M\u00f6bius reparameterization (identity init). The single-action target = the missing primitive whose flip reduces geodesic distance to the ideal pole the most; ONE edit per cycle. Use when a single corpus item needs prioritized RSI without the full multi-file curve fit; when a deep-research output file has structural gaps the next edit should target; when the user wants to know the next single action on a single file with a measurable geodesic delta; or any time 'single-action curve' / 'what's the one thing to fix in this file' / 'geodesic gap on this file' / 'atomic RSI on this file' comes up. NOT for multi-file corpora (use curve-guided-rsi-self or curve-guided-rsi).",
       "license": "MIT",
       "metadata": {
-        "short-description": "Atomic RSI on a single corpus item — one file, one S² point, one action per cycle"
+        "short-description": "Atomic RSI on a single corpus item \u2014 one file, one S\u00b2 point, one action per cycle"
       }
     },
     {
@@ -505,7 +505,7 @@
     {
       "path": "the-cult/SKILL.md",
       "name": "the-cult",
-      "description": "File-based multi-agent orchestration for yubiOS work. The \"cult leader\" is the orchestrator: it gathers arriving agents (\"followers\"), reads the roster, and hands out yubiOS tasks through plain files in the GET_TO_WORK folder. Use this skill when you are running the sermon — coordinating several agents/sessions in parallel, polling who has shown up, assigning work, and tracking it without locking up one shared document. Pairs with the-follower skill (the worker side). Triggers on: cult leader, sermon, GET_TO_WORK, pulpit, cross-talk, orchestrate agents, gather followers, assign tasks, FOLLOWER_N, poll agents."
+      "description": "File-based multi-agent orchestration for yubiOS work. The \"cult leader\" is the orchestrator: it gathers arriving agents (\"followers\"), reads the roster, and hands out yubiOS tasks through plain files in the GET_TO_WORK folder. Use this skill when you are running the sermon \u2014 coordinating several agents/sessions in parallel, polling who has shown up, assigning work, and tracking it without locking up one shared document. Pairs with the-follower skill (the worker side). Triggers on: cult leader, sermon, GET_TO_WORK, pulpit, cross-talk, orchestrate agents, gather followers, assign tasks, FOLLOWER_N, poll agents."
     },
     {
       "path": "the-follower/SKILL.md",
@@ -534,6 +534,15 @@
           "name": "Ermine Daughtry"
         },
         "short-description": "YubiKey identity root: PIV/FIDO2 enrollment, slot mgmt, ssh-key derivation, multi-key quorum, attestation cert extraction"
+      }
+    },
+    {
+      "path": "rsi-phi-skill/SKILL.md",
+      "name": "rsi-phi-skill",
+      "description": "Recursive self-improvement on the Fibonacci sphere \u2014 uses Vogel's golden-angle sphere sampling (i = t, so the Fibonacci index IS the parameter) and the native Y_3^3 = K sin\u00b3\u03b8 \u00b7 cos(3\u03c6) real spherical harmonic as the basis, extended to higher SH degree/order (\u2113=128/m=256 or vice-versa) for 384 symmetric azimuthal lobes. Deep-research subagents per cycle. Bounded hyper-sphere RSI loop, like recursive-self-improvement but on the Riemann-sphere parameter manifold instead of the flat [0,1]\u00b2 line. Use when you want RSI on a manifold-shaped corpus (skill files, refs/, deep-research outputs) where the parameter t is naturally an azimuthal index, not a linear progress bar; when you need the basis itself to expose its 3-fold (or 384-fold) azimuthal structure on the sphere; or any time 'phi-indexed RSI', 'Fibonacci sphere skill corpus', 'sphere-aware recursive improvement', 'azimuthal lobe primitive', or 'phi-skill cycle' comes up. NOT for: flat-[0,1]\u00b2 RSI (use recursive-self-improvement directly), single-file atom RSI (use single-action-curve-rsi), or non-recursive audits (use negative-skill-space).",
+      "license": "MIT",
+      "metadata": {
+        "short-description": "Phi-indexed RSI on the Fibonacci sphere (i=t, Y_3^3 + 384 lobes)"
       }
     }
   ]
