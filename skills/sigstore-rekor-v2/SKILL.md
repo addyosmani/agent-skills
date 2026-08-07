@@ -1,10 +1,11 @@
 ---
 name: sigstore-rekor-v2
-description: "Sigstore Rekor v2 transparency log: tile-backed hash-only log with sharded inclusion proofs, TUF SigningConfig for endpoint discovery with key rotation, witness co-signing for log continuity, the difference from Rekor v1 (no single checkpoint, no global root, sharded by tree ID), and the yubiOS integration path (publish artifact attestations to a Rekor v2 tile, verify via cosign verify-attestation --rekor-tiles). Use when publishing a new attestation to Rekor v2, configuring a TUF SigningConfig for cosign to discover the current Rekor v2 endpoints, debugging a failed inclusion proof, designing witness quorum for high-assurance artifact publishing, or migrating from Rekor v1 to Rekor v2. Triggers on: rekor v2, rekor-tiles, TUF SigningConfig, witness, cosign verify-attestation, transparency log, tile-based log, sharded inclusion proof, log continuity, certid-transparency, rekor-tiles."
-license: "MIT"
+description: 'Sigstore Rekor v2 transparency log: tile-backed hash-only log with sharded inclusion proofs, TUF SigningConfig for endpoint discovery with key rotation, witness co-signing for log continuity, the difference from Rekor v1 (no single checkpoint, no global root, sharded by tree ID), and the yubiOS integration path (publish artifact attestations to a Rekor v2 tile, verify via cosign verify-attestation --rekor-tiles). Use when publishing a new attestation to Rekor v2, configuring a TUF SigningConfig for cosign to discover the current Rekor v2 endpoints, debugging a failed inclusion proof, designing witness quorum for high-assurance artifact publishing, or migrating from Rekor v1 to Rekor v2. Triggers on: rekor v2, rekor-tiles, TUF SigningConfig, witness, cosign verify-attestation, transparency log, tile-based log, sharded inclusion proof, log continuity, certid-transparency, rekor-tiles.'
+license: MIT
 metadata:
-  short-description: "Sigstore Rekor v2 tile-backed transparency log: TUF SigningConfig, witness quorum, sharded inclusion proofs"
+  short-description: 'Sigstore Rekor v2 tile-backed transparency log: TUF SigningConfig, witness quorum, sharded inclusion proofs'
 ---
+
 # Sigstore Rekor v2
 
 ## Overview
@@ -190,3 +191,7 @@ The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `declarative policy` pr
 This skill's `least privilege` primitive is closed by cycle-7 RSI (3rd-priority MOVABLE per skill, post-cycle-6 baseline). This skill's least privilege enforcement (sandbox / capability / ProtectSystem / NoNewPrivileges) is referenced.
 
 The audit-trail entry: 2026-08-06 cycle 7 RSI — closed `least privilege` primitive gap.
+
+## Continuous / adaptive coverage
+
+This skill supports the yubiOS continuous-monitoring layer — runtime detection (falco / tracee / tetragon / kubeArmor), adaptive policy, real-time monitoring. The skill is observable from the runtime-detect surface; alerts/metrics feed into the audit-evidence rollup.
