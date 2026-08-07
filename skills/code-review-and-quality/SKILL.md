@@ -63,7 +63,9 @@ Does the change fit the system's design?
 
 ### 4. Security
 
-For detailed security guidance, see `security-and-hardening`. Does the change introduce vulnerabilities?
+The checks below are the self-contained baseline. For security-sensitive changes, use the `security-and-hardening` skill when available. If the change is security-sensitive and the skill is unavailable, state that only the baseline security review was performed.
+
+Does the change introduce vulnerabilities?
 
 - Is user input validated and sanitized?
 - Are secrets kept out of code, logs, and version control?
@@ -76,7 +78,9 @@ For detailed security guidance, see `security-and-hardening`. Does the change in
 
 ### 5. Performance
 
-For detailed profiling and optimization, see `performance-optimization`. Does the change introduce performance problems?
+The checks below are the self-contained baseline. If the change has performance requirements or these checks reveal a plausible regression, use the `performance-optimization` skill when available. If deeper investigation is warranted and the skill is unavailable, state that measurement-driven performance investigation was not performed.
+
+Does the change introduce performance problems?
 
 - Any N+1 query patterns?
 - Any unbounded loops or unconstrained data fetching?
@@ -297,7 +301,7 @@ Part of code review is dependency review:
 4. **Mind the transitive graph.** Most installed packages are ones nobody chose directly. Review the lockfile diff, not just `package.json`; a single direct bump can pull in dozens of indirect changes.
 5. **Keep the lockfile honest.** Commit it, review its diff, and never hand-edit it. The lockfile is the thing that actually pins what ships.
 
-For triaging `npm audit` findings and supply-chain risk (typosquatting, compromised maintainers), follow the `security-and-hardening` skill — this section covers the upgrade *workflow*, that one covers the security verdict.
+For `npm audit` findings and supply-chain risk (typosquatting, compromised maintainers), apply the checks in this section as the baseline. When available, use the `security-and-hardening` skill for a dedicated security verdict; otherwise report that deeper supply-chain analysis was not performed.
 
 ## The Review Checklist
 
@@ -346,11 +350,6 @@ For triaging `npm audit` findings and supply-chain risk (typosquatting, compromi
 - [ ] **Approve** — Ready to merge
 - [ ] **Request changes** — Issues must be addressed
 ```
-## See Also
-
-- For detailed security review guidance, see `references/security-checklist.md`
-- For performance review checks, see `references/performance-checklist.md`
-
 ## Common Rationalizations
 
 | Rationalization | Reality |
