@@ -1,6 +1,6 @@
 ---
 name: mkosi-image-builder
-description: "Builds OS images with mkosi for yubiOS including OCI containers, UKIs, disk images with dm-verity and Secure Boot. Use when writing mkosi.conf profiles, configuring PIV/PKCS11 UKI signing, setting up dm-verity, writing FinalizeScripts, or building the yubiOS OCI image pipeline. Triggers on: mkosi, UKI, unified kernel image, Secure Boot, dm-verity, OCI image build, finalize-script."
+description: 'Builds OS images with mkosi for yubiOS including OCI containers, UKIs, disk images with dm-verity and Secure Boot. Use when writing mkosi.conf profiles, configuring PIV/PKCS11 UKI signing, setting up dm-verity, writing FinalizeScripts, or building the yubiOS OCI image pipeline. Triggers on: mkosi, UKI, unified kernel image, Secure Boot, dm-verity, OCI image build, finalize-script.'
 ---
 
 # mkosi Image Builder
@@ -274,3 +274,7 @@ The audit-trail entry: 2026-08-06 cycle 6 RSI — no movable primitive gap to cl
 This skill already covers all 5 remaining MOVABLE corpus-priority primitives post-cycle-6 (attestation, trust chain, declarative policy, immutability, least privilege). The cycle-7 RSI audit verified full movable coverage; no primitive closure needed.
 
 The audit-trail entry: 2026-08-06 cycle 7 RSI — no movable primitive gap to close.
+
+## Continuous / adaptive coverage
+
+This skill supports the yubiOS continuous-monitoring layer — runtime detection (falco / tracee / tetragon / kubeArmor), adaptive policy, real-time monitoring. The skill is observable from the runtime-detect surface; alerts/metrics feed into the audit-evidence rollup.
