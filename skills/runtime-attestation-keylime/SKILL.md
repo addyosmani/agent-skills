@@ -1,3 +1,7 @@
+---
+name: runtime-attestation-keylime
+description: Runtime attestation for yubiOS using Keylime, in-toto, and confidential-containers. The 4-component evidence shape (quote / measurement / evidence bundle / Rekor v2 anchor) shared across the three frameworks. Anchors P0 (attestation) and contributes to P3 (declarative policy) and P6 (audit/evidence).
+---
 ## Changelog
 
 - 2026-08-06 cycle 9: **Initial v1.** New skill created per deep-research Stream 1 §4.3 (corpus enrichment for the 8-cell attestation residual post-cycle-8). Body covers the canonical 4-component evidence shape (quote / measurement / evidence bundle / Rekor v2 anchor) shared across Keylime, in-toto, and confidential-containers. Skill mapped to 10-primitive axes: P0 attestation (primary), P3 declarative policy (the attestation policy itself is declarative), P6 audit/evidence (the bundle is the audit artifact). Frontmatter validated by `js-yaml`. This is the corpus-enrichment addition that closes the 8 attestation closure cells structurally.

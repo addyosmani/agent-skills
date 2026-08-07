@@ -1,3 +1,7 @@
+---
+name: least-privilege-pod-security-standards
+description: Pod Security Standards restricted baseline + OPA Rego policies for least-privilege enforcement on yubiOS. Declarative policy primitive (P3) with PSS admission logs and OPA decision logs as audit artifacts (P6).
+---
 ## Changelog
 
 - 2026-08-06 cycle 9: **Initial v1.** New skill created per deep-research Stream 1 §4.3 (corpus enrichment for the 7-cell least-privilege residual post-cycle-8). Body covers the canonical LP keyword set mapped onto both PSS `restricted` and OPA Rego. Skill mapped to 10-primitive axes: P2 least privilege (primary), P3 declarative policy (PSS + Rego are both declarative), P6 audit/evidence (PSS admission logs + OPA decision logs are audit artifacts). Frontmatter validated by `js-yaml`. This is the corpus-enrichment addition that closes the 7 LP closure cells structurally.

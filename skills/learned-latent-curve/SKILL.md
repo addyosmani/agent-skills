@@ -1,3 +1,7 @@
+---
+name: learned-latent-curve
+description: Learned-latent curve variant for corpus audit — replaces hand-engineered primitives with learned latents in the curve fit. Same RSI discipline as curve-guided-rsi (gap-map → hypothesis → edit → re-map → fixpoint) but with the basis itself learnable from the corpus.
+---
 ## Changelog` entry → apply fixpoint rule (no new substantive gaps AND old gaps closed AND no new anti-patterns). Cap at 3 cycles by default; user-override protocol raises the cap. The skill's `## Changelog` section is the audit trail produced by this protocol. Closes the cycle-1 axis-12 Recursion gap meta-meta-cycle: this section is what makes the recursive-self-improvement loop applicable to *this* skill — the gap map you wrote to produce cycle-11's edit is the cycle-12's gap-map input.
 
 Each pairing is orthogonal: `internal-nonlex-tokens` is downstream (consume the fit), `prior-art-search` is upstream-research (alternative architectures), `negative-skill-space` is periodic re-evaluation, `recursive-self-improvement` is the meta-protocol that drives the loop. Cross-reference consistency: `internal-nonlex-tokens`'s curve-checkpoint-hash bundles the items in `## Lifecycle` §t-pipeline versioning persistence list; `prior-art-search`'s alternative-architecture sweep covers the 5 alternatives listed at line ~91; `negative-skill-space`'s 12 axes (Audience, Inputs, Outputs, Mode, Assumption set, Adjacent problems, Failure modes, Lifecycle, Composition, Knowledge sources, Calibration, Recursion) map 1:1 to the section structure of this skill.

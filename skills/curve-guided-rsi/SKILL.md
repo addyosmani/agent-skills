@@ -1,3 +1,7 @@
+---
+name: curve-guided-rsi
+description: Recursive self-improvement driven by negative-skill-space gap-mapping and hypersphere curve-fitting on the SKILL.md corpus. The bounded RSI loop — hypothesis per cycle, fixpoint rule (no new gaps, old gaps closed, no new anti-patterns), 3-cycle default cap, fresh-context subagent per cycle to avoid author bias.
+---
 ## Changelog entry to the gap candidate's SKILL.md
 ELSE:
   Mark gap as "non-fixable by NSS" (likely an artifact of the curve fit, not a real gap)

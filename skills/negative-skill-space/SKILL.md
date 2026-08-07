@@ -1,3 +1,7 @@
+---
+name: negative-skill-space
+description: 12-axis qualitative sweep (Audience, Inputs, Outputs, Mode, Assumption set, Adjacent problems, Failure modes, Lifecycle, Composition, Knowledge sources, Calibration, Recursion) for gap-mapping any skill before recursive-self-improvement cycles. Upstream gap-proposer in the curve-rsi dispatch chain.
+---
 ## Role in the Atom-Bound Pipeline (NSS proposes, atom disposes)
 
 As of 2026-08-06 this skill's role in the parent's Stage 3 dispatch is **upstream gap-proposer**, not gap-closer. The dispatch chain is:

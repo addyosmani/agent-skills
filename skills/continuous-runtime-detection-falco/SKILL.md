@@ -1,3 +1,7 @@
+---
+name: continuous-runtime-detection-falco
+description: Detects runtime security events using Falco rules, Tetragon TracingPolicy, OTel Collector, and Prometheus recording rules. Declarative continuous/adaptive telemetry for yubiOS — provides the audit artifact for primitive P4 and anchors P3 (declarative policy) and P6 (audit/evidence).
+---
 ## Changelog
 
 - 2026-08-06 cycle 9: **Initial v1.** New skill created per deep-research Stream 1 §4.3 (corpus enrichment for the 2-cell continuous/adaptive residual post-cycle-8, accepting the structural-gap residual for `composefs-kernel-floors` and `yubikey-operations` per §3.4 recommendation). Body covers the canonical C/A keyword set mapped onto all 4 frameworks. Skill mapped to 10-primitive axes: P4 continuous/adaptive (primary), P3 declarative policy (Falco rules + Tetragon TracingPolicy + OTel Collector config + Prometheus recording rules are all declarative), P6 audit/evidence (the continuous telemetry is the audit artifact). Frontmatter validated by `js-yaml`. This is the corpus-enrichment addition that closes the C/A residual structurally.
