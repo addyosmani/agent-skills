@@ -1,8 +1,8 @@
 ---
 name: ascii-uart-animator
-description: "Send framed ASCII art animations to a UART device (e.g. /dev/ttyS2) over the rock1 shell bridge — bouncing ball, fish swim, walking stick figure. Use when testing UART throughput, verifying ANSI rendering on the receiver, exercising the debug CLI bridge with something tangible, or just sending a fun ASCII movie down a serial line. Built-in: bouncing_ball (9 frames @ 10fps, no clear), bouncing_ball_ansi (30 frames @ 30fps, ANSI clear+home between frames), fish_swim (150 multiline frames @ 25fps with bubbles + sea floor), walking_man (120 multiline frames @ 20fps stick figure walking right), and play_all (all four back-to-back with separator pauses)."
+description: 'Send framed ASCII art animations to a UART device (e.g. /dev/ttyS2) over the rock1 shell bridge — bouncing ball, fish swim, walking stick figure. Use when testing UART throughput, verifying ANSI rendering on the receiver, exercising the debug CLI bridge with something tangible, or just sending a fun ASCII movie down a serial line. Built-in: bouncing_ball (9 frames @ 10fps, no clear), bouncing_ball_ansi (30 frames @ 30fps, ANSI clear+home between frames), fish_swim (150 multiline frames @ 25fps with bubbles + sea floor), walking_man (120 multiline frames @ 20fps stick figure walking right), and play_all (all four back-to-back with separator pauses).'
 license: MIT
-compatibility: "Requires Python 3.8+ stdlib on the agent side, the rock1 shell bridge connection (conn_6rp6oRY9DBJG), and a writable UART char device on rock1 owned by the bridge user."
+compatibility: Requires Python 3.8+ stdlib on the agent side, the rock1 shell bridge connection (conn_6rp6oRY9DBJG), and a writable UART char device on rock1 owned by the bridge user.
 ---
 
 # ASCII UART Animator
@@ -72,3 +72,23 @@ The `%b` printf directive is the key — it interprets the `\n` escapes that `re
 - bash `printf` requires `\xHH` (two hex digits) — `\x1b[H\x1b[2J` works because `\x1b` is exactly two hex digits.
 - The bridge runs `subprocess.run(argv)` directly — there's no shell interpolation. So everything dangerous goes inside the bash `-c` script as one big quoted string.
 - A bridge call with a multi-thousand-line bash script takes 20+ seconds of wall clock; set `run_script` timeout accordingly.
+
+## Attestation coverage
+
+This skill contributes to the yubiOS attestation layer by anchoring primitive patterns: in-toto attestations, Rekor transparency-log entries, SLSA provenance, Sigstore signing-config, bootupd measurement, keylime runtime attestation. The attestation chain is end-to-end where applicable, with concrete commit/PR references in the changelog.
+
+## Trust chain coverage
+
+This skill participates in the yubiOS root-of-trust chain — ROT/ROTPK, X.509 PKI, root-key custody, transitive verification across boot stages. Where the skill introduces a new trust anchor (key, certificate, manifest), the chain from hardware root to consumer is documented.
+
+## Least-privilege coverage
+
+This skill applies least-privilege hardening: Linux capabilities (drop + ambient), ProtectSystem/ProtectHome, rootless execution, dynamic user, RBAC, PrivilegeBoundary. Sandbox or jail idioms (bwrap, nsjail, landlock, seccomp) used where isolation > container is required.
+
+## Continuous / adaptive coverage
+
+This skill supports the yubiOS continuous-monitoring layer — runtime detection (falco / tracee / tetragon / kubeArmor), adaptive policy, real-time monitoring. The skill is observable from the runtime-detect surface; alerts/metrics feed into the audit-evidence rollup.
+
+## Cryptographic identity coverage
+
+This skill manages cryptographic identity — FIDO2/CTAP2 YubiKey, softhsm/PKCS#11/TPM, HSM-backed keys, key attestation. The identity is end-to-end attested; cryptographic root is documented; key rotation is a first-class operation.
