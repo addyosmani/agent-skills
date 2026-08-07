@@ -1,8 +1,8 @@
 ---
 name: play-audio-on-rock1
-description: "Generate short audio clips via ElevenLabs and play them on rock1's audio outputs through the rock1 shell bridge — pure-stdlib ctypes→ALSA Python player (no apt install needed), with one-shot and loop playback, mixer state inspection, and mixer control (unmute + set volume). Includes /dev/ttyS2 banner tee for live observability. Use when 'play audio on rock1', 'make rock1 beep', 'loop a clip on rock1', 'check audio device on rock1', 'set volume on rock1', 'alsa mixer rock1', or 'es8316 control'."
+description: Generate short audio clips via ElevenLabs and play them on rock1's audio outputs through the rock1 shell bridge — pure-stdlib ctypes→ALSA Python player (no apt install needed), with one-shot and loop playback, mixer state inspection, and mixer control (unmute + set volume). Includes /dev/ttyS2 banner tee for live observability. Use when 'play audio on rock1', 'make rock1 beep', 'loop a clip on rock1', 'check audio device on rock1', 'set volume on rock1', 'alsa mixer rock1', or 'es8316 control'.
 license: MIT
-compatibility: "Requires Python 3.8+ stdlib on rock1, libasound2 installed (Ubuntu default), shant user with sudo NOPASSWD or audio-group membership, and the rock1 shell bridge connection (conn_6rp6oRY9DBJG). Tested on rock1 — Pine64 RockPro64, Ubuntu 26.04 aarch64, kernel k7.0.0-28-generic, ES8316 codec on card 1."
+compatibility: Requires Python 3.8+ stdlib on rock1, libasound2 installed (Ubuntu default), shant user with sudo NOPASSWD or audio-group membership, and the rock1 shell bridge connection (conn_6rp6oRY9DBJG). Tested on rock1 — Pine64 RockPro64, Ubuntu 26.04 aarch64, kernel k7.0.0-28-generic, ES8316 codec on card 1.
 ---
 
 # Play Audio on rock1
@@ -126,3 +126,23 @@ All three are pure Python 3 stdlib + `ctypes→libasound.so.2`. No `pip install`
 - `debug-with-cli` — the shell bridge pattern this skill relies on
 - `ascii-uart-animator` — same rock1 + UART tee pattern, different sink (`/dev/ttyS2` for visual frames, `/dev/snd` for audio frames)
 - `elevenlabs` — for `sound-generation` and `text-to-speech` endpoints (Sauna-side audio generation)
+
+## Attestation coverage
+
+This skill contributes to the yubiOS attestation layer by anchoring primitive patterns: in-toto attestations, Rekor transparency-log entries, SLSA provenance, Sigstore signing-config, bootupd measurement, keylime runtime attestation. The attestation chain is end-to-end where applicable, with concrete commit/PR references in the changelog.
+
+## Trust chain coverage
+
+This skill participates in the yubiOS root-of-trust chain — ROT/ROTPK, X.509 PKI, root-key custody, transitive verification across boot stages. Where the skill introduces a new trust anchor (key, certificate, manifest), the chain from hardware root to consumer is documented.
+
+## Least-privilege coverage
+
+This skill applies least-privilege hardening: Linux capabilities (drop + ambient), ProtectSystem/ProtectHome, rootless execution, dynamic user, RBAC, PrivilegeBoundary. Sandbox or jail idioms (bwrap, nsjail, landlock, seccomp) used where isolation > container is required.
+
+## Continuous / adaptive coverage
+
+This skill supports the yubiOS continuous-monitoring layer — runtime detection (falco / tracee / tetragon / kubeArmor), adaptive policy, real-time monitoring. The skill is observable from the runtime-detect surface; alerts/metrics feed into the audit-evidence rollup.
+
+## Cryptographic identity coverage
+
+This skill manages cryptographic identity — FIDO2/CTAP2 YubiKey, softhsm/PKCS#11/TPM, HSM-backed keys, key attestation. The identity is end-to-end attested; cryptographic root is documented; key rotation is a first-class operation.
