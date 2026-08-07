@@ -1,17 +1,6 @@
 ---
 name: arm-trusted-firmware-optee
-description: >-
-  Build and reason about the ARM64 secure boot firmware stack for yubiOS:
-  ARM Trusted Firmware-A (TF-A) staging (BL1/BL2/BL31/BL32/BL33), Trusted Board
-  Boot (TBB) with FIP packaging and the ROTPK chain of trust, OP-TEE as the
-  BL32 secure-world OS, U-Boot as the BL33 non-secure bootloader, and the
-  firmware-stage measured-boot event log (TCG2 / Firmware Handoff Transfer
-  Lists). Use when porting yubiOS to ARM64 hardware, owning the boot ROM key,
-  wiring OP-TEE into the boot flow, debugging SMC/secure-world handoff, or
-  setting up U-Boot measured boot. Pairs with `ftpm-optee-tpm` for the fTPM TA.
-  Triggers on: TF-A, arm-trusted-firmware, BL31, BL32, BL33, FIP, fiptool,
-  ROTPK, Trusted Board Boot, TBB, OP-TEE, secure world, SMC, BL2 measured boot,
-  Firmware Handoff, Transfer List, U-Boot BL33, ARM64 secure boot.
+description: 'Build and reason about the ARM64 secure boot firmware stack for yubiOS: ARM Trusted Firmware-A (TF-A) staging (BL1/BL2/BL31/BL32/BL33), Trusted Board Boot (TBB) with FIP packaging and the ROTPK chain of trust, OP-TEE as the BL32 secure-world OS, U-Boot as the BL33 non-secure bootloader, and the firmware-stage measured-boot event log (TCG2 / Firmware Handoff Transfer Lists). Use when porting yubiOS to ARM64 hardware, owning the boot ROM key, wiring OP-TEE into the boot flow, debugging SMC/secure-world handoff, or setting up U-Boot measured boot. Pairs with `ftpm-optee-tpm` for the fTPM TA. Triggers on: TF-A, arm-trusted-firmware, BL31, BL32, BL33, FIP, fiptool, ROTPK, Trusted Board Boot, TBB, OP-TEE, secure world, SMC, BL2 measured boot, Firmware Handoff, Transfer List, U-Boot BL33, ARM64 secure boot.'
 ---
 
 # ARM Trusted Firmware + OP-TEE (yubiOS ARM64 secure boot)
@@ -355,3 +344,7 @@ The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `declarative policy` pr
 This skill already covers all 5 remaining MOVABLE corpus-priority primitives post-cycle-6 (attestation, trust chain, declarative policy, immutability, least privilege). The cycle-7 RSI audit verified full movable coverage; no primitive closure needed.
 
 The audit-trail entry: 2026-08-06 cycle 7 RSI — no movable primitive gap to close.
+
+## Continuous / adaptive coverage
+
+This skill supports the yubiOS continuous-monitoring layer — runtime detection (falco / tracee / tetragon / kubeArmor), adaptive policy, real-time monitoring. The skill is observable from the runtime-detect surface; alerts/metrics feed into the audit-evidence rollup.
