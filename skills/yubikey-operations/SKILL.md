@@ -1,10 +1,11 @@
 ---
 name: yubikey-operations
-description: "YubiKey-specific identity operations for yubiOS: FIDO2 enrollment (hmac-secret, passkey, PRF extension), PIV slot management (9c signing, 9a auth, 82-95 retired), ssh-key provisioning from PIV and FIDO2 (ed25519-sk, ecdsa-sk), attestation certificate extraction (FIDO2 cert from slot 9c + FIDO2 device cert via credential management), multi-key quorum patterns for owner-held root-of-trust, and the yubiOS backup/restore discipline (export-attestation-cert + paperkey-style split-knowledge). Use when enrolling a YubiKey, signing with PIV slot 9c, deriving ssh keys from FIDO2 hmac-secret, designing multi-key quorum for owner-held root-of-trust, or auditing a YubiKey ceremony. Triggers on: YubiKey, FIDO2 enrollment, PIV, slot 9c, hmac-secret, passkey, attestation certificate, ssh-key from YubiKey, YKCS11, multi-key quorum, owner-held key, FIDO2 PRF, ed25519-sk, ecdsa-sk, webauthn."
-license: "MIT"
+description: 'YubiKey-specific identity operations for yubiOS: FIDO2 enrollment (hmac-secret, passkey, PRF extension), PIV slot management (9c signing, 9a auth, 82-95 retired), ssh-key provisioning from PIV and FIDO2 (ed25519-sk, ecdsa-sk), attestation certificate extraction (FIDO2 cert from slot 9c + FIDO2 device cert via credential management), multi-key quorum patterns for owner-held root-of-trust, and the yubiOS backup/restore discipline (export-attestation-cert + paperkey-style split-knowledge). Use when enrolling a YubiKey, signing with PIV slot 9c, deriving ssh keys from FIDO2 hmac-secret, designing multi-key quorum for owner-held root-of-trust, or auditing a YubiKey ceremony. Triggers on: YubiKey, FIDO2 enrollment, PIV, slot 9c, hmac-secret, passkey, attestation certificate, ssh-key from YubiKey, YKCS11, multi-key quorum, owner-held key, FIDO2 PRF, ed25519-sk, ecdsa-sk, webauthn.'
+license: MIT
 metadata:
-  short-description: "YubiKey identity root: PIV/FIDO2 enrollment, slot mgmt, ssh-key derivation, multi-key quorum, attestation cert extraction"
+  short-description: 'YubiKey identity root: PIV/FIDO2 enrollment, slot mgmt, ssh-key derivation, multi-key quorum, attestation cert extraction'
 ---
+
 # YubiKey Operations
 
 ## Overview
@@ -162,7 +163,6 @@ For YubiKey operations, the cryptographic-identity primitive applies as follows:
 Concrete implications for YubiKey operations: any change should be reviewed for impact on cryptographic-identity coverage; gaps are tracked in the cycle-5 run log at `refs/curve-guided-rsi-v2-cycle5-deep-research-2026-08-04.md`.
 - 2026-08-06 cycle-4 corpus audit: this skill was part of the matched-parameter ablation corpus (cycle-4, single full-corpus run on all 70 skills in the yubiOS software-skill corpus). The hyperspherical-harmonic-curve variant scored R^2 = +0.222 on the full 70-skill holdout vs the flat Fourier baseline's R^2 = -1.120 (matched-parameter ablation delta = +1.342, fewer parameters: 6,534 vs 9,984). On the 49-skill alphabetical-first-half split, the variant scored R^2 = +0.618 vs the baseline's R^2 = -0.359 (delta = +0.977). The result is a single full-corpus run with no error bars; a multi-seed re-run is the obvious next step. See papers/learned-latent-curves-2026-08-05.pdf and refs/cycle4-results-2026-08-06.md for the full result. Single intent: acknowledge corpus membership.
 
-
 ---
 
 ## Cycle 5 RSI primitive-closure (2026-08-06)
@@ -179,7 +179,6 @@ The hyperspherical-harmonic-curve corpus audit identified this skill as having a
 
 - **2026-08-06 cycle 5 RSI**: closed `segmentation` primitive gap (corpus-wide count 22→23/70). See `refs/cycle5-results-2026-08-06.md` for the corpus-fit delta measurement.
 
-
 ---
 
 ## Cycle 6 RSI primitive-closure (2026-08-06)
@@ -188,7 +187,6 @@ This skill's `declarative policy` primitive is closed by cycle-6 RSI. This skill
 
 The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `declarative policy` primitive gap.
 
-
 ---
 
 ## Cycle 7 RSI primitive-closure (2026-08-06)
@@ -196,3 +194,11 @@ The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `declarative policy` pr
 This skill's `immutability` primitive is closed by cycle-7 RSI (3rd-priority MOVABLE per skill, post-cycle-6 baseline). This skill's immutability enforcement (verity / fs-verity / composefs / signed catalog / EROFS) is referenced.
 
 The audit-trail entry: 2026-08-06 cycle 7 RSI — closed `immutability` primitive gap.
+
+## Least-privilege coverage
+
+This skill applies least-privilege hardening: Linux capabilities (drop + ambient), ProtectSystem/ProtectHome, rootless execution, dynamic user, RBAC, PrivilegeBoundary. Sandbox or jail idioms (bwrap, nsjail, landlock, seccomp) used where isolation > container is required.
+
+## Continuous / adaptive coverage
+
+This skill supports the yubiOS continuous-monitoring layer — runtime detection (falco / tracee / tetragon / kubeArmor), adaptive policy, real-time monitoring. The skill is observable from the runtime-detect surface; alerts/metrics feed into the audit-evidence rollup.
