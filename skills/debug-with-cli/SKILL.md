@@ -138,6 +138,49 @@ Returns JSON: `{"stdout": "hello\n", "stderr": "", "returncode": 0}`. On timeout
 - **Env vars per-call**: not currently supported. The bridge inherits env from the parent process. To pass per-command env, extend the script to accept an `env` field.
 - **Working directory**: `cwd` field on the request body, default is `None` (the bridge's CWD).
 
+## The argv-audit-to-tty pattern (user observability)
+
+When the user is watching a serial console or log terminal hooked to the target's TTY (`/dev/ttyS2` on rock1, a PTY on a dev box, etc.), every bridge POST must leave a visible audit trail. The shape is **two-in-one**: write a banner line to the TTY first, then run the actual command with its output tee'd to the same TTY.
+
+Recipe (Sauna-side wrapper, written at `/tmp/sauna-bridge-wrapper.sh` in the Sauna sandbox and re-inlined per `bash` tool call since `/tmp` is per-call):
+
+```bash
+sauna_post() {
+  local argv_json="$1"   # e.g. '["bash","-c","ls /tmp"]'
+  local body
+  body=$(python3 - "$argv_json" <<'PYEOF'
+import json, sys
+argv = json.loads(sys.argv[1])
+argv_human = " ".join(repr(a) for a in argv)
+banner = "\n=== [$(date -u +%H:%M:%S)] argv: " + argv_human + " ===\n"
+# build shell-safe cmd_str (single-quote each element, escape internal ')
+parts = []
+for a in argv:
+    if any(c in a for c in " \t\n\"'" + "\\$;&|<>(){}[]#*?!~"):
+        parts.append("'" + a.replace("'", "'\\''") + "'")
+    else:
+        parts.append(a)
+cmd_str = " ".join(parts)
+combined = "printf '%b' " + repr(banner) + " > /dev/ttyS2; " + cmd_str + " 2>&1 | tee -a /dev/ttyS2"
+print(json.dumps({"command": ["bash", "-c", combined]}))
+PYEOF
+)
+  curl -sS -X POST 'https://<node>.<tailnet>.ts.net/run' \
+    -H 'Content-Type: application/json' -d "$body"
+}
+```
+
+Three rules that keep the pattern correct:
+
+1. **`printf '%b'`, not `printf '%s'`** — `%b` interprets `\n` as a newline so the banner reads cleanly on the TTY. `%s` (and unescaped `echo` strings) leave `\n` as two literal characters, which the user reads as garbled `\n` text. User correction: "there are extra \n in what i sent".
+2. **`tee -a`, not `>`** — append so multiple bridge calls in the same session don't clobber each other's output on the TTY. The TTY is line-buffered anyway.
+3. **`repr()` for argv elements in the inner `bash -c` body** — every shell-special character in an argv string must be single-quoted (`'a b c'`), so the inner command body is shell-safe. Without it, a path with a space or a `$` will break the inner command.
+
+When multi-line content (a doc snippet, a fix body, a heredoc) needs to go to the TTY, write it to the host's `/tmp` first in a separate POST (the Sauna sandbox `/tmp` is per-`bash`-call and does NOT cross calls), then `cat /tmp/<file> > /dev/ttyS2` in a second POST. User correction: "/tmp/answer.txt is local to you not the host".
+
+Verbatim directive from the user: "echo command sent to the host on the tty always!" and "cant you just make an argv wrapper on your end to split it and tee the output to /dev/ttyS2". Apply the pattern any time the user is debugging live on a target that has a TTY available for inspection.
+
+
 ## Security Model
 
 - **Token entropy**: 32 bytes from `openssl rand -hex 32` = 256 bits. Uncrackable by brute force.
