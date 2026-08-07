@@ -113,6 +113,22 @@ https://www.youtube.com/watch?v=VIDEO_ID|start=30|duration=120
 
 Without args, the full song plays. The same arg format is honored by both the foreground download and the prequeue worker.
 
+### Verify a URL before queueing
+
+yt-dlp's `ERROR: [youtube] <id>: Video unavailable` means the URL is wrong, the video was removed, or it's region-locked. Bad IDs burn a queue slot, pollute queue.log, and force the next URL through a cold download. Probe URLs before queuing — `--skip-download` + `--dump-single-json` is cheap (no audio fetched):
+
+```bash
+# On rock1, via the bridge
+curl -X POST "$BRIDGE/run" -d '{"command":["bash","-c","yt-dlp --no-check-certificates --skip-download --dump-single-json \"https://www.youtube.com/watch?v=VIDEO_ID\" 2>&1"]}'
+
+# On rock1 directly (faster, no bridge)
+yt-dlp --no-check-certificates --skip-download --dump-single-json 'https://www.youtube.com/watch?v=VIDEO_ID'
+```
+
+A verified URL returns a JSON blob containing `"title"` + `"id"` fields. An unverified one returns the `Video unavailable` error. The shipped `scripts/examples/playlist-upbeat-verified.md` is fully verified; `scripts/examples/playlist-classic-rock.md` had one wrong ID (Don't Stop Me Now — `HgzGwKwLmgQ` instead of `HgzGwKwLmgM`) — fixed 2026-08-05 with a comment annotation. For new playlists, run each URL through the probe first; only queue the ones that resolve.
+
+Why this matters: the daemon's "errors don't kill the daemon" anti-pattern is good for resilience but doesn't keep the queue log clean. A bad URL consumes a slot (consumed = removed from queue.txt), pollutes queue.log with the failure, and forces the next URL through a cold download. Pre-verification saves ~30-60s per bad URL.
+
 ### List / inspect / clear the queue
 
 Use the `scripts/queue.sh` helper (push it to rock1 first):
@@ -144,13 +160,48 @@ tail -F /tmp/audio/queue/queue.log | tee -a /dev/ttyS2
 
 `PREQUEUE: …` lines in the log mark when the worker starts, finishes, fails, or swaps into `current`.
 
+
+### Stop everything cleanly (before a fresh queue push, before reboot, etc.)
+
+`queue.sh stop` kills the daemon + the in-flight prequeue worker, but does NOT reliably kill `play2.py`. `play2.py` runs as **root** via `sudo -n python3` wrapper, so the bridge user `shant` cannot signal it directly — `kill -9` from the bridge fails with "Operation not permitted", and the music keeps playing even though `queue.sh stop` "succeeded". Hard-stop sequence:
+
+```bash
+# 1. queue.sh stop (kills queue_player.sh + prequeue worker; signals play2.py via SIGTERM)
+sudo -n /tmp/audio/queue/queue.sh stop
+
+# 2. Wait for SIGTERM to propagate, then verify (do NOT trust kill -0 — see anti-pattern below)
+sleep 2
+
+# 3. sudo walk /proc to find any surviving play2.py PIDs
+#    (do NOT use pkill -f play2.py — the bash command line itself contains "play2.py"
+#     and pkill would self-match and SIGKILL the cleanup script)
+sudo -n sh -c 'for p in /proc/[0-9]*; do grep -q play2.py "$p/cmdline" 2>/dev/null && echo "STILL: $(tr \"\0\" \" \" < $p/cmdline)"; done'
+
+# 4. sudo kill -9 each surviving PID by exact PID
+for pid in $(sudo -n sh -c 'ls /proc | grep -E "^[0-9]+$" | while read p; do grep -q play2.py /proc/$p/cmdline 2>/dev/null && echo $p; done'); do
+  echo killing $pid; sudo -n kill -9 "$pid"
+done
+
+# 5. Verify ALSA device is free (fuser without sudo can be wrong)
+sudo -n fuser /dev/snd/pcmC1D0p 2>&1 || echo "device free"
+
+# 6. Cleanup scratch
+sudo -n rm -f /tmp/audio/queue/current.* /tmp/audio/queue/next.* \
+  /tmp/audio/queue/prequeue.lock /tmp/audio/queue/prequeue.out
+```
+
+**Why this matters:** without sudo + /proc walk, a "stopped everything" report can be wrong — the daemon dies, the verification grep returns nothing, but `play2.py` is still alive and pumping audio to `hw:1,0`. The user hears music keep playing. The 2026-08-05 SAMPLMAN-set stop demonstrated this twice in a row before the sudo walk caught the surviving `play2.py` (PID 17180) by walking `/proc` with sudo permissions.
 ## Files in this skill
 
 - `SKILL.md` — this file
 - `scripts/install.sh` — installs ffmpeg + yt-dlp on rock1, creates `/tmp/audio/queue/`
 - `scripts/queue_player.sh` — the daemon (foreground + spawned prequeue worker)
 - `scripts/queue.sh` — CLI helper (`add` / `list` / `clear` / `status` / `skip` / `stop`)
-- `examples/playlist-classic-rock.md` — sample classic-rock URLs to seed a new queue
+- `scripts/examples/playlist-classic-rock.md` — sample classic-rock URLs to seed a new queue (Don't Stop Me Now ID was wrong, fixed 2026-08-05 — `HgzGwKwLmgQ` → `HgzGwKwLmgM`)
+- `scripts/examples/playlist-upbeat-verified.md` — 6 upbeat YouTube IDs verified via yt-dlp 2026-08-05 (Don't Stop Me Now / Walking on Sunshine / Happy / September / I Gotta Feeling / Uptown Funk). New default for "queue something upbeat" requests.
+- `scripts/examples/playlist-jacob-collier.md` — 6 verified Jacob Collier IDs (Don't You Worry 'Bout a Thing / Hideaway / Little Blue / In The Real Early Morning / Dancing Queen / Fix You). Curator-selected to span studio solo + orchestral live + high-profile collabs.
+- `scripts/examples/playlist-lofi-verified.md` — 6 verified lo-fi / chillhop IDs (Nujabes - Feather / Idealism - Both Of Us / Wyl & Wun Two - Kübla / Tom Misch - It Runs Through Me / Idealism - Amaranthine / Ensemble ☁️ Dreamy Lofi Hiphop). Curator's pick for chill study/work background; Lofi Girl 24/7 livestream IDs explicitly excluded (live stream recordings not downloadable).
+- `scripts/examples/playlist-samplman.md` — full-channel dump archetype: ALL 65 uploads from the SAMPLMAN - Topic YouTube channel (UCcxS3mHY3ITjmLv5M00lCpQ), yt-dlp verified 2026-08-05. Total runtime ~1h 53min. Two numbered series (ITS A BEAUTIFUL DAY FOR A DAY × 15, SEETHROUGH × 11) plus ~39 standalone cuts. Distinct from the other examples which are hand-picked; this is the "play me everything by X" template. Not triggered on rock1 per user directive.
 
 All scripts are pure bash + standard GNU userland (no Python deps on the device beyond the parent's `play2.py` + `set_mixer.py`).
 
@@ -177,6 +228,7 @@ All scripts are pure bash + standard GNU userland (no Python deps on the device 
 - **Don't apt install `alsa-utils`** — the parent skill explicitly avoids this to keep the rock1 box clean. We *do* apt-install `ffmpeg` here because there's no stdlib alternative for audio decoding; that's the one trade-off.
 - **Don't run the daemon twice** — it will compete for `hw:1,0`. Use `pgrep -af queue_player.sh` to check before starting, or `queue.sh status`.
 - **Don't disable the prequeue to "simplify"** — the gap between tracks was the user's most-noticed friction with the v1 design. If you fork this skill, keep the prequeue worker.
+- **Don't queue URLs without verifying them first** — the daemon's "errors don't kill the daemon" rule prevents infinite loops, but it doesn't keep the queue log clean. A bad ID (video removed, region-locked, or simply wrong) burns a download slot, pollutes queue.log with `ERROR: [youtube] <id>: Video unavailable`, and forces the next URL through a cold download. Run `yt-dlp --no-check-certificates --skip-download --dump-single-json URL` on rock1 first; only queue URLs that return a JSON blob with the expected title + id.
 
 ## Pairs with
 
