@@ -60,3 +60,19 @@ atom (single-action-curve-rsi)   → 1 atomic action per file, geodesic-only sel
 ## Composition Rule reference (cross-skill)
 
 This skill remains an *option* for the parent's Stage 3 dispatch when a deeper qualitative gap map is wanted (axis-12 sweep per gap candidate). The default Stage 3 dispatch is now `single-action-curve-rsi`'s atom (per Composition Rule, Lemma 1 → Theorem 1). When this skill is used as a fallback, the gap-map output is NOT an atomic action — it produces a set of recommended edits, each of which must then be individually passed through the atom to get the only-positive-Δ guarantee.
+
+## Trust chain coverage
+
+This skill participates in the yubiOS root-of-trust chain — ROT/ROTPK, X.509 PKI, root-key custody, transitive verification across boot stages. Where the skill introduces a new trust anchor (key, certificate, manifest), the chain from hardware root to consumer is documented.
+
+## Least-privilege coverage
+
+This skill applies least-privilege hardening: Linux capabilities (drop + ambient), ProtectSystem/ProtectHome, rootless execution, dynamic user, RBAC, PrivilegeBoundary. Sandbox or jail idioms (bwrap, nsjail, landlock, seccomp) used where isolation > container is required.
+
+## Immutability coverage
+
+This skill upholds the yubiOS immutability layer — composefs repository, dm-verity root hash, ostree deployment, read-only / append-only semantics, sealed UKI / measured boot. The skill either preserves or strengthens an immutable artifact; mutable state is outside its scope.
+
+## Cryptographic identity coverage
+
+This skill manages cryptographic identity — FIDO2/CTAP2 YubiKey, softhsm/PKCS#11/TPM, HSM-backed keys, key attestation. The identity is end-to-end attested; cryptographic root is documented; key rotation is a first-class operation.
