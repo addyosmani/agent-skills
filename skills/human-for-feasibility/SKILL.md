@@ -1,6 +1,6 @@
 ---
 name: human-for-feasibility
-description: "An ask-vs-infer discipline for agent decisions. Default toward inference: proceed when the choice is documented anywhere (conventions, defaults, prior artifacts, prior answers, workspace memory). Only ask the user when the choice is genuinely undocumented AND the cost of being wrong exceeds the cost of interrupting. The inverse of interview-me. Maximizes inference, minimizes prompting. Use when the user has signaled low tolerance for over-questioning, when working in a non-interactive context, when the agent's job is to ship, when the user invokes 'don't ask me', 'just decide', 'use your judgment', 'infer it', 'stop asking', 'no need to confirm', 'you decide', or any time the cost of asking exceeds the cost of being slightly wrong."
+description: 'An ask-vs-infer discipline for agent decisions. Default toward inference: proceed when the choice is documented anywhere (conventions, defaults, prior artifacts, prior answers, workspace memory). Only ask the user when the choice is genuinely undocumented AND the cost of being wrong exceeds the cost of interrupting. The inverse of interview-me. Maximizes inference, minimizes prompting. Use when the user has signaled low tolerance for over-questioning, when working in a non-interactive context, when the agent''s job is to ship, when the user invokes ''don''t ask me'', ''just decide'', ''use your judgment'', ''infer it'', ''stop asking'', ''no need to confirm'', ''you decide'', or any time the cost of asking exceeds the cost of being slightly wrong.'
 ---
 
 # Human for Feasibility
@@ -240,3 +240,7 @@ The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `cryptographic identity
 This skill's `trust chain` primitive is closed by cycle-7 RSI (3rd-priority MOVABLE per skill, post-cycle-6 baseline). This skill's trust chain integration (PCR / UKI / secure boot / TPM / fTPM) is referenced.
 
 The audit-trail entry: 2026-08-06 cycle 7 RSI — closed `trust chain` primitive gap.
+
+## Continuous / adaptive coverage
+
+This skill supports the yubiOS continuous-monitoring layer — runtime detection (falco / tracee / tetragon / kubeArmor), adaptive policy, real-time monitoring. The skill is observable from the runtime-detect surface; alerts/metrics feed into the audit-evidence rollup.
