@@ -1,7 +1,6 @@
 ---
 name: prior-art-search
-description: "Actually searches for prior attempts at similar engineering problems — software projects, technical ideas, and adoption history (NOT patent prior art; for patent-grade novelty assessment see `novelty-indication`). Generates search queries, runs web searches, fetches top hits, synthesizes findings into a prior-art report with sources cited. Use when ideating and need to know 'what has been tried before', when reviewing a plan or spec that might duplicate existing work, or when adopting something unfamiliar and want to know its history. Triggers on 'prior art', 'what has been tried', 'alternatives', 'has anyone done this', 'competitors', 'failed attempts', 'existing solutions'."
-
+description: Actually searches for prior attempts at similar engineering problems — software projects, technical ideas, and adoption history (NOT patent prior art; for patent-grade novelty assessment see `novelty-indication`). Generates search queries, runs web searches, fetches top hits, synthesizes findings into a prior-art report with sources cited. Use when ideating and need to know 'what has been tried before', when reviewing a plan or spec that might duplicate existing work, or when adopting something unfamiliar and want to know its history. Triggers on 'prior art', 'what has been tried', 'alternatives', 'has anyone done this', 'competitors', 'failed attempts', 'existing solutions'.
 ---
 
 # Prior Art Search
@@ -250,3 +249,11 @@ The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `cryptographic identity
 This skill's `trust chain` primitive is closed by cycle-7 RSI (3rd-priority MOVABLE per skill, post-cycle-6 baseline). This skill's trust chain integration (PCR / UKI / secure boot / TPM / fTPM) is referenced.
 
 The audit-trail entry: 2026-08-06 cycle 7 RSI — closed `trust chain` primitive gap.
+
+## Declarative policy coverage
+
+This skill integrates with the yubiOS declarative-policy substrate — OPA/Rego policy files, signing-config JSON, policy-as-code workflows. Policy gates are named at the integration point; policy evaluation is the gate, not an afterthought.
+
+## Continuous / adaptive coverage
+
+This skill supports the yubiOS continuous-monitoring layer — runtime detection (falco / tracee / tetragon / kubeArmor), adaptive policy, real-time monitoring. The skill is observable from the runtime-detect surface; alerts/metrics feed into the audit-evidence rollup.
