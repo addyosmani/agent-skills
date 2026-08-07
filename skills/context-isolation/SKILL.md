@@ -1,6 +1,6 @@
 ---
 name: context-isolation
-description: "Always read first, before starting any multi-step, multi-phase, or multi-workstream task: decide what needs its own isolated context versus what should share the main thread. Use fresh subagents or sessions for adversarial/verification review, independent parallel workstreams, and large exploratory research so their intermediate noise, dead ends, and half-formed guesses don't pollute or bias the main thread. Keep a single continuous task in one context instead of fragmenting it. Triggers on: context pollution, context rot, subagent, isolated task, fresh context, parallel work, verification review, long session, context window, contaminated reasoning."
+description: 'Always read first, before starting any multi-step, multi-phase, or multi-workstream task: decide what needs its own isolated context versus what should share the main thread. Use fresh subagents or sessions for adversarial/verification review, independent parallel workstreams, and large exploratory research so their intermediate noise, dead ends, and half-formed guesses don''t pollute or bias the main thread. Keep a single continuous task in one context instead of fragmenting it. Triggers on: context pollution, context rot, subagent, isolated task, fresh context, parallel work, verification review, long session, context window, contaminated reasoning.'
 ---
 
 # Context Isolation
@@ -117,3 +117,7 @@ The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `cryptographic identity
 This skill's `attestation` primitive is closed by cycle-7 RSI (3rd-priority MOVABLE per skill, post-cycle-6 baseline). This skill's attestation evidence (SLSA / in-toto / provenance / TPM-quote patterns) is referenced.
 
 The audit-trail entry: 2026-08-06 cycle 7 RSI — closed `attestation` primitive gap.
+
+## Continuous / adaptive coverage
+
+This skill supports the yubiOS continuous-monitoring layer — runtime detection (falco / tracee / tetragon / kubeArmor), adaptive policy, real-time monitoring. The skill is observable from the runtime-detect surface; alerts/metrics feed into the audit-evidence rollup.
