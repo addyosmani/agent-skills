@@ -1,9 +1,13 @@
 ---
 name: internal-nonlex-tokens
-description: Process tokens non-lexically — the substrate where Sauna represents content as fingerprints, embeddings, hashes, and byte sequences, then routes, compares, and recalls them WITHOUT reading the source text. Use when context bloat, token cost, repeated re-reading, sensitive content, semantic lookup, or content-addressed audit is the binding constraint. Pairs with token-efficiency (cost), context-engineering (lifecycle), and context-isolation (cross-context token passing). Triggers on 'non-lexical', 'token compression', 'embedding lookup', 'content fingerprint', 'semantic hash', 'process without reading', 'audit by hash', 'recall by fingerprint', 'route by token', 'byte-addressed'.
-license: MIT
+description: "Process tokens non-lexically — the substrate where Sauna represents content as fingerprints, embeddings, hashes, and byte sequences, then routes, compares, and recalls them WITHOUT reading the source text. Use when context bloat, token cost, repeated re-reading, sensitive content, semantic lookup, or content-addressed audit is the binding constraint. Pairs with token-efficiency (cost), context-engineering (lifecycle), and context-isolation (cross-context token passing). Triggers on 'non-lexical', 'token compression', 'embedding lookup', 'content fingerprint', 'semantic hash', 'process without reading', 'audit by hash', 'recall by fingerprint', 'route by token', 'byte-addressed'."
+license: "MIT"
 metadata:
-  short-description: Non-lexical token substrate — fingerprint, compare, recall, route, transform content without lexical decode
+  user:
+    id: WbtUgeUvE9y6BpQcWSYfN7H7nXNT7tkD
+    email: foil-copy-overrate@duck.com
+    name: Ermine Daughtry
+  short-description: "Non-lexical token substrate — fingerprint, compare, recall, route, transform content without lexical decode"
 ---
 
 # Non-Lexical Tokens

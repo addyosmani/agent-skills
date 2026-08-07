@@ -1,6 +1,6 @@
 ---
 name: docker-setup-buildx-action
-description: 'Set up Docker Buildx (BuildKit) in GitHub Actions for multi-platform builds, cache export/import, SLSA attestations, and advanced build features. Use before docker/build-push-action when needing cache, attestations, or multi-platform. Triggers on: Docker Buildx, BuildKit, setup-buildx, multi-platform build, cache export, build attestations.'
+description: "Set up Docker Buildx (BuildKit) in GitHub Actions for multi-platform builds, cache export/import, SLSA attestations, and advanced build features. Use before docker/build-push-action when needing cache, attestations, or multi-platform. Triggers on: Docker Buildx, BuildKit, setup-buildx, multi-platform build, cache export, build attestations."
 ---
 
 # docker/setup-buildx-action

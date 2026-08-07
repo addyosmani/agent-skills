@@ -1,6 +1,6 @@
 ---
 name: docker-setup-qemu-action
-description: 'Register QEMU emulators for cross-platform Docker builds in GitHub Actions. Use when building linux/arm64 or other non-native architectures on standard amd64 runners. Triggers on: QEMU, cross-platform build, multi-architecture, linux/arm64, linux/arm.'
+description: "Register QEMU emulators for cross-platform Docker builds in GitHub Actions. Use when building linux/arm64 or other non-native architectures on standard amd64 runners. Triggers on: QEMU, cross-platform build, multi-architecture, linux/arm64, linux/arm."
 ---
 
 # docker/setup-qemu-action

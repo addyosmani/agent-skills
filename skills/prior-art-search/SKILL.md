@@ -1,6 +1,7 @@
 ---
 name: prior-art-search
-description: Actually searches for prior attempts at similar engineering problems — software projects, technical ideas, and adoption history (NOT patent prior art; for patent-grade novelty assessment see `novelty-indication`). Generates search queries, runs web searches, fetches top hits, synthesizes findings into a prior-art report with sources cited. Use when ideating and need to know 'what has been tried before', when reviewing a plan or spec that might duplicate existing work, or when adopting something unfamiliar and want to know its history. Triggers on 'prior art', 'what has been tried', 'alternatives', 'has anyone done this', 'competitors', 'failed attempts', 'existing solutions'.
+description: "Actually searches for prior attempts at similar engineering problems — software projects, technical ideas, and adoption history (NOT patent prior art; for patent-grade novelty assessment see `novelty-indication`). Generates search queries, runs web searches, fetches top hits, synthesizes findings into a prior-art report with sources cited. Use when ideating and need to know 'what has been tried before', when reviewing a plan or spec that might duplicate existing work, or when adopting something unfamiliar and want to know its history. Triggers on 'prior art', 'what has been tried', 'alternatives', 'has anyone done this', 'competitors', 'failed attempts', 'existing solutions'."
+
 ---
 
 # Prior Art Search

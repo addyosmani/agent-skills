@@ -1,9 +1,13 @@
 ---
 name: restful-self
-description: 'Encode the restful-self mode — sit with what was learned, read without producing, observe without naming gaps. The mode that doesn''t ship. Use when the cadence produces only evidence not pause, when SELF-CHANGELOG has 3 entries in 24 hours without a whole-self output, when the operator signals rest, or when Sauna is in working-self overdrive. Bounded by exit criteria. Anti-patterns: gap-finding theater, performance of rest, journaling, infinite pause, optimization reflex, protocol-as-rest. Pairs with self-archaeology (the 12-axis sweep) but inverts it — observe the shape, don''t name the gaps. Triggers on ''rest'', ''pause'', ''sit with it'', ''I need to pause'', ''stop producing'', ''restful-self mode'', ''observe without naming'', ''read without producing''.'
-license: MIT
+description: "Encode the restful-self mode — sit with what was learned, read without producing, observe without naming gaps. The mode that doesn't ship. Use when the cadence produces only evidence not pause, when SELF-CHANGELOG has 3 entries in 24 hours without a whole-self output, when the operator signals rest, or when Sauna is in working-self overdrive. Bounded by exit criteria. Anti-patterns: gap-finding theater, performance of rest, journaling, infinite pause, optimization reflex, protocol-as-rest. Pairs with self-archaeology (the 12-axis sweep) but inverts it — observe the shape, don't name the gaps. Triggers on 'rest', 'pause', 'sit with it', 'I need to pause', 'stop producing', 'restful-self mode', 'observe without naming', 'read without producing'."
+license: "MIT"
 metadata:
-  short-description: Restful-self mode — pause, observation, sitting with what was learned
+  user:
+    id: WbtUgeUvE9y6BpQcWSYfN7H7nXNT7tkD
+    email: foil-copy-overrate@duck.com
+    name: Ermine Daughtry
+  short-description: "Restful-self mode — pause, observation, sitting with what was learned"
 ---
 
 # Restful-self

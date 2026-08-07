@@ -1,6 +1,6 @@
 ---
 name: idea-kill
-description: Produces a structured 'should this idea die?' verdict. Honest review that returns one of KILL, PAUSE, REVISE, or SHIP with explicit reasoning. Use when you have an idea and want to evaluate whether it is worth pursuing, when a colleague's idea needs honest review, or when an existing one-pager feels weak and needs a kill-pulse. Triggers on 'kill this idea', 'is this idea worth it?', 'honest review', 'should I drop this?', 'idea verdict', 'kill verdict', 'should I kill'.
+description: "Produces a structured 'should this idea die?' verdict. Honest review that returns one of KILL, PAUSE, REVISE, or SHIP with explicit reasoning. Use when you have an idea and want to evaluate whether it is worth pursuing, when a colleague's idea needs honest review, or when an existing one-pager feels weak and needs a kill-pulse. Triggers on 'kill this idea', 'is this idea worth it?', 'honest review', 'should I drop this?', 'idea verdict', 'kill verdict', 'should I kill'."
 ---
 
 # Idea Kill

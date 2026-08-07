@@ -1,9 +1,13 @@
 ---
 name: nspawn-containers
-description: 'systemd-nspawn for yubiOS: hermetic container dev/test/build environments running off a signed mkosi image (RootImage=, RootMStack=), user-namespace isolation (--private-users=UID_RANGE), network namespace modes (--network-bridge=, --private-network), ephemeral layering (--ephemeral), boot-in-container (--boot), integration with mkosi-built images for reproducible container boundaries, and the yubiOS convention for using nspawn as a portable-service substitute when bootc swap is too heavyweight. Use when setting up a hermetic dev container, running CI in an image-rooted nspawn, configuring RootImage= for a systemd portable service, designing microsegmentation via nspawn + network policy, or testing a build inside a known-good image. Triggers on: systemd-nspawn, nspawn, RootImage=, RootMStack=, portable service, hermetic container, user namespace container, image-rooted nspawn, --ephemeral, --boot, nspawn network bridge.'
-license: MIT
+description: "systemd-nspawn for yubiOS: hermetic container dev/test/build environments running off a signed mkosi image (RootImage=, RootMStack=), user-namespace isolation (--private-users=UID_RANGE), network namespace modes (--network-bridge=, --private-network), ephemeral layering (--ephemeral), boot-in-container (--boot), integration with mkosi-built images for reproducible container boundaries, and the yubiOS convention for using nspawn as a portable-service substitute when bootc swap is too heavyweight. Use when setting up a hermetic dev container, running CI in an image-rooted nspawn, configuring RootImage= for a systemd portable service, designing microsegmentation via nspawn + network policy, or testing a build inside a known-good image. Triggers on: systemd-nspawn, nspawn, RootImage=, RootMStack=, portable service, hermetic container, user namespace container, image-rooted nspawn, --ephemeral, --boot, nspawn network bridge."
+license: "MIT"
 metadata:
-  short-description: 'systemd-nspawn: hermetic image-rooted containers for dev/test/build, portable-service substitute'
+  user:
+    id: WbtUgeUvE9y6BpQcWSYfN7H7nXNT7tkD
+    email: foil-copy-overrate@duck.com
+    name: Ermine Daughtry
+  short-description: "systemd-nspawn: hermetic image-rooted containers for dev/test/build, portable-service substitute"
 ---
 
 # nspawn Containers

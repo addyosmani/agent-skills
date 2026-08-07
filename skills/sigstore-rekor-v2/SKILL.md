@@ -1,9 +1,13 @@
 ---
 name: sigstore-rekor-v2
-description: 'Sigstore Rekor v2 transparency log: tile-backed hash-only log with sharded inclusion proofs, TUF SigningConfig for endpoint discovery with key rotation, witness co-signing for log continuity, the difference from Rekor v1 (no single checkpoint, no global root, sharded by tree ID), and the yubiOS integration path (publish artifact attestations to a Rekor v2 tile, verify via cosign verify-attestation --rekor-tiles). Use when publishing a new attestation to Rekor v2, configuring a TUF SigningConfig for cosign to discover the current Rekor v2 endpoints, debugging a failed inclusion proof, designing witness quorum for high-assurance artifact publishing, or migrating from Rekor v1 to Rekor v2. Triggers on: rekor v2, rekor-tiles, TUF SigningConfig, witness, cosign verify-attestation, transparency log, tile-based log, sharded inclusion proof, log continuity, certid-transparency, rekor-tiles.'
-license: MIT
+description: "Sigstore Rekor v2 transparency log: tile-backed hash-only log with sharded inclusion proofs, TUF SigningConfig for endpoint discovery with key rotation, witness co-signing for log continuity, the difference from Rekor v1 (no single checkpoint, no global root, sharded by tree ID), and the yubiOS integration path (publish artifact attestations to a Rekor v2 tile, verify via cosign verify-attestation --rekor-tiles). Use when publishing a new attestation to Rekor v2, configuring a TUF SigningConfig for cosign to discover the current Rekor v2 endpoints, debugging a failed inclusion proof, designing witness quorum for high-assurance artifact publishing, or migrating from Rekor v1 to Rekor v2. Triggers on: rekor v2, rekor-tiles, TUF SigningConfig, witness, cosign verify-attestation, transparency log, tile-based log, sharded inclusion proof, log continuity, certid-transparency, rekor-tiles."
+license: "MIT"
 metadata:
-  short-description: 'Sigstore Rekor v2 tile-backed transparency log: TUF SigningConfig, witness quorum, sharded inclusion proofs'
+  user:
+    id: WbtUgeUvE9y6BpQcWSYfN7H7nXNT7tkD
+    email: foil-copy-overrate@duck.com
+    name: Ermine Daughtry
+  short-description: "Sigstore Rekor v2 tile-backed transparency log: TUF SigningConfig, witness quorum, sharded inclusion proofs"
 ---
 
 # Sigstore Rekor v2

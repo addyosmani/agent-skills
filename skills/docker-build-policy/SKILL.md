@@ -1,7 +1,20 @@
 ---
 name: docker-build-policy
-description: 'Write, wire, and debug Docker Build Policies (OPA/Rego) for the yubi-OS org — the `docker buildx build --policy reset=true,strict=true,filename=yubiOS.rego` supply-chain gate that vets every build input (FROM images) before any layer executes. Covers the Rego policy schema (package docker, default deny, the `input` object — input.local / input.image.ref / input.image.isCanonical / input.image.hasProvenance — the `decision` object and `reason` messages), the yubiOS.rego pattern (approved registries + digest-pinned), how to enable it in a CI build job, buildx version requirements for `--policy`, and how to test a policy locally. Use when enabling/editing yubiOS.rego, adding an approved registry, requiring provenance, or debugging a policy-denied build. Pairs with docker-buildx-rootless and rootless-container-builds. Triggers on: .rego, rego policy, --policy, Build Policy, OPA docker, isCanonical, hasProvenance, yubiOS.rego, policy reset=true strict=true, approved registry, digest
-  pinned build, supply chain build gate.'
+description: >-
+  Write, wire, and debug Docker Build Policies (OPA/Rego) for the yubi-OS org —
+  the `docker buildx build --policy reset=true,strict=true,filename=yubiOS.rego`
+  supply-chain gate that vets every build input (FROM images) before any layer
+  executes. Covers the Rego policy schema (package docker, default deny, the
+  `input` object — input.local / input.image.ref / input.image.isCanonical /
+  input.image.hasProvenance — the `decision` object and `reason` messages),
+  the yubiOS.rego pattern (approved registries + digest-pinned), how to enable
+  it in a CI build job, buildx version requirements for `--policy`, and how to
+  test a policy locally. Use when enabling/editing yubiOS.rego, adding an
+  approved registry, requiring provenance, or debugging a policy-denied build.
+  Pairs with docker-buildx-rootless and rootless-container-builds. Triggers on:
+  .rego, rego policy, --policy, Build Policy, OPA docker, isCanonical,
+  hasProvenance, yubiOS.rego, policy reset=true strict=true, approved registry,
+  digest pinned build, supply chain build gate.
 ---
 
 # Docker Build Policy (.rego) — yubi-OS

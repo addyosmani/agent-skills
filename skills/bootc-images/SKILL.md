@@ -1,6 +1,6 @@
 ---
 name: bootc-images
-description: 'Builds, installs, upgrades, and manages bootc-compatible OCI images. Use when writing Containerfiles for bootc base images, configuring composefs/fsverity, managing filesystem semantics (/usr, /etc, /var), installing to disk, performing atomic upgrades and rollbacks, or troubleshooting bootc deployments. Triggers on: bootc, bootable container, OCI image boot, bootc upgrade, bootc switch, bootc install to-disk, composefs, ostree, atomic upgrade, image mode.'
+description: "Builds, installs, upgrades, and manages bootc-compatible OCI images. Use when writing Containerfiles for bootc base images, configuring composefs/fsverity, managing filesystem semantics (/usr, /etc, /var), installing to disk, performing atomic upgrades and rollbacks, or troubleshooting bootc deployments. Triggers on: bootc, bootable container, OCI image boot, bootc upgrade, bootc switch, bootc install to-disk, composefs, ostree, atomic upgrade, image mode."
 ---
 
 # bootc Images

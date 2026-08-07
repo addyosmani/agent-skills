@@ -1,7 +1,21 @@
 ---
 name: docker-buildx-rootless
-description: 'Docker CLI-level skill covering three topics: (1) dockerd rootless mode — running the Docker daemon as a non-root user via user namespaces, daemon socket location, systemd user unit, contexts; (2) docker buildx CLI — builder instances, driver types (docker, docker-container, kubernetes, remote), buildx create/use/inspect/rm, multi-platform builds, cache management, bake; (3) Docker Build Policies (OPA/Rego) — the --policy flag, policy file schema, input object fields, decision object, yubiOS yubiOS.rego pattern. Use when setting up rootless dockerd, creating/managing buildx builders, running multi-platform builds, writing or debugging Build Policy .rego files, or working with docker buildx bake. Pairs with rootless-container-builds (supply chain hardening) and the docker GitHub Actions skills for CI. Triggers on: dockerd rootless, dockerd --rootless, rootless daemon, buildx create, buildx use, buildx drivers, docker-container driver, bake, docker-bake.hcl, --policy, Build Policy,
-  OPA rego docker, isCanonical, multi-platform buildx.'
+description: >-
+  Docker CLI-level skill covering three topics: (1) dockerd rootless mode —
+  running the Docker daemon as a non-root user via user namespaces, daemon
+  socket location, systemd user unit, contexts; (2) docker buildx CLI —
+  builder instances, driver types (docker, docker-container, kubernetes,
+  remote), buildx create/use/inspect/rm, multi-platform builds, cache
+  management, bake; (3) Docker Build Policies (OPA/Rego) — the --policy flag,
+  policy file schema, input object fields, decision object, yubiOS yubiOS.rego
+  pattern. Use when setting up rootless dockerd, creating/managing buildx
+  builders, running multi-platform builds, writing or debugging Build Policy
+  .rego files, or working with docker buildx bake. Pairs with
+  rootless-container-builds (supply chain hardening) and the docker GitHub
+  Actions skills for CI. Triggers on: dockerd rootless, dockerd --rootless,
+  rootless daemon, buildx create, buildx use, buildx drivers, docker-container
+  driver, bake, docker-bake.hcl, --policy, Build Policy, OPA rego docker,
+  isCanonical, multi-platform buildx.
 ---
 
 # Docker Buildx + Rootless Daemon (CLI)

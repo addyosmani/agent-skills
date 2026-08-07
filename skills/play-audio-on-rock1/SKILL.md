@@ -1,8 +1,8 @@
 ---
 name: play-audio-on-rock1
-description: Generate short audio clips via ElevenLabs and play them on rock1's audio outputs through the rock1 shell bridge — pure-stdlib ctypes→ALSA Python player (no apt install needed), with one-shot and loop playback, mixer state inspection, and mixer control (unmute + set volume). Includes /dev/ttyS2 banner tee for live observability. Use when 'play audio on rock1', 'make rock1 beep', 'loop a clip on rock1', 'check audio device on rock1', 'set volume on rock1', 'alsa mixer rock1', or 'es8316 control'.
+description: "Generate short audio clips via ElevenLabs and play them on rock1's audio outputs through the rock1 shell bridge — pure-stdlib ctypes→ALSA Python player (no apt install needed), with one-shot and loop playback, mixer state inspection, and mixer control (unmute + set volume). Includes /dev/ttyS2 banner tee for live observability. Use when 'play audio on rock1', 'make rock1 beep', 'loop a clip on rock1', 'check audio device on rock1', 'set volume on rock1', 'alsa mixer rock1', or 'es8316 control'."
 license: MIT
-compatibility: Requires Python 3.8+ stdlib on rock1, libasound2 installed (Ubuntu default), shant user with sudo NOPASSWD or audio-group membership, and the rock1 shell bridge connection (conn_6rp6oRY9DBJG). Tested on rock1 — Pine64 RockPro64, Ubuntu 26.04 aarch64, kernel k7.0.0-28-generic, ES8316 codec on card 1.
+compatibility: "Requires Python 3.8+ stdlib on rock1, libasound2 installed (Ubuntu default), shant user with sudo NOPASSWD or audio-group membership, and the rock1 shell bridge connection (conn_6rp6oRY9DBJG). Tested on rock1 — Pine64 RockPro64, Ubuntu 26.04 aarch64, kernel k7.0.0-28-generic, ES8316 codec on card 1."
 ---
 
 # Play Audio on rock1

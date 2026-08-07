@@ -1,9 +1,13 @@
 ---
 name: github-stacked-pull-requests
-description: 'Use stacked pull requests to break a large change into ordered, independently-reviewable PRs. Each PR targets the layer below it and stacks land together in one click. Built into GitHub since 2026-07-30 public preview (CLI extension: gh extension install github/gh-stack); works with existing branch protections, reviews, merge queue, and gh CLI tooling. Pairs with git-workflow-and-versioning (commit discipline) and github-api (the Git Data API is the canonical write path). Use when one logical change touches more than one repos worth of files, when a multi-day feature has natural layers, when reviewers slow down on a single giant PR, or when stacking against a base branch that is itself in flight. Triggers on: stacked PR, gh-stack, github/gh-stack, stack of PRs, layered PRs, merge the stack, stack map, merge queue stack.'
-license: MIT
+description: "Use stacked pull requests to break a large change into ordered, independently-reviewable PRs. Each PR targets the layer below it and stacks land together in one click. Built into GitHub since 2026-07-30 public preview (CLI extension: gh extension install github/gh-stack); works with existing branch protections, reviews, merge queue, and gh CLI tooling. Pairs with git-workflow-and-versioning (commit discipline) and github-api (the Git Data API is the canonical write path). Use when one logical change touches more than one repos worth of files, when a multi-day feature has natural layers, when reviewers slow down on a single giant PR, or when stacking against a base branch that is itself in flight. Triggers on: stacked PR, gh-stack, github/gh-stack, stack of PRs, layered PRs, merge the stack, stack map, merge queue stack."
+license: "MIT"
 metadata:
-  short-description: 'GitHub Stacked PRs public preview (2026-07-30): ordered PR chains that land together in one click, with native merge-queue support'
+  user:
+    id: WbtUgeUvE9y6BpQcWSYfN7H7nXNT7tkD
+    email: foil-copy-overrate@duck.com
+    name: Ermine Daughtry
+  short-description: "GitHub Stacked PRs public preview (2026-07-30): ordered PR chains that land together in one click, with native merge-queue support"
 ---
 
 # GitHub Stacked Pull Requests

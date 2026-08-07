@@ -1,6 +1,6 @@
 ---
 name: docker-bake-action
-description: 'Build multiple Docker/OCI images or multi-platform variants defined in a docker-bake.hcl or docker-compose.yml file using docker/bake-action in GitHub Actions. Use instead of build-push-action when managing 2+ build targets or complex image matrices. Triggers on: docker bake, bake-action, docker-bake.hcl, multi-target build, bake file, Bake workflow.'
+description: "Build multiple Docker/OCI images or multi-platform variants defined in a docker-bake.hcl or docker-compose.yml file using docker/bake-action in GitHub Actions. Use instead of build-push-action when managing 2+ build targets or complex image matrices. Triggers on: docker bake, bake-action, docker-bake.hcl, multi-target build, bake file, Bake workflow."
 ---
 
 # docker/bake-action

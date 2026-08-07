@@ -1,6 +1,17 @@
 ---
 name: arm-trusted-firmware-optee
-description: 'Build and reason about the ARM64 secure boot firmware stack for yubiOS: ARM Trusted Firmware-A (TF-A) staging (BL1/BL2/BL31/BL32/BL33), Trusted Board Boot (TBB) with FIP packaging and the ROTPK chain of trust, OP-TEE as the BL32 secure-world OS, U-Boot as the BL33 non-secure bootloader, and the firmware-stage measured-boot event log (TCG2 / Firmware Handoff Transfer Lists). Use when porting yubiOS to ARM64 hardware, owning the boot ROM key, wiring OP-TEE into the boot flow, debugging SMC/secure-world handoff, or setting up U-Boot measured boot. Pairs with `ftpm-optee-tpm` for the fTPM TA. Triggers on: TF-A, arm-trusted-firmware, BL31, BL32, BL33, FIP, fiptool, ROTPK, Trusted Board Boot, TBB, OP-TEE, secure world, SMC, BL2 measured boot, Firmware Handoff, Transfer List, U-Boot BL33, ARM64 secure boot.'
+description: >-
+  Build and reason about the ARM64 secure boot firmware stack for yubiOS:
+  ARM Trusted Firmware-A (TF-A) staging (BL1/BL2/BL31/BL32/BL33), Trusted Board
+  Boot (TBB) with FIP packaging and the ROTPK chain of trust, OP-TEE as the
+  BL32 secure-world OS, U-Boot as the BL33 non-secure bootloader, and the
+  firmware-stage measured-boot event log (TCG2 / Firmware Handoff Transfer
+  Lists). Use when porting yubiOS to ARM64 hardware, owning the boot ROM key,
+  wiring OP-TEE into the boot flow, debugging SMC/secure-world handoff, or
+  setting up U-Boot measured boot. Pairs with `ftpm-optee-tpm` for the fTPM TA.
+  Triggers on: TF-A, arm-trusted-firmware, BL31, BL32, BL33, FIP, fiptool,
+  ROTPK, Trusted Board Boot, TBB, OP-TEE, secure world, SMC, BL2 measured boot,
+  Firmware Handoff, Transfer List, U-Boot BL33, ARM64 secure boot.
 ---
 
 # ARM Trusted Firmware + OP-TEE (yubiOS ARM64 secure boot)

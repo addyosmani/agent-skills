@@ -1,6 +1,6 @@
 ---
 name: slsa-provenance
-description: 'Implements SLSA v1.0 supply chain security, targeting Build Level 3 (the Build track tops out at L3 in v1.0; there is no Build L4). Use when adding provenance attestations to build artifacts, setting up GitHub Actions SLSA workflows, verifying attestations with slsa-verifier or cosign, or auditing a build pipeline for supply chain compliance. Triggers on: SLSA, provenance, attestation, supply chain, sigstore, cosign, rekor.'
+description: "Implements SLSA v1.0 supply chain security, targeting Build Level 3 (the Build track tops out at L3 in v1.0; there is no Build L4). Use when adding provenance attestations to build artifacts, setting up GitHub Actions SLSA workflows, verifying attestations with slsa-verifier or cosign, or auditing a build pipeline for supply chain compliance. Triggers on: SLSA, provenance, attestation, supply chain, sigstore, cosign, rekor."
 ---
 
 # SLSA Provenance

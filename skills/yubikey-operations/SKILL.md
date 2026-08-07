@@ -1,9 +1,13 @@
 ---
 name: yubikey-operations
-description: 'YubiKey-specific identity operations for yubiOS: FIDO2 enrollment (hmac-secret, passkey, PRF extension), PIV slot management (9c signing, 9a auth, 82-95 retired), ssh-key provisioning from PIV and FIDO2 (ed25519-sk, ecdsa-sk), attestation certificate extraction (FIDO2 cert from slot 9c + FIDO2 device cert via credential management), multi-key quorum patterns for owner-held root-of-trust, and the yubiOS backup/restore discipline (export-attestation-cert + paperkey-style split-knowledge). Use when enrolling a YubiKey, signing with PIV slot 9c, deriving ssh keys from FIDO2 hmac-secret, designing multi-key quorum for owner-held root-of-trust, or auditing a YubiKey ceremony. Triggers on: YubiKey, FIDO2 enrollment, PIV, slot 9c, hmac-secret, passkey, attestation certificate, ssh-key from YubiKey, YKCS11, multi-key quorum, owner-held key, FIDO2 PRF, ed25519-sk, ecdsa-sk, webauthn.'
-license: MIT
+description: "YubiKey-specific identity operations for yubiOS: FIDO2 enrollment (hmac-secret, passkey, PRF extension), PIV slot management (9c signing, 9a auth, 82-95 retired), ssh-key provisioning from PIV and FIDO2 (ed25519-sk, ecdsa-sk), attestation certificate extraction (FIDO2 cert from slot 9c + FIDO2 device cert via credential management), multi-key quorum patterns for owner-held root-of-trust, and the yubiOS backup/restore discipline (export-attestation-cert + paperkey-style split-knowledge). Use when enrolling a YubiKey, signing with PIV slot 9c, deriving ssh keys from FIDO2 hmac-secret, designing multi-key quorum for owner-held root-of-trust, or auditing a YubiKey ceremony. Triggers on: YubiKey, FIDO2 enrollment, PIV, slot 9c, hmac-secret, passkey, attestation certificate, ssh-key from YubiKey, YKCS11, multi-key quorum, owner-held key, FIDO2 PRF, ed25519-sk, ecdsa-sk, webauthn."
+license: "MIT"
 metadata:
-  short-description: 'YubiKey identity root: PIV/FIDO2 enrollment, slot mgmt, ssh-key derivation, multi-key quorum, attestation cert extraction'
+  user:
+    id: WbtUgeUvE9y6BpQcWSYfN7H7nXNT7tkD
+    email: foil-copy-overrate@duck.com
+    name: Ermine Daughtry
+  short-description: "YubiKey identity root: PIV/FIDO2 enrollment, slot mgmt, ssh-key derivation, multi-key quorum, attestation cert extraction"
 ---
 
 # YubiKey Operations

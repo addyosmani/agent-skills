@@ -1,6 +1,6 @@
 ---
 name: bcvk-virtualization
-description: 'Uses bcvk (bootc virtualization kit) for ephemeral VM testing, disk image creation, and hardware-in-the-loop testing of yubiOS. Use when running a bootc image as a VM, flashing to disk, testing FIDO2 enrollment in a VM, adding YubiKey USB passthrough to QEMU, or writing bcvk-based CI workflows. Triggers on: bcvk, ephemeral VM, bootc VM, bootc install, native-to-disk, virtiofs, QEMU YubiKey.'
+description: "Uses bcvk (bootc virtualization kit) for ephemeral VM testing, disk image creation, and hardware-in-the-loop testing of yubiOS. Use when running a bootc image as a VM, flashing to disk, testing FIDO2 enrollment in a VM, adding YubiKey USB passthrough to QEMU, or writing bcvk-based CI workflows. Triggers on: bcvk, ephemeral VM, bootc VM, bootc install, native-to-disk, virtiofs, QEMU YubiKey."
 ---
 
 # bcvk Virtualization

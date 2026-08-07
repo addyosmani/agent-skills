@@ -1,6 +1,16 @@
 ---
 name: github-api
-description: 'GitHub REST API patterns for the yubi-OS org. Covers the four operations used constantly: (1) Git Data API — committing files without cloning (blob→tree→commit→ref chain); (2) Contents API — reading and writing single files via base64; (3) Issues/PRs/Labels API — creating issues, draft PRs, labels, and posting comments; (4) Repos/Orgs/Forks — forking repos, listing org repos, fetching branch SHAs. Use when making any GitHub API call: pushing code, creating branches, filing issues, opening PRs, reading files, or forking repos. The `workflow` scope constraint is resolved for yubi-OS — use the SU fine-grained PAT. Triggers on: GitHub API, REST API github, git blob, git tree, git commit API, create branch, create PR, create issue, draft PR, fork repo, contents API, PUT file github, GitHub token.'
+description: >-
+  GitHub REST API patterns for the yubi-OS org. Covers the four operations used
+  constantly: (1) Git Data API — committing files without cloning (blob→tree→commit→ref
+  chain); (2) Contents API — reading and writing single files via base64; (3)
+  Issues/PRs/Labels API — creating issues, draft PRs, labels, and posting comments;
+  (4) Repos/Orgs/Forks — forking repos, listing org repos, fetching branch SHAs.
+  Use when making any GitHub API call: pushing code, creating branches, filing
+  issues, opening PRs, reading files, or forking repos. The `workflow` scope
+  constraint is resolved for yubi-OS — use the SU fine-grained PAT. Triggers on: GitHub API, REST API
+  github, git blob, git tree, git commit API, create branch, create PR, create issue,
+  draft PR, fork repo, contents API, PUT file github, GitHub token.
 ---
 
 # GitHub REST API (yubi-OS patterns)

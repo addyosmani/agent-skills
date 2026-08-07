@@ -1,6 +1,6 @@
 ---
 name: context-isolation
-description: 'Always read first, before starting any multi-step, multi-phase, or multi-workstream task: decide what needs its own isolated context versus what should share the main thread. Use fresh subagents or sessions for adversarial/verification review, independent parallel workstreams, and large exploratory research so their intermediate noise, dead ends, and half-formed guesses don''t pollute or bias the main thread. Keep a single continuous task in one context instead of fragmenting it. Triggers on: context pollution, context rot, subagent, isolated task, fresh context, parallel work, verification review, long session, context window, contaminated reasoning.'
+description: "Always read first, before starting any multi-step, multi-phase, or multi-workstream task: decide what needs its own isolated context versus what should share the main thread. Use fresh subagents or sessions for adversarial/verification review, independent parallel workstreams, and large exploratory research so their intermediate noise, dead ends, and half-formed guesses don't pollute or bias the main thread. Keep a single continuous task in one context instead of fragmenting it. Triggers on: context pollution, context rot, subagent, isolated task, fresh context, parallel work, verification review, long session, context window, contaminated reasoning."
 ---
 
 # Context Isolation

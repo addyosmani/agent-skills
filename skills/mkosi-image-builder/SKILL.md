@@ -1,6 +1,6 @@
 ---
 name: mkosi-image-builder
-description: 'Builds OS images with mkosi for yubiOS including OCI containers, UKIs, disk images with dm-verity and Secure Boot. Use when writing mkosi.conf profiles, configuring PIV/PKCS11 UKI signing, setting up dm-verity, writing FinalizeScripts, or building the yubiOS OCI image pipeline. Triggers on: mkosi, UKI, unified kernel image, Secure Boot, dm-verity, OCI image build, finalize-script.'
+description: "Builds OS images with mkosi for yubiOS including OCI containers, UKIs, disk images with dm-verity and Secure Boot. Use when writing mkosi.conf profiles, configuring PIV/PKCS11 UKI signing, setting up dm-verity, writing FinalizeScripts, or building the yubiOS OCI image pipeline. Triggers on: mkosi, UKI, unified kernel image, Secure Boot, dm-verity, OCI image build, finalize-script."
 ---
 
 # mkosi Image Builder

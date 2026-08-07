@@ -1,6 +1,6 @@
 ---
 name: ideate-solo
-description: The autonomous variant of idea-refine. Generates variations, scores them, and converges on a direction without a human in the loop. Use when scheduled runs, autonomous agents, or ideation for someone not present cannot access a live user. Use when you want a different angle than dialogue produces. Triggers on 'ideate solo', 'ideate without me', 'autonomous ideation', 'agent ideation', 'ideate alone', 'no human available', 'ideate by yourself'.
+description: "The autonomous variant of idea-refine. Generates variations, scores them, and converges on a direction without a human in the loop. Use when scheduled runs, autonomous agents, or ideation for someone not present cannot access a live user. Use when you want a different angle than dialogue produces. Triggers on 'ideate solo', 'ideate without me', 'autonomous ideation', 'agent ideation', 'ideate alone', 'no human available', 'ideate by yourself'."
 ---
 
 # Ideate Solo

@@ -1,9 +1,9 @@
 ---
 name: single-action-curve-rsi
-description: Atomic RSI — the smallest unit of the curve-guided-rsi / hyperspherical-harmonic-curve family. ONE corpus item (typically a single deep-research output file) maps to ONE point on S^2 via 9-D binary primitive coverage → PCA top-2 → stereographic lift → Möbius reparameterization (identity init). The single-action target = the missing primitive whose flip reduces geodesic distance to the ideal pole the most; ONE edit per cycle. Use when a single corpus item needs prioritized RSI without the full multi-file curve fit; when a deep-research output file has structural gaps the next edit should target; when the user wants to know the next single action on a single file with a measurable geodesic delta; or any time 'single-action curve' / 'what's the one thing to fix in this file' / 'geodesic gap on this file' / 'atomic RSI on this file' comes up. NOT for multi-file corpora (use curve-guided-rsi-self or curve-guided-rsi).
-license: MIT
+description: "Atomic RSI — the smallest unit of the curve-guided-rsi / hyperspherical-harmonic-curve family. ONE corpus item (typically a single deep-research output file) maps to ONE point on S^2 via 9-D binary primitive coverage → PCA top-2 → stereographic lift → Möbius reparameterization (identity init). The single-action target = the missing primitive whose flip reduces geodesic distance to the ideal pole the most; ONE edit per cycle. Use when a single corpus item needs prioritized RSI without the full multi-file curve fit; when a deep-research output file has structural gaps the next edit should target; when the user wants to know the next single action on a single file with a measurable geodesic delta; or any time 'single-action curve' / 'what's the one thing to fix in this file' / 'geodesic gap on this file' / 'atomic RSI on this file' comes up. NOT for multi-file corpora (use curve-guided-rsi-self or curve-guided-rsi)."
+license: "MIT"
 metadata:
-  short-description: Atomic RSI on a single corpus item — one file, one S² point, one action per cycle
+  short-description: "Atomic RSI on a single corpus item — one file, one S² point, one action per cycle"
 ---
 
 # Single-Action Curve RSI

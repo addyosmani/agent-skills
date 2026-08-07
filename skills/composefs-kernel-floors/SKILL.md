@@ -1,9 +1,13 @@
 ---
 name: composefs-kernel-floors
-description: 'Kernel version floors and mount options required for composefs on yubiOS: kernel ≥6.5 for data-only OverlayFS (composefs''s primary backing fs), kernel ≥6.6 for verity=require mount option (enforces composefs-signed catalog on mount), kernel ≥6.12 for file-backed EROFS (composefs''s alternate backing fs), the systemd-dissect integration points, and the yubiOS convention for picking the lowest-supported kernel in PINNED.md. Use when deciding a kernel version floor for a new yubiOS image, debugging a composefs mount failure (incompatible kernel), picking between OverlayFS and EROFS as the backing fs for a sysext/confext, or auditing whether a yubiOS build''s kernel supports the composefs flow. Triggers on: composefs, kernel floor, verity=require, file-backed EROFS, data-only OverlayFS, OverlayFS data-only, composefs mount, kernel ≥6.5, kernel ≥6.6, kernel ≥6.12, systemd-dissect.'
-license: MIT
+description: "Kernel version floors and mount options required for composefs on yubiOS: kernel ≥6.5 for data-only OverlayFS (composefs's primary backing fs), kernel ≥6.6 for verity=require mount option (enforces composefs-signed catalog on mount), kernel ≥6.12 for file-backed EROFS (composefs's alternate backing fs), the systemd-dissect integration points, and the yubiOS convention for picking the lowest-supported kernel in PINNED.md. Use when deciding a kernel version floor for a new yubiOS image, debugging a composefs mount failure (incompatible kernel), picking between OverlayFS and EROFS as the backing fs for a sysext/confext, or auditing whether a yubiOS build's kernel supports the composefs flow. Triggers on: composefs, kernel floor, verity=require, file-backed EROFS, data-only OverlayFS, OverlayFS data-only, composefs mount, kernel ≥6.5, kernel ≥6.6, kernel ≥6.12, systemd-dissect."
+license: "MIT"
 metadata:
-  short-description: 'composefs kernel floors: 6.5 data-only OverlayFS, 6.6 verity=require, 6.12 file-backed EROFS'
+  user:
+    id: WbtUgeUvE9y6BpQcWSYfN7H7nXNT7tkD
+    email: foil-copy-overrate@duck.com
+    name: Ermine Daughtry
+  short-description: "composefs kernel floors: 6.5 data-only OverlayFS, 6.6 verity=require, 6.12 file-backed EROFS"
 ---
 
 # composefs Kernel Floors

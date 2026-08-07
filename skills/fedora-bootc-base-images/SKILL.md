@@ -1,6 +1,6 @@
 ---
 name: fedora-bootc-base-images
-description: 'Working with official Fedora and CentOS Stream bootc base images: image tiers (standard/minimal/minimal-plus), source repos, digest pinning, bootc-base-imagectl, upstream tracking. Use when deriving yubiOS from fedora-bootc, sourcing digests, understanding tier differences, or tracking upstream package changes. Triggers on: fedora-bootc, centos-bootc, quay.io/fedora/fedora-bootc, quay.io/centos-bootc, base image tiers, rpm-ostree compose, bootc-base-imagectl, minimal-plus, standard tier.'
+description: "Working with official Fedora and CentOS Stream bootc base images: image tiers (standard/minimal/minimal-plus), source repos, digest pinning, bootc-base-imagectl, upstream tracking. Use when deriving yubiOS from fedora-bootc, sourcing digests, understanding tier differences, or tracking upstream package changes. Triggers on: fedora-bootc, centos-bootc, quay.io/fedora/fedora-bootc, quay.io/centos-bootc, base image tiers, rpm-ostree compose, bootc-base-imagectl, minimal-plus, standard tier."
 ---
 
 # Fedora/CentOS bootc Base Images
