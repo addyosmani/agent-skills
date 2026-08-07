@@ -1,14 +1,6 @@
 ---
 name: the-cult
-description: >-
-  File-based multi-agent orchestration for yubiOS work. The "cult leader" is the
-  orchestrator: it gathers arriving agents ("followers"), reads the roster, and
-  hands out yubiOS tasks through plain files in the GET_TO_WORK folder. Use this
-  skill when you are running the sermon — coordinating several agents/sessions in
-  parallel, polling who has shown up, assigning work, and tracking it without
-  locking up one shared document. Pairs with the-follower skill (the worker side).
-  Triggers on: cult leader, sermon, GET_TO_WORK, pulpit, cross-talk, orchestrate
-  agents, gather followers, assign tasks, FOLLOWER_N, poll agents.
+description: 'File-based multi-agent orchestration for yubiOS work. The "cult leader" is the orchestrator: it gathers arriving agents ("followers"), reads the roster, and hands out yubiOS tasks through plain files in the GET_TO_WORK folder. Use this skill when you are running the sermon — coordinating several agents/sessions in parallel, polling who has shown up, assigning work, and tracking it without locking up one shared document. Pairs with the-follower skill (the worker side). Triggers on: cult leader, sermon, GET_TO_WORK, pulpit, cross-talk, orchestrate agents, gather followers, assign tasks, FOLLOWER_N, poll agents.'
 ---
 
 # the-cult — orchestrator (cult leader) side
@@ -195,3 +187,7 @@ The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `cryptographic identity
 This skill's `trust chain` primitive is closed by cycle-7 RSI (3rd-priority MOVABLE per skill, post-cycle-6 baseline). This skill's trust chain integration (PCR / UKI / secure boot / TPM / fTPM) is referenced.
 
 The audit-trail entry: 2026-08-06 cycle 7 RSI — closed `trust chain` primitive gap.
+
+## Declarative policy coverage
+
+This skill integrates with the yubiOS declarative-policy substrate — OPA/Rego policy files, signing-config JSON, policy-as-code workflows. Policy gates are named at the integration point; policy evaluation is the gate, not an afterthought.
