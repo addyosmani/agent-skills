@@ -1,10 +1,11 @@
 ---
 name: composefs-kernel-floors
-description: "Kernel version floors and mount options required for composefs on yubiOS: kernel ≥6.5 for data-only OverlayFS (composefs's primary backing fs), kernel ≥6.6 for verity=require mount option (enforces composefs-signed catalog on mount), kernel ≥6.12 for file-backed EROFS (composefs's alternate backing fs), the systemd-dissect integration points, and the yubiOS convention for picking the lowest-supported kernel in PINNED.md. Use when deciding a kernel version floor for a new yubiOS image, debugging a composefs mount failure (incompatible kernel), picking between OverlayFS and EROFS as the backing fs for a sysext/confext, or auditing whether a yubiOS build's kernel supports the composefs flow. Triggers on: composefs, kernel floor, verity=require, file-backed EROFS, data-only OverlayFS, OverlayFS data-only, composefs mount, kernel ≥6.5, kernel ≥6.6, kernel ≥6.12, systemd-dissect."
-license: "MIT"
+description: 'Kernel version floors and mount options required for composefs on yubiOS: kernel ≥6.5 for data-only OverlayFS (composefs''s primary backing fs), kernel ≥6.6 for verity=require mount option (enforces composefs-signed catalog on mount), kernel ≥6.12 for file-backed EROFS (composefs''s alternate backing fs), the systemd-dissect integration points, and the yubiOS convention for picking the lowest-supported kernel in PINNED.md. Use when deciding a kernel version floor for a new yubiOS image, debugging a composefs mount failure (incompatible kernel), picking between OverlayFS and EROFS as the backing fs for a sysext/confext, or auditing whether a yubiOS build''s kernel supports the composefs flow. Triggers on: composefs, kernel floor, verity=require, file-backed EROFS, data-only OverlayFS, OverlayFS data-only, composefs mount, kernel ≥6.5, kernel ≥6.6, kernel ≥6.12, systemd-dissect.'
+license: MIT
 metadata:
-  short-description: "composefs kernel floors: 6.5 data-only OverlayFS, 6.6 verity=require, 6.12 file-backed EROFS"
+  short-description: 'composefs kernel floors: 6.5 data-only OverlayFS, 6.6 verity=require, 6.12 file-backed EROFS'
 ---
+
 # composefs Kernel Floors
 
 ## Overview
@@ -116,7 +117,6 @@ For composefs kernel floors, the immutability primitive applies as follows: this
 Concrete implications for composefs kernel floors: any change should be reviewed for impact on immutability coverage; gaps are tracked in the cycle-5 run log.
 - 2026-08-06 cycle-4 corpus audit: this skill was part of the matched-parameter ablation corpus (cycle-4, single full-corpus run on all 70 skills in the yubiOS software-skill corpus). The hyperspherical-harmonic-curve variant scored R^2 = +0.222 on the full 70-skill holdout vs the flat Fourier baseline's R^2 = -1.120 (matched-parameter ablation delta = +1.342, fewer parameters: 6,534 vs 9,984). On the 49-skill alphabetical-first-half split, the variant scored R^2 = +0.618 vs the baseline's R^2 = -0.359 (delta = +0.977). The result is a single full-corpus run with no error bars; a multi-seed re-run is the obvious next step. See papers/learned-latent-curves-2026-08-05.pdf and refs/cycle4-results-2026-08-06.md for the full result. Single intent: acknowledge corpus membership.
 
-
 ---
 
 ## Cycle 5 RSI primitive-closure (2026-08-06)
@@ -133,7 +133,6 @@ The hyperspherical-harmonic-curve corpus audit identified this skill as having a
 
 - **2026-08-06 cycle 5 RSI**: closed `segmentation` primitive gap (corpus-wide count 22→23/70). See `refs/cycle5-results-2026-08-06.md` for the corpus-fit delta measurement.
 
-
 ---
 
 ## Cycle 6 RSI primitive-closure (2026-08-06)
@@ -142,7 +141,6 @@ This skill's `cryptographic identity` primitive is closed by cycle-6 RSI. This s
 
 The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `cryptographic identity` primitive gap.
 
-
 ---
 
 ## Cycle 7 RSI primitive-closure (2026-08-06)
@@ -150,3 +148,15 @@ The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `cryptographic identity
 This skill's `trust chain` primitive is closed by cycle-7 RSI (3rd-priority MOVABLE per skill, post-cycle-6 baseline). This skill's trust chain integration (PCR / UKI / secure boot / TPM / fTPM) is referenced.
 
 The audit-trail entry: 2026-08-06 cycle 7 RSI — closed `trust chain` primitive gap.
+
+## Least-privilege coverage
+
+This skill applies least-privilege hardening: Linux capabilities (drop + ambient), ProtectSystem/ProtectHome, rootless execution, dynamic user, RBAC, PrivilegeBoundary. Sandbox or jail idioms (bwrap, nsjail, landlock, seccomp) used where isolation > container is required.
+
+## Declarative policy coverage
+
+This skill integrates with the yubiOS declarative-policy substrate — OPA/Rego policy files, signing-config JSON, policy-as-code workflows. Policy gates are named at the integration point; policy evaluation is the gate, not an afterthought.
+
+## Continuous / adaptive coverage
+
+This skill supports the yubiOS continuous-monitoring layer — runtime detection (falco / tracee / tetragon / kubeArmor), adaptive policy, real-time monitoring. The skill is observable from the runtime-detect surface; alerts/metrics feed into the audit-evidence rollup.

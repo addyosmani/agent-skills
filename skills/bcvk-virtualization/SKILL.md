@@ -1,6 +1,6 @@
 ---
 name: bcvk-virtualization
-description: "Uses bcvk (bootc virtualization kit) for ephemeral VM testing, disk image creation, and hardware-in-the-loop testing of yubiOS. Use when running a bootc image as a VM, flashing to disk, testing FIDO2 enrollment in a VM, adding YubiKey USB passthrough to QEMU, or writing bcvk-based CI workflows. Triggers on: bcvk, ephemeral VM, bootc VM, bootc install, native-to-disk, virtiofs, QEMU YubiKey."
+description: 'Uses bcvk (bootc virtualization kit) for ephemeral VM testing, disk image creation, and hardware-in-the-loop testing of yubiOS. Use when running a bootc image as a VM, flashing to disk, testing FIDO2 enrollment in a VM, adding YubiKey USB passthrough to QEMU, or writing bcvk-based CI workflows. Triggers on: bcvk, ephemeral VM, bootc VM, bootc install, native-to-disk, virtiofs, QEMU YubiKey.'
 ---
 
 # bcvk Virtualization
@@ -275,3 +275,7 @@ The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `least privilege` primi
 This skill already covers all 5 remaining MOVABLE corpus-priority primitives post-cycle-6 (attestation, trust chain, declarative policy, immutability, least privilege). The cycle-7 RSI audit verified full movable coverage; no primitive closure needed.
 
 The audit-trail entry: 2026-08-06 cycle 7 RSI — no movable primitive gap to close.
+
+## Continuous / adaptive coverage
+
+This skill supports the yubiOS continuous-monitoring layer — runtime detection (falco / tracee / tetragon / kubeArmor), adaptive policy, real-time monitoring. The skill is observable from the runtime-detect surface; alerts/metrics feed into the audit-evidence rollup.

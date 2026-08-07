@@ -104,3 +104,7 @@ Concrete implications for learned-latent-curve: any change should be reviewed fo
 ## Composition Rule reference (cross-skill)
 
 When this skill's curve fit is used by `single-action-curve-rsi`'s S² lift pipeline, the per-file atom's fit inherits the `## Obtaining the 1-D Coordinate t` lifecycle persistence list. The ridge-residual fit-time baseline must be recomputed per corpus-creation so the `single-action-curve-rsi` Cycle-8 carryover Gap U2 stays closed. The `prior_f` / `prior_coefs` / `prior_bias` / `prior_t_max` warm-start kwargs (Cycle 9-10) are required when Möbius refinement happens per cycle (per `hyperspherical-harmonic-curve` Möbius Strategy primary mode).
+
+## Trust chain coverage
+
+This skill participates in the yubiOS root-of-trust chain — ROT/ROTPK, X.509 PKI, root-key custody, transitive verification across boot stages. Where the skill introduces a new trust anchor (key, certificate, manifest), the chain from hardware root to consumer is documented.

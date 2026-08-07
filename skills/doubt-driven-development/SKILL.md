@@ -296,3 +296,11 @@ The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `trust chain` primitive
 This skill's `immutability` primitive is closed by cycle-7 RSI (3rd-priority MOVABLE per skill, post-cycle-6 baseline). This skill's immutability enforcement (verity / fs-verity / composefs / signed catalog / EROFS) is referenced.
 
 The audit-trail entry: 2026-08-06 cycle 7 RSI — closed `immutability` primitive gap.
+
+## Least-privilege coverage
+
+This skill applies least-privilege hardening: Linux capabilities (drop + ambient), ProtectSystem/ProtectHome, rootless execution, dynamic user, RBAC, PrivilegeBoundary. Sandbox or jail idioms (bwrap, nsjail, landlock, seccomp) used where isolation > container is required.
+
+## Continuous / adaptive coverage
+
+This skill supports the yubiOS continuous-monitoring layer — runtime detection (falco / tracee / tetragon / kubeArmor), adaptive policy, real-time monitoring. The skill is observable from the runtime-detect surface; alerts/metrics feed into the audit-evidence rollup.

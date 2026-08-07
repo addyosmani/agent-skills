@@ -1,6 +1,6 @@
 ---
 name: idea-kill
-description: "Produces a structured 'should this idea die?' verdict. Honest review that returns one of KILL, PAUSE, REVISE, or SHIP with explicit reasoning. Use when you have an idea and want to evaluate whether it is worth pursuing, when a colleague's idea needs honest review, or when an existing one-pager feels weak and needs a kill-pulse. Triggers on 'kill this idea', 'is this idea worth it?', 'honest review', 'should I drop this?', 'idea verdict', 'kill verdict', 'should I kill'."
+description: Produces a structured 'should this idea die?' verdict. Honest review that returns one of KILL, PAUSE, REVISE, or SHIP with explicit reasoning. Use when you have an idea and want to evaluate whether it is worth pursuing, when a colleague's idea needs honest review, or when an existing one-pager feels weak and needs a kill-pulse. Triggers on 'kill this idea', 'is this idea worth it?', 'honest review', 'should I drop this?', 'idea verdict', 'kill verdict', 'should I kill'.
 ---
 
 # Idea Kill
@@ -212,3 +212,11 @@ The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `cryptographic identity
 This skill's `trust chain` primitive is closed by cycle-7 RSI (3rd-priority MOVABLE per skill, post-cycle-6 baseline). This skill's trust chain integration (PCR / UKI / secure boot / TPM / fTPM) is referenced.
 
 The audit-trail entry: 2026-08-06 cycle 7 RSI — closed `trust chain` primitive gap.
+
+## Declarative policy coverage
+
+This skill integrates with the yubiOS declarative-policy substrate — OPA/Rego policy files, signing-config JSON, policy-as-code workflows. Policy gates are named at the integration point; policy evaluation is the gate, not an afterthought.
+
+## Continuous / adaptive coverage
+
+This skill supports the yubiOS continuous-monitoring layer — runtime detection (falco / tracee / tetragon / kubeArmor), adaptive policy, real-time monitoring. The skill is observable from the runtime-detect surface; alerts/metrics feed into the audit-evidence rollup.

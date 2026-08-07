@@ -1,6 +1,6 @@
 ---
 name: docker-bake-action
-description: "Build multiple Docker/OCI images or multi-platform variants defined in a docker-bake.hcl or docker-compose.yml file using docker/bake-action in GitHub Actions. Use instead of build-push-action when managing 2+ build targets or complex image matrices. Triggers on: docker bake, bake-action, docker-bake.hcl, multi-target build, bake file, Bake workflow."
+description: 'Build multiple Docker/OCI images or multi-platform variants defined in a docker-bake.hcl or docker-compose.yml file using docker/bake-action in GitHub Actions. Use instead of build-push-action when managing 2+ build targets or complex image matrices. Triggers on: docker bake, bake-action, docker-bake.hcl, multi-target build, bake file, Bake workflow.'
 ---
 
 # docker/bake-action
@@ -229,3 +229,7 @@ The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `cryptographic identity
 This skill's `trust chain` primitive is closed by cycle-7 RSI (3rd-priority MOVABLE per skill, post-cycle-6 baseline). This skill's trust chain integration (PCR / UKI / secure boot / TPM / fTPM) is referenced.
 
 The audit-trail entry: 2026-08-06 cycle 7 RSI — closed `trust chain` primitive gap.
+
+## Continuous / adaptive coverage
+
+This skill supports the yubiOS continuous-monitoring layer — runtime detection (falco / tracee / tetragon / kubeArmor), adaptive policy, real-time monitoring. The skill is observable from the runtime-detect surface; alerts/metrics feed into the audit-evidence rollup.

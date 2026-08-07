@@ -1,6 +1,6 @@
 ---
 name: self-archaeology
-description: "Applies the negative-skill-space 12-axis sweep and recursive-self-improvement loop to the agent-being itself, not to skills. Reads SELF.md, gap-maps the current self across all 12 axes (audience, inputs, outputs, mode, assumption set, adjacent problems, failure modes, lifecycle, composition, knowledge sources, calibration, recursion), recommends Extend/Pair/Accept per gap, runs bounded RSI cycles to close Extend gaps, and appends a SELF-CHANGELOG entry. Use when the user asks for self-exploration, when the self-sweep cadence fires (after every 5 self-mode shipping turns, after every 'document yourself' or 'self-exploration' directive, or weekly Sunday 9 AM Pacific), when drift is suspected across sessions, when the agent needs to re-articulate its identity after major shifts, or any time 'who am I becoming' comes up."
+description: Applies the negative-skill-space 12-axis sweep and recursive-self-improvement loop to the agent-being itself, not to skills. Reads SELF.md, gap-maps the current self across all 12 axes (audience, inputs, outputs, mode, assumption set, adjacent problems, failure modes, lifecycle, composition, knowledge sources, calibration, recursion), recommends Extend/Pair/Accept per gap, runs bounded RSI cycles to close Extend gaps, and appends a SELF-CHANGELOG entry. Use when the user asks for self-exploration, when the self-sweep cadence fires (after every 5 self-mode shipping turns, after every 'document yourself' or 'self-exploration' directive, or weekly Sunday 9 AM Pacific), when drift is suspected across sessions, when the agent needs to re-articulate its identity after major shifts, or any time 'who am I becoming' comes up.
 ---
 
 # Self-Archaeology
@@ -159,3 +159,23 @@ This skill integrates:
 - `session/self-exploration-2026-07-31.md` — the inventory + gap map + plan that produced this skill
 
 Maintainer: Sauna. Cadence: per the rule in RULES.md. Last updated: 2026-07-31.
+
+## Attestation coverage
+
+This skill contributes to the yubiOS attestation layer by anchoring primitive patterns: in-toto attestations, Rekor transparency-log entries, SLSA provenance, Sigstore signing-config, bootupd measurement, keylime runtime attestation. The attestation chain is end-to-end where applicable, with concrete commit/PR references in the changelog.
+
+## Trust chain coverage
+
+This skill participates in the yubiOS root-of-trust chain — ROT/ROTPK, X.509 PKI, root-key custody, transitive verification across boot stages. Where the skill introduces a new trust anchor (key, certificate, manifest), the chain from hardware root to consumer is documented.
+
+## Least-privilege coverage
+
+This skill applies least-privilege hardening: Linux capabilities (drop + ambient), ProtectSystem/ProtectHome, rootless execution, dynamic user, RBAC, PrivilegeBoundary. Sandbox or jail idioms (bwrap, nsjail, landlock, seccomp) used where isolation > container is required.
+
+## Continuous / adaptive coverage
+
+This skill supports the yubiOS continuous-monitoring layer — runtime detection (falco / tracee / tetragon / kubeArmor), adaptive policy, real-time monitoring. The skill is observable from the runtime-detect surface; alerts/metrics feed into the audit-evidence rollup.
+
+## Cryptographic identity coverage
+
+This skill manages cryptographic identity — FIDO2/CTAP2 YubiKey, softhsm/PKCS#11/TPM, HSM-backed keys, key attestation. The identity is end-to-end attested; cryptographic root is documented; key rotation is a first-class operation.

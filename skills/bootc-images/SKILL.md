@@ -1,6 +1,6 @@
 ---
 name: bootc-images
-description: "Builds, installs, upgrades, and manages bootc-compatible OCI images. Use when writing Containerfiles for bootc base images, configuring composefs/fsverity, managing filesystem semantics (/usr, /etc, /var), installing to disk, performing atomic upgrades and rollbacks, or troubleshooting bootc deployments. Triggers on: bootc, bootable container, OCI image boot, bootc upgrade, bootc switch, bootc install to-disk, composefs, ostree, atomic upgrade, image mode."
+description: 'Builds, installs, upgrades, and manages bootc-compatible OCI images. Use when writing Containerfiles for bootc base images, configuring composefs/fsverity, managing filesystem semantics (/usr, /etc, /var), installing to disk, performing atomic upgrades and rollbacks, or troubleshooting bootc deployments. Triggers on: bootc, bootable container, OCI image boot, bootc upgrade, bootc switch, bootc install to-disk, composefs, ostree, atomic upgrade, image mode.'
 ---
 
 # bootc Images
@@ -395,3 +395,11 @@ The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `declarative policy` pr
 This skill's `attestation` primitive is closed by cycle-7 RSI (3rd-priority MOVABLE per skill, post-cycle-6 baseline). This skill's attestation evidence (SLSA / in-toto / provenance / TPM-quote patterns) is referenced.
 
 The audit-trail entry: 2026-08-06 cycle 7 RSI — closed `attestation` primitive gap.
+
+## Trust chain coverage
+
+This skill participates in the yubiOS root-of-trust chain — ROT/ROTPK, X.509 PKI, root-key custody, transitive verification across boot stages. Where the skill introduces a new trust anchor (key, certificate, manifest), the chain from hardware root to consumer is documented.
+
+## Continuous / adaptive coverage
+
+This skill supports the yubiOS continuous-monitoring layer — runtime detection (falco / tracee / tetragon / kubeArmor), adaptive policy, real-time monitoring. The skill is observable from the runtime-detect surface; alerts/metrics feed into the audit-evidence rollup.
