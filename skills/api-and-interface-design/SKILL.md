@@ -155,7 +155,7 @@ interface CreateTaskInput {
 **When you must evolve a contract**, do it without a hard break:
 
 - **Pick one versioning strategy and apply it consistently** — date-based pinning (Stripe-style, version sent in a header), a URL segment (`/v2/...`), or a version header. Date pinning ages best for large public APIs; a URL segment is simplest for internal ones.
-- **Signal removal before you remove it** — emit `Deprecation` and `Sunset` response headers ([RFC 8594](https://www.rfc-editor.org/rfc/rfc8594)) so consumers get programmatic warning, then follow `deprecation-and-migration` for the rollout.
+- **Signal removal before you remove it** — emit `Deprecation` ([RFC 9745](https://www.rfc-editor.org/rfc/rfc9745)) and `Sunset` ([RFC 8594](https://www.rfc-editor.org/rfc/rfc8594)) response headers so consumers get programmatic warning, then follow `deprecation-and-migration` for the rollout.
 - **Watch enum evolution** — adding a new enum value is a breaking change for strict consumers that exhaustively switch on it. Document that clients must tolerate unknown values (Postel's Law: be liberal in what you accept).
 - **Verify with consumer-driven contract tests** (e.g. Pact) so a provider change that breaks a real consumer fails in CI, not in production.
 
