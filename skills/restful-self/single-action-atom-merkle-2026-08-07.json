@@ -1,0 +1,99 @@
+{
+  "session_id": "ses_02311d1deffe3OSD1UVOduG3ej",
+  "timestamp_utc": "2026-08-08T02:55:00Z",
+  "user": "Ermine Daughtry <foil-copy-overrate@duck.com>",
+  "active_space": "github-yubios",
+  "merkle_algorithm": "SHA-256",
+  "tree_structure": [
+    [
+      [
+        "ods-untitled-1-37a4939f",
+        "36b85eb0da92c9d865a2550026b54d030ba06f431d3e37a45ffa3e7d920f55b3"
+      ],
+      [
+        "tex-learned-latent-curves-2026-08-06",
+        "ba471980a0657bc1de1fe5695a87ac6718ad0acf657da1142535573b53a7a73d"
+      ],
+      [
+        "insight-single-action-atom",
+        "733392b6c0b7a80aa830c2051f45465d28adfa34e8cdb469cbec81cb1b7b4168"
+      ],
+      [
+        "three-regimes-eligible-deferred-refused",
+        "c8e114ede065cd6b83067d8f5e60ee9882aab95c46ac5938737305e2dad33e08"
+      ],
+      [
+        "ratios-of-ratios-analysis",
+        "c62bd217a8107c145f5e557251dc526ca7c26559c1405e5597c8d3a441183706"
+      ],
+      [
+        "whole-self-output-2026-08-07",
+        "ecb8f44eb19606b71f7a6d48b710c344cd7c83898954ddbaf8047aed6324cb09"
+      ]
+    ],
+    [
+      [
+        "L1-N0 (ods-untitled-1-37a4939f + tex-learned-latent-curves-2026-08-06)",
+        "b502f3fcaae10a837cd3ddbb2ec0fccb4930d28d72675dbd9240a56819ea3502"
+      ],
+      [
+        "L1-N1 (insight-single-action-atom + three-regimes-eligible-deferred-refused)",
+        "8298da686fc54a5c1e08b100d98e9406937975ce297cbaecc45416860f4d4904"
+      ],
+      [
+        "L1-N2 (ratios-of-ratios-analysis + whole-self-output-2026-08-07)",
+        "0c219834c3d034fad43de03d6326106fa692cc2bc2eb6bd2bdcd4bfd6dc824fc"
+      ]
+    ],
+    [
+      [
+        "L2-N0 (L1-N0 (ods-untitled-1-37a4939f + tex-learned-latent-curves-2026-08-06) + L1-N1 (insight-single-action-atom + three-regimes-eligible-deferred-refused))",
+        "6f65daa9270a64045d07ad3b8833b33268a47dc07bbd943808683ebf59071218"
+      ],
+      [
+        "L2-N1 (L1-N2 (ratios-of-ratios-analysis + whole-self-output-2026-08-07) + L1-N2 (ratios-of-ratios-analysis + whole-self-output-2026-08-07))",
+        "e37155458fc8d80583f22895725e7f4f7b1daea976badf3386c4ee5cef3451e9"
+      ]
+    ],
+    [
+      [
+        "L3-N0 (L2-N0 (L1-N0 (ods-untitled-1-37a4939f + tex-learned-latent-curves-2026-08-06) + L1-N1 (insight-single-action-atom + three-regimes-eligible-deferred-refused)) + L2-N1 (L1-N2 (ratios-of-ratios-analysis + whole-self-output-2026-08-07) + L1-N2 (ratios-of-ratios-analysis + whole-self-output-2026-08-07)))",
+        "3e32eef859a758db124e91aa04724f1bbc0481ef9968e600d7fcafb8f1d7ff4e"
+      ]
+    ]
+  ],
+  "leaves": [
+    {
+      "name": "ods-untitled-1-37a4939f",
+      "hash": "36b85eb0da92c9d865a2550026b54d030ba06f431d3e37a45ffa3e7d920f55b3",
+      "description": "The .ods file: 40 rows, 3 blocks of 3 sets, (a,b,ab,1/n,n) structure"
+    },
+    {
+      "name": "tex-learned-latent-curves-2026-08-06",
+      "hash": "ba471980a0657bc1de1fe5695a87ac6718ad0acf657da1142535573b53a7a73d",
+      "description": "The 8-6.tex source: Learned Latent Curves and the Hyperspherical-Harmonic Variant"
+    },
+    {
+      "name": "insight-single-action-atom",
+      "hash": "733392b6c0b7a80aa830c2051f45465d28adfa34e8cdb469cbec81cb1b7b4168",
+      "description": "The single-action atom insight: the one primitive the framework admits"
+    },
+    {
+      "name": "three-regimes-eligible-deferred-refused",
+      "hash": "c8e114ede065cd6b83067d8f5e60ee9882aab95c46ac5938737305e2dad33e08",
+      "description": "The three-regime decomposition: atom-eligible, atom-deferred, atom-refused"
+    },
+    {
+      "name": "ratios-of-ratios-analysis",
+      "hash": "c62bd217a8107c145f5e557251dc526ca7c26559c1405e5597c8d3a441183706",
+      "description": "The ratios-of-ratios analysis: how each set's ratio compares across sets"
+    },
+    {
+      "name": "whole-self-output-2026-08-07",
+      "hash": "ecb8f44eb19606b71f7a6d48b710c344cd7c83898954ddbaf8047aed6324cb09",
+      "description": "The whole-self output: structural artifact of this session"
+    }
+  ],
+  "root": "3e32eef859a758db124e91aa04724f1bbc0481ef9968e600d7fcafb8f1d7ff4e",
+  "context": "Learned Latent Curves paper session - single-action atom primitive insight + Merkle tree artifact"
+}
