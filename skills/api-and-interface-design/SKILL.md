@@ -222,13 +222,20 @@ interface WebhookEvent {
 }
 ```
 
-**2. Sign every outbound payload.** Use HMAC-SHA256; attach as a header; document consumer verification. Design this in from day one — adding required auth after consumers are live forces a coordinated migration:
+**2. Sign every outbound payload.** Use HMAC-SHA256; attach as a header; document consumer verification. Design this in from day one — adding required auth after consumers are live forces a coordinated migration. The snippets below use TypeScript and Node's `crypto` for illustration; the rules (sign the raw body, constant-time compare, length-check first) are the same on any platform:
 
 ```typescript
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
+// Producer side: sign the raw body before sending
 const sig = 'sha256=' + createHmac('sha256', secret).update(rawBody).digest('hex');
 headers['X-Webhook-Signature'] = sig;
+
+// Consumer side: length-check first (timingSafeEqual throws on length mismatch),
+// then constant-time compare to prevent timing attacks
+const expected = Buffer.from('sha256=' + createHmac('sha256', secret).update(rawBody).digest('hex'));
+const received = Buffer.from(signatureHeader);
+const valid = expected.length === received.length && timingSafeEqual(expected, received);
 ```
 
 **3. Deliver asynchronously, not in the request path.** Enqueue events; fan-out per consumer. One slow or failing consumer must never block the triggering transaction or delay other consumers.
