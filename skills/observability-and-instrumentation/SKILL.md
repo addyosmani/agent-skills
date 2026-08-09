@@ -154,16 +154,17 @@ Rules for every alert you create:
 3. **It has a threshold and duration** justified by the SLO or by historical data, not by a guess.
 4. Use two severities only: **page** (user-facing, act now) and **ticket** (degradation, act this week). A third tier becomes noise that trains people to ignore everything.
 
-### Writing Runbooks
+#### Writing Runbooks
 
-A runbook is the document your alert links to. Its job is to answer three questions without requiring the reader to think: what is happening, what to check first, and who to call if that doesn't resolve it. Store in `docs/runbooks/` named after the alert.
+Rule 2 above requires every alert to link to a runbook. A runbook's job is to answer three questions without requiring the reader to think: what is happening, what to check first, and who to call if that doesn't resolve it. Store in `docs/runbooks/` named after the alert.
 
 **Minimum viable runbook (three lines):**
 
 ```markdown
 # Runbook: High Error Rate on /api/tasks
 **Means:** DB connection pool likely exhausted, or a bad deploy.
-**First check:** `SELECT count(*) FROM pg_stat_activity;` — if > pool limit, see Step 2.
+**First check:** `SELECT count(*) FROM pg_stat_activity WHERE backend_type = 'client backend';`
+  — if count > pool limit, see Step 2. (Swap in the equivalent for your database.)
 **Escalate to:** #db-oncall or engineering on-call rotation.
 ```
 
