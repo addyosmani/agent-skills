@@ -185,6 +185,24 @@ The first command registers the marketplace; the second installs the plugin. Cod
 </details>
 
 <details>
+<summary><b>Reasonix</b></summary>
+
+Install as a native Reasonix plugin after inspecting the capability boundary:
+
+```bash
+reasonix plugin install https://github.com/addyosmani/agent-skills.git --dry-run
+reasonix plugin install https://github.com/addyosmani/agent-skills.git --yes
+```
+
+The Reasonix adapter exports all 24 skills, 8 slash commands, and 4 specialist
+personas. It intentionally excludes the repository-scoped `CLAUDE.md`,
+lifecycle hooks, and MCP configuration. See
+[docs/reasonix-setup.md](docs/reasonix-setup.md) for requirements, local
+installation, usage, and the expected dry-run inventory.
+
+</details>
+
+<details>
 <summary><b>Command Code</b></summary>
 
 Install natively with the built-in `cmd skills` command. Command Code clones the repo, discovers every `SKILL.md`, and installs into `.commandcode/skills/`:
@@ -379,6 +397,7 @@ agent-skills/
 ├── .gemini/commands/                  # 8 slash commands (Gemini CLI)
 ├── commands/                          # 8 slash commands (Antigravity CLI)
 ├── plugin.json                        # Antigravity plugin manifest
+├── reasonix-plugin.json               # Reasonix plugin manifest
 └── docs/                              # Setup guides per tool
 ```
 
