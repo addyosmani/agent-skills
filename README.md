@@ -187,6 +187,9 @@ The first command registers the marketplace; the second installs the plugin. Cod
 <details>
 <summary><b>Reasonix</b></summary>
 
+Requires Reasonix v1.22.0 or newer. Earlier releases may import host-specific
+companion files that the native manifest intentionally excludes.
+
 Install as a native Reasonix plugin after inspecting the capability boundary:
 
 ```bash

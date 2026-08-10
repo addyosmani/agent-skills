@@ -19,6 +19,10 @@ other host-specific lifecycle behavior rather than reusable Reasonix features.
 
 ## Install
 
+Reasonix v1.22.0 or newer is required. Earlier releases may import
+host-specific companion files outside the explicit native v2 capability
+boundary, even when those resources are not declared in the manifest.
+
 Inspect the exact capability inventory before installing:
 
 ```bash
@@ -39,9 +43,8 @@ reasonix plugin install /path/to/agent-skills --dry-run
 reasonix plugin install /path/to/agent-skills --yes
 ```
 
-Use a Reasonix build whose native v2 plugin manifests load only explicitly
-declared resources. If the preview discovers `CLAUDE.md` or any hook, stop and
-upgrade Reasonix before installing.
+If the preview discovers the root `CLAUDE.md`, any hook, or any MCP server,
+stop and upgrade Reasonix before installing.
 
 ## Usage
 
