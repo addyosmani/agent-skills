@@ -49,6 +49,10 @@ npx skills add addyosmani/agent-skills            # install all 24 skills
 npx skills add addyosmani/agent-skills --list     # browse before installing
 ```
 
+> **Using Reasonix?** Reasonix v1.22.0 or newer can install this repository as
+> a native plugin with all 24 skills, 8 slash commands, and 4 specialist
+> personas. See the [Reasonix setup guide](docs/reasonix-setup.md).
+
 Or grab individual skills:
 
 ```bash
