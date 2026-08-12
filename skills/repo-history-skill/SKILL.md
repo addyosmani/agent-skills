@@ -57,7 +57,7 @@ deep-research hook is the cycle's intake.
 
 ## The Two Substrates
 
-### git side (GitHub REST API via `conn_1KXnkOHGgyE4`)
+### git side (GitHub REST API via `conn_3h7rj41VF6hs`)
 
 Four sub-corpora per target repo:
 

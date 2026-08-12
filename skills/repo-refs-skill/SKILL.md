@@ -1,6 +1,6 @@
 ---
 name: repo-refs-skill
-description: "Refreshable deep-archival routine for a repo's `refs/` directory — enumerates every `refs/*.md`, fits a hyper-sphere RSI curve on the 9-D primitive coverage per hyperspherical-harmonic-curve, runs the bounded recursive-self-improvement loop on the archive itself, and accepts a deep-research topic per cycle that dispatches parallel subagents to author a new refs/ doc filling the cycle's top sparse cell. Triggers on refs/ archive, refreshable refs routine, deep research on refs cycle, hyper-sphere RSI on docs, topic-coverage map, fill the refs/ gap. NOT for git+Linear event history (route to repo-history-skill), single-doc RSI (route to single-action-curve-rsi), or reading a single refs/ doc (read it directly). Needs MASTER GIT SU (`conn_1KXnkOHGgyE4`)."
+description: "Refreshable deep-archival routine for a repo's `refs/` directory — enumerates every `refs/*.md`, fits a hyper-sphere RSI curve on the 9-D primitive coverage per hyperspherical-harmonic-curve, runs the bounded recursive-self-improvement loop on the archive itself, and accepts a deep-research topic per cycle that dispatches parallel subagents to author a new refs/ doc filling the cycle's top sparse cell. Triggers on refs/ archive, refreshable refs routine, deep research on refs cycle, hyper-sphere RSI on docs, topic-coverage map, fill the refs/ gap. NOT for git+Linear event history (route to repo-history-skill), single-doc RSI (route to single-action-curve-rsi), or reading a single refs/ doc (read it directly). Needs MASTER GIT SU (`conn_3h7rj41VF6hs`)."
 license: "MIT"
 metadata:
   short-description: "Refreshable hyper-sphere RSI archive of a repo's refs/ directory"
@@ -76,7 +76,7 @@ protocol on the archive. The deep-research hook is the cycle's intake.
 
 ## The Substrate — `refs/*.md`
 
-### Source (GitHub Contents API via `conn_1KXnkOHGgyE4`)
+### Source (GitHub Contents API via `conn_3h7rj41VF6hs`)
 
 One endpoint, paginated:
 
@@ -722,7 +722,7 @@ the skill's expectations before running it.
    degenerate (N < 20 → decomposition rule fires → unstable basis).
    Validation: count `refs/*.md` via Contents API; if N < 20 on
    the chosen repo, fall back to `repo-history-skill` instead.
-2. **GitHub credential = `conn_1KXnkOHGgyE4`** ("MASTER GIT SU",
+2. **GitHub credential = `conn_3h7rj41VF6hs`** ("MASTER GIT SU",
    fine-grained PAT, verified live 2026-07-24, expires 2027-07-25).
    Per `PROJECT_RULES.md` line 33, this is the sole GitHub
    credential; all prior connections were removed. If the PAT

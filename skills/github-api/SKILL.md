@@ -30,10 +30,9 @@ const h = {
 const base = 'https://api.github.com/repos/yubi-OS/yubiOS';
 ```
 
-**Connection note (updated 2026-07-24):** The ONLY GitHub credential is
-`conn_1KXnkOHGgyE4` ("MASTER GIT SU", fine-grained PAT, expires 2027-07-25).
-All prior connections (managed OAuth `foil-copy-overrate`, `conn_fNLu9cx2iEZ2`,
-`conn_4K1E40LryOy6`) are gone — pass MASTER GIT SU on every GitHub call, no fallback.
+**Connection note (re-established 2026-08-12):** The ONLY GitHub credential is
+`conn_3h7rj41VF6hs` ("MASTER GIT SU", fine-grained PAT). Pass MASTER GIT SU on
+every GitHub call, no fallback.
 
 ---
 
@@ -275,7 +274,7 @@ const OWNER = 'yubi-OS';
 const REPO  = 'yubiOS';
 const BASE  = `https://api.github.com/repos/${OWNER}/${REPO}`;
 // Default branch: main
-// Sole token: conn_1KXnkOHGgyE4 ("MASTER GIT SU") — use for ALL GitHub calls,
+// Sole token: conn_3h7rj41VF6hs ("MASTER GIT SU") — use for ALL GitHub calls,
 // including .github/workflows/*.yml writes.
 ```
 

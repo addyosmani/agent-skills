@@ -29,7 +29,7 @@ Every workflow in `yubi-OS/*` must follow these rules from AGENTS.md:
 2. **Container image must use the approved dhi.io digest** (or be absent).
 3. **Only approved actions are allowed** — see the allowlist below.
 4. **Workflow files live at `<repo>/.github/workflows/*.yml`.** Edit these directly via
-   the sole GitHub connection `conn_1KXnkOHGgyE4` ("MASTER GIT SU", fine-grained PAT).
+   the sole GitHub connection `conn_3h7rj41VF6hs` ("MASTER GIT SU", fine-grained PAT).
    No more staging to `<repo>/2026/<name>.yml` or `refs/<name>.yml`; that convention is retired as of 2026-07-09.
 
 ### Approved action SHAs (from AGENTS.md)
@@ -159,12 +159,10 @@ jobs:
 
 ## BLOCKER-001 — `workflow` scope (writing `.github/workflows/` files) — CLOSED 2026-07-24
 
-**Credential consolidation 2026-07-24:** all previous GitHub connections were removed
-(managed OAuth `foil-copy-overrate`, `conn_fNLu9cx2iEZ2`, `conn_4K1E40LryOy6`). The single
-credential is now `conn_1KXnkOHGgyE4` ("MASTER GIT SU", fine-grained PAT, verified live,
-expires 2027-07-25). Use it for all GitHub API work including workflow-file writes. If a
-`.github/workflows/**` write 404s, the PAT is missing `Workflows: Write` — tell Jenny,
-don't work around it.
+**Credential re-established 2026-08-12:** the sole credential is
+`conn_3h7rj41VF6hs` ("MASTER GIT SU", fine-grained PAT, verified live). Use it for all
+GitHub API work including workflow-file writes. If a `.github/workflows/**` write 404s,
+the PAT is missing `Workflows: Write` — tell Jenny, don't work around it.
 
 **Historical context (why this was ever a problem):** classic PATs without the `workflow` scope 404/403 on any `.github/workflows/*.yml` write, and `GITHUB_TOKEN` inside a running workflow can't self-modify workflow files (GitHub security hardening).
 

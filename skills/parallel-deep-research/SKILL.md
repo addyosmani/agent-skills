@@ -22,7 +22,7 @@ When Jenny asks for "deep research X" with parallel agents (or just "deep resear
    - Be self-contained (subagents have no chat memory — provide IDs, paths, constraints, the question)
    - Specify what to return (structured markdown report with citations, length budget ~1500-2500 words)
    - Use `type: "general"`, `model_preset: "fast"` (per token-efficiency: bounded research doesn't need the smartest model)
-   - Pass connection IDs explicitly if it needs API access (e.g. `conn_1KXnkOHGgyE4` for GitHub)
+   - Pass connection IDs explicitly if it needs API access (e.g. `conn_3h7rj41VF6hs` for GitHub)
 
 4. **After subagents return, synthesize**:
    - Resolve conflicts by inspecting ground truth (don't trust any single stream blindly)
@@ -31,7 +31,7 @@ When Jenny asks for "deep research X" with parallel agents (or just "deep resear
 
 5. **Push to canonical location**:
    - Target: `refs/<topic-slug>-YYYY-MM-DD.md` on `yubi-OS/yubiOS` main
-   - Use GitHub Contents API PUT with `X-Sauna-Connection-Id: conn_1KXnkOHGgyE4` header
+   - Use GitHub Contents API PUT with `X-Sauna-Connection-Id: conn_3h7rj41VF6hs` header
    - **Watch for JSON shell-quoting issues** — apostrophes in commit messages break single-quoted bodies. Use a temp file for the JSON body, or a Python heredoc
 
 6. **Verify before code change** (critical lesson):
