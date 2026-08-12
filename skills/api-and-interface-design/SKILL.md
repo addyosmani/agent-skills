@@ -206,6 +206,42 @@ PATCH /api/tasks/123
 { "title": "Updated title" }
 ```
 
+## Webhook Design
+
+Webhooks are the outbound side of an API: instead of consumers polling for changes, you push events to a URL they provide. Four decisions determine whether your webhook API is reliable and safe to build on:
+
+**1. Give every event a stable, unique ID.** Delivery is at-least-once — retries happen. Without a stable `id` field, consumers have no way to de-duplicate:
+
+```typescript
+interface WebhookEvent {
+  id: string;        // Stable across retries — consumers key idempotency on this
+  type: string;      // e.g. "task.completed"
+  timestamp: string; // ISO 8601
+  version: string;   // Schema version — lets you evolve the payload shape
+  data: unknown;
+}
+```
+
+**2. Sign every outbound payload.** Use HMAC-SHA256; attach as a header; document consumer verification. Design this in from day one — adding required auth after consumers are live forces a coordinated migration. The snippets below use TypeScript and Node's `crypto` for illustration; the rules (sign the raw body, constant-time compare, length-check first) are the same on any platform:
+
+```typescript
+import { createHmac, timingSafeEqual } from 'node:crypto';
+
+// Producer side: sign the raw body before sending
+const sig = 'sha256=' + createHmac('sha256', secret).update(rawBody).digest('hex');
+headers['X-Webhook-Signature'] = sig;
+
+// Consumer side: length-check first (timingSafeEqual throws on length mismatch),
+// then constant-time compare to prevent timing attacks
+const expected = Buffer.from('sha256=' + createHmac('sha256', secret).update(rawBody).digest('hex'));
+const received = Buffer.from(signatureHeader);
+const valid = expected.length === received.length && timingSafeEqual(expected, received);
+```
+
+**3. Deliver asynchronously, not in the request path.** Enqueue events; fan-out per consumer. One slow or failing consumer must never block the triggering transaction or delay other consumers.
+
+**4. Publish a consumer contract.** Document the four rules consumers must follow: verify the signature before processing; respond 2xx immediately and work asynchronously; de-duplicate on the event `id`; return 200 and discard unknown event types (new types will be added).
+
 ## TypeScript Interface Patterns
 
 ### Use Discriminated Unions for Variants
@@ -270,6 +306,8 @@ function getTask(id: TaskId): Promise<Task> { ... }
 | "Nobody uses that undocumented behavior" | Hyrum's Law: if it's observable, somebody depends on it. Treat every public behavior as a commitment. |
 | "We can just maintain two versions" | Multiple versions multiply maintenance cost and create diamond dependency problems. Prefer the One-Version Rule. |
 | "Internal APIs don't need contracts" | Internal consumers are still consumers. Contracts prevent coupling and enable parallel work. |
+| "Consumers will figure out how to handle duplicates" | Without a stable event ID they can't de-duplicate retries. Every webhook event needs one. |
+| "We'll add signature verification once consumers complain" | Once consumers are live, adding required auth headers forces a coordinated migration. Design it in from day one. |
 
 ## Red Flags
 
@@ -280,6 +318,9 @@ function getTask(id: TaskId): Promise<Task> { ... }
 - List endpoints without pagination
 - Verbs in REST URLs (`/api/createTask`, `/api/getUsers`)
 - Third-party API responses used without validation or sanitization
+- Webhook payloads with no unique event ID (consumers cannot de-duplicate retries)
+- Outbound webhooks with no signature (consumers cannot verify authenticity)
+- Synchronous webhook fan-out in the request path (one slow consumer blocks all)
 
 ## Verification
 
@@ -292,3 +333,6 @@ After designing an API:
 - [ ] New fields are additive and optional (backward compatible)
 - [ ] Naming follows consistent conventions across all endpoints
 - [ ] API documentation or types are committed alongside the implementation
+- [ ] Webhook events include a unique stable `id` field consumers can use for idempotency
+- [ ] Outbound payloads are signed and consumer verification is documented
+- [ ] Webhook delivery is queue-backed and isolated per consumer
