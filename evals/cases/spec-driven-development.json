@@ -13,6 +13,14 @@
       {
         "prompt": "We are starting a new service, define the requirements first",
         "top_k": 3
+      },
+      {
+        "prompt": "We shipped the V1 we specced — how do I spec the V2 features we deferred?",
+        "top_k": 3
+      },
+      {
+        "prompt": "This feature already has a spec, but now we want OCR instead of the manual step — spec that change before building",
+        "top_k": 3
       }
     ],
     "negative": [
