@@ -99,7 +99,7 @@ Why this fails:
 ## Rules for personas
 
 1. A persona is a single role with a single output format. If you find yourself adding a second role, create a second persona.
-2. **Personas do not invoke other personas.** Composition is the job of slash commands or the user. On Claude Code this is also a hard platform constraint — *"subagents cannot spawn other subagents"* — so the rule is enforced for you.
+2. **Personas do not invoke other personas.** Composition is the job of slash commands or the user. While Claude Code supports subagent nesting when equipped with the `Agent` tool, this project enforces single-level orchestration (user/command → persona) to maintain clean context windows and avoid paraphrasing loss.
 3. A persona may invoke skills (the *how*).
 4. Every persona file ends with a "Composition" block stating where it fits.
 

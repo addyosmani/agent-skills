@@ -18,8 +18,8 @@ In Claude Code, each call passes `subagent_type` matching the persona's `name` f
 
 In other harnesses without an Agent tool, invoke each persona's system prompt sequentially and treat their outputs as if returned in parallel — the merge phase still works.
 
-Constraints (from Claude Code's subagent model):
-- Subagents cannot spawn other subagents — do not let one persona delegate to another.
+Constraints (from this repository's orchestration model):
+- Subagents do not spawn other subagents — personas are single-level specialists and do not delegate to each other.
 - Each subagent gets its own context window and returns only its report to this main session.
 - If you need teammates that talk to each other instead of just reporting back, use Claude Code Agent Teams and reference these personas as teammate types (see `references/orchestration-patterns.md`).
 
