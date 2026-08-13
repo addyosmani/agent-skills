@@ -1,3 +1,9 @@
+---
+name: webperf
+description: 'Run a web performance audit via the web-performance-auditor persona'
+---
+
+
 description = "Run a web performance audit via the web-performance-auditor persona"
 
 prompt = """
