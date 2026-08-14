@@ -20,7 +20,8 @@
         "prompt": "Format this file with prettier"
       },
       {
-        "prompt": "Write the changelog entry for the release"
+        "prompt": "Write the changelog entry for the release",
+        "owner": "git-workflow-and-versioning"
       }
     ]
   },
