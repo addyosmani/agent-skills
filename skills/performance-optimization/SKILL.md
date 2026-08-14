@@ -113,7 +113,7 @@ Common bottlenecks by category:
 
 | Symptom | Likely Cause | Investigation |
 |---------|-------------|---------------|
-| Slow API responses | N+1 queries, missing indexes, unoptimized queries | Check database query log |
+| Slow API responses | N+1 queries, missing indexes, unoptimized queries | Check database query log; missing indexes on new schema → `database-and-schema-design` |
 | Memory growth | Leaked references, unbounded caches, large payloads | Heap snapshot analysis |
 | CPU spikes | Synchronous heavy computation, regex backtracking | CPU profiling |
 | High latency | Missing caching, redundant computation, network hops | Trace requests through the stack |
@@ -351,6 +351,7 @@ npx lhci autorun
 
 For detailed performance checklists, optimization commands, and anti-pattern reference, see `../../references/performance-checklist.md`.
 
+Schema design, migration expand/contract, and index *placement* for new tables belong in `database-and-schema-design`. This skill owns measure-first query tuning (N+1, EXPLAIN, caching) once the schema exists.
 
 ## Common Rationalizations
 

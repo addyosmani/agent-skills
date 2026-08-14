@@ -22,7 +22,7 @@ codex plugin add agent-skills@agent-skills
 
 ## Usage
 
-After install, invoke a skill in Codex chat with `@` (e.g. `@spec-driven-development`) or just describe the task and let Codex pick the right skill. All 24 skills under `skills/` are available.
+After install, invoke a skill in Codex chat with `@` (e.g. `@spec-driven-development`) or just describe the task and let Codex pick the right skill. All 25 skills under `skills/` are available.
 
 ## How it works
 

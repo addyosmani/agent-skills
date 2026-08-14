@@ -11,7 +11,7 @@
         "top_k": 3
       },
       {
-        "prompt": "Profile these slow database queries and add the right indexes",
+        "prompt": "Profile these slow order-list queries and eliminate the N+1 joins",
         "top_k": 1
       },
       {
@@ -31,6 +31,10 @@
       {
         "prompt": "Design the public interface for the billing module",
         "owner": "api-and-interface-design"
+      },
+      {
+        "prompt": "Write an expand/contract schema migration to rename a column safely",
+        "owner": "database-and-schema-design"
       }
     ]
   },
