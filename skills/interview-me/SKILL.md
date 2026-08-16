@@ -126,7 +126,7 @@ If they correct you, fold the correction in and restate. Loop until you get an e
 When the user confirms the statement of intent with an explicit "yes":
 
 1. **Deliver the confirmed Statement of Intent.**
-2. **Offer downstream paths** (saving to `docs/intent/[topic].md`, drafting a spec with `spec-driven-development`, or moving to task planning).
+2. **Offer downstream paths** (offer to save it to `docs/intent/[topic].md`, draft a spec with `spec-driven-development`, or move to task planning *after* the spec).
 3. **STOP YOUR TURN IMMEDIATELY.** Do NOT invoke any tools (`run_command`, `write_to_file`, directory listings, or planning tools) in this turn. Hand control back to the user to choose the downstream path.
 
 ### The 95% Confidence Stop
