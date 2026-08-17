@@ -18,12 +18,9 @@ function readManifestVersion(manifestPath) {
   return manifest.version ?? manifest.plugins?.[0]?.version;
 }
 
-test("all plugin manifests use the latest release tag", () => {
-  const expectedVersion = execFileSync(
-    "git",
-    ["describe", "--tags", "--abbrev=0"],
-    { encoding: "utf8" },
-  ).trim();
+test("all plugin manifests use the root plugin.json version", () => {
+  const expectedVersion = readManifestVersion("plugin.json");
+  assert.ok(expectedVersion, "plugin.json must define a version");
 
   for (const manifestPath of manifestPaths) {
     assert.equal(
