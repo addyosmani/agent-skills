@@ -1,6 +1,6 @@
 ---
 name: security-and-hardening
-description: Hardens code against vulnerabilities. Use when handling user input, authentication, data storage, or external integrations. Use when building any feature that accepts untrusted data, manages user sessions, or interacts with third-party services.
+description: Hardens code against vulnerabilities. Use when handling user input, authentication, data storage, or external integrations. Use when building any feature that accepts untrusted data, manages user sessions, or interacts with third-party services. Use when personal data or privacy compliance (GDPR, CCPA) is involved.
 ---
 
 # Security and Hardening
@@ -74,7 +74,7 @@ If you can't name the trust boundaries for a feature, you're not ready to secure
 
 ## OWASP Top 10 Prevention Patterns
 
-These are prevention patterns, not a ranking. For the 2021 ordering, see the quick-reference table in `references/security-checklist.md`.
+These are prevention patterns, not a ranking. For the 2021 ordering, see the quick-reference table in `../../references/security-checklist.md`.
 
 ### Injection (SQL, NoSQL, OS Command)
 
@@ -300,7 +300,7 @@ When you defer a fix, document the reason and set a review date.
 
 Do not assume npm or treat the nearest manifest as the install root. Apply this order:
 
-1. **Find the installation boundary and manager.** Use the workspace root that owns the lockfile, or an independent nested project only when it is outside that workspace. There, corroborate `packageManager` (when present), the lockfile, and CI; stop on disagreement or competing lockfiles. Pin the manager version and use the matrix in `references/security-checklist.md`.
+1. **Find the installation boundary and manager.** Use the workspace root that owns the lockfile, or an independent nested project only when it is outside that workspace. There, corroborate `packageManager` (when present), the lockfile, and CI; stop on disagreement or competing lockfiles. Pin the manager version and use the matrix in `../../references/security-checklist.md`.
 2. **Block dependency scripts before first execution.** Bootstrap with scripts disabled or a documented fail-closed policy, inspect the pending script source, approve only the minimum required packages, commit the policy, then verify with a clean frozen/immutable install. Never blanket-approve scripts.
 
 Audits only find known advisories; they do not catch a newly malicious or typosquatted package. Therefore:
@@ -352,6 +352,27 @@ git diff --cached | grep -i "password\|secret\|api_key\|token"
 ```
 
 **If a secret is ever committed, rotate it.** Deleting the line or rewriting history is not enough — assume it's compromised the moment it reaches a remote. Revoke and reissue the key first, then purge it from history.
+
+## Data Privacy & Compliance
+
+Securing data is "can an attacker read it?" Privacy is "should *we* even hold it, and for how long?" — a separate question that hardening doesn't answer. The cheapest data to protect, breach, and comply over is the data you never collected. Treat personal data as a liability to minimize, not an asset to hoard.
+
+**Know what you hold.** You can't protect or honor a deletion request for data you can't find. Classify fields as you add them:
+
+| Class | Examples | Handling |
+|---|---|---|
+| **Non-personal** | Aggregates, anonymized counts | Normal handling |
+| **Personal (PII)** | Name, email, IP, device/user IDs | Minimize, access-control, include in export/delete |
+| **Sensitive** | Health, finance, location, biometrics, gov IDs, anything about minors | Extra basis to collect, stricter access, often encryption + audit logging |
+
+**Operating rules:**
+- **Minimize and set a purpose.** Collect a field only against a stated use. "It might be useful later" is not a purpose — it's latent breach scope. Don't log PII into telemetry (the `observability-and-instrumentation` skill makes the same point from the ops side).
+- **Set retention up front, then actually delete.** Every personal-data store needs a TTL and a working deletion path — including backups, caches, search indexes, and analytics copies. Data with no expiry is a breach scheduled for later.
+- **Support the data-subject rights your jurisdiction requires** (GDPR/CCPA and kin): export, correct, and delete on request. These are engineering features — design the schema so a user's data is *findable* and *erasable*, not smeared irreversibly across systems.
+- **Get consent before collection or third-party sharing**, and make it auditable. Sending PII to an analytics/ad/LLM vendor is "sharing" — the user's choice gates it, and the vendor needs a data-processing agreement.
+- **Localize defaults, don't hardcode one region's law.** Data-residency and rules differ by user location; make the policy a configurable boundary, not an assumption.
+
+When data crosses a trust boundary, validate it as untrusted (see Input Validation above); when a privacy incident exposes personal data, the breach-notification clock is part of the postmortem — follow the `debugging-and-error-recovery` skill.
 
 ## Securing AI / LLM Features
 
@@ -405,6 +426,9 @@ container.textContent = await llm.reply(userMessage);
 - [ ] No secrets in code or version control
 - [ ] Sensitive fields excluded from API responses
 - [ ] PII encrypted at rest (if applicable)
+- [ ] Personal data is classified, collected against a stated purpose, and minimized
+- [ ] Personal data has a retention limit and a working deletion path (incl. backups/indexes)
+- [ ] Export/delete (data-subject) requests are supported where required; sharing with third parties has consent
 
 ### Infrastructure
 - [ ] Security headers configured (CSP, HSTS, etc.)
@@ -424,7 +448,7 @@ container.textContent = await llm.reply(userMessage);
 ```
 ## See Also
 
-For detailed security checklists and pre-commit verification steps, see `references/security-checklist.md`.
+For detailed security checklists and pre-commit verification steps, see `../../references/security-checklist.md`.
 
 ## Common Rationalizations
 
@@ -438,6 +462,9 @@ For detailed security checklists and pre-commit verification steps, see `referen
 | "Threat modeling is overkill here" | Five minutes of "how would I attack this?" prevents the design flaws no control can patch later. |
 | "It's just LLM output, it's only text" | That "text" can be a SQL statement, a script tag, or a shell command. Treat it like any untrusted input. |
 | "The audit passed, so the dependency is safe" | Audits match known advisories. They do not detect a newly malicious package or make unreviewed install scripts safe to execute. |
+| "Collect it now, we might need it later" | Data you don't hold can't be breached, subpoenaed, or mis-deleted. "Might need it" is breach scope, not a purpose. |
+| "We'll handle deletion requests manually" | Manual erasure misses backups, caches, and analytics copies. If the schema can't find a user's data, you can't honor the request — design for it. |
+| "Compliance is legal's problem, not ours" | Export, deletion, retention, and consent are schema and code. Legal can't bolt them on after you've smeared PII across ten systems. |
 
 ## Red Flags
 
@@ -451,6 +478,9 @@ For detailed security checklists and pre-commit verification steps, see `referen
 - Server fetches user-supplied URLs without an allowlist (SSRF)
 - LLM/model output passed into a query, the DOM, a shell, or `eval`
 - Secrets, PII, or the full system prompt placed inside an LLM context window
+- Personal data collected with no stated purpose, retention limit, or deletion path
+- PII sent to analytics/ad/LLM vendors with no consent or data-processing agreement
+- "Delete my account" that only flips a flag while the personal data lingers in stores and backups
 
 ## Verification
 
@@ -465,3 +495,5 @@ After implementing security-relevant code:
 - [ ] Rate limiting active on auth endpoints
 - [ ] Server-side URL fetches validated against an allowlist (no SSRF)
 - [ ] LLM/model output validated and encoded before use (if AI features present)
+- [ ] Personal data is classified, minimized to a stated purpose, and has a retention limit
+- [ ] Deletion and export requests work end-to-end (including backups, caches, and analytics copies)

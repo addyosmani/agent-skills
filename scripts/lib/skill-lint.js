@@ -208,7 +208,7 @@ function lintSkillContent(dirName, content, knownSkills) {
   // If a skill's frontmatter tries to declare its own exemption, fail loud —
   // that's a sign someone is trying to bypass the validator.
   if (fm.type === 'meta' || fm.exempt === 'sections') {
-    if (!SECTION_EXEMPT_SKILLS[dirName]) {
+    if (!Object.hasOwn(SECTION_EXEMPT_SKILLS, dirName)) {
       errors.push(
         `Frontmatter declares 'type: meta' or 'exempt: sections' but '${dirName}' is not in ` +
         `the validator's SECTION_EXEMPT_SKILLS allowlist. ` +
@@ -218,7 +218,11 @@ function lintSkillContent(dirName, content, knownSkills) {
   }
 
   // ── Required sections ────────────────────────────────────────────────────
-  exempt = dirName in SECTION_EXEMPT_SKILLS;
+  // `Object.hasOwn`, not `in`: `in` walks the prototype chain, so a skill
+  // directory named `constructor` — which passes the kebab-case check — would
+  // otherwise resolve to Object.prototype.constructor and be silently exempt
+  // from every required-section check.
+  exempt = Object.hasOwn(SECTION_EXEMPT_SKILLS, dirName);
 
   if (!exempt) {
     // Strip fenced code blocks so headings inside examples/templates don't

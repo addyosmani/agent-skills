@@ -426,7 +426,7 @@ function materializeWorkspace(ev) {
   return workspace;
 }
 
-function parseGrading(raw) {
+function parseGrading(raw, expectedCount) {
   // Grader output may arrive fenced; extract the JSON object and validate shape.
   const m = raw.match(/\{[\s\S]*\}/);
   if (!m) return null;
@@ -436,10 +436,23 @@ function parseGrading(raw) {
   } catch {
     return null;
   }
+  const expectations = g.expectations;
+  const summary = g.summary;
+  const passed = Array.isArray(expectations)
+    ? expectations.filter((expectation) => expectation.passed === true).length
+    : 0;
   const ok =
-    Array.isArray(g.expectations) &&
-    g.expectations.every((e) => typeof e.text === 'string' && typeof e.passed === 'boolean') &&
-    g.summary && typeof g.summary.passed === 'number' && typeof g.summary.total === 'number';
+    Number.isInteger(expectedCount) && expectedCount > 0 &&
+    Array.isArray(expectations) && expectations.length === expectedCount &&
+    expectations.every((expectation) =>
+      typeof expectation.text === 'string' &&
+      typeof expectation.passed === 'boolean' &&
+      typeof expectation.evidence === 'string') &&
+    summary &&
+    Number.isInteger(summary.passed) && summary.passed === passed &&
+    Number.isInteger(summary.failed) && summary.failed === expectedCount - passed &&
+    Number.isInteger(summary.total) && summary.total === expectedCount &&
+    typeof summary.pass_rate === 'number' && Number.isFinite(summary.pass_rate);
   return ok ? g : null;
 }
 
@@ -526,7 +539,7 @@ function runBehavioral(skillName, dryRun) {
     // The trace can be megabytes; pass the grader prompt via stdin, never
     // argv, or it would blow past the OS argument-size limit (E2BIG).
     const raw = execFileSync('claude', ['-p'], { input: graderPrompt, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, timeout: GRADER_TIMEOUT_MS });
-    const grading = parseGrading(raw);
+    const grading = parseGrading(raw, ev.expectations.length);
     const base = path.join(RESULTS_DIR, `${skillName}.eval-${ev.id}`);
     if (!grading) {
       fs.writeFileSync(`${base}.grading.raw.txt`, raw);
@@ -573,4 +586,4 @@ function main(args = process.argv.slice(2)) {
 
 if (require.main === module) main();
 
-module.exports = { materializeWorkspace };
+module.exports = { materializeWorkspace, parseGrading };
