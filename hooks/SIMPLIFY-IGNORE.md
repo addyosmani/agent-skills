@@ -46,6 +46,9 @@ result[3] = buf[3] ^ key[3];
 
 > **Note:** The hook stores temporary backups in `.claude/.simplify-ignore-cache/`. Make sure this path is in your `.gitignore`.
 
+Oh My Pi: opt in with `hooks/omp/simplify-ignore.js` via `extensions:` — see [docs/omp-setup.md](../docs/omp-setup.md#optional-extensions). Cache dir is `.omp/.simplify-ignore-cache/`.
+
+
 ## How it works
 
 One script, three hook events:

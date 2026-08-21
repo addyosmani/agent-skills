@@ -76,18 +76,27 @@ We don't accept translations of the documentation (README, `docs/`) or of skills
 
 ## Testing Hooks
 
-The session-start hook (`hooks/session-start.sh`) injects the `using-agent-skills` meta-skill into every new Claude Code session. A regression test at `hooks/session-start-test.sh` validates the hook's JSON payload — both when `jq` is available and when it isn't.
+Two session-start implementations inject the `using-agent-skills` meta-skill:
 
-Run it before opening any PR that touches:
+- Claude Code: `hooks/session-start.sh` via `hooks/hooks.json`. Regression test: `hooks/session-start-test.sh` (JSON payload, with and without `jq`).
+- Oh My Pi: `hooks/pre/session-start.js`. Regression test: `scripts/omp-session-start-test.mjs` (kept out of `hooks/pre/` so OMP does not load it as an extension).
 
-- `hooks/session-start.sh`
-- `skills/using-agent-skills/SKILL.md` (the meta-skill content embedded by the hook)
+Run the relevant test before opening any PR that touches those files or `skills/using-agent-skills/SKILL.md` (the meta-skill content they embed):
 
 ```bash
 bash hooks/session-start-test.sh
+node --test scripts/omp-session-start-test.mjs
 ```
 
-Expected output: `session-start JSON payload OK`. The script exits non-zero on any assertion failure.
+Expected output includes `session-start JSON payload OK` and a passing Node test. Either command exits non-zero on assertion failure.
+
+Optional Oh My Pi extensions (`hooks/omp/sdd-cache.js`, `hooks/omp/simplify-ignore.js`) are not loaded unless listed in `extensions:`. Tests:
+
+```bash
+node --test hooks/omp/sdd-cache-test.js hooks/omp/simplify-ignore-test.js
+```
+
+
 
 ### Reproducing the no-jq fallback
 

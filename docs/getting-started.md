@@ -104,7 +104,7 @@ Load an agent definition when you need specialized review. For example, ask your
 
 ## Using Commands
 
-The `.claude/commands/` directory contains slash commands for Claude Code:
+The `.claude/commands/` directory contains slash commands for Claude Code and Oh My Pi (`.omp/commands` is a symlink to the same files):
 
 | Command | Skill Invoked |
 |---------|---------------|
@@ -117,6 +117,8 @@ The `.claude/commands/` directory contains slash commands for Claude Code:
 | `/code-simplify` | code-simplification |
 | `/ship` | shipping-and-launch |
 | `/webperf` | web-performance-auditor (specialist agent, web apps only) |
+
+Oh My Pi marketplace installs prefix the names (`/agent-skills:spec`). Spawn personas with the `task` tool (`agent: code-reviewer`), not Claude Code's Agent tool. See [omp-setup.md](omp-setup.md).
 
 > **Note:** When installed as a Claude Code plugin you may see a warning like
 > _"Default commands/ folder is ignored because the manifest sets 'commands'"_.

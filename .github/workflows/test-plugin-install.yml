@@ -28,6 +28,12 @@ jobs:
       - name: Test manifest version validator
         run: node --test scripts/validate-versions-test.js
 
+      - name: Test OMP session-start extension
+        run: node --test scripts/omp-session-start-test.mjs
+
+      - name: Test OMP optional hook extensions
+        run: node --test hooks/omp/sdd-cache-test.js hooks/omp/simplify-ignore-test.js
+
       - name: Test skill eval runner
         run: node --test scripts/run-evals-test.js
 
