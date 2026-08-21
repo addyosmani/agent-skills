@@ -188,6 +188,22 @@ Label every comment with its severity so the author knows what's required vs opt
 
 This prevents authors from treating all feedback as mandatory and wasting time on optional suggestions.
 
+**Rate likelihood, not just consequence.** Severity is blast radius — how bad it is *if* the issue fires. It says nothing about *whether* it fires. Triage on both: consequence × likelihood, not consequence alone. This is the axis that separates a real bug from the endless supply of technically-correct-but-impossible findings a reviewer can generate ("breaks at 10M rows" on a 400-row internal tool). Neither severity nor your own confidence can filter those — you are *right* about them, and they are still noise.
+
+Assess likelihood **against this project's actual inputs, invariants, and configuration. Read them; do not guess**:
+
+| Likelihood | Triggering condition | Effect |
+|---|---|---|
+| **Likely** | Occurs on the normal path or the first realistic input | Label on consequence |
+| **Plausible** | Needs a specific but real condition — an error path, a concurrent write, a large input | Label on consequence |
+| **Remote** | Needs a conjunction the code already prevents, a scale this system won't reach, or a configuration it doesn't use | Downgrade to **Optional:** / **FYI**, with the condition stated |
+
+**Name the condition, don't assert the risk.** "Fails if two workers process one shard" is checkable — the reader compares it against the single-consumer invariant and settles it. "Could have a race" is not. If you cannot name the condition that makes a finding fire, you have not established the finding — the same bar as reproducing a bug before you raise it.
+
+**Downgrade, never drop.** A remote finding keeps its comment, its condition, and your reasoning; it just stops blocking. The author may know the condition is reachable for reasons the diff doesn't show. Downgrading hands them that call — deleting takes it away, and a filter the author can't see reads as "the reviewer found nothing".
+
+**Reserve Request changes for findings that are both consequential and plausible.** Blocking a merge on things that cannot happen trains authors to discount the whole review, including the finding that was real.
+
 **Lead with what matters.** Order findings by leverage: correctness and security first, then structural regressions and missed simplifications, then everything else. Don't bury a real issue under cosmetic nits — a few high-conviction comments beat a long list. If you have one structural problem and ten nits, the structural problem *is* the review.
 
 ### Step 5: Verify the Verification
@@ -273,6 +289,7 @@ When reviewing code — whether written by you, another agent, or a human:
 - **Don't rubber-stamp.** "LGTM" without evidence of review helps no one.
 - **Don't soften real issues.** "This might be a minor concern" when it's a bug that will hit production is dishonest.
 - **Quantify problems when possible.** "This N+1 query will add ~50ms per item in the list" is better than "this could be slow."
+- **Quantify likelihood too.** "This overflows above 2^31 rows; the table is capped at 1M by the migration" is an honest finding. Reporting the overflow without checking the cap is not — it borrows the authority of a real bug for something that cannot happen. Overstating likelihood is the same dishonesty as softening a real issue, pointed the other way.
 - **Push back on approaches with clear problems.** Sycophancy is a failure mode in reviews. If the implementation has issues, say so directly and propose alternatives.
 - **Accept override gracefully.** If the author has full context and disagrees, defer to their judgment. Comment on code, not people — reframe personal critiques to focus on the code itself.
 
@@ -306,6 +323,7 @@ For triaging `npm audit` findings and supply-chain risk (typosquatting, compromi
 
 ### Context
 - [ ] I understand what this change does and why
+- [ ] I know this project's real inputs, invariants, and scale well enough to judge whether a finding can fire
 
 ### Correctness
 - [ ] Change matches spec/task requirements
@@ -364,6 +382,9 @@ For triaging `npm audit` findings and supply-chain risk (typosquatting, compromi
 | "It's only a small addition to this file" | Small diffs still push files past a healthy size and bolt branches onto unrelated flows. Judge the resulting structure, not the diff size. |
 | "It's just a version bump" | A bump is a behavior change you didn't write. Read the changelog; semver doesn't guarantee no breakage. |
 | "I'll upgrade everything in one PR to save time" | A bulk bump that breaks the build hides which package did it. One dependency per change keeps the cause and the revert clean. |
+| "It's technically possible, so it's a real finding" | Possible isn't likely. If the trigger needs something the code already prevents, downgrade it and say why. Still worth writing down; not worth blocking on. |
+| "Better to flag it just in case" | Every finding costs the author a read, an evaluation, and a dismissal. A review padded with impossible findings gets skimmed — and the real one gets skimmed with it. |
+| "I can't check the project's limits, so I'll assume the worst" | Then say that: flag it as unverified and name what you'd need to check. Downgrading on a guess and blocking on a guess are the same error. |
 
 ## Red Flags
 
@@ -374,6 +395,9 @@ For triaging `npm audit` findings and supply-chain risk (typosquatting, compromi
 - Large PRs that are "too big to review properly" (split them)
 - No regression tests with bug fix PRs
 - Review comments without severity labels — makes it unclear what's required vs optional
+- Findings labelled on consequence alone, with no check of whether the condition can occur in this project
+- A blocking review whose findings all need conditions the code already prevents
+- A finding downgraded to Optional with no stated reason — the author can't tell whether you checked or guessed
 - Accepting "I'll fix it later" — it never happens
 - A refactor that moves code around without reducing the number of concepts a reader must hold
 - A change that grows an already-large file instead of decomposing it
@@ -388,6 +412,8 @@ After review is complete:
 
 - [ ] All Critical issues are resolved
 - [ ] All Required (no-prefix) changes are resolved or explicitly deferred with justification
+- [ ] Every Critical and Required finding names the condition that makes it fire, checked against this project's inputs and invariants
+- [ ] Findings judged remote were downgraded with their condition stated, not deleted
 - [ ] Tests pass
 - [ ] Build succeeds
 - [ ] The verification story is documented (what changed, how it was verified)

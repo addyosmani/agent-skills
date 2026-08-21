@@ -38,7 +38,9 @@
         "Findings cover more than one axis (correctness, readability, architecture, security, performance)",
         "Every finding carries a severity label from the skill's taxonomy",
         "Security of user input is explicitly considered for the new endpoint",
-        "The review leads with high-leverage findings rather than nits"
+        "The review leads with high-leverage findings rather than nits",
+        "Blocking findings name the condition that makes them fire, rather than asserting risk generically",
+        "Any finding judged unlikely under the project's actual inputs is downgraded with its condition stated, not omitted"
       ]
     }
   ]
