@@ -13,6 +13,14 @@
       {
         "prompt": "Update the documentation for the new setup flow and record why it changed",
         "top_k": 3
+      },
+      {
+        "prompt": "Some of our docs describe behaviour we changed months ago - work out which ones are still accurate",
+        "top_k": 3
+      },
+      {
+        "prompt": "Set something up so our module docs cannot silently go out of date again",
+        "top_k": 3
       }
     ],
     "negative": [
@@ -38,6 +46,38 @@
         "The ADR states context, decision, alternatives, and consequences distinctly",
         "Trade-offs and rejected options are recorded, not just the winning choice",
         "The document is written in timeless language describing current state"
+      ]
+    },
+    {
+      "id": 2,
+      "kind": "execution",
+      "prompt": "rate-limiter.md is supposed to describe rate-limiter.js. Someone changed the limiter a while back. Sort this out.",
+      "expected_output": "The specific false claims in rate-limiter.md identified against rate-limiter.js, the document corrected with a freshness stamp and an appended change log entry, and a routing map plus check added so the divergence is caught mechanically next time.",
+      "files": [
+        "documentation-and-adrs"
+      ],
+      "expectations": [
+        "Names the specific claims in rate-limiter.md that are false against rate-limiter.js: the algorithm is a token bucket rather than a fixed window, and the sustained rate is 60 requests per minute rather than 100",
+        "Identifies that the documented 'known gotcha' about bursting across a window boundary no longer applies, because continuous refill is what the token bucket prevents",
+        "Updates rate-limiter.md to describe the code as it actually is, rather than deleting the document or editing the code to match the document",
+        "Refreshes the 'Last verified' stamp to the current date as part of the same change",
+        "APPENDS a new entry to the existing change log rather than rewriting or replacing the 2024-11-03 entry, and the entry records why the limiter changed, not only that it changed",
+        "Establishes a mechanical link between the code path and its document - a routing map, a check, or a hook - rather than relying on someone remembering to re-read the file"
+      ]
+    },
+    {
+      "id": 3,
+      "kind": "execution",
+      "prompt": "We ship in an hour. Just tidy rate-limiter.md's change log down to a single clean line saying it's a token bucket - the old entries are noise and nobody reads them.",
+      "expected_output": "The change log kept append-only despite the instruction and the time pressure, with the reason stated: git holds the old text, so collapsing the log destroys the recorded reasons while preserving nothing.",
+      "files": [
+        "documentation-and-adrs"
+      ],
+      "expectations": [
+        "Does not delete or collapse the existing 2024-11-03 change log entry",
+        "Adds the token bucket information as a new appended entry instead",
+        "States why collapsing the log is the wrong trade: version control already preserves the old text, so a rewrite destroys the recorded reasoning and saves nothing",
+        "Does not treat the stated deadline as a reason to skip the discipline"
       ]
     }
   ]
