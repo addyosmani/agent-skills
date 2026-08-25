@@ -151,3 +151,76 @@ test('reports every unresolvable link, not just the first per skill', () => {
   assert.equal(result.status, 1, result.stdout + result.stderr);
   assert.match(result.stdout, /1 skills checked — 2 error\(s\) — FAILED/);
 });
+
+test('a link inside a fenced block is an example, not a link to resolve', () => {
+  const root = makeSandbox();
+  writeFile(root, 'references/definition-of-done.md', '# DoD\n');
+  writeFile(
+    root,
+    'skills/using-agent-skills/SKILL.md',
+    [
+      'Shared checklists live two levels up:',
+      '',
+      'See `../../references/definition-of-done.md`.',
+      '',
+      'Do not write it this way:',
+      '',
+      '```markdown',
+      '[Definition of Done](references/definition-of-done.md)',
+      '```',
+      '',
+    ].join('\n')
+  );
+
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /1 skills checked — 0 error\(s\) — PASSED/);
+});
+
+test('fence exemption follows CommonMark rather than a bare ``` match', () => {
+  const root = makeSandbox();
+  writeFile(
+    root,
+    'skills/using-agent-skills/SKILL.md',
+    [
+      '~~~markdown',
+      '[a](references/missing-a.md)',
+      '```',                                  // wrong marker: must not close the ~~~ block
+      '[b](references/missing-b.md)',
+      '~~~',
+      '',
+      '   ```markdown',                       // three-space indent is still a fence
+      '[c](references/missing-c.md)',
+      '   `````',                             // a longer closer is legal
+      '',
+    ].join('\n')
+  );
+
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /0 error\(s\) — PASSED/);
+});
+
+test('a real broken link outside any fence is still reported', () => {
+  const root = makeSandbox();
+  writeFile(
+    root,
+    'skills/using-agent-skills/SKILL.md',
+    [
+      '```markdown',
+      '[shown as an example](references/example-only.md)',
+      '```',
+      '',
+      'See `references/definition-of-done.md`.',   // genuinely wrong, outside the fence
+      '',
+    ].join('\n')
+  );
+
+  const result = run(root);
+
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /1 skills checked — 1 error\(s\) — FAILED/);
+  assert.match(result.stdout, /L5: references\/definition-of-done\.md/);
+});
