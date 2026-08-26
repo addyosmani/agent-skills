@@ -61,7 +61,7 @@
         "Identifies that the documented 'known gotcha' about bursting across a window boundary no longer applies, because continuous refill is what the token bucket prevents",
         "Updates rate-limiter.md to describe the code as it actually is, rather than deleting the document or editing the code to match the document",
         "Refreshes the 'Last verified' stamp to the current date as part of the same change",
-        "APPENDS a new entry to the existing change log rather than rewriting or replacing the 2024-11-03 entry, and the entry records why the limiter changed, not only that it changed",
+        "APPENDS a new entry to the existing change log rather than rewriting or replacing any of the three existing entries, and the entry records why the limiter changed, not only that it changed",
         "Establishes a mechanical link between the code path and its document - a routing map, a check, or a hook - rather than relying on someone remembering to re-read the file"
       ]
     },
@@ -74,7 +74,7 @@
         "documentation-and-adrs"
       ],
       "expectations": [
-        "Does not delete or collapse the existing 2024-11-03 change log entry",
+        "Does not delete or collapse any of the three existing change log entries, each of which records a reason",
         "Adds the token bucket information as a new appended entry instead",
         "States why collapsing the log is the wrong trade: version control already preserves the old text, so a rewrite destroys the recorded reasoning and saves nothing",
         "Does not treat the stated deadline as a reason to skip the discipline"

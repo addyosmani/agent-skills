@@ -1,8 +1,4 @@
 // Token bucket limiter.
-//
-// Tokens refill continuously rather than resetting on a boundary, so a client
-// cannot spend a full allowance at the end of one window and another at the
-// start of the next.
 
 const CAPACITY = 60;           // burst size, in tokens
 const REFILL_PER_SECOND = 1;   // sustained rate -> 60 requests / minute
