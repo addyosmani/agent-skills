@@ -21,4 +21,10 @@ sliding window later.
 
 ## Change Log (newest first)
 
-- [2024-11-03] Initial limiter documented.
+- [2024-11-03] Raised the documented allowance from 60 to 100 per window - support
+  found bulk-import clients throttled at 60 during nightly syncs, and raising the
+  ceiling was cheaper than special-casing those clients.
+- [2024-09-17] Recorded the burst-across-boundary gotcha - a customer sent 200
+  requests in two seconds and nothing in the doc explained how that was possible.
+  Kept the fixed window for the quarter and wrote the surprise down instead.
+- [2024-08-02] Initial limiter documented.
