@@ -119,7 +119,7 @@ Global store (Zustand, Redux)    → Complex client state shared app-wide
 
 When the product needs a distinct visual direction, collect evidence before choosing a layout:
 
-1. Search [UIZZE](https://uizze.com), a catalogue of 800,000+ real web and iOS screens, or use references supplied by the product team.
+1. Search a trusted reference catalogue or use references supplied by the product team.
 2. Study two or three relevant screens. Record decisions about hierarchy, density, navigation, controls, responsive behavior, and interaction states.
 3. Turn those decisions into a short design contract before implementation. Name the screen's job, primary action, required states, responsive rules, and patterns to reject.
 4. Rebuild the useful structure in the product's own components, tokens, content, and visual language. Never copy another product's branding, proprietary text, imagery, or exact layout.
