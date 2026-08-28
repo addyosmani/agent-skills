@@ -2,7 +2,7 @@
 
 [fx](https://fx.sh) (by Vercel Labs) is a coding agent harness and CLI with native Agent Skills support. It discovers every `SKILL.md` under a set of workspace and user skill roots at startup, and loads a skill's full instructions into context only when the skill is invoked.
 
-> fx is experimental (v0.0.4 at the time of writing). Paths and commands below come from the [fx skills documentation](https://fx.sh/docs/capabilities/skills) — check it if something has moved.
+> fx is experimental (v0.0.6 at the time of writing; skill discovery paths below require 0.0.5+). Paths and commands come from the [fx skills documentation](https://fx.sh/docs/capabilities/skills) — check it if something has moved.
 
 ## Install fx
 
@@ -24,15 +24,15 @@ fx
 
 All skills appear in the `/skills` catalog immediately.
 
-To use the pack in your own project, copy the skills into any workspace root fx scans:
+To use the pack in your own project, copy the skills into `.fx/skills/` — fx's native project root, checked before every other workspace root:
 
 ```bash
 git clone https://github.com/addyosmani/agent-skills.git /tmp/agent-skills
-mkdir -p .agents/skills
-cp -R /tmp/agent-skills/skills/* .agents/skills/
+mkdir -p .fx/skills
+cp -R /tmp/agent-skills/skills/* .fx/skills/
 ```
 
-If you already vendor these skills for another agent (for example under `.claude/skills/`), fx finds them there — no second copy needed.
+If you already vendor these skills for another agent (for example under `.claude/skills/` or `.agents/skills/`), fx finds them there — no second copy needed.
 
 ## User scope (all projects)
 
@@ -46,21 +46,26 @@ cp -R /tmp/agent-skills/skills/* ~/.fx/skills/
 
 An existing Claude Code user-level install (`~/.claude/skills/`) is also picked up automatically.
 
-**Symlinks:** fx only resolves symlinked skills whose targets live under a directory listed in the colon-separated `FX_SKILL_SYMLINK_AUTHORITIES` environment variable. To symlink from a local clone instead of copying:
+**Symlinks:** symlinking from a local clone instead of copying works without configuration as long as the link target resolves inside your home directory or the workspace:
 
 ```bash
-export FX_SKILL_SYMLINK_AUTHORITIES="$HOME/src/agent-skills"
 ln -s ~/src/agent-skills/skills/* ~/.fx/skills/
+```
+
+Only symlinks that resolve *outside* home and workspace (Nix store paths, for example) need their target listed in the colon-separated `FX_SKILL_SYMLINK_AUTHORITIES` environment variable:
+
+```bash
+export FX_SKILL_SYMLINK_AUTHORITIES="/nix/store"
 ```
 
 ## Where fx looks for skills
 
-| Scope | Roots |
-|-------|-------|
-| Workspace | `skills/`, `.opencode/skills/`, `.codex/skills/`, `.claude/skills/`, `.agents/skills/`, `.claw/skills/` |
+| Scope | Roots (in priority order) |
+|-------|---------------------------|
+| Workspace | `.fx/skills/`, `skills/`, `.opencode/skills/`, `.codex/skills/`, `.claude/skills/`, `.agents/skills/`, `.claw/skills/` |
 | User | `~/.fx/skills/`, `~/.config/opencode/skills/`, `~/.codex/skills/`, `~/.claude/skills/`, `~/.agents/skills/`, `~/.claw/skills/` |
 
-Only the primary workspace contributes project skills; additional workspace directories provide tool access but are not scanned for skills.
+Workspace roots are checked from the workspace upward, stopping before your home directory — so a `skills/` directory in a parent of the project is picked up too. Only the primary workspace contributes project skills; additional workspace directories provide tool access but are not scanned for skills.
 
 ## Usage
 

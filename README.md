@@ -207,7 +207,7 @@ fx discovers skills natively — a workspace `skills/` directory (this repo's la
 ```bash
 git clone https://github.com/addyosmani/agent-skills.git
 cd agent-skills && fx                                # project scope, zero config
-cp -R agent-skills/skills/* ~/.fx/skills/            # user scope, all projects
+cp -R skills/* ~/.fx/skills/                         # user scope, all projects
 ```
 
 Browse with `/skills`, search with `$` in the composer. See [docs/fx-setup.md](docs/fx-setup.md).
