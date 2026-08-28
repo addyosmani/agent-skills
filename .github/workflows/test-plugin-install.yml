@@ -41,12 +41,7 @@ jobs:
         run: node --test scripts/validate-reference-links-test.js
 
       - name: Test session-start hook payload
-        run: |
-          if ! command -v jq >/dev/null 2>&1; then
-            echo "jq not found; skipping session-start hook test"
-            exit 0
-          fi
-          bash hooks/session-start-test.sh
+        run: bash hooks/session-start-test.sh
 
   validate-commands:
     name: Validate command parity and description sync
