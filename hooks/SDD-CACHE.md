@@ -21,7 +21,7 @@ This hook caches fetched content on disk, but **revalidates with the origin serv
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PROJECT_DIR}/hooks/sdd-cache-pre.sh",
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/hooks/sdd-cache-pre.sh\"",
             "timeout": 10
           }
         ]
@@ -33,7 +33,7 @@ This hook caches fetched content on disk, but **revalidates with the origin serv
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PROJECT_DIR}/hooks/sdd-cache-post.sh",
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/hooks/sdd-cache-post.sh\"",
             "async": true,
             "timeout": 10
           }

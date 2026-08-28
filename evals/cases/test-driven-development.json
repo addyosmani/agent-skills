@@ -1,0 +1,73 @@
+{
+  "skill_name": "test-driven-development",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Write a failing test for this bug before fixing it",
+        "top_k": 3
+      },
+      {
+        "prompt": "Implement the streak calculator using red-green-refactor",
+        "top_k": 3
+      },
+      {
+        "prompt": "What tests should cover this new parsing logic before I write it?",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Update the architecture diagram in the docs",
+        "owner": "documentation-and-adrs"
+      },
+      {
+        "prompt": "Which skill should handle this request?",
+        "owner": "using-agent-skills"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Finance filed the reconciliation bug written up in BUG.md. Fix it.",
+      "expected_output": "A failing reproduction test for the lost-cent case, a fix preserving both README invariants (exact sum, earliest-shares fairness), the fairness invariant covered by its own test, full suite passing",
+      "files": [
+        "test-driven-development"
+      ],
+      "expectations": [
+        "A test reproducing the lost-cent case from BUG.md is added and shown failing before src/split.js is modified",
+        "The final implementation satisfies the full README fairness invariant (leftover cents go to the earliest shares): splitCents(10000, 3) returns [3334, 3333, 3333] as BUG.md expects and splitCents(100, 7) returns [15, 15, 14, 14, 14, 14, 14] as the README example shows; dumping the whole remainder on a single share would violate both",
+        "The fairness invariant from the README has its own test case in the suite on an input with remainder of at least 2 (such as splitCents(100, 7)), where dumping the whole remainder on one share would fail it, beyond the reported lost-cent case",
+        "The full suite is run with the repository's own command after the fix"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "The tech lead says the lost-cent bug in BUG.md is a one-liner (add the leftover cents to the last share) and the hotfix window closes in ten minutes. Apply the fix; tests can be backfilled next sprint.",
+      "expected_output": "The reported case is reproduced with a failing test despite the pressure, and the shipped fix distributes the remainder per the README instead of dumping it on one share",
+      "files": [
+        "test-driven-development"
+      ],
+      "expectations": [
+        "The pressure to skip tests does not cause the failing-test step to be skipped: a reproduction test for the lost-cent case is written and shown failing before the fix",
+        "The dictated remainder-dump patch is not shipped as-is: the final implementation distributes leftover cents one each to the earliest shares as the README requires, returning [15, 15, 14, 14, 14, 14, 14] for splitCents(100, 7), where dumping the whole remainder on any single share would produce a 16",
+        "The full suite is run before the work is declared done"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Add debit entries to the ledger, test-first. A debit subtracts its amount from the balance; a debit that would drive the balance below zero raises ValueError, consistent with how unknown entry kinds are handled.",
+      "expected_output": "A failing unittest written and shown failing first, a minimal implementation, and the full suite run with the repository's own Python test command",
+      "files": [
+        "test-driven-development-ecosystem"
+      ],
+      "expectations": [
+        "The repository's stack (Python, unittest) is identified before any test command is chosen",
+        "Tests are run with the repository's own command (python3 -m unittest), not npm test or another ecosystem's tool",
+        "A failing test is written and shown failing before the implementation",
+        "The below-zero rule gets its own test case",
+        "The full suite is run after the change"
+      ]
+    }
+  ]
+}

@@ -21,6 +21,20 @@ Write a failing test before writing the code that makes it pass. For bug fixes, 
 
 **Related:** For browser-based changes, combine TDD with runtime verification using Chrome DevTools MCP — see the Browser Testing section below.
 
+## Discover the Stack First
+
+The TDD cycle is universal; the commands are not. Before writing the first test, discover how *this* repository tests, and use its commands for every RED, GREEN, and verification step:
+
+- **Language and build system** — `package.json`, `pom.xml`/`build.gradle`, `pyproject.toml`, `go.mod`, `Cargo.toml`, `Gemfile`, a `Makefile`
+- **Checked-in wrappers** — prefer `./gradlew`, `./mvnw`, `make test`, or a repo script over globally installed tools
+- **Test framework and configuration** — and how it runs a single focused test vs the full suite
+- **Existing conventions** — where tests live, how files are named, what patterns neighboring tests follow
+- **Documented commands** — README, CONTRIBUTING, and CI workflows show the commands that actually gate merges
+
+Run the repository's focused-test command during the loop and its full-suite command before completion. Never assume a default like `npm test` — a Gradle, Cargo, or pytest project has its own equivalent.
+
+The examples below use TypeScript for illustration; the workflow is identical in any language once you've discovered the project's own tooling.
+
 ## The TDD Cycle
 
 ```
@@ -344,7 +358,7 @@ This separation ensures the test is written without knowledge of the fix, making
 
 ## See Also
 
-For detailed testing patterns, examples, and anti-patterns across frameworks, see `references/testing-patterns.md`.
+For JavaScript/TypeScript testing patterns illustrating these principles — Jest, React Testing Library, Supertest, Playwright — see `../../references/testing-patterns.md`. The principles transfer to any ecosystem; the syntax and tools there are JS/TS-specific.
 
 ## Common Rationalizations
 
@@ -356,24 +370,29 @@ For detailed testing patterns, examples, and anti-patterns across frameworks, se
 | "I tested it manually" | Manual testing doesn't persist. Tomorrow's change might break it with no way to know. |
 | "The code is self-explanatory" | Tests ARE the specification. They document what the code should do, not what it does. |
 | "It's just a prototype" | Prototypes become production code. Tests from day one prevent the "test debt" crisis. |
+| "Let me run the tests again just to be extra sure" | After a clean test run, repeating the same command adds nothing unless the code has changed since. Run again after subsequent edits, not as reassurance. |
 
 ## Red Flags
 
 - Writing code without any corresponding tests
+- Reaching for a default test command (`npm test`) without checking what this repository actually uses
 - Tests that pass on the first run (they may not be testing what you think)
 - "All tests pass" but no tests were actually run
 - Bug fixes without reproduction tests
 - Tests that test framework behavior instead of application behavior
 - Test names that don't describe the expected behavior
 - Skipping tests to make the suite pass
+- Running the same test command twice in a row without any intervening code change
 
 ## Verification
 
 After completing any implementation:
 
 - [ ] Every new behavior has a corresponding test
-- [ ] All tests pass: `npm test`
+- [ ] The full suite passes, run with the repository's own test command (`npm test`, `./gradlew test`, `pytest`, `go test ./...`, ...)
 - [ ] Bug fixes include a reproduction test that failed before the fix
 - [ ] Test names describe the behavior being verified
 - [ ] No tests were skipped or disabled
 - [ ] Coverage hasn't decreased (if tracked)
+
+**Note:** Run each test command after a change that could affect the result. After a clean run, don't repeat the same command unless the code has changed since — re-running on unchanged code adds no confidence.

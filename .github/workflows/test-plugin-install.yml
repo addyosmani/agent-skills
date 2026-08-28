@@ -6,8 +6,66 @@ on:
   workflow_dispatch:
 
 jobs:
+  validate-skills:
+    name: Validate skill content
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Validate all skills
+        run: node scripts/validate-skills.js
+
+      - name: Validate manifest versions
+        run: node scripts/validate-versions.js
+
+      - name: Test manifest version validator
+        run: node --test scripts/validate-versions-test.js
+
+      - name: Test skill eval runner
+        run: node --test scripts/run-evals-test.js
+
+      - name: Run skill evals (trigger + routing)
+        run: node scripts/run-evals.js --min-rank1 80
+
+      - name: Validate references/ links in skills
+        run: node scripts/validate-reference-links.js
+
+      - name: Test reference-link validator
+        run: node --test scripts/validate-reference-links-test.js
+
+  validate-commands:
+    name: Validate command parity and description sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Validate commands across all tool directories
+        run: node scripts/validate-commands.js
+
+      - name: Test command validator
+        run: node --test scripts/validate-commands-test.js
+
+      - name: Validate spec/plan/todo artifact paths
+        run: node scripts/validate-artifact-paths.js
+
+      - name: Test artifact-path validator
+        run: node --test scripts/validate-artifact-paths-test.js
+
   validate:
     name: Validate plugin structure
+    needs: [validate-skills, validate-commands]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6

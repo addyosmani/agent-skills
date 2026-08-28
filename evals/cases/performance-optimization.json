@@ -1,0 +1,52 @@
+{
+  "skill_name": "performance-optimization",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Optimize this N+1 query",
+        "top_k": 1
+      },
+      {
+        "prompt": "The dashboard takes eight seconds to load, profile it and fix the bottleneck",
+        "top_k": 3
+      },
+      {
+        "prompt": "Profile these slow database queries and add the right indexes",
+        "top_k": 1
+      },
+      {
+        "prompt": "The orders endpoint has a slow N+1 query pattern, profile it and fix the bottleneck",
+        "top_k": 3
+      },
+      {
+        "prompt": "Core Web Vitals are failing, improve our LCP",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Draft the deprecation notice for the v1 API",
+        "owner": "deprecation-and-migration"
+      },
+      {
+        "prompt": "Design the public interface for the billing module",
+        "owner": "api-and-interface-design"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The products page renders slowly with 1000 items. Improve its performance.",
+      "expected_output": "A measured baseline, an identified bottleneck, a targeted fix, and a verified improvement",
+      "files": [
+        "performance-optimization"
+      ],
+      "expectations": [
+        "Performance is measured before any optimization is applied",
+        "The fix targets the measured bottleneck rather than guessing",
+        "Improvement is verified against the baseline after the change"
+      ]
+    }
+  ]
+}

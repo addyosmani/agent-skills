@@ -1,0 +1,44 @@
+{
+  "skill_name": "observability-and-instrumentation",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Add structured logging and metrics to the checkout service",
+        "top_k": 3
+      },
+      {
+        "prompt": "Set up tracing so we can follow a request across services",
+        "top_k": 3
+      },
+      {
+        "prompt": "What alerts should we page on for this new endpoint?",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Simplify this over-clever component",
+        "owner": "code-simplification"
+      },
+      {
+        "prompt": "Draft the PRD for the referral program"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Instrument a new payment-retry feature so on-call can operate it.",
+      "expected_output": "On-call questions defined first, then structured logs, RED metrics, and symptom-based alerts that answer them",
+      "files": [
+        "observability-and-instrumentation"
+      ],
+      "expectations": [
+        "On-call questions are written before instrumentation is added",
+        "Logs are structured events with a correlation id, not prose strings",
+        "Metrics avoid unbounded label cardinality",
+        "Alerts are symptom-based and actionable"
+      ]
+    }
+  ]
+}
