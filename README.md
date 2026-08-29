@@ -46,7 +46,7 @@ Skills also activate automatically based on what you're doing — designing an A
 **Fastest path — any agent, one command.** The open [skills CLI](https://github.com/vercel-labs/skills) installs into 70+ agents (Claude Code, Cursor, Codex, Copilot, Cline, and more):
 
 ```bash
-npx skills add addyosmani/agent-skills            # install all 25 skills
+npx skills add addyosmani/agent-skills            # install all 26 skills
 npx skills add addyosmani/agent-skills --list     # browse before installing
 ```
 
@@ -219,13 +219,19 @@ Already installed? How you roll the pack out depends on your codebase. The **[Ad
 
 ## All 24 Skills
 
-The commands above are entry points. The pack includes 25 skills total — 24 lifecycle skills plus the `using-agent-skills` meta-skill. Each skill is a structured workflow with steps, verification gates, and anti-rationalization tables. You can also reference any skill directly.
+The commands above are entry points. The pack includes 26 skills total — 24 lifecycle skills, the `using-agent-skills` meta-skill, and `agent-security-guard`, a cross-cutting skill that governs the agent's own runtime conduct rather than a point in the lifecycle. Each skill is a structured workflow with steps, verification gates, and anti-rationalization tables. You can also reference any skill directly.
 
 ### Meta - Discover which skill applies
 
 | Skill | What It Does | Use When |
 |-------|-------------|----------|
 | [using-agent-skills](skills/using-agent-skills/SKILL.md) | Maps incoming work to the right skill workflow and defines shared operating rules | Starting a session or deciding which skill applies |
+
+### Cross-Cutting - Runtime safety while operating
+
+| Skill | What It Does | Use When |
+|-------|-------------|----------|
+| [agent-security-guard](skills/agent-security-guard/SKILL.md) | Coding-agent runtime trust decisions — classify untrusted content/tools/actors, refuse or stop-and-ask on credential moves, capability escalation, or external side effects; not application security (see `security-and-hardening`) | Cloning/running an unfamiliar repo, connecting a new MCP server or tool, reading fetched content, or before a secret or approval-ambiguous action |
 
 ### Define - Clarify what to build
 
@@ -349,7 +355,7 @@ Every skill follows a consistent anatomy:
 
 ```
 agent-skills/
-├── skills/                            # 25 skills (24 lifecycle + 1 meta)
+├── skills/                            # 26 skills (24 lifecycle + 1 meta + 1 cross-cutting)
 │   ├── interview-me/                  #   Define
 │   ├── idea-refine/                   #   Define
 │   ├── spec-driven-development/       #   Define
@@ -374,6 +380,7 @@ agent-skills/
 │   ├── documentation-and-adrs/        #   Ship
 │   ├── observability-and-instrumentation/ # Ship
 │   ├── shipping-and-launch/           #   Ship
+│   ├── agent-security-guard/          #   Cross-cutting: agent runtime safety
 │   └── using-agent-skills/            #   Meta: how to use this pack
 ├── agents/                            # 4 specialist personas
 ├── references/                        # 7 supplementary checklists

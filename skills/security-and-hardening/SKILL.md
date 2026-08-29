@@ -301,7 +301,7 @@ When you defer a fix, document the reason and set a review date.
 Do not assume npm or treat the nearest manifest as the install root. Apply this order:
 
 1. **Find the installation boundary and manager.** Use the workspace root that owns the lockfile, or an independent nested project only when it is outside that workspace. There, corroborate `packageManager` (when present), the lockfile, and CI; stop on disagreement or competing lockfiles. Pin the manager version and use the matrix in `../../references/security-checklist.md`.
-2. **Block dependency scripts before first execution.** Bootstrap with scripts disabled or a documented fail-closed policy, inspect the pending script source, approve only the minimum required packages, commit the policy, then verify with a clean frozen/immutable install. Never blanket-approve scripts.
+2. **Block dependency scripts before first execution.** Bootstrap with scripts disabled or a documented fail-closed policy, inspect the pending script source, approve only the minimum required packages, commit the policy, then verify with a clean frozen/immutable install. Never blanket-approve scripts. Concretely: `npm install --ignore-scripts` / `yarn install --ignore-scripts`, or pnpm's default-blocked-until-approved workflow (`pnpm approve-builds`, approved per package, never globally); for pip, prefer wheels over sdists that run `setup.py` at build time. Re-run only the specific script actually needed once it's been reviewed. CI/build configs (`.github/workflows/*.yml`, `Dockerfile`, `devcontainer.json`) that execute on open/push deserve the same scrutiny — they're scripts too.
 
 Audits only find known advisories; they do not catch a newly malicious or typosquatted package. Therefore:
 
@@ -450,7 +450,7 @@ container.textContent = await llm.reply(userMessage);
 
 For detailed security checklists and pre-commit verification steps, see `../../references/security-checklist.md`.
 
-For the agent's *own* operational security — what to do when the agent itself encounters an untrusted MCP server, an unfamiliar repo's build scripts, or injected content while doing a task, rather than how to build security features into the application under development — see the `agent-security-guard` skill.
+This skill covers how to build secure software: the actor is the application developer, the moment is implementation/design time, and the output is code patterns and checklists for the app under development. It does not cover how the coding agent itself should behave at runtime — deciding whether to trust, refuse, stop, or ask when it personally encounters untrusted content, tools, actors, credentials, permissions, or external side effects while operating. For that, see the `agent-security-guard` skill.
 
 ## Common Rationalizations
 
