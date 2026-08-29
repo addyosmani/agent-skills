@@ -217,7 +217,7 @@ Already installed? How you roll the pack out depends on your codebase. The **[Ad
 
 ---
 
-## All 24 Skills
+## Skill Catalog
 
 The commands above are entry points. The pack includes 26 skills total — 24 lifecycle skills, the `using-agent-skills` meta-skill, and `agent-security-guard`, a cross-cutting skill that governs the agent's own runtime conduct rather than a point in the lifecycle. Each skill is a structured workflow with steps, verification gates, and anti-rationalization tables. You can also reference any skill directly.
 
