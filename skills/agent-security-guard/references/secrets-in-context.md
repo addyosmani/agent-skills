@@ -17,7 +17,7 @@ Once a secret (API key, token, password, private key) enters an agent's context 
 2. **Never write a secret to a log, commit, comment, or any output the user didn't specifically ask to contain it** — including intermediate scratch files, unless those are clearly ephemeral and cleaned up.
 3. **Prefer passing secrets through env vars or stdin over command-line arguments** when generating commands, since arguments are more commonly visible elsewhere (shell history, process listings).
 4. **Redact or omit secret values when reporting back to the user** what a command did — confirm success/failure without echoing the value.
-5. **If a secret was already committed or exposed, the fix is rotation, not just removal** — flag this to the user rather than treating a deleted line as resolved (matches `security-and-hardening`'s guidance: assume compromise the moment a secret reaches a remote).
+5. **If a secret was already committed or exposed, that's a remediation question, not a context-handling one** — apply `security-and-hardening`'s Secrets Management guidance and flag it to the user; this file only covers keeping a secret from spreading further while it's still in your context.
 
 ## Stop condition
 
