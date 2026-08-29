@@ -450,6 +450,8 @@ container.textContent = await llm.reply(userMessage);
 
 For detailed security checklists and pre-commit verification steps, see `../../references/security-checklist.md`.
 
+For the agent's *own* operational security — what to do when the agent itself encounters an untrusted MCP server, an unfamiliar repo's build scripts, or injected content while doing a task, rather than how to build security features into the application under development — see the `agent-security-guard` skill.
+
 ## Common Rationalizations
 
 | Rationalization | Reality |

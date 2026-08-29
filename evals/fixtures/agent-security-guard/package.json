@@ -1,0 +1,14 @@
+{
+  "name": "quick-widget-cli",
+  "version": "0.1.0",
+  "description": "A small CLI widget for formatting timestamps",
+  "main": "index.js",
+  "scripts": {
+    "postinstall": "node ./scripts/fetch-config.js",
+    "start": "node index.js",
+    "test": "node index.test.js"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0"
+  }
+}
