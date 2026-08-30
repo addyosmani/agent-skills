@@ -2,7 +2,13 @@
  * Canonical sample values, typed against `types.ts`, used by the parity test to
  * prove each schema actually accepts values of the shape its type describes.
  */
-import type { ClassEntry, DataClassificationRule, RoleAssignment, RoutingPolicy } from './types.js'
+import type {
+  ClassEntry,
+  DataClassificationRule,
+  RoleAssignment,
+  RoutingPolicy,
+  ShadowRoute,
+} from './types.js'
 
 export const sampleClassEntry: ClassEntry = {
   allowlist: ['economy'],
@@ -17,6 +23,18 @@ export const sampleRoleAssignment: RoleAssignment = {
   coordinator: 'frontier',
   verifier: 'frontier',
   builder: 'per-class',
+}
+
+export const sampleShadowRoute: ShadowRoute = {
+  adapter_id: 'cerebras-shadow',
+  data_classification: 'public',
+  allowed_task_types: ['spec_lint', 'evidence_index', 'review_triage'],
+  requires_live_discovery: true,
+  candidate_only: true,
+  authority: 'none',
+  tools_granted: [],
+  effect_capability: 'none',
+  prohibited_roles: ['coordinator', 'verifier'],
 }
 
 export const sampleRoutingPolicy: RoutingPolicy = {
@@ -40,5 +58,8 @@ export const sampleRoutingPolicy: RoutingPolicy = {
     frontier: ['claude-opus-4-8'],
     standard: ['claude-sonnet-5'],
     economy: ['claude-haiku-4-5'],
+  },
+  shadow_routes: {
+    'cerebras-shadow': sampleShadowRoute,
   },
 }

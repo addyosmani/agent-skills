@@ -62,6 +62,25 @@ export interface RoleAssignment {
   readonly builder: 'per-class'
 }
 
+export type ShadowTaskType = 'spec_lint' | 'evidence_index' | 'review_triage'
+
+/**
+ * A non-authoritative sidecar route. Shadow routes are deliberately separate
+ * from `model_tiers`: they can propose a candidate, but can neither select an
+ * owner nor satisfy a review, approval, or release gate.
+ */
+export interface ShadowRoute {
+  readonly adapter_id: string
+  readonly data_classification: 'public'
+  readonly allowed_task_types: readonly ShadowTaskType[]
+  readonly requires_live_discovery: true
+  readonly candidate_only: true
+  readonly authority: 'none'
+  readonly tools_granted: readonly []
+  readonly effect_capability: 'none'
+  readonly prohibited_roles: readonly ['coordinator', 'verifier']
+}
+
 /**
  * The full routing policy document. `model_tiers` resolves each tier name used
  * in `classes[*].allowlist` and `roles` to concrete July-2026 model ids; `'frontier'`
@@ -73,4 +92,5 @@ export interface RoutingPolicy {
   readonly data_classification: Readonly<Record<DataClassificationTier, DataClassificationRule>>
   readonly roles: RoleAssignment
   readonly model_tiers: Readonly<Record<string, readonly string[]>>
+  readonly shadow_routes: Readonly<Record<string, ShadowRoute>>
 }

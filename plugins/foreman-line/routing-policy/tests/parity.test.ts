@@ -18,6 +18,7 @@ import {
   sampleDataClassificationRule,
   sampleRoleAssignment,
   sampleRoutingPolicy,
+  sampleShadowRoute,
 } from '../src/testing.js'
 
 const schemasDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'schemas')
@@ -27,11 +28,12 @@ const samplesByName: ReadonlyMap<string, unknown> = new Map<string, unknown>([
   ['class-entry', sampleClassEntry],
   ['data-classification-rule', sampleDataClassificationRule],
   ['role-assignment', sampleRoleAssignment],
+  ['shadow-route', sampleShadowRoute],
 ])
 
 registerNoDriftTests(allSchemaFiles, schemasDir)
 registerSampleValidationTests(allSchemaFiles, samplesByName)
 
 test('every exported routing-policy type has a committed schema file', () => {
-  assert.equal(allSchemaFiles.length, 4)
+  assert.equal(allSchemaFiles.length, 5)
 })

@@ -8,7 +8,7 @@ decision record (W0-P4 / the frozen `DispatchOrder.routingDecisionRef`).
 
 ## Schema shape
 
-`RoutingPolicy` = `{ classes, data_classification, roles, model_tiers }`.
+`RoutingPolicy` = `{ classes, data_classification, roles, model_tiers, shadow_routes }`.
 
 - **`classes`** — keyed by `routing_class` value; MUST include the four
   reconciled values (`boilerplate`, `standard-feature`, `architecture/risk`,
@@ -29,12 +29,19 @@ decision record (W0-P4 / the frozen `DispatchOrder.routingDecisionRef`).
   without touching the validator** — it intentionally diverges from plan
   §5's illustrative `small`/`medium`/`large` labels, which were never
   binding.
+- **`shadow_routes`** — separately governed advisory sidecars, never model
+  tiers. v0.1 requires the `cerebras-shadow` route to remain public-only and
+  candidate-only. A route declares its adapter, approved task types, live
+  discovery requirement, zero authority, no tools/effects, and exclusion from
+  the Coordinator and verifier roles. The policy neither contains credentials
+  nor records a host's current availability; the host verifies availability at
+  invocation time and the Parcel supplies the exact public inputs.
 
 Types live in `src/types.ts`; schemas in `schemas/*.json` (hand-authored as
 `SchemaObject`, never ajv's `JSONSchemaType`); `tests/parity.test.ts` proves
 the two never drift.
 
-## The five enforced invariants
+## The six enforced invariants
 
 1. **Classification gates before cost (D6):** `eligible_models` must narrow
    monotonically — `restricted ⊆ internal ⊆ public`.
@@ -51,6 +58,23 @@ the two never drift.
    schema layer (a static bound needs no cross-field logic).
 5. **Frontier-tier anchoring:** every model id in `model_tiers.frontier` must
    belong to `KNOWN_FRONTIER_MODELS`. See below.
+6. **Shadow-route containment:** every shadow route is public-only, requires
+   live discovery, has no authority/tools/effects, is candidate-only, and
+   excludes the Coordinator and verifier. The route key must equal its adapter
+   id, preventing a policy entry from silently referring to a different adapter.
+
+## Cerebras shadow route
+
+`cerebras-shadow` is an optional public-analysis sidecar. It may receive only
+the public, Parcel-authorized material for `spec_lint`, `evidence_index`, or
+`review_triage`. Its candidate output must be independently reviewed; it can
+never approve a change, clear a gate, trigger a tool, or create an external
+effect.
+
+At dispatch, the owning agent first runs host-local discovery. If the adapter
+is not `verified_available`, the Parcel proceeds without Cerebras. Do not add
+`CEREBRAS_API_KEY`, provider requests, probe outcomes, or other availability
+state to this policy file.
 
 ## Frontier-tier anchoring registry
 

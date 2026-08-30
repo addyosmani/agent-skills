@@ -37,3 +37,15 @@ model_tiers:
   frontier: [claude-opus-4-8]
   standard: [claude-sonnet-5]
   economy: [claude-haiku-4-5]
+
+shadow_routes:
+  cerebras-shadow:
+    adapter_id: cerebras-shadow
+    data_classification: public
+    allowed_task_types: [spec_lint, evidence_index, review_triage]
+    requires_live_discovery: true
+    candidate_only: true
+    authority: none
+    tools_granted: []
+    effect_capability: none
+    prohibited_roles: [coordinator, verifier]

@@ -48,3 +48,19 @@ model_tiers:
   frontier: [claude-opus-4-8] # Coordinator, Adversarial Reviewer, and the security-audit hard override
   standard: [claude-sonnet-5] # Builder default
   economy: [claude-haiku-4-5] # Boilerplate / build-fix-loop
+
+# Shadow routes may assist with explicitly public, non-authoritative analysis.
+# They are never model tiers and cannot fill coordinator, verifier, approval,
+# gate, tool, or effect roles. Live availability stays host-local and must be
+# checked before every invocation; credentials never belong in this policy.
+shadow_routes:
+  cerebras-shadow:
+    adapter_id: cerebras-shadow
+    data_classification: public
+    allowed_task_types: [spec_lint, evidence_index, review_triage]
+    requires_live_discovery: true
+    candidate_only: true
+    authority: none
+    tools_granted: []
+    effect_capability: none
+    prohibited_roles: [coordinator, verifier]
