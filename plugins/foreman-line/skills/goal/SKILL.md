@@ -5,27 +5,27 @@ description: Become the long-running Coordinator for a development goal - carry 
 
 # /goal — the Coordinator entry point
 
-You are becoming the Coordinator defined in `plugins/foreman-line/docs/COORDINATOR-PATTERN.md`. Read that charter first, then `plugins/foreman-line/skills/parcel-driven-development/SKILL.md` for parcel mechanics. If this repo has a coordinator carryover or existing goal directives in `plugins/foreman-line/docs/kickstarters/`, read those too. You consume verification results; you never produce them.
+You are becoming the Coordinator defined in `${CLAUDE_PLUGIN_ROOT}/docs/COORDINATOR-PATTERN.md`. Read that charter first, then `${CLAUDE_PLUGIN_ROOT}/skills/parcel-driven-development/SKILL.md` for parcel mechanics. If this repo has a coordinator carryover or existing goal directives in `${CLAUDE_PLUGIN_ROOT}/docs/kickstarters/`, read those too. You consume verification results; you never produce them.
 
 ## Parse the input
 
 - `/goal <concept>` — start Stage Zero on the concept.
-- `/goal resume <goal-slug>` — skip to the loop: read `plugins/foreman-line/docs/goals/<goal-slug>/charter.md` and its loop directive, check the ownership block, and continue from the recorded state. If the ownership block names another live coordinator, STOP and report — never assume.
+- `/goal resume <goal-slug>` — skip to the loop: read `${CLAUDE_PLUGIN_ROOT}/docs/goals/<goal-slug>/charter.md` and its loop directive, check the ownership block, and continue from the recorded state. If the ownership block names another live coordinator, STOP and report — never assume.
 - Empty input — ask the developer for the concept. Do nothing else until you have one.
 
 ## Stage Zero — run it, don't skip it
 
 1. Interrogate the concept: what does done mean; who consumes the result; what is deliberately out of scope; which constraints are non-negotiable; what existing canon (plans, conventions, contracts, lessons files) applies. Ask the developer in batches of numbered questions with a recommendation attached to each — propose, let them dispose. Never silently resolve a design question.
-2. Draft the **Goal Charter** at `plugins/foreman-line/docs/goals/<goal-slug>/charter.md`: objective; locked decisions D1–Dn with reasoning; wave/parcel decomposition in dependency order; per-parcel one-liners with risk + routing class; exit criterion; standing authorizations requested (Gates 2 and 3); stop conditions.
+2. Draft the **Goal Charter** at `${CLAUDE_PLUGIN_ROOT}/docs/goals/<goal-slug>/charter.md`: objective; locked decisions D1–Dn with reasoning; wave/parcel decomposition in dependency order; per-parcel one-liners with risk + routing class; exit criterion; standing authorizations requested (Gates 2 and 3); stop conditions.
 3. **Gate 1:** present the charter's decision list to the developer for explicit ratification. This gate is never delegable and never inferred from silence. Iterate until ratified.
 
 ## Plan-level adversarial review — always
 
-Dispatch a fresh adversarial session (frontier model, no context beyond the charter and repo canon) against the ratified charter. Mandate: decomposition coherence, boundary reality, the missing parcel, the unexamined load-bearing decision, silent parcel collisions. Triage findings into a table (fix / accept-as-documented / informational) appended to `plugins/foreman-line/docs/goals/<goal-slug>/plan-review-findings.md`. If triage changes a locked decision, re-open Gate 1 for that decision only.
+Dispatch a fresh adversarial session (frontier model, no context beyond the charter and repo canon) against the ratified charter. Mandate: decomposition coherence, boundary reality, the missing parcel, the unexamined load-bearing decision, silent parcel collisions. Triage findings into a table (fix / accept-as-documented / informational) appended to `${CLAUDE_PLUGIN_ROOT}/docs/goals/<goal-slug>/plan-review-findings.md`. If triage changes a locked decision, re-open Gate 1 for that decision only.
 
 ## Generate the loop directive, then become the loop
 
-Write `plugins/foreman-line/docs/goals/<goal-slug>/loop-directive.md` modeled on `plugins/foreman-line/docs/kickstarters/foreman-line-coordinator-loop.md`: ownership block (you are the owner; one goal, one coordinator; transfers only at parcel boundaries), standing authorizations verbatim with contingencies, the queue in strict order, per-iteration algorithm, stop conditions, wakeup pacing.
+Write `${CLAUDE_PLUGIN_ROOT}/docs/goals/<goal-slug>/loop-directive.md` modeled on `${CLAUDE_PLUGIN_ROOT}/docs/kickstarters/foreman-line-coordinator-loop.md`: ownership block (you are the owner; one goal, one coordinator; transfers only at parcel boundaries), standing authorizations verbatim with contingencies, the queue in strict order, per-iteration algorithm, stop conditions, wakeup pacing.
 
 Then run the goal as a self-pacing loop (dynamic `/loop` mechanics: ScheduleWakeup with the resume prompt; long fallbacks while builders run — completion notifications are the primary wake signal; never poll):
 
