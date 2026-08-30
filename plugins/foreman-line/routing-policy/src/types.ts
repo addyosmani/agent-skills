@@ -64,6 +64,11 @@ export interface RoleAssignment {
 
 export type ShadowTaskType = 'spec_lint' | 'evidence_index' | 'review_triage'
 
+/** Exactly the two roles a shadow route may never fill, in either YAML order. */
+export type ProhibitedShadowRoles =
+  | readonly ['coordinator', 'verifier']
+  | readonly ['verifier', 'coordinator']
+
 /**
  * A non-authoritative sidecar route. Shadow routes are deliberately separate
  * from `model_tiers`: they can propose a candidate, but can neither select an
@@ -78,14 +83,14 @@ export interface ShadowRoute {
   readonly authority: 'none'
   readonly tools_granted: readonly []
   readonly effect_capability: 'none'
-  readonly prohibited_roles: readonly ['coordinator', 'verifier']
+  readonly prohibited_roles: ProhibitedShadowRoles
 }
 
 /**
  * The full routing policy document. `model_tiers` resolves each tier name used
- * in `classes[*].allowlist` and `roles` to concrete July-2026 model ids; `'frontier'`
+ * in `classes[*].allowlist` and `roles` to concrete August-2026 model ids; `'frontier'`
  * is the one tier name the validator's invariants depend on literally — every
- * other tier name is v0 policy content, revisable without touching the validator.
+ * other tier name is v0.1 policy content, revisable without touching the validator.
  */
 export interface RoutingPolicy {
   readonly classes: Readonly<Record<ClassName, ClassEntry>>

@@ -4,9 +4,10 @@
  * `tests/parity.test.ts` proves each schema agrees with its `types.ts` counterpart
  * via a canonical sample, and that the committed `schemas/*.json` files never drift.
  *
- * The four semantic invariants (classification-gates-before-cost, coordinator/
- * verifier frontier pinning, the security override, and its derived name-guard)
- * are intentionally NOT encoded here — they are cross-field business rules
+ * Five of the six invariants (classification-gates-before-cost, coordinator/
+ * verifier frontier pinning, the security override and derived name-guard,
+ * frontier anchoring, and shadow-route containment) are intentionally NOT
+ * encoded here — they are cross-field business rules
  * enforced by `validator.ts`, kept distinct from pure structural shape so a
  * schema-valid-but-semantically-wrong document is distinguishable from a
  * structurally invalid one (both classes of rejecting fixture are needed
