@@ -1,9 +1,9 @@
-# Foreman Line — Model Routing Policy (v0)
+# Foreman Line — Model Routing Policy (v0.1)
 #
-# Concrete July-2026 instantiation of plan §5. Revisit quarterly — model
+# Concrete August-2026 instantiation of plan §5. Revisit quarterly — model
 # pricing and capability change faster than this document should be treated
 # as permanent. See routing-policy/README.md for the schema shape, the
-# exit-code contract, and the four invariants the validator enforces.
+# exit-code contract, and the six invariants the validator enforces.
 
 classes:
   boilerplate:
@@ -23,7 +23,7 @@ classes:
     ceiling_usd: 5.00
 
 data_classification:
-  # v0: all three current models are already approved-endpoint / on-platform
+  # v0.1: all three current models are already approved-endpoint / on-platform
   # inference, so eligibility is uniform across tiers today. Classification
   # gating is still evaluated before cost optimization (D6) — this is the
   # list a future model addition must respect (each tier's eligible set must
@@ -41,10 +41,26 @@ roles:
   builder: per-class
 
 model_tiers:
-  # Tier vocabulary below `frontier` is this parcel's own v0 content and is
+  # Tier vocabulary below `frontier` is this parcel's own v0.1 content and is
   # revisable quarterly; it diverges from plan §5's illustrative
   # small/medium/large. `frontier` is the one literal name the validator's
   # invariants depend on — do not rename it.
   frontier: [claude-opus-4-8] # Coordinator, Adversarial Reviewer, and the security-audit hard override
   standard: [claude-sonnet-5] # Builder default
   economy: [claude-haiku-4-5] # Boilerplate / build-fix-loop
+
+# Shadow routes may assist with explicitly public, non-authoritative analysis.
+# They are never model tiers and cannot fill coordinator, verifier, approval,
+# gate, tool, or effect roles. Live availability stays host-local and must be
+# checked before every invocation; credentials never belong in this policy.
+shadow_routes:
+  cerebras-shadow:
+    adapter_id: cerebras-shadow
+    data_classification: public
+    allowed_task_types: [spec_lint, evidence_index, review_triage]
+    requires_live_discovery: true
+    candidate_only: true
+    authority: none
+    tools_granted: []
+    effect_capability: none
+    prohibited_roles: [coordinator, verifier]

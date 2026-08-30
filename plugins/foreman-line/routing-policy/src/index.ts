@@ -3,14 +3,18 @@ export {
   dataClassificationRuleSchema,
   roleAssignmentSchema,
   routingPolicySchema,
+  shadowRouteSchema,
 } from './schemas.js'
 export type {
   ClassEntry,
   ClassName,
   DataClassificationRule,
   DataClassificationTier,
+  ProhibitedShadowRoles,
   RoleAssignment,
   RoutingPolicy,
+  ShadowRoute,
+  ShadowTaskType,
 } from './types.js'
 export { CLASS_NAMES, DATA_CLASSIFICATION_TIERS } from './types.js'
 export type { ValidationResult } from './validator.js'
