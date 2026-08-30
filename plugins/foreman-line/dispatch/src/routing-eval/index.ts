@@ -28,6 +28,24 @@ import {
   validatePolicy,
 } from '../../../routing-policy/src/index.js'
 
+export type {
+  ParcelShadowAuthorization,
+  ResolvedParcelShadowAuthorization,
+  ShadowCandidateResult,
+  ShadowInvocationRequest,
+  ShadowRoutingDependencies,
+  ShadowRoutingInput,
+  ShadowRoutingOptions,
+  ShadowRoutingResult,
+  ShadowSkippedResult,
+} from './shadow.js'
+export {
+  executeShadowRoute,
+  hashShadowPublicInput,
+  SHADOW_LIMITS,
+  ShadowRoutingError,
+} from './shadow.js'
+
 // ─── Error class ──────────────────────────────────────────────────────────────
 
 export class RoutingError extends Error {

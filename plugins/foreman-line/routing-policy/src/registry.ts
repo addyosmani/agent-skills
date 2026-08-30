@@ -9,6 +9,7 @@ import {
   dataClassificationRuleSchema,
   roleAssignmentSchema,
   routingPolicySchema,
+  shadowRouteSchema,
 } from './schemas.js'
 
 export type { SchemaFile }
@@ -18,4 +19,5 @@ export const allSchemaFiles: readonly SchemaFile[] = [
   { name: 'class-entry', schema: classEntrySchema },
   { name: 'data-classification-rule', schema: dataClassificationRuleSchema },
   { name: 'role-assignment', schema: roleAssignmentSchema },
+  { name: 'shadow-route', schema: shadowRouteSchema },
 ]

@@ -112,3 +112,65 @@ test('frontier-tier anchoring: rejects a model_tiers.frontier not in KNOWN_FRONT
     `expected an error naming the offending model id, got: ${JSON.stringify(result.errors)}`,
   )
 })
+
+// f. Public-only shadow routing ------------------------------------------------
+
+test('Cerebras shadow route: shipped policy is public-only, candidate-only, and non-authoritative', () => {
+  const doc = validPolicy as {
+    shadow_routes?: Record<string, Record<string, unknown>>
+  }
+  const route = doc.shadow_routes?.['cerebras-shadow']
+
+  assert.deepEqual(route, {
+    adapter_id: 'cerebras-shadow',
+    data_classification: 'public',
+    allowed_task_types: ['spec_lint', 'evidence_index', 'review_triage'],
+    requires_live_discovery: true,
+    candidate_only: true,
+    authority: 'none',
+    tools_granted: [],
+    effect_capability: 'none',
+    prohibited_roles: ['coordinator', 'verifier'],
+  })
+  assert.equal(validatePolicy(validPolicy).valid, true)
+})
+
+test('Cerebras shadow route: rejects non-public classification, authority, tools, effects, and missing role prohibitions', () => {
+  const doc = structuredClone(validPolicy) as {
+    shadow_routes?: Record<string, Record<string, unknown>>
+  }
+  const route = doc.shadow_routes?.['cerebras-shadow']
+  assert.ok(route, 'fixture requires the shipped cerebras-shadow route')
+  route.data_classification = 'internal'
+  route.authority = 'coordinator'
+  route.tools_granted = ['filesystem']
+  route.effect_capability = 'write'
+  route.prohibited_roles = ['coordinator']
+
+  const result = validatePolicy(doc)
+  assert.equal(result.valid, false)
+  assert.ok(result.errors.some((error) => error.includes('data_classification')))
+  assert.ok(result.errors.some((error) => error.includes('authority')))
+  assert.ok(result.errors.some((error) => error.includes('tools_granted')))
+  assert.ok(result.errors.some((error) => error.includes('effect_capability')))
+  assert.ok(result.errors.some((error) => error.includes('prohibited_roles')))
+})
+
+test('Cerebras shadow route: rejects a mismatched adapter, undiscoverable execution, gate-satisfying output, and unsupported task type', () => {
+  const doc = structuredClone(validPolicy) as {
+    shadow_routes?: Record<string, Record<string, unknown>>
+  }
+  const route = doc.shadow_routes?.['cerebras-shadow']
+  assert.ok(route, 'fixture requires the shipped cerebras-shadow route')
+  route.adapter_id = 'another-adapter'
+  route.requires_live_discovery = false
+  route.candidate_only = false
+  route.allowed_task_types = ['dispatch']
+
+  const result = validatePolicy(doc)
+  assert.equal(result.valid, false)
+  assert.ok(result.errors.some((error) => error.includes('adapter_id')))
+  assert.ok(result.errors.some((error) => error.includes('requires_live_discovery')))
+  assert.ok(result.errors.some((error) => error.includes('candidate_only')))
+  assert.ok(result.errors.some((error) => error.includes('allowed_task_types')))
+})

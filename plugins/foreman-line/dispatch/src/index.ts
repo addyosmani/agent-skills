@@ -45,11 +45,27 @@ export type {
 export { buildCandidateJql, queryAndRankCandidates, SITE_URL } from './query/index.js'
 // W2-P3: routing-eval
 export type {
+  ParcelShadowAuthorization,
+  ResolvedParcelShadowAuthorization,
   RoutingInput,
   RoutingOptions,
   RoutingResult,
+  ShadowCandidateResult,
+  ShadowInvocationRequest,
+  ShadowRoutingDependencies,
+  ShadowRoutingInput,
+  ShadowRoutingOptions,
+  ShadowRoutingResult,
+  ShadowSkippedResult,
 } from './routing-eval/index.js'
-export { evaluateRouting, RoutingError } from './routing-eval/index.js'
+export {
+  evaluateRouting,
+  executeShadowRoute,
+  hashShadowPublicInput,
+  RoutingError,
+  SHADOW_LIMITS,
+  ShadowRoutingError,
+} from './routing-eval/index.js'
 // W2-P5: skill-resolver
 export type {
   SkillResolverInput,

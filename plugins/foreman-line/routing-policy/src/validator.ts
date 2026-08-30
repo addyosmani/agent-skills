@@ -23,6 +23,7 @@ const ajv = new Ajv({ allErrors: true })
 const validateStructure = ajv.compile(routingPolicySchema as SchemaObject)
 
 const SECURITY_NAME_PATTERN = /security|audit/i
+const SHADOW_TASK_TYPES = new Set(['spec_lint', 'evidence_index', 'review_triage'])
 
 /**
  * Frontier-tier anchoring registry (rework Finding 1): the set of model ids
@@ -150,6 +151,62 @@ function checkFrontierTierAnchoring(doc: Record<string, unknown>): string[] {
   return errors
 }
 
+/**
+ * Shadow routes are advisory sidecars, never substitute model tiers or
+ * authority-bearing roles. Structural rules live in the schema; these checks
+ * bind a route's map key to its adapter id and make the fail-closed policy
+ * reasons explicit for dispatch-time callers and reviewers.
+ */
+function checkShadowRoutes(doc: Record<string, unknown>): string[] {
+  const errors: string[] = []
+  const shadowRoutes = doc.shadow_routes
+  if (!isRecord(shadowRoutes)) return errors
+
+  for (const [routeName, rawRoute] of Object.entries(shadowRoutes)) {
+    if (!isRecord(rawRoute)) continue
+    const prefix = `shadow_routes['${routeName}']`
+
+    if (rawRoute.adapter_id !== routeName) {
+      errors.push(`${prefix}.adapter_id must equal its route key '${routeName}'`)
+    }
+    if (rawRoute.data_classification !== 'public') {
+      errors.push(`${prefix}.data_classification must be 'public' for a shadow route`)
+    }
+    if (rawRoute.requires_live_discovery !== true) {
+      errors.push(`${prefix}.requires_live_discovery must be true`)
+    }
+    if (rawRoute.candidate_only !== true) {
+      errors.push(
+        `${prefix}.candidate_only must be true; shadow output cannot satisfy a review or gate`,
+      )
+    }
+    if (rawRoute.authority !== 'none') {
+      errors.push(`${prefix}.authority must be 'none'`)
+    }
+    if (toStringArray(rawRoute.tools_granted).length !== 0) {
+      errors.push(`${prefix}.tools_granted must be empty`)
+    }
+    if (rawRoute.effect_capability !== 'none') {
+      errors.push(`${prefix}.effect_capability must be 'none'`)
+    }
+
+    const prohibitedRoles = new Set(toStringArray(rawRoute.prohibited_roles))
+    for (const role of ['coordinator', 'verifier']) {
+      if (!prohibitedRoles.has(role)) {
+        errors.push(`${prefix}.prohibited_roles must include '${role}'`)
+      }
+    }
+
+    for (const taskType of toStringArray(rawRoute.allowed_task_types)) {
+      if (!SHADOW_TASK_TYPES.has(taskType)) {
+        errors.push(`${prefix}.allowed_task_types contains unsupported task type '${taskType}'`)
+      }
+    }
+  }
+
+  return errors
+}
+
 export function validatePolicy(doc: unknown): ValidationResult {
   const errors: string[] = []
 
@@ -166,6 +223,7 @@ export function validatePolicy(doc: unknown): ValidationResult {
     errors.push(...checkRolePinning(doc))
     errors.push(...checkSecurityOverride(doc))
     errors.push(...checkFrontierTierAnchoring(doc))
+    errors.push(...checkShadowRoutes(doc))
   }
 
   return { valid: errors.length === 0, errors }
