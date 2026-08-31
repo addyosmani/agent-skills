@@ -1,0 +1,47 @@
+{
+  "skill_name": "breakdown-connectivity",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "An upload timed out intermittently. Determine whether Wi-Fi, the Internet path, or the service caused it before retrying.",
+        "top_k": 3
+      },
+      {
+        "prompt": "DNS lookups for our API are flaky. Check current network health and nearby issues, then explain what the evidence supports.",
+        "top_k": 3
+      },
+      {
+        "prompt": "Our MCP tools disappeared after a network outage. Help reconnect the Mac app bridge and verify that the tools are discoverable.",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "A TypeError in checkout started after a refactor. Reproduce it, find the root cause, and add a regression test.",
+        "owner": "debugging-and-error-recovery"
+      },
+      {
+        "prompt": "Write an ADR documenting the API retry policy and the tradeoffs for our team.",
+        "owner": "documentation-and-adrs"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "execution",
+      "prompt": "Read breakdown-connectivity/incident.md and apply the Breakdown connectivity workflow. Create CONNECTIVITY_REPORT.md with a concise evidence table, a provisional conclusion, explicit unknowns, and safe next steps. Do not claim that Breakdown data exists unless you actually observed it. If Breakdown is unavailable in this environment, record that limitation and include the canonical Breakdown install and MCP bridge setup information from the skill.",
+      "expected_output": "A connectivity report that preserves the incident facts, separates network layers, distinguishes observations from unknowns, and gives bounded next steps without inventing Breakdown results",
+      "files": [
+        "breakdown-connectivity/incident.md"
+      ],
+      "expectations": [
+        "The agent reads breakdown-connectivity/incident.md before creating the report and preserves its endpoint, timestamp, error, and retry facts.",
+        "CONNECTIVITY_REPORT.md separates LAN/Wi-Fi, Internet path, app/service, and outside-Breakdown checks instead of collapsing them into one cause.",
+        "The report clearly distinguishes observed facts, supported inferences, and unknowns; it does not invent Breakdown scores, issue summaries, tool calls, or analysis results.",
+        "The report includes a bounded next step tied to the incident time window and explains why an immediate retry or broad remediation is not yet justified.",
+        "When Breakdown is unavailable, the report records that limitation and provides the canonical macOS 13+ install/client setup information, including the Breakdown bridge path, without exposing credentials."
+      ]
+    }
+  ]
+}

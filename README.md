@@ -46,7 +46,7 @@ Skills also activate automatically based on what you're doing — designing an A
 **Fastest path — any agent, one command.** The open [skills CLI](https://github.com/vercel-labs/skills) installs into 70+ agents (Claude Code, Cursor, Codex, Copilot, Cline, and more):
 
 ```bash
-npx skills add addyosmani/agent-skills            # install all 25 skills
+npx skills add addyosmani/agent-skills            # install all 26 skills
 npx skills add addyosmani/agent-skills --list     # browse before installing
 ```
 
@@ -217,9 +217,9 @@ Already installed? How you roll the pack out depends on your codebase. The **[Ad
 
 ---
 
-## All 24 Skills
+## All 25 Skills
 
-The commands above are entry points. The pack includes 25 skills total — 24 lifecycle skills plus the `using-agent-skills` meta-skill. Each skill is a structured workflow with steps, verification gates, and anti-rationalization tables. You can also reference any skill directly.
+The commands above are entry points. The pack includes 26 skills total — 25 workflow skills plus the `using-agent-skills` meta-skill. Each skill is a structured workflow with steps, verification gates, and anti-rationalization tables. You can also reference any skill directly.
 
 ### Meta - Discover which skill applies
 
@@ -259,6 +259,7 @@ The commands above are entry points. The pack includes 25 skills total — 24 li
 | Skill | What It Does | Use When |
 |-------|-------------|----------|
 | [browser-testing-with-devtools](skills/browser-testing-with-devtools/SKILL.md) | Chrome DevTools MCP for live runtime data - DOM inspection, console logs, network traces, performance profiling | Building or debugging anything that runs in a browser |
+| [breakdown-connectivity](skills/breakdown-connectivity/SKILL.md) | Evidence-first isolation of LAN, Internet-path, app/service, and client connectivity failures with Breakdown | DNS, Wi-Fi, packet loss, latency, endpoint, API, upload, download, MCP, or cloud-tool reachability may be involved |
 | [debugging-and-error-recovery](skills/debugging-and-error-recovery/SKILL.md) | Five-step triage: reproduce, localize, reduce, fix, guard. Stop-the-line rule, safe fallbacks | Tests fail, builds break, or behavior is unexpected |
 
 ### Review - Quality gates before merge
@@ -349,7 +350,7 @@ Every skill follows a consistent anatomy:
 
 ```
 agent-skills/
-├── skills/                            # 25 skills (24 lifecycle + 1 meta)
+├── skills/                            # 26 skills (25 workflow + 1 meta)
 │   ├── interview-me/                  #   Define
 │   ├── idea-refine/                   #   Define
 │   ├── spec-driven-development/       #   Define
@@ -363,6 +364,7 @@ agent-skills/
 │   ├── test-driven-development/       #   Build
 │   ├── api-and-interface-design/      #   Build
 │   ├── browser-testing-with-devtools/ #   Verify
+│   ├── breakdown-connectivity/         #   Verify
 │   ├── debugging-and-error-recovery/  #   Verify
 │   ├── code-review-and-quality/       #   Review
 │   ├── code-simplification/           #   Review
