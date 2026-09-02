@@ -32,7 +32,7 @@ jobs:
         run: node --test scripts/run-evals-test.js
 
       - name: Run skill evals (trigger + routing)
-        run: node scripts/run-evals.js --min-rank1 80
+        run: node scripts/run-evals.js --min-rank1 95
 
       - name: Validate references/ links in skills
         run: node scripts/validate-reference-links.js
