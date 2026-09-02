@@ -396,9 +396,9 @@ agent-skills/
 ├── hooks/                             # Session lifecycle hooks (Claude bash + OMP JS)
 ├── .omp/                              # Oh My Pi native discovery (symlinks + rules)
 ├── .omp-plugin/                       # Oh My Pi marketplace + plugin manifests
-├── .claude/commands/                  # 8 slash commands (Claude Code; OMP via .omp/commands)
-├── .gemini/commands/                  # 8 slash commands (Gemini CLI)
-├── commands/                          # 8 slash commands (Antigravity CLI)
+├── .claude/commands/                  # 9 slash commands (Claude Code; OMP via .omp/commands)
+├── .gemini/commands/                  # 9 slash commands (Gemini CLI)
+├── commands/                          # 9 slash commands (Antigravity CLI)
 ├── plugin.json                        # Antigravity plugin manifest
 └── docs/                              # Setup guides per tool
 ```

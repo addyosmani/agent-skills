@@ -31,8 +31,8 @@ Open this repository in Oh My Pi. Native discovery reads `.omp/`:
 
 | Path | Points at | Becomes |
 |------|-----------|---------|
-| `.omp/skills` | `skills/` | 24 skills in the skill list; `read skill://<name>` |
-| `.omp/commands` | `.claude/commands/` | `/spec` `/plan` `/build` `/test` `/review` `/code-simplify` `/ship` `/webperf` |
+| `.omp/skills` | `skills/` | 25 skills in the skill list; `read skill://<name>` |
+| `.omp/commands` | `.claude/commands/` | `/spec` `/plan` `/build` `/test` `/constraints` `/review` `/code-simplify` `/ship` `/webperf` |
 | `.omp/agents` | `agents/` | `task` agents `code-reviewer`, `security-auditor`, `test-engineer`, `web-performance-auditor` |
 | `.omp/extensions/session-start.js` | `hooks/pre/session-start.js` | Injects `using-agent-skills` on the next user turn |
 | `.omp/rules/skills-contributing.md` | (OMP-native copy) | Contributor guardrail while editing `skills/**` |
@@ -42,7 +42,7 @@ Do not copy root `AGENTS.md` or `CLAUDE.md` into other projects. Those files con
 ## Usage
 
 - **Skills.** Describe the work; the agent should `read skill://<name>` when a skill matches. Or invoke `/skill:<name>` when skill commands are enabled.
-- **Slash commands.** Same names as Claude Code (`/spec`, `/plan`, `/build`, `/build auto`, `/test`, `/review`, `/code-simplify`, `/ship`, `/webperf`). After a marketplace install the names are prefixed: `/agent-skills:spec`.
+- **Slash commands.** Same names as Claude Code (`/spec`, `/plan`, `/build`, `/build auto`, `/test`, `/constraints`, `/review`, `/code-simplify`, `/ship`, `/webperf`). After a marketplace install the names are prefixed: `/agent-skills:spec`.
 - **Personas.** Spawn with the `task` tool, `agent` set to the persona `name`. `/ship` fans out `code-reviewer`, `security-auditor`, and `test-engineer` in one `tasks[]` array. `/webperf` spawns `web-performance-auditor`.
 - **Meta-skill.** The session-start extension injects `using-agent-skills` silently on the next turn. Skills still appear in the list if the extension does not load.
 
