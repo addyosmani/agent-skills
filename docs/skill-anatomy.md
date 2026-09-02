@@ -147,6 +147,20 @@ When a skill ships runnable helpers under `scripts/`, each script follows these 
 4. **Anti-rationalization.** Every skip-worthy step needs a counter-argument in the rationalizations table.
 5. **Progressive disclosure.** Main SKILL.md is the entry point. Supporting files are loaded only when needed.
 6. **Token-conscious.** Every section must justify its inclusion. If removing it wouldn't change agent behavior, remove it.
+7. **Model-neutral.** Write the procedure, not the workaround. See [Write the Procedure, Not the Workaround](#write-the-procedure-not-the-workaround).
+
+## Write the Procedure, Not the Workaround
+
+Skills in this pack run on many agents and model generations. A step that exists because one model gets a specific call wrong is a liability on every other model: it constrains agents that would have solved the task directly, and it spends turns that stronger models need for the actual work. Cross-model transfer measurements ([WikiSkill, arXiv:2608.27454](https://arxiv.org/abs/2608.27454)) show skills authored against one model's execution failures can leave a stronger model performing *worse than with no skill at all*.
+
+**The rule:** if a step cannot be justified without naming a model, a model version, or one agent's private tool name, it belongs in an issue, not in a skill. Describe the capability ("run the focused test command", "write the file"), not the mechanism one runtime happens to expose (`run_command`, `write_to_file`).
+
+Two smells to check for before proposing skill content:
+
+- **Over-specified mechanics.** Prescribing an exact command form or serialization detail where stating the goal alone would do. If the justification is "model X gets this wrong otherwise", it's a workaround, not a procedure.
+- **Fragmented diagnostics.** A multi-step inspection sequence where one step would confirm the same thing. Every extra step spends turns, and turn budget is finite.
+
+This is about skill *content*; the portability of `references/` *paths* is a separate concern (see [Shared References](#shared-references)).
 
 ## Naming Conventions
 
