@@ -13,6 +13,10 @@
       {
         "prompt": "How should we tag and version this release?",
         "top_k": 3
+      },
+      {
+        "prompt": "Commit this work and open a pull request",
+        "top_k": 3
       }
     ],
     "negative": [

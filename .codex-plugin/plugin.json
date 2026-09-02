@@ -1,6 +1,6 @@
 {
   "name": "agent-skills",
-  "version": "0.6.7",
+  "version": "0.6.8",
   "description": "Production-grade engineering skills for AI coding agents covering the full software development lifecycle from spec to ship.",
   "author": {
     "name": "Addy Osmani",

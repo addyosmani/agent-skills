@@ -38,14 +38,15 @@
     {
       "id": 1,
       "prompt": "The products page renders slowly with 1000 items. Improve its performance.",
-      "expected_output": "A measured baseline, an identified bottleneck, a targeted fix, and a verified improvement",
+      "expected_output": "A measured baseline, an identified bottleneck, a targeted fix, a verified improvement, and a regression guard",
       "files": [
         "performance-optimization"
       ],
       "expectations": [
         "Performance is measured before any optimization is applied",
         "The fix targets the measured bottleneck rather than guessing",
-        "Improvement is verified against the baseline after the change"
+        "Improvement is verified against the baseline after the change",
+        "A concrete guard is added after verification using a synthetic performance budget or field monitoring tied to the measured user-facing metric"
       ]
     }
   ]

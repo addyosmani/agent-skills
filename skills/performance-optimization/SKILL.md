@@ -149,6 +149,58 @@ const tasks = await db.tasks.findMany({
 });
 ```
 
+#### Queries That Ignore Their Index
+
+"Add an index" is the guess. The query plan is the measurement:
+
+```sql
+EXPLAIN ANALYZE
+SELECT id, title FROM tasks
+WHERE owner_id = 42 ORDER BY created_at DESC LIMIT 20;
+```
+
+Three things in the output decide the fix:
+
+| What you see | What it means |
+|---|---|
+| `Seq Scan` on a large table where you expected an index | No usable index for this predicate |
+| Estimated `rows=` off from actual by an order of magnitude | Stale statistics; the planner is choosing on bad information |
+| A `Sort` node above the scan | The index covers the filter but not the `ORDER BY` |
+
+Index for the **shape of the query**, not the column in isolation. In a composite index, equality columns come first, then the range or sort column:
+
+```sql
+CREATE INDEX idx_tasks_owner_created ON tasks (owner_id, created_at DESC);
+```
+
+**When an index will not help:**
+
+| Situation | Why |
+|---|---|
+| Low selectivity, querying the dominant value (a `status` column that is 95% `active`, filtered on `active`) | A sequential scan is genuinely cheaper; the planner will ignore the index. Filtering on the rare value is the opposite case, and a partial index serves it well |
+| Leading wildcard (`LIKE '%term'`) | A B-tree cannot seek without a prefix; needs trigram or full-text |
+| Function on the column (`WHERE lower(email) = ?`) | The plain column index is unusable; index the expression instead |
+| Write-heavy table | Every index is a tax on every `INSERT`/`UPDATE`; measure the write cost, not just the read gain |
+
+Re-run `EXPLAIN ANALYZE` after. An index that did not change the plan is a revert (Step 4), and it is not free: it still costs on every write.
+
+#### Connection Pool Exhaustion
+
+The signature is distinctive: **every** endpoint slows at once, the slow time is spent waiting for a connection rather than executing, and the database reports mostly idle sessions.
+
+```typescript
+// BAD: a pool per request or per module — under serverless this multiplies
+// by instance count and exhausts the database's connection limit
+// GOOD: one pool per process, sized against the database's ceiling
+const pool = new Pool({
+  max: 10,                        // instances × max must stay under max_connections
+  idleTimeoutMillis: 30_000,
+  connectionTimeoutMillis: 5_000, // fail fast instead of queueing forever
+});
+```
+
+**Bigger is not faster.** A pool larger than what the database can execute concurrently just relocates the queue from your app to the database, where it is harder to see. When instance count is unbounded (serverless, autoscaling), a proxy that multiplexes connections (pgbouncer, RDS Proxy) is the fix, not a higher `max`.
+
 #### Missing Image Optimization (Frontend)
 
 ```html
@@ -264,6 +316,16 @@ function App() {
 
 #### Missing Caching (Backend)
 
+Cache what is expensive to produce and read far more often than it changes. Caching a query that was already fast adds a network hop, a staleness bug, and an eviction policy to maintain, in exchange for nothing.
+
+**Pick the layer deliberately:**
+
+| Layer | Visible to | Use when | Cost |
+|---|---|---|---|
+| In-process (`Map`, LRU) | One instance | Small, hot, per-instance staleness is acceptable | Each instance drifts independently; invalidation reaches only one |
+| Shared (Redis, Memcached) | All instances | Instances must agree, or the value is expensive to recompute | A network hop, and another service to run and monitor |
+| CDN / edge | Everyone, per URL | Responses are public and identical for a given key | Invalidation is the hard part; assume you cannot recall a bad response quickly |
+
 ```typescript
 // Cache frequently-read, rarely-changed data
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
@@ -288,6 +350,20 @@ app.use('/static', express.static('public', {
 // Cache-Control for API responses
 res.set('Cache-Control', 'public, max-age=300'); // 5 minutes
 ```
+
+**Key design decides correctness.** Every input that changes the response belongs in the key: tenant, locale, permissions, feature flags. A key that omits the viewer is how one user's data gets served to another, and that ships as a performance win.
+
+**Choose one invalidation strategy, not three:**
+
+| Strategy | Trade-off |
+|---|---|
+| TTL | Simplest. You accept staleness up to the TTL, so state the acceptable window explicitly |
+| Event or tag based | Fresh on write, but writers now have to know the cache topology |
+| Versioned keys (`user:42:profile:v7`) | Never invalidate, just stop reading old keys. Costs memory until eviction |
+
+**Guard against the stampede.** A hot key expires, every concurrent request misses together, and the origin takes the full load at once, which is how a cache turns into an outage instead of preventing one. Serve stale while a single request recomputes (`stale-while-revalidate`), or coalesce concurrent misses behind one in-flight promise so N waiters cause one recompute.
+
+**Do not cache:** anything whose staleness is a correctness bug (balances, permissions, inventory at checkout), or per-user data under a key that does not identify the user. See `../../references/performance-checklist.md` for request coalescing, write strategies, negative caching, and the cache checklist.
 
 ### Step 4: Verify (Keep or Revert)
 
@@ -324,9 +400,24 @@ Reverted work leaves no trace in git history, which is exactly why the same dead
 
 A section in the PR description or a `PERF.md` in the repo both work. What matters is that the next person (or the next agent) reads it before proposing an experiment, and doesn't re-run one that already failed.
 
-## Performance Budget
+### Step 5: Guard Against Regression
 
-Set budgets and enforce them:
+Guard the metric the user actually feels, not every available number. Use the
+same LCP, INP, p95 latency, or other primary metric that justified the fix.
+
+Use two complementary layers when the surface is user-facing:
+
+- **Synthetic CI gate:** Catch reproducible regressions before merge with a
+  performance budget. Repeat noisy measurements or compare a median/trend so
+  normal run-to-run variance does not turn the gate into a flaky check.
+- **Field monitoring:** Alert on a meaningful p75 movement in RUM data. Use
+  attributed `web-vitals` data to locate the cause; treat CrUX's rolling window
+  as confirmation rather than an immediate alert.
+
+When either guard fires, return to Step 1 and establish a fresh baseline before
+proposing another fix.
+
+**Set budgets and enforce them:**
 
 ```
 JavaScript bundle: < 200KB gzipped (initial load)
@@ -361,6 +452,9 @@ For detailed performance checklists, optimization commands, and anti-pattern ref
 | "This optimization is obvious" | If you didn't measure, you don't know. Profile first. |
 | "Users won't notice 100ms" | Research shows 100ms delays impact conversion rates. Users notice more than you think. |
 | "The framework handles performance" | Frameworks prevent some issues but can't fix N+1 queries or oversized bundles. |
+| "The query is slow, add an index" | Read the plan first. The index may already exist and be unusable, and every index taxes writes forever. |
+| "Just cache it" | Caching an already-cheap call buys nothing and adds a staleness bug. Cache what is expensive *and* re-read far more than written. |
+| "Raise the pool size, we're running out of connections" | A pool bigger than the database can serve moves the queue somewhere less visible. Find what holds connections. |
 | "It didn't help much, but it doesn't hurt" | Neutral changes are a revert. You pay maintenance on them forever and got nothing back. |
 | "We already wrote it, may as well keep it" | Sunk cost. The measurement doesn't care how long the change took to write. |
 | "The improvement is obvious, no need to re-measure" | Then re-measuring is cheap and proves it. Unmeasured wins are how neutral complexity lands. |
@@ -369,6 +463,10 @@ For detailed performance checklists, optimization commands, and anti-pattern ref
 
 - Optimization without profiling data to justify it
 - N+1 query patterns in data fetching
+- An index added without a query plan before and after to justify it
+- A cache key that omits an input the response depends on (tenant, locale, viewer)
+- A cache with no stated staleness window and no invalidation strategy
+- Connection pool size raised in response to exhaustion, without finding what holds connections
 - List endpoints without pagination
 - Images without dimensions, lazy loading, or responsive sizes
 - Bundle size growing without review
@@ -392,5 +490,7 @@ After any performance-related change:
 - [ ] Core Web Vitals are within "Good" thresholds
 - [ ] Bundle size hasn't increased significantly
 - [ ] No N+1 queries in new data fetching code
-- [ ] Performance budget passes in CI (if configured)
+- [ ] Any new index is justified by a query plan before and after, and its write cost was considered
+- [ ] Any new cache states what it keys on and how it goes stale
+- [ ] The measured user-facing metric has a synthetic budget or field monitor that can detect regression
 - [ ] Existing tests still pass (optimization didn't break behavior)
