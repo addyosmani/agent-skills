@@ -5,15 +5,21 @@
  * touched. The frozen routing-policy.yaml is copied from the real repo path
  * into each tmpDir fixture.
  *
+ * Expected model ids track the shipped v0.3 policy (OpenRouter slugs). All
+ * three classifications share one eligible list, so a class resolves to the
+ * same model regardless of classification; what differs per classification
+ * is `transportRequirements`, which AC6 also asserts (strict for
+ * internal/restricted, permissive for public).
+ *
  * Coverage:
- *   - AC2: standard-feature/internal → claude-sonnet-5/standard (spec workflowId)
- *   - AC3: architecture/risk/public  → claude-opus-4-8/frontier  (spec workflowId)
- *   - AC4: boilerplate/public        → claude-haiku-4-5/economy  (spec workflowId)
- *   - AC5: implementation/standard/restricted → claude-sonnet-5/standard
- *   - AC6: all 12 class × data_classification combinations (eval matrix)
+ *   - AC2: standard-feature/internal → anthropic/claude-sonnet-5/standard (spec workflowId)
+ *   - AC3: architecture/risk/public  → anthropic/claude-opus-5/frontier  (spec workflowId)
+ *   - AC4: boilerplate/public        → openai/gpt-5.6-luna/economy
+ *   - AC5: implementation/standard/restricted → anthropic/claude-sonnet-5/standard
+ *   - AC6: all 12 class × data_classification combinations (eval matrix + transport)
  *   - AC7/PAR-2: routing_class 'standard' (old wrong label) → UNKNOWN_CLASS
  *   - AC8: unrecognised data_classification → UNKNOWN_DATA_CLASSIFICATION
- *   - AC9: receipt contains all 7 required fields; policyRef and timestamp valid
+ *   - AC9: receipt contains all 8 required fields; policyRef and timestamp valid
  *   - AC10: second call with same workflowId overwrites receipt cleanly
  *   - AC11b: POLICY_UNREADABLE thrown when policy YAML is absent
  *   - F-01: malformed YAML throws RoutingError POLICY_INVALID (not a bare YAMLParseError)
@@ -47,7 +53,7 @@ function makeTempRepoRoot(): string {
 
 // ─── AC2–AC5: named spec assertions ──────────────────────────────────────────
 
-test('AC2: standard-feature/internal resolves to claude-sonnet-5/standard', () => {
+test('AC2: standard-feature/internal resolves to anthropic/claude-sonnet-5/standard', () => {
   const repoRoot = makeTempRepoRoot()
   try {
     const result = evaluateRouting(
@@ -58,7 +64,7 @@ test('AC2: standard-feature/internal resolves to claude-sonnet-5/standard', () =
       },
       { repoRoot },
     )
-    assert.equal(result.resolvedModelId, 'claude-sonnet-5')
+    assert.equal(result.resolvedModelId, 'anthropic/claude-sonnet-5')
     assert.equal(result.resolvedTier, 'standard')
     assert.equal(result.routingDecisionRef, 'docs/receipts/test-wf-001/routing-decision.json')
   } finally {
@@ -66,7 +72,7 @@ test('AC2: standard-feature/internal resolves to claude-sonnet-5/standard', () =
   }
 })
 
-test('AC3: architecture/risk/public resolves to claude-opus-4-8/frontier', () => {
+test('AC3: architecture/risk/public resolves to anthropic/claude-opus-5/frontier', () => {
   const repoRoot = makeTempRepoRoot()
   try {
     const result = evaluateRouting(
@@ -77,7 +83,7 @@ test('AC3: architecture/risk/public resolves to claude-opus-4-8/frontier', () =>
       },
       { repoRoot },
     )
-    assert.equal(result.resolvedModelId, 'claude-opus-4-8')
+    assert.equal(result.resolvedModelId, 'anthropic/claude-opus-5')
     assert.equal(result.resolvedTier, 'frontier')
     assert.equal(result.routingDecisionRef, 'docs/receipts/test-wf-002/routing-decision.json')
   } finally {
@@ -85,14 +91,14 @@ test('AC3: architecture/risk/public resolves to claude-opus-4-8/frontier', () =>
   }
 })
 
-test('AC4: boilerplate/public resolves to claude-haiku-4-5/economy', () => {
+test('AC4: boilerplate/public resolves to openai/gpt-5.6-luna/economy', () => {
   const repoRoot = makeTempRepoRoot()
   try {
     const result = evaluateRouting(
       { routing_class: 'boilerplate', data_classification: 'public', workflowId: 'test-wf-003' },
       { repoRoot },
     )
-    assert.equal(result.resolvedModelId, 'claude-haiku-4-5')
+    assert.equal(result.resolvedModelId, 'openai/gpt-5.6-luna')
     assert.equal(result.resolvedTier, 'economy')
     assert.equal(result.routingDecisionRef, 'docs/receipts/test-wf-003/routing-decision.json')
   } finally {
@@ -100,7 +106,7 @@ test('AC4: boilerplate/public resolves to claude-haiku-4-5/economy', () => {
   }
 })
 
-test('AC5: implementation/standard/restricted resolves to claude-sonnet-5/standard', () => {
+test('AC5: implementation/standard/restricted resolves to anthropic/claude-sonnet-5/standard', () => {
   const repoRoot = makeTempRepoRoot()
   try {
     const result = evaluateRouting(
@@ -111,7 +117,7 @@ test('AC5: implementation/standard/restricted resolves to claude-sonnet-5/standa
       },
       { repoRoot },
     )
-    assert.equal(result.resolvedModelId, 'claude-sonnet-5')
+    assert.equal(result.resolvedModelId, 'anthropic/claude-sonnet-5')
     assert.equal(result.resolvedTier, 'standard')
     assert.equal(result.routingDecisionRef, 'docs/receipts/test-wf-004/routing-decision.json')
   } finally {
@@ -129,83 +135,94 @@ interface EvalCase {
 }
 
 const EVAL_MATRIX: EvalCase[] = [
-  // boilerplate → economy → claude-haiku-4-5 (all three data tiers)
+  // boilerplate → economy → openai/gpt-5.6-luna (all three data tiers)
   {
     routing_class: 'boilerplate',
     data_classification: 'public',
-    expectedModel: 'claude-haiku-4-5',
+    expectedModel: 'openai/gpt-5.6-luna',
     expectedTier: 'economy',
   },
   {
     routing_class: 'boilerplate',
     data_classification: 'internal',
-    expectedModel: 'claude-haiku-4-5',
+    expectedModel: 'openai/gpt-5.6-luna',
     expectedTier: 'economy',
   },
   {
     routing_class: 'boilerplate',
     data_classification: 'restricted',
-    expectedModel: 'claude-haiku-4-5',
+    expectedModel: 'openai/gpt-5.6-luna',
     expectedTier: 'economy',
   },
-  // standard-feature → standard → claude-sonnet-5 (all three data tiers)
+  // standard-feature → standard → anthropic/claude-sonnet-5 (all three data tiers)
   {
     routing_class: 'standard-feature',
     data_classification: 'public',
-    expectedModel: 'claude-sonnet-5',
+    expectedModel: 'anthropic/claude-sonnet-5',
     expectedTier: 'standard',
   },
   {
     routing_class: 'standard-feature',
     data_classification: 'internal',
-    expectedModel: 'claude-sonnet-5',
+    expectedModel: 'anthropic/claude-sonnet-5',
     expectedTier: 'standard',
   },
   {
     routing_class: 'standard-feature',
     data_classification: 'restricted',
-    expectedModel: 'claude-sonnet-5',
+    expectedModel: 'anthropic/claude-sonnet-5',
     expectedTier: 'standard',
   },
-  // architecture/risk → frontier → claude-opus-4-8 (all three data tiers)
+  // architecture/risk → frontier → anthropic/claude-opus-5 (all three data tiers)
   {
     routing_class: 'architecture/risk',
     data_classification: 'public',
-    expectedModel: 'claude-opus-4-8',
+    expectedModel: 'anthropic/claude-opus-5',
     expectedTier: 'frontier',
   },
   {
     routing_class: 'architecture/risk',
     data_classification: 'internal',
-    expectedModel: 'claude-opus-4-8',
+    expectedModel: 'anthropic/claude-opus-5',
     expectedTier: 'frontier',
   },
   {
     routing_class: 'architecture/risk',
     data_classification: 'restricted',
-    expectedModel: 'claude-opus-4-8',
+    expectedModel: 'anthropic/claude-opus-5',
     expectedTier: 'frontier',
   },
-  // implementation/standard → standard → claude-sonnet-5 (all three data tiers)
+  // implementation/standard → standard → anthropic/claude-sonnet-5 (all three data tiers)
   {
     routing_class: 'implementation/standard',
     data_classification: 'public',
-    expectedModel: 'claude-sonnet-5',
+    expectedModel: 'anthropic/claude-sonnet-5',
     expectedTier: 'standard',
   },
   {
     routing_class: 'implementation/standard',
     data_classification: 'internal',
-    expectedModel: 'claude-sonnet-5',
+    expectedModel: 'anthropic/claude-sonnet-5',
     expectedTier: 'standard',
   },
   {
     routing_class: 'implementation/standard',
     data_classification: 'restricted',
-    expectedModel: 'claude-sonnet-5',
+    expectedModel: 'anthropic/claude-sonnet-5',
     expectedTier: 'standard',
   },
 ]
+
+/**
+ * Transport requirements are per-classification, not per-model: the same model
+ * id carries permissive constraints for public tasks and the strict
+ * `deny` + `zdr` pair for anything non-public (policy invariant g). On a
+ * multi-provider gateway this pair — not the model id — is what keeps a prompt
+ * off providers that store or train on inputs, so the caller must receive it
+ * alongside the model.
+ */
+const STRICT_TRANSPORT = { data_collection: 'deny', zdr: true } as const
+const PUBLIC_TRANSPORT = { data_collection: 'allow', zdr: false } as const
 
 for (const { routing_class, data_classification, expectedModel, expectedTier } of EVAL_MATRIX) {
   test(`AC6: ${routing_class}/${data_classification} → ${expectedModel} (${expectedTier})`, () => {
@@ -219,6 +236,14 @@ for (const { routing_class, data_classification, expectedModel, expectedTier } o
       assert.equal(result.resolvedModelId, expectedModel)
       assert.equal(result.resolvedTier, expectedTier)
       assert.equal(result.routingDecisionRef, `docs/receipts/${wfId}/routing-decision.json`)
+      assert.deepEqual(
+        result.transportRequirements,
+        data_classification === 'public' ? PUBLIC_TRANSPORT : STRICT_TRANSPORT,
+      )
+      const receipt = JSON.parse(
+        readFileSync(join(repoRoot, result.routingDecisionRef), 'utf8'),
+      ) as Record<string, unknown>
+      assert.deepEqual(receipt.transportRequirements, result.transportRequirements)
     } finally {
       rmSync(repoRoot, { recursive: true, force: true })
     }
@@ -273,9 +298,9 @@ test('AC8: unrecognised data_classification throws RoutingError UNKNOWN_DATA_CLA
   }
 })
 
-// ─── AC9: receipt contains all 7 required fields ─────────────────────────────
+// ─── AC9: receipt contains all 8 required fields ─────────────────────────────
 
-test('AC9: receipt JSON contains all 7 required fields with correct values', () => {
+test('AC9: receipt JSON contains all 8 required fields with correct values', () => {
   const repoRoot = makeTempRepoRoot()
   const workflowId = 'ac9-receipt-test'
   try {
@@ -291,7 +316,8 @@ test('AC9: receipt JSON contains all 7 required fields with correct values', () 
     assert.equal(receipt.routing_class, 'standard-feature')
     assert.equal(receipt.data_classification, 'internal')
     assert.equal(receipt.resolvedTier, 'standard')
-    assert.equal(receipt.resolvedModelId, 'claude-sonnet-5')
+    assert.equal(receipt.resolvedModelId, 'anthropic/claude-sonnet-5')
+    assert.deepEqual(receipt.transportRequirements, { data_collection: 'deny', zdr: true })
     assert.equal(receipt.policyRef, 'plugins/foreman-line/routing-policy/routing-policy.yaml')
     // timestamp must be parseable as ISO 8601
     assert.ok(typeof receipt.timestamp === 'string', 'timestamp must be a string')
@@ -327,7 +353,7 @@ test('AC10: second call with same workflowId overwrites receipt without error', 
 
     // Must reflect the second call's values
     assert.equal(receipt.routing_class, 'boilerplate')
-    assert.equal(receipt.resolvedModelId, 'claude-haiku-4-5')
+    assert.equal(receipt.resolvedModelId, 'openai/gpt-5.6-luna')
     assert.equal(receipt.resolvedTier, 'economy')
   } finally {
     rmSync(repoRoot, { recursive: true, force: true })

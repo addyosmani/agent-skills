@@ -2,7 +2,7 @@
 
 The policy-as-code artifact that governs model/agent-count selection at
 dispatch (plan §5, D5/D6). This package ships the schema, the TypeScript type,
-the concrete v0.1 `routing-policy.yaml`, and a validator. Primary-model policy
+the concrete v0.3 `routing-policy.yaml`, and a validator. Primary-model policy
 evaluation and the optional shadow-route execution boundary live in
 `@foreman-line/dispatch`; this package does not perform provider transport.
 
@@ -15,7 +15,16 @@ evaluation and the optional shadow-route execution boundary live in
   `implementation/standard`) but may carry additional class keys. Each entry:
   `allowlist` (tier names), `ceiling_usd` (> 0), optional `security_flavored`.
 - **`data_classification`** — exactly `public` / `internal` / `restricted`,
-  each an `eligible_models` list.
+  each an `eligible_models` list plus a `transport_requirements` block
+  (`data_collection: allow|deny`, `zdr: boolean`, mirroring OpenRouter's
+  `provider` request object). On a multi-provider gateway a model id does not
+  determine which upstream host serves the request; these two request
+  parameters do. This repository never sends requests, so the block is a
+  **declared obligation on the consumer**, not an enforcement — but invariant 7
+  rejects any policy that declares anything weaker than `deny` + `true` for
+  non-public data. Pair it with OpenRouter's account-wide privacy settings
+  (disable training providers; per-group ZDR) so the strict values are the
+  default regardless of what the consumer sends.
 - **`roles`** — `coordinator`, `verifier`, `builder`. Schema only requires
   non-empty strings; the frontier pin is enforced as an invariant, not a
   schema `const`, so a schema-valid-but-wrong document is distinguishable from
@@ -25,23 +34,31 @@ evaluation and the optional shadow-route execution boundary live in
   literally, and its *contents* are anchored against a validator-code
   registry (see "Frontier-tier anchoring registry" below), not left to the
   policy document's own say-so. **Every other tier name (`standard`,
-  `economy` in v0.1) is this parcel's own policy content, revisable quarterly
+  `economy` in v0.3) is this parcel's own policy content, revisable quarterly
   without touching the validator** — it intentionally diverges from plan
   §5's illustrative `small`/`medium`/`large` labels, which were never
-  binding.
+  binding. **Order within a tier is the selection rule:** the dispatcher
+  (`dispatch/src/routing-eval`) walks a class's allowlist tiers in order and
+  picks the first model eligible under the task's data classification. There
+  is no price comparison at dispatch time, so cost optimization is expressed
+  by list order. Ids are bare OpenRouter slugs (`vendor/model`); the consumer
+  prepends its own provider prefix. No `:nitro`/`:floor`/`:free`/`:batch`
+  variant suffixes — those are transport concerns or unusable in an agent loop.
 - **`shadow_routes`** — separately governed advisory sidecars, never model
-  tiers. v0.1 requires the `cerebras-shadow` route to remain public-only and
-  candidate-only. A route declares its adapter, approved task types, live
-  discovery requirement, zero authority, no tools/effects, and exclusion from
-  the Coordinator and verifier roles. The policy neither contains credentials
-  nor records a host's current availability; the host verifies availability at
-  invocation time and the Parcel supplies the exact public inputs.
+  tiers. May be empty (v0.3 ships none); no particular route key is required
+  by the schema. Any route declared must be public-only and candidate-only. A
+  route declares its adapter, approved task types, live discovery requirement,
+  zero authority, no tools/effects, and exclusion from the Coordinator and
+  verifier roles. The policy neither contains credentials nor records a host's
+  current availability; the host verifies availability at invocation time and
+  the Parcel supplies the exact public inputs.
+  `tests/fixtures/accept-shadow-route.yaml` is the canonical valid example.
 
 Types live in `src/types.ts`; schemas in `schemas/*.json` (hand-authored as
 `SchemaObject`, never ajv's `JSONSchemaType`); `tests/parity.test.ts` proves
 the two never drift.
 
-## The six enforced invariants
+## The eight enforced invariants
 
 1. **Classification gates before cost (D6):** `eligible_models` must narrow
    monotonically — `restricted ⊆ internal ⊆ public`.
@@ -58,14 +75,34 @@ the two never drift.
    schema layer (a static bound needs no cross-field logic).
 5. **Frontier-tier anchoring:** every model id in `model_tiers.frontier` must
    belong to `KNOWN_FRONTIER_MODELS`. See below.
-6. **Shadow-route containment:** every shadow route is public-only, requires
+6. **Tier models are classification-eligible:** every model id in any
+   `model_tiers.*` list must appear in `data_classification.public.eligible_models`.
+   Because invariant 1 already forces `internal` and `restricted` to be
+   subsets of `public`, a model absent from `public` is dispatchable under no
+   classification at all — the tier list would be advertising a route that
+   cannot exist, or one a tier-only caller would take unchecked.
+7. **Non-public transport requirements:** `internal` and `restricted` must
+   declare `transport_requirements: { data_collection: deny, zdr: true }`. A
+   model id names a model, not a host; on OpenRouter the same id is
+   load-balanced across many providers with differing retention and training
+   policies. The policy cannot send requests, but it can refuse to be the
+   document that declared non-public prompts may reach a training provider.
+8. **Shadow-route containment:** every shadow route is public-only, requires
    live discovery, has no authority/tools/effects, is candidate-only, and
    excludes the Coordinator and verifier. The route key must equal its adapter
    id, preventing a policy entry from silently referring to a different adapter.
 
-## Cerebras shadow route
+## Shadow routes (execution boundary)
 
-`cerebras-shadow` is an optional public-analysis sidecar. The executable entry
+A shadow route is an optional public-analysis sidecar. The shipped v0.3 policy
+declares none: the former `cerebras-shadow` entry never had an adapter,
+credential, or production caller behind it, and on OpenRouter fast inference
+(Cerebras, Groq) is a provider preference on an existing model id under the
+same credential — nothing is left for a separate adapter to add. The execution
+boundary below is retained so a route can still be declared later as a policy
+entry plus a host-local adapter, without a schema change.
+
+The executable entry
 point is `executeShadowRoute` from `@foreman-line/dispatch`. Before discovery,
 it requires a public Parcel authorization reference, a policy- and
 Parcel-allowed task type, and a SHA-256 binding to the exact canonical JSON
@@ -97,12 +134,12 @@ dependency function references are also captured before awaiting resolution,
 so an async closure cannot replace discovery or invocation mid-flight.
 
 The caller also injects host-local `discoverAdapter` and `invokeAdapter`
-functions; the repository provides no Cerebras credential or network
+functions; the repository provides no provider credential or network
 implementation.
 Discovery runs on every invocation. Only the exact normalized object
 `{ status: 'verified_available' }` permits provider execution. Any exception,
 unavailable result, or malformed/extended discovery value writes a normalized
-skip receipt and proceeds without Cerebras.
+skip receipt and proceeds without the shadow provider.
 
 The frozen invocation request is fixed to a runtime-frozen empty tools array,
 no effect capability, no authority, and candidate-only use. Untrusted output must have exactly a
@@ -118,7 +155,7 @@ review itself. Accepted evidence references are defensively copied and frozen;
 candidate and skip results, their no-tools arrays, and the independent-review
 binding are runtime-frozen so later mutation cannot create digest/receipt drift.
 
-Do not add `CEREBRAS_API_KEY`, provider requests, probe outcomes, or other
+Do not add provider API keys, provider requests, probe outcomes, or other
 availability state to this policy file. Actual adapter discovery and provider
 transport remain host/operator-owned integration work.
 
@@ -132,12 +169,22 @@ define its own notion of "frontier" would mean it could satisfy every other
 invariant while quietly redefining frontier to point at a cheaper model,
 silently gutting D4's pinning and the §5 security hard-override in one edit.
 
-`src/validator.ts` therefore carries `KNOWN_FRONTIER_MODELS` — v0.1:
-`['claude-opus-4-8']` — as a constant in reviewed, tested code, not as
-policy content. Invariant 5 rejects any `model_tiers.frontier` entry absent
-from this registry. This is intentional friction: redefining what counts as
-frontier (the quarterly model revisit plan §5 anticipates) requires a code
-change with a test, never a one-line policy-file edit.
+`src/validator.ts` therefore carries `KNOWN_FRONTIER_MODELS` — v0.3
+(September 2026, OpenRouter slugs):
+`['anthropic/claude-opus-5', 'anthropic/claude-fable-5.1', 'openai/gpt-5.6-sol', 'openai/gpt-5.5', 'google/gemini-3.1-pro-preview']`
+— as a constant in reviewed, tested code, not as policy content. Invariant 5
+rejects any `model_tiers.frontier` entry absent from this registry. This is
+intentional friction: redefining what counts as frontier (the quarterly model
+revisit plan §5 anticipates) requires a code change with a test, never a
+one-line policy-file edit.
+
+Registry rules of thumb: ids are OpenRouter slugs verbatim (`vendor/model`;
+Anthropic ids use dots there — `anthropic/claude-fable-5.1` — the opposite of
+OpenCode Zen's dashes; Gemini 3.1 Pro exists only as `-preview`); free,
+`:free`, and contributor-tier models are never frontier because they may train
+on submitted data or be rate-capped, and the coordinator and verifier see
+everything; and `*-pro` tiers priced at $30/$180 per 1M tokens are excluded
+because they exhaust a $25 class ceiling in a single turn.
 
 ## Exit-code contract
 

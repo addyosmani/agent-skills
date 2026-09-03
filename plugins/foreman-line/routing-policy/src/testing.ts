@@ -8,6 +8,7 @@ import type {
   RoleAssignment,
   RoutingPolicy,
   ShadowRoute,
+  TransportRequirements,
 } from './types.js'
 
 export const sampleClassEntry: ClassEntry = {
@@ -15,8 +16,39 @@ export const sampleClassEntry: ClassEntry = {
   ceiling_usd: 0.5,
 }
 
+/**
+ * OpenRouter slugs, mirroring routing-policy.yaml v0.3. One list shared by all
+ * three classifications: every model is a first-party-lab model with
+ * ZDR-capable endpoints, so eligibility is uniform and only the transport
+ * requirements differ between public and non-public.
+ */
+const sampleModels: readonly string[] = [
+  'anthropic/claude-opus-5',
+  'anthropic/claude-fable-5.1',
+  'openai/gpt-5.6-sol',
+  'google/gemini-3.1-pro-preview',
+  'anthropic/claude-sonnet-5',
+  'google/gemini-3.8-flash',
+  'openai/gpt-5.6-terra',
+  'openai/gpt-5.6-luna',
+  'google/gemini-3.1-flash-lite',
+  'anthropic/claude-haiku-4.5',
+]
+
+/** The strict values invariant (g) requires for internal and restricted. */
+export const sampleStrictTransport: TransportRequirements = {
+  data_collection: 'deny',
+  zdr: true,
+}
+
+export const samplePublicTransport: TransportRequirements = {
+  data_collection: 'allow',
+  zdr: false,
+}
+
 export const sampleDataClassificationRule: DataClassificationRule = {
-  eligible_models: ['claude-haiku-4-5', 'claude-sonnet-5', 'claude-opus-4-8'],
+  eligible_models: [...sampleModels],
+  transport_requirements: sampleStrictTransport,
 }
 
 export const sampleRoleAssignment: RoleAssignment = {
@@ -25,8 +57,14 @@ export const sampleRoleAssignment: RoleAssignment = {
   builder: 'per-class',
 }
 
+/**
+ * A well-formed shadow route. The shipped policy declares none; this sample
+ * proves the schema still accepts a populated `shadow_routes` map and the
+ * validator still enforces containment on it. The id is deliberately
+ * provider-neutral — no provider name is baked into schema or samples.
+ */
 export const sampleShadowRoute: ShadowRoute = {
-  adapter_id: 'cerebras-shadow',
+  adapter_id: 'example-shadow',
   data_classification: 'public',
   allowed_task_types: ['spec_lint', 'evidence_index', 'review_triage'],
   requires_live_discovery: true,
@@ -45,9 +83,12 @@ export const sampleRoutingPolicy: RoutingPolicy = {
     'implementation/standard': { allowlist: ['standard'], ceiling_usd: 5.0 },
   },
   data_classification: {
-    public: { eligible_models: ['claude-haiku-4-5', 'claude-sonnet-5', 'claude-opus-4-8'] },
-    internal: { eligible_models: ['claude-haiku-4-5', 'claude-sonnet-5', 'claude-opus-4-8'] },
-    restricted: { eligible_models: ['claude-haiku-4-5', 'claude-sonnet-5', 'claude-opus-4-8'] },
+    public: { eligible_models: [...sampleModels], transport_requirements: samplePublicTransport },
+    internal: { eligible_models: [...sampleModels], transport_requirements: sampleStrictTransport },
+    restricted: {
+      eligible_models: [...sampleModels],
+      transport_requirements: sampleStrictTransport,
+    },
   },
   roles: {
     coordinator: 'frontier',
@@ -55,11 +96,17 @@ export const sampleRoutingPolicy: RoutingPolicy = {
     builder: 'per-class',
   },
   model_tiers: {
-    frontier: ['claude-opus-4-8'],
-    standard: ['claude-sonnet-5'],
-    economy: ['claude-haiku-4-5'],
+    // Order is the dispatcher's selection rule (first eligible wins).
+    frontier: [
+      'anthropic/claude-opus-5',
+      'openai/gpt-5.6-sol',
+      'google/gemini-3.1-pro-preview',
+      'anthropic/claude-fable-5.1',
+    ],
+    standard: ['anthropic/claude-sonnet-5', 'google/gemini-3.8-flash', 'openai/gpt-5.6-terra'],
+    economy: ['openai/gpt-5.6-luna', 'google/gemini-3.1-flash-lite', 'anthropic/claude-haiku-4.5'],
   },
   shadow_routes: {
-    'cerebras-shadow': sampleShadowRoute,
+    'example-shadow': sampleShadowRoute,
   },
 }

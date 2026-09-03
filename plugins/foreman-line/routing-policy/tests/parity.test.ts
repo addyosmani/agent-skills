@@ -21,6 +21,7 @@ import {
   sampleRoleAssignment,
   sampleRoutingPolicy,
   sampleShadowRoute,
+  sampleStrictTransport,
 } from '../src/testing.js'
 import type { ShadowRoute } from '../src/types.js'
 
@@ -30,6 +31,7 @@ const samplesByName: ReadonlyMap<string, unknown> = new Map<string, unknown>([
   ['routing-policy', sampleRoutingPolicy],
   ['class-entry', sampleClassEntry],
   ['data-classification-rule', sampleDataClassificationRule],
+  ['transport-requirements', sampleStrictTransport],
   ['role-assignment', sampleRoleAssignment],
   ['shadow-route', sampleShadowRoute],
 ])
@@ -38,7 +40,7 @@ registerNoDriftTests(allSchemaFiles, schemasDir)
 registerSampleValidationTests(allSchemaFiles, samplesByName)
 
 test('every exported routing-policy type has a committed schema file', () => {
-  assert.equal(allSchemaFiles.length, 5)
+  assert.equal(allSchemaFiles.length, 6)
 })
 
 test('shadow prohibited_roles type and schema accept either exact role order', () => {

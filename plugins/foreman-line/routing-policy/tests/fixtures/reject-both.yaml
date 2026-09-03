@@ -23,25 +23,18 @@ classes:
 
 data_classification:
   public:
-    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+    transport_requirements: { data_collection: allow, zdr: false }
+    eligible_models: [anthropic/claude-haiku-4.5, anthropic/claude-sonnet-5, anthropic/claude-opus-5]
   internal:
-    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+    transport_requirements: { data_collection: deny, zdr: true }
+    eligible_models: [anthropic/claude-haiku-4.5, anthropic/claude-sonnet-5, anthropic/claude-opus-5]
   restricted:
-    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+    transport_requirements: { data_collection: deny, zdr: true }
+    eligible_models: [anthropic/claude-haiku-4.5, anthropic/claude-sonnet-5, anthropic/claude-opus-5]
 
 model_tiers:
-  frontier: [claude-opus-4-8]
-  standard: [claude-sonnet-5]
-  economy: [claude-haiku-4-5]
+  frontier: [anthropic/claude-opus-5]
+  standard: [anthropic/claude-sonnet-5]
+  economy: [anthropic/claude-haiku-4.5]
 
-shadow_routes: &shadow_routes
-  cerebras-shadow:
-    adapter_id: cerebras-shadow
-    data_classification: public
-    allowed_task_types: [spec_lint, evidence_index, review_triage]
-    requires_live_discovery: true
-    candidate_only: true
-    authority: none
-    tools_granted: []
-    effect_capability: none
-    prohibited_roles: [coordinator, verifier]
+shadow_routes: {}

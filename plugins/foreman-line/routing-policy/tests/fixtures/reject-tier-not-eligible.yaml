@@ -1,6 +1,11 @@
-# Rejecting fixture: violates TWO semantic invariants at once (role pinning
-# and the security override), proving the CLI lists every violation found —
-# not just the first — per the exit-code contract.
+# Rejecting fixture (invariant f): `openai/gpt-5.6-sol` is a legitimate frontier id
+# (it IS in KNOWN_FRONTIER_MODELS) and is listed in `model_tiers.frontier`,
+# but was never added to any `data_classification.*.eligible_models` list.
+# Every other invariant (a-e) and the schema are satisfied unchanged from the
+# shipped policy, so this fixture isolates (f) alone: classification gating
+# runs before cost optimization (D6), so this model can never be dispatched
+# under any classification - the tier list is advertising a route that does
+# not exist.
 classes:
   boilerplate:
     allowlist: [economy]
@@ -14,10 +19,6 @@ classes:
   implementation/standard:
     allowlist: [standard]
     ceiling_usd: 5.00
-  security-audit:
-    allowlist: [standard]
-    ceiling_usd: 25.00
-    security_flavored: true
 
 data_classification:
   public:
@@ -31,12 +32,12 @@ data_classification:
     eligible_models: [anthropic/claude-haiku-4.5, anthropic/claude-sonnet-5, anthropic/claude-opus-5]
 
 roles:
-  coordinator: standard
+  coordinator: frontier
   verifier: frontier
   builder: per-class
 
 model_tiers:
-  frontier: [anthropic/claude-opus-5]
+  frontier: [anthropic/claude-opus-5, openai/gpt-5.6-sol]
   standard: [anthropic/claude-sonnet-5]
   economy: [anthropic/claude-haiku-4.5]
 

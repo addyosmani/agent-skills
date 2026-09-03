@@ -257,8 +257,8 @@ test('AC4: routing eval result populates pkg.order.routingDecisionRef', async ()
       pkg.routingResult.routingDecisionRef,
       `docs/receipts/${WORKFLOW_ID}/routing-decision.json`,
     )
-    // architecture/risk → frontier → claude-opus-4-8
-    assert.equal(pkg.routingResult.resolvedModelId, 'claude-opus-4-8')
+    // architecture/risk → frontier → anthropic/claude-opus-5 (first frontier entry in the shipped policy)
+    assert.equal(pkg.routingResult.resolvedModelId, 'anthropic/claude-opus-5')
   } finally {
     rmSync(repoRoot, { recursive: true, force: true })
   }
@@ -338,7 +338,7 @@ test('AC7: stepZeroRestatement contains all required substrings', async () => {
     const restatement = pkg.order.stepZeroRestatement
     assert.ok(restatement.includes('KONE-9999'), 'must contain ticket key')
     assert.ok(restatement.includes(WORKFLOW_ID), 'must contain workflowId')
-    assert.ok(restatement.includes('claude-opus-4-8'), 'must contain resolved model ID')
+    assert.ok(restatement.includes('anthropic/claude-opus-5'), 'must contain resolved model ID')
     assert.ok(restatement.includes('artifact ID:'), 'must contain "artifact ID:"')
     assert.ok(restatement.includes('artifact-hash-999'), 'must contain kompressArtifactId')
   } finally {

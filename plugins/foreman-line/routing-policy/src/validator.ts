@@ -1,6 +1,6 @@
 /**
  * `validatePolicy`: the one exported validation entry point. Runs the
- * structural (ajv) pass against `routingPolicySchema` first, then the five
+ * structural (ajv) pass against `routingPolicySchema` first, then the seven
  * semantic invariants from the spec's Constraints section, independent of
  * whether the structural pass succeeded (so a single invocation surfaces every
  * violation, not just the first — the exit-code contract's `1` case depends
@@ -33,8 +33,24 @@ const SHADOW_TASK_TYPES = new Set(['spec_lint', 'evidence_index', 'review_triage
  * validation; this registry is reviewed, tested code. Redefining "frontier"
  * therefore costs a code change with tests (the quarterly model revisit),
  * never a policy-file edit.
+ *
+ * Ids are OpenRouter slugs verbatim (`vendor/model`, from
+ * https://openrouter.ai/api/v1/models) — note Anthropic ids use dots there
+ * (`anthropic/claude-fable-5.1`), the opposite of OpenCode Zen's dashes.
+ * Gemini 3.1 Pro exists on OpenRouter only as `-preview`. Free, `:free`, and
+ * contributor-tier models (which may train on submitted data, or are
+ * rate-limited) are never frontier: the coordinator and verifier see
+ * everything. Registry as of 2026-09-03; `openai/gpt-5.5-pro` /
+ * `openai/gpt-5.4-pro` are deliberately absent — at $30/$180 per 1M tokens
+ * they exhaust a $25 class ceiling in a single turn.
  */
-export const KNOWN_FRONTIER_MODELS: readonly string[] = ['claude-opus-4-8']
+export const KNOWN_FRONTIER_MODELS: readonly string[] = [
+  'anthropic/claude-opus-5',
+  'anthropic/claude-fable-5.1',
+  'openai/gpt-5.6-sol',
+  'openai/gpt-5.5',
+  'google/gemini-3.1-pro-preview',
+]
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -152,6 +168,69 @@ function checkFrontierTierAnchoring(doc: Record<string, unknown>): string[] {
 }
 
 /**
+ * Invariant (g): non-public classifications must declare the strictest
+ * gateway transport requirements. On a multi-provider gateway a model id does
+ * not determine who serves the request; `data_collection: 'deny'` and
+ * `zdr: true` are the two OpenRouter controls that do. The policy cannot send
+ * requests, so this is a declared obligation on the consumer — but a policy
+ * that declared anything weaker for internal/restricted data would be wrong
+ * on its face, and that much can be checked here.
+ */
+function checkTransportRequirements(doc: Record<string, unknown>): string[] {
+  const errors: string[] = []
+  const dataClassification = doc.data_classification
+  if (!isRecord(dataClassification)) return errors
+
+  for (const tier of ['internal', 'restricted'] as const) {
+    const rule = dataClassification[tier]
+    if (!isRecord(rule)) continue
+    const transport = rule.transport_requirements
+    if (!isRecord(transport)) continue // structural pass reports the missing block
+    const prefix = `data_classification.${tier}.transport_requirements`
+    if (transport.data_collection !== 'deny') {
+      errors.push(
+        `${prefix}.data_collection must be 'deny', got '${String(transport.data_collection)}' — non-public data may not reach providers that store or train on inputs (g)`,
+      )
+    }
+    if (transport.zdr !== true) {
+      errors.push(
+        `${prefix}.zdr must be true, got '${String(transport.zdr)}' — non-public data may only reach zero-data-retention endpoints (g)`,
+      )
+    }
+  }
+  return errors
+}
+
+/**
+ * Invariant (f): every model id in any `model_tiers.*` list must be eligible
+ * under `data_classification.public`. Classification gating runs before cost
+ * optimization (D6), so a tier model absent from even the widest eligible set
+ * can never be dispatched under any classification — or, worse, is dispatched
+ * unchecked by a caller that consults tiers without consulting eligibility.
+ * Either way the document is lying about what it routes to. Checking against
+ * `public` suffices because (D6) already forces internal and restricted to be
+ * subsets of it.
+ */
+function checkTiersEligibleUnderPublic(doc: Record<string, unknown>): string[] {
+  const errors: string[] = []
+  const modelTiers = doc.model_tiers
+  const dataClassification = doc.data_classification
+  if (!isRecord(modelTiers) || !isRecord(dataClassification)) return errors
+
+  const publicModels = eligibleModelsOf(dataClassification, 'public')
+  for (const [tierName, rawModels] of Object.entries(modelTiers)) {
+    for (const modelId of toStringArray(rawModels)) {
+      if (!publicModels.has(modelId)) {
+        errors.push(
+          `model_tiers.${tierName} contains '${modelId}', which is not in data_classification.public.eligible_models — every tier model must be classification-eligible somewhere or it can never be dispatched (D6)`,
+        )
+      }
+    }
+  }
+  return errors
+}
+
+/**
  * Shadow routes are advisory sidecars, never substitute model tiers or
  * authority-bearing roles. Structural rules live in the schema; these checks
  * bind a route's map key to its adapter id and make the fail-closed policy
@@ -223,6 +302,8 @@ export function validatePolicy(doc: unknown): ValidationResult {
     errors.push(...checkRolePinning(doc))
     errors.push(...checkSecurityOverride(doc))
     errors.push(...checkFrontierTierAnchoring(doc))
+    errors.push(...checkTiersEligibleUnderPublic(doc))
+    errors.push(...checkTransportRequirements(doc))
     errors.push(...checkShadowRoutes(doc))
   }
 

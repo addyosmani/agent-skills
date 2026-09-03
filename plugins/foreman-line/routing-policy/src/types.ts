@@ -42,12 +42,31 @@ export interface ClassEntry {
 }
 
 /**
+ * Gateway-level routing constraints the consumer MUST apply to every request
+ * made under a classification. The policy names model ids; on a multi-provider
+ * gateway (OpenRouter) the same id can be served by many upstream hosts with
+ * different retention and training policies, and provider selection is a
+ * request parameter this repository never sends. Declaring the requirement
+ * here makes the consumer's obligation explicit and machine-readable; it does
+ * not enforce it. Field names mirror OpenRouter's `provider` request object.
+ */
+export interface TransportRequirements {
+  /** `deny` = only providers that do not store or train on inputs. */
+  readonly data_collection: 'allow' | 'deny'
+  /** `true` = only Zero-Data-Retention endpoints. */
+  readonly zdr: boolean
+}
+
+/**
  * One entry in `data_classification`. `eligible_models` must narrow monotonically
  * from `public` -> `internal` -> `restricted` (D6: classification gates eligibility
  * before cost optimization) — a semantic invariant, not expressible in this shape.
+ * `internal` and `restricted` must require `data_collection: 'deny'` and
+ * `zdr: true` (invariant g), also enforced by the validator.
  */
 export interface DataClassificationRule {
   readonly eligible_models: readonly string[]
+  readonly transport_requirements: TransportRequirements
 }
 
 /**

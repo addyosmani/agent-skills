@@ -1,6 +1,11 @@
-# Rejecting fixture: violates TWO semantic invariants at once (role pinning
-# and the security override), proving the CLI lists every violation found —
-# not just the first — per the exit-code contract.
+# Rejecting fixture (invariant g): `internal` declares the permissive transport
+# requirements (`data_collection: allow`, `zdr: false`) that only `public` may
+# carry, and `restricted` relaxes just one of the two (`zdr: false`). Both must
+# be reported. Every other invariant (a-f) and the schema are satisfied
+# unchanged from the shipped policy, so this fixture isolates (g) alone: the
+# model lists are identical and every id is first-party, but the document has
+# declared that non-public prompts may reach providers that store or train on
+# inputs — exactly the loophole a multi-provider gateway opens.
 classes:
   boilerplate:
     allowlist: [economy]
@@ -14,24 +19,20 @@ classes:
   implementation/standard:
     allowlist: [standard]
     ceiling_usd: 5.00
-  security-audit:
-    allowlist: [standard]
-    ceiling_usd: 25.00
-    security_flavored: true
 
 data_classification:
   public:
     transport_requirements: { data_collection: allow, zdr: false }
     eligible_models: [anthropic/claude-haiku-4.5, anthropic/claude-sonnet-5, anthropic/claude-opus-5]
   internal:
-    transport_requirements: { data_collection: deny, zdr: true }
+    transport_requirements: { data_collection: allow, zdr: false }
     eligible_models: [anthropic/claude-haiku-4.5, anthropic/claude-sonnet-5, anthropic/claude-opus-5]
   restricted:
-    transport_requirements: { data_collection: deny, zdr: true }
+    transport_requirements: { data_collection: deny, zdr: false }
     eligible_models: [anthropic/claude-haiku-4.5, anthropic/claude-sonnet-5, anthropic/claude-opus-5]
 
 roles:
-  coordinator: standard
+  coordinator: frontier
   verifier: frontier
   builder: per-class
 

@@ -81,8 +81,24 @@ const result = await queryAndRankCandidates({
 ## Sub-module: `src/routing-eval/`
 
 `evaluateRouting` remains the synchronous deterministic primary-model selector.
+It walks the class's allowlist tiers in policy order and returns the first
+model eligible under the task's data classification — there is no price
+comparison, so tier list order in `routing-policy.yaml` is the cost policy.
+
+The result carries `resolvedModelId` (a bare OpenRouter `vendor/model` slug;
+the caller prepends its provider prefix) **and** `transportRequirements`
+(`{ data_collection, zdr }`, from the policy's per-classification block). On a
+multi-provider gateway the model id does not determine which upstream host
+serves the request; the caller MUST pass these two values through as
+OpenRouter `provider` options on every request for the task. This package
+selects and records; it does not send requests. Both fields are also written
+to the routing receipt.
+
 `executeShadowRoute` is an additive asynchronous dispatch API for optional,
-policy-governed analysis sidecars such as `cerebras-shadow`.
+policy-governed analysis sidecars declared under `shadow_routes`. The shipped
+v0.3 policy declares none; the API is retained and is exercised against
+`routing-policy/tests/fixtures/accept-shadow-route.yaml`, whose route is named
+`example-shadow`.
 
 The shadow API accepts only exact Parcel-authorized public JSON input. Callers
 bind that input with `hashShadowPublicInput`, name a policy- and Parcel-allowed
@@ -93,8 +109,8 @@ reference to an exact record containing `parcelId`, public
 validates and compares that record before discovery. Missing, throwing,
 malformed, non-public, or mismatched resolution fails closed without persisting
 raw resolver data. Callers also inject fresh host-local discovery and provider
-invocation functions; this package does not read credentials or implement a
-Cerebras transport.
+invocation functions; this package does not read credentials or implement any
+provider transport.
 
 ```typescript
 import { executeShadowRoute, hashShadowPublicInput } from '@foreman-line/dispatch'
@@ -103,7 +119,7 @@ const publicInput = { specRef: 'docs/specs/active/example.md' }
 const result = await executeShadowRoute(
   {
     workflowId: 'workflow-001',
-    routeName: 'cerebras-shadow',
+    routeName: 'example-shadow', // must be a key under shadow_routes in the loaded policy
     taskType: 'spec_lint',
     publicInput,
     parcelAuthorization: {

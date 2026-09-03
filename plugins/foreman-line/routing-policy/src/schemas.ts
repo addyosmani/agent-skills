@@ -4,9 +4,10 @@
  * `tests/parity.test.ts` proves each schema agrees with its `types.ts` counterpart
  * via a canonical sample, and that the committed `schemas/*.json` files never drift.
  *
- * Five of the six invariants (classification-gates-before-cost, coordinator/
+ * Seven of the eight invariants (classification-gates-before-cost, coordinator/
  * verifier frontier pinning, the security override and derived name-guard,
- * frontier anchoring, and shadow-route containment) are intentionally NOT
+ * frontier anchoring, tier-models-are-classification-eligible, non-public
+ * transport requirements, and shadow-route containment) are intentionally NOT
  * encoded here — they are cross-field business rules
  * enforced by `validator.ts`, kept distinct from pure structural shape so a
  * schema-valid-but-semantically-wrong document is distinguishable from a
@@ -30,16 +31,27 @@ export const classEntrySchema: SchemaObject = {
   },
 }
 
+export const transportRequirementsSchema: SchemaObject = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['data_collection', 'zdr'],
+  properties: {
+    data_collection: { enum: ['allow', 'deny'] },
+    zdr: { type: 'boolean' },
+  },
+}
+
 export const dataClassificationRuleSchema: SchemaObject = {
   type: 'object',
   additionalProperties: false,
-  required: ['eligible_models'],
+  required: ['eligible_models', 'transport_requirements'],
   properties: {
     eligible_models: {
       type: 'array',
       items: { type: 'string', minLength: 1 },
       minItems: 1,
     },
+    transport_requirements: transportRequirementsSchema,
   },
 }
 
@@ -130,8 +142,9 @@ export const routingPolicySchema: SchemaObject = {
       },
     },
     shadow_routes: {
+      // May be empty. Any route present must satisfy `shadowRouteSchema` and
+      // the validator's containment invariant; no provider name is required.
       type: 'object',
-      required: ['cerebras-shadow'],
       additionalProperties: shadowRouteSchema,
     },
   },

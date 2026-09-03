@@ -21,6 +21,7 @@ import type {
   ClassName,
   DataClassificationTier,
   RoutingPolicy,
+  TransportRequirements,
 } from '../../../routing-policy/src/index.js'
 import {
   CLASS_NAMES,
@@ -45,6 +46,7 @@ export {
   SHADOW_LIMITS,
   ShadowRoutingError,
 } from './shadow.js'
+export type { TransportRequirements }
 
 // ─── Error class ──────────────────────────────────────────────────────────────
 
@@ -76,10 +78,20 @@ export interface RoutingInput {
 }
 
 export interface RoutingResult {
-  /** The single resolved concrete model ID (e.g. 'claude-sonnet-5'). */
+  /** The single resolved concrete model ID (an OpenRouter slug, e.g. 'anthropic/claude-sonnet-5'). */
   readonly resolvedModelId: string
   /** The policy tier that produced the resolved model (e.g. 'standard'). */
   readonly resolvedTier: string
+  /**
+   * Gateway routing constraints the caller MUST apply to every request made
+   * for this task (policy `data_classification.<tier>.transport_requirements`,
+   * mirroring OpenRouter's `provider` object). A model id names a model, not a
+   * host; on a multi-provider gateway these two fields are what keep
+   * non-public prompts off providers that store or train on inputs. This
+   * package selects the model and hands the obligation on — it does not send
+   * requests.
+   */
+  readonly transportRequirements: TransportRequirements
   /** Repo-relative path to the written routing receipt JSON. */
   readonly routingDecisionRef: string
 }
@@ -201,12 +213,18 @@ export function evaluateRouting(input: RoutingInput, options: RoutingOptions = {
   // Write routing receipt — mkdirSync with recursive:true handles pre-existing dirs;
   // both calls are wrapped so ENOSPC/EACCES/ENAMETOOLONG surface as RoutingError
   const receiptDir = join(repoRoot, 'docs', 'receipts', input.workflowId)
+  const transportRequirements: TransportRequirements = {
+    data_collection: dataClassRule.transport_requirements.data_collection,
+    zdr: dataClassRule.transport_requirements.zdr,
+  }
+
   const receipt = {
     workflowId: input.workflowId,
     routing_class: input.routing_class,
     data_classification: input.data_classification,
     resolvedTier,
     resolvedModelId,
+    transportRequirements,
     timestamp: new Date().toISOString(),
     policyRef: POLICY_REPO_PATH,
   }
@@ -223,6 +241,7 @@ export function evaluateRouting(input: RoutingInput, options: RoutingOptions = {
   return {
     resolvedModelId,
     resolvedTier,
+    transportRequirements,
     routingDecisionRef: `docs/receipts/${input.workflowId}/routing-decision.json`,
   }
 }
