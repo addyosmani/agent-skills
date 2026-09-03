@@ -1,5 +1,5 @@
-# Rejecting fixture (AC5e / rework Finding 1): `claude-haiku-4-5` is smuggled
-# into `model_tiers.frontier` alongside the legitimate `claude-opus-4-8`.
+# Rejecting fixture (AC5e / rework Finding 1): `anthropic/claude-haiku-4.5` is smuggled
+# into `model_tiers.frontier` alongside the legitimate `anthropic/claude-opus-5`.
 # Every OTHER invariant (a-d) and the schema are satisfied unchanged from the
 # shipped policy, so this fixture isolates invariant (e) alone: tier *names*
 # still check out (roles pinned to 'frontier', allowlists reference 'frontier'
@@ -21,11 +21,14 @@ classes:
 
 data_classification:
   public:
-    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+    transport_requirements: { data_collection: allow, zdr: false }
+    eligible_models: [anthropic/claude-haiku-4.5, anthropic/claude-sonnet-5, anthropic/claude-opus-5]
   internal:
-    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+    transport_requirements: { data_collection: deny, zdr: true }
+    eligible_models: [anthropic/claude-haiku-4.5, anthropic/claude-sonnet-5, anthropic/claude-opus-5]
   restricted:
-    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+    transport_requirements: { data_collection: deny, zdr: true }
+    eligible_models: [anthropic/claude-haiku-4.5, anthropic/claude-sonnet-5, anthropic/claude-opus-5]
 
 roles:
   coordinator: frontier
@@ -33,18 +36,8 @@ roles:
   builder: per-class
 
 model_tiers:
-  frontier: [claude-opus-4-8, claude-haiku-4-5]
-  standard: [claude-sonnet-5]
-  economy: [claude-haiku-4-5]
+  frontier: [anthropic/claude-opus-5, anthropic/claude-haiku-4.5]
+  standard: [anthropic/claude-sonnet-5]
+  economy: [anthropic/claude-haiku-4.5]
 
-shadow_routes:
-  cerebras-shadow:
-    adapter_id: cerebras-shadow
-    data_classification: public
-    allowed_task_types: [spec_lint, evidence_index, review_triage]
-    requires_live_discovery: true
-    candidate_only: true
-    authority: none
-    tools_granted: []
-    effect_capability: none
-    prohibited_roles: [coordinator, verifier]
+shadow_routes: {}

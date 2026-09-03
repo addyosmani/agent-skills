@@ -1,9 +1,18 @@
-# Foreman Line — Model Routing Policy (v0.1)
+# Foreman Line — Model Routing Policy (v0.3)
 #
-# Concrete August-2026 instantiation of plan §5. Revisit quarterly — model
-# pricing and capability change faster than this document should be treated
-# as permanent. See routing-policy/README.md for the schema shape, the
-# exit-code contract, and the six invariants the validator enforces.
+# Concrete September-2026 instantiation of plan §5 against the OpenRouter
+# catalog (https://openrouter.ai/api/v1/models). Model ids are OpenRouter slugs
+# verbatim — `vendor/model`, and Anthropic ids use DOTS here
+# (`anthropic/claude-fable-5.1`), the opposite of OpenCode Zen's dashes. The
+# consumer prepends its own provider prefix (e.g. `openrouter/`), exactly as it
+# prepended `opencode/` to the v0.2 Zen ids. Revisit quarterly — model pricing
+# and capability change faster than this document should be treated as
+# permanent. See routing-policy/README.md for the schema shape, the exit-code
+# contract, and the invariants the validator enforces.
+#
+# Prices noted below are OpenRouter list prices per 1M tokens (input / output)
+# on 2026-09-03, informational only; ceilings are the enforced bound.
+# OpenRouter adds a fee on credit purchases (~5.5%), not per token.
 
 classes:
   boilerplate:
@@ -23,17 +32,83 @@ classes:
     ceiling_usd: 5.00
 
 data_classification:
-  # v0.1: all three current models are already approved-endpoint / on-platform
-  # inference, so eligibility is uniform across tiers today. Classification
-  # gating is still evaluated before cost optimization (D6) — this is the
-  # list a future model addition must respect (each tier's eligible set must
-  # narrow monotonically: restricted subset-of internal subset-of public).
+  # OpenRouter is a multi-provider gateway: one model id may be served by many
+  # upstream hosts (Anthropic/Bedrock/Vertex/Azure for Claude; a dozen-plus
+  # third parties for open-weight models) with different retention and
+  # training policies, load-balanced by price unless told otherwise. A model
+  # id therefore does NOT determine who sees the prompt. Two request-level
+  # controls do — `provider.data_collection` and `provider.zdr` — and this
+  # repository never sends requests. `transport_requirements` declares what
+  # the consumer MUST send per classification (invariant g requires the
+  # strict values for internal and restricted); it does not enforce it.
+  #
+  # Recommended companion setting, outside this repo: in OpenRouter's privacy
+  # settings, disable providers that train on inputs and enable ZDR
+  # enforcement for the Anthropic / OpenAI / Google groups account-wide. That
+  # makes the strict values below the fail-closed default for every request
+  # regardless of classification, and is why v0.3 lists only first-party-lab
+  # models: every id below has ZDR-capable endpoints.
+  #
+  # v0.2's public-only free Meta contributor model is gone. On OpenRouter it
+  # costs $0.10 / $0.20 rather than $0, Meta still trains on it, and the
+  # public-vs-non-public boundary would now be enforced only by the consumer
+  # honoring `transport_requirements` — an unverifiable dependency this
+  # policy's "declared + derived, never somehow" stance rejects. OpenRouter's
+  # `:free` variants are likewise excluded: daily request caps plus a
+  # first-eligible dispatcher with no runtime fallback means quota exhaustion
+  # fails the task outright.
+  #
+  # Classification gating is evaluated before cost optimization (D6): each
+  # tier's eligible set must narrow monotonically (restricted subset-of
+  # internal subset-of public), and every model_tiers entry must appear under
+  # public. All three lists are identical in v0.3.
   public:
-    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+    transport_requirements:
+      # Public inputs may reach any provider; still recommend the strict
+      # account-wide setting so this is never load-bearing.
+      data_collection: allow
+      zdr: false
+    eligible_models:
+      - anthropic/claude-opus-5
+      - anthropic/claude-fable-5.1
+      - openai/gpt-5.6-sol
+      - google/gemini-3.1-pro-preview
+      - anthropic/claude-sonnet-5
+      - google/gemini-3.8-flash
+      - openai/gpt-5.6-terra
+      - openai/gpt-5.6-luna
+      - google/gemini-3.1-flash-lite
+      - anthropic/claude-haiku-4.5
   internal:
-    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+    transport_requirements:
+      data_collection: deny # required by invariant (g)
+      zdr: true # required by invariant (g)
+    eligible_models:
+      - anthropic/claude-opus-5
+      - anthropic/claude-fable-5.1
+      - openai/gpt-5.6-sol
+      - google/gemini-3.1-pro-preview
+      - anthropic/claude-sonnet-5
+      - google/gemini-3.8-flash
+      - openai/gpt-5.6-terra
+      - openai/gpt-5.6-luna
+      - google/gemini-3.1-flash-lite
+      - anthropic/claude-haiku-4.5
   restricted:
-    eligible_models: [claude-haiku-4-5, claude-sonnet-5, claude-opus-4-8]
+    transport_requirements:
+      data_collection: deny # required by invariant (g)
+      zdr: true # required by invariant (g)
+    eligible_models:
+      - anthropic/claude-opus-5
+      - anthropic/claude-fable-5.1
+      - openai/gpt-5.6-sol
+      - google/gemini-3.1-pro-preview
+      - anthropic/claude-sonnet-5
+      - google/gemini-3.8-flash
+      - openai/gpt-5.6-terra
+      - openai/gpt-5.6-luna
+      - google/gemini-3.1-flash-lite
+      - anthropic/claude-haiku-4.5
 
 roles:
   coordinator: frontier # always; D4
@@ -41,26 +116,54 @@ roles:
   builder: per-class
 
 model_tiers:
-  # Tier vocabulary below `frontier` is this parcel's own v0.1 content and is
+  # Tier vocabulary below `frontier` is this parcel's own content and is
   # revisable quarterly; it diverges from plan §5's illustrative
   # small/medium/large. `frontier` is the one literal name the validator's
-  # invariants depend on — do not rename it.
-  frontier: [claude-opus-4-8] # Coordinator, Adversarial Reviewer, and the security-audit hard override
-  standard: [claude-sonnet-5] # Builder default
-  economy: [claude-haiku-4-5] # Boilerplate / build-fix-loop
+  # invariants depend on — do not rename it. Every `frontier` id must also be
+  # in KNOWN_FRONTIER_MODELS (src/validator.ts).
+  #
+  # ORDER IS THE SELECTION RULE. The dispatcher (dispatch/src/routing-eval)
+  # walks the class allowlist tiers in order and, within each tier, picks the
+  # FIRST model that is eligible under the task's data classification. There
+  # is no price comparison at dispatch time — cost optimization is expressed
+  # entirely by how these lists are ordered.
+  #
+  # Do not append OpenRouter variant suffixes here. `:nitro` enables priced
+  # priority tiers and `:floor` enables flex tiers; `:free` is rate-capped;
+  # `:batch` is asynchronous and unusable in an agent loop. Provider speed
+  # preferences (`provider.sort`, `provider.order: ['cerebras']`) are transport
+  # parameters for the consumer, not model ids.
+  frontier:
+    # Coordinator, Adversarial Reviewer, and the security-audit hard override.
+    # Two vendors on purpose: a verifier drawn from a different vendor than the
+    # coordinator makes distinct-instance independence more than nominal.
+    - anthropic/claude-opus-5 # $5 / $25 — primary coordinator
+    - openai/gpt-5.6-sol # $2 / $10 — preferred verifier
+    - google/gemini-3.1-pro-preview # $2 / $12 — third-vendor fallback (no GA slug on OpenRouter)
+    - anthropic/claude-fable-5.1 # $10 / $50 — escalation only; 2x Opus 5
+  standard:
+    # Builder default. Gemini 3.8 Flash is half its Zen price on OpenRouter
+    # and sits second on price; Sonnet 5 stays first on track record.
+    - anthropic/claude-sonnet-5 # $2 / $10
+    - google/gemini-3.8-flash # $0.75 / $3.75
+    - openai/gpt-5.6-terra # $2 / $12
+  economy:
+    # Boilerplate / build-fix-loop. Haiku 4.5 is 5x Luna's price and is kept
+    # only as a last-resort Anthropic fallback.
+    - openai/gpt-5.6-luna # $0.20 / $1.20
+    - google/gemini-3.1-flash-lite # $0.25 / $1.50
+    - anthropic/claude-haiku-4.5 # $1 / $5
 
-# Shadow routes may assist with explicitly public, non-authoritative analysis.
-# They are never model tiers and cannot fill coordinator, verifier, approval,
-# gate, tool, or effect roles. Live availability stays host-local and must be
-# checked before every invocation; credentials never belong in this policy.
-shadow_routes:
-  cerebras-shadow:
-    adapter_id: cerebras-shadow
-    data_classification: public
-    allowed_task_types: [spec_lint, evidence_index, review_triage]
-    requires_live_discovery: true
-    candidate_only: true
-    authority: none
-    tools_granted: []
-    effect_capability: none
-    prohibited_roles: [coordinator, verifier]
+# Shadow routes are advisory sidecars for explicitly public, non-authoritative
+# analysis (spec_lint, evidence_index, review_triage). They are never model
+# tiers and cannot fill coordinator, verifier, approval, gate, tool, or effect
+# roles; the validator enforces that containment for any route declared here.
+#
+# v0.3 ships none. The former `cerebras-shadow` entry had no adapter, no
+# credential, and no production caller behind it. On OpenRouter, fast
+# inference (Cerebras, Groq) is a provider preference on an existing model id
+# under the same credential, not a separate adapter — there is nothing left
+# for a shadow route to add. The dispatch API (`executeShadowRoute`) and its
+# invariants are retained; see tests/fixtures/accept-shadow-route.yaml for the
+# shape of a valid route.
+shadow_routes: {}

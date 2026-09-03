@@ -13,13 +13,22 @@ import {
   type ShadowRoutingInput,
 } from '../src/index.js'
 
-const REAL_POLICY_PATH = join(
+/**
+ * The shipped v0.2 policy declares no shadow routes, so these tests load the
+ * routing-policy package's accepting fixture — the shipped policy plus one
+ * fully-contained, provider-neutral `example-shadow` route — into the tmp
+ * repo under the production policy path.
+ */
+const SHADOW_POLICY_FIXTURE_PATH = join(
   dirname(fileURLToPath(import.meta.url)),
   '..',
   '..',
   'routing-policy',
-  'routing-policy.yaml',
+  'tests',
+  'fixtures',
+  'accept-shadow-route.yaml',
 )
+const SHADOW_ROUTE_NAME = 'example-shadow'
 
 const PUBLIC_INPUT = {
   specRef: 'docs/specs/active/example.md',
@@ -52,14 +61,17 @@ function makeTempRepoRoot(): string {
   const repoRoot = mkdtempSync(join(tmpdir(), 'shadow-routing-test-'))
   const policyDir = join(repoRoot, 'plugins', 'foreman-line', 'routing-policy')
   mkdirSync(policyDir, { recursive: true })
-  writeFileSync(join(policyDir, 'routing-policy.yaml'), readFileSync(REAL_POLICY_PATH, 'utf8'))
+  writeFileSync(
+    join(policyDir, 'routing-policy.yaml'),
+    readFileSync(SHADOW_POLICY_FIXTURE_PATH, 'utf8'),
+  )
   return repoRoot
 }
 
 function makeInput(overrides: Partial<ShadowRoutingInput> = {}): ShadowRoutingInput {
   return {
     workflowId: 'shadow-workflow-001',
-    routeName: 'cerebras-shadow',
+    routeName: SHADOW_ROUTE_NAME,
     taskType: 'spec_lint',
     publicInput: PUBLIC_INPUT,
     parcelAuthorization: {
@@ -279,7 +291,7 @@ test('snapshots all request metadata and dependency functions before authorizati
       mutableInput.parcelAuthorization.dataClassification = 'internal'
       mutableInput.parcelAuthorization.allowedTaskTypes.splice(0, 1, 'code_generation')
       mutableInput.parcelAuthorization.publicInputSha256 = '0'.repeat(64)
-      mutableInput.independentReviewerId = 'cerebras-shadow'
+      mutableInput.independentReviewerId = SHADOW_ROUTE_NAME
       dependencies.discoverAdapter = async () => {
         replacementDiscoveryCalls += 1
         return { status: 'verified_available' }
@@ -313,7 +325,7 @@ test('snapshots all request metadata and dependency functions before authorizati
     assert.equal(result.independentReview.reviewerId, 'independent-reviewer-001')
     assert.equal(
       result.receiptRef,
-      'docs/receipts/shadow-workflow-001/shadow-routing-cerebras-shadow.json',
+      'docs/receipts/shadow-workflow-001/shadow-routing-example-shadow.json',
     )
 
     const receipt = JSON.parse(readFileSync(join(repoRoot, result.receiptRef), 'utf8')) as {
@@ -325,7 +337,7 @@ test('snapshots all request metadata and dependency functions before authorizati
       independentReview: { reviewerId: string }
     }
     assert.equal(receipt.workflowId, 'shadow-workflow-001')
-    assert.equal(receipt.routeName, 'cerebras-shadow')
+    assert.equal(receipt.routeName, SHADOW_ROUTE_NAME)
     assert.equal(receipt.taskType, 'spec_lint')
     assert.equal(receipt.parcelId, 'PARCEL-CEREBRAS-001')
     assert.equal(receipt.authorizationRef, 'docs/specs/active/example.md#shadow-inputs')
@@ -350,7 +362,7 @@ test('discovery-time caller mutation cannot change the authorized task or review
       mutableInput.parcelAuthorization.parcelId = 'FORGED-PARCEL'
       mutableInput.parcelAuthorization.authorizationRef = 'forged-authorization-ref'
       mutableInput.parcelAuthorization.allowedTaskTypes.splice(0, 1, 'code_generation')
-      mutableInput.independentReviewerId = 'cerebras-shadow'
+      mutableInput.independentReviewerId = SHADOW_ROUTE_NAME
       dependencies.invokeAdapter = async () => {
         replacementInvocationCalls += 1
         return { candidate: 'Replacement must not run.', evidence_refs: [] }
@@ -388,7 +400,7 @@ test('discovery-time caller mutation cannot change the authorized task or review
       independentReview: { reviewerId: string }
     }
     assert.equal(receipt.workflowId, 'shadow-workflow-001')
-    assert.equal(receipt.routeName, 'cerebras-shadow')
+    assert.equal(receipt.routeName, SHADOW_ROUTE_NAME)
     assert.equal(receipt.taskType, 'spec_lint')
     assert.equal(receipt.parcelId, 'PARCEL-CEREBRAS-001')
     assert.equal(receipt.authorizationRef, 'docs/specs/active/example.md#shadow-inputs')
@@ -423,7 +435,7 @@ test('rejects malformed trusted authorization without persisting verifier detail
           'docs',
           'receipts',
           'shadow-workflow-001',
-          'shadow-routing-cerebras-shadow.json',
+          'shadow-routing-example-shadow.json',
         ),
       ),
       false,
@@ -807,7 +819,7 @@ test('verified adapter returns a constrained candidate bound to pending independ
     assert.equal(fake.discoveryCalls(), 1)
     assert.equal(fake.invocationCalls(), 1)
     assert.deepEqual(fake.invocationRequest(), {
-      adapterId: 'cerebras-shadow',
+      adapterId: SHADOW_ROUTE_NAME,
       taskType: 'spec_lint',
       publicInput: PUBLIC_INPUT,
       parcelId: 'PARCEL-CEREBRAS-001',
@@ -937,7 +949,7 @@ test('normalizes hostile adapter output without creating a receipt', async () =>
           'docs',
           'receipts',
           'shadow-workflow-001',
-          'shadow-routing-cerebras-shadow.json',
+          'shadow-routing-example-shadow.json',
         ),
       ),
       false,
@@ -983,7 +995,7 @@ for (const testCase of [
             'docs',
             'receipts',
             'shadow-workflow-001',
-            'shadow-routing-cerebras-shadow.json',
+            'shadow-routing-example-shadow.json',
           ),
         ),
         false,
@@ -1000,7 +1012,7 @@ test('requires an independent reviewer distinct from the shadow adapter before d
   try {
     await assert.rejects(
       executeShadowRoute(
-        makeInput({ independentReviewerId: 'cerebras-shadow' }),
+        makeInput({ independentReviewerId: SHADOW_ROUTE_NAME }),
         fake.dependencies,
         { repoRoot },
       ),

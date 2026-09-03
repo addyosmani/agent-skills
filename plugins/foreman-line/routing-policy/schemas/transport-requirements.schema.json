@@ -1,0 +1,19 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "data_collection",
+    "zdr"
+  ],
+  "properties": {
+    "data_collection": {
+      "enum": [
+        "allow",
+        "deny"
+      ]
+    },
+    "zdr": {
+      "type": "boolean"
+    }
+  }
+}

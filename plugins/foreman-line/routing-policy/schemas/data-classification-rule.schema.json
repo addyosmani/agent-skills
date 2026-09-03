@@ -2,7 +2,8 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "eligible_models"
+    "eligible_models",
+    "transport_requirements"
   ],
   "properties": {
     "eligible_models": {
@@ -12,6 +13,25 @@
         "minLength": 1
       },
       "minItems": 1
+    },
+    "transport_requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "data_collection",
+        "zdr"
+      ],
+      "properties": {
+        "data_collection": {
+          "enum": [
+            "allow",
+            "deny"
+          ]
+        },
+        "zdr": {
+          "type": "boolean"
+        }
+      }
     }
   }
 }

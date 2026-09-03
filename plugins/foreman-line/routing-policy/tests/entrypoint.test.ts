@@ -6,7 +6,7 @@ import { type ShadowRoute, type ShadowTaskType, shadowRouteSchema } from '../src
 test('package entrypoint exports the shadow route schema and public types', () => {
   const taskType: ShadowTaskType = 'spec_lint'
   const route: ShadowRoute = {
-    adapter_id: 'cerebras-shadow',
+    adapter_id: 'example-shadow',
     data_classification: 'public',
     allowed_task_types: [taskType],
     requires_live_discovery: true,
