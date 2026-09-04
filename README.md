@@ -26,7 +26,7 @@ Skills encode the workflows, quality gates, and best practices that senior engin
 | What you're doing | Command | Key principle |
 |-------------------|---------|---------------|
 | Define what to build | `/spec` | Spec before code |
-| Plan how to build | `/plan` | Small, atomic tasks |
+| Plan how to build it | `/plan` | Small, atomic tasks |
 | Build incrementally | `/build` | One slice at a time |
 | Prove it works | `/test` | Tests are proof |
 | Set the quality bar | `/constraints` | Decide it once, enforce it everywhere |
