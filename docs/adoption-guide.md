@@ -65,7 +65,7 @@ Run the lifecycle in order for the project's first real feature:
 ### Greenfield anti-patterns
 
 - **Skipping `/spec` because "it's just a prototype."** Prototypes become products. The spec is the cheapest artifact you'll ever write for this codebase.
-- **Loading all 24 skills into every session.** It wastes context and dilutes the ones that matter. Load by phase; let `using-agent-skills` route.
+- **Loading all 25 skills into every session.** It wastes context and dilutes the ones that matter. Load by phase; let `using-agent-skills` route.
 - **Deferring observability until "there's something to observe."** Instrument as you build, retrofitting structured logging is a Path B problem you're choosing to create.
 
 ---

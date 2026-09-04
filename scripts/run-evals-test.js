@@ -8,7 +8,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
-const { materializeWorkspace } = require('./run-evals');
+const { materializeWorkspace, parseGrading } = require('./run-evals');
 
 const RUNNER = path.join(__dirname, 'run-evals.js');
 
@@ -66,6 +66,59 @@ function run(root, args = []) {
     encoding: 'utf8',
   });
 }
+
+test('accepts a complete and consistent grader result', () => {
+  const raw = JSON.stringify({
+    expectations: [
+      { text: 'first expectation', passed: true, evidence: 'observed in the trace' },
+      { text: 'second expectation', passed: false, evidence: 'not observed in the trace' },
+    ],
+    summary: { passed: 1, failed: 1, total: 2, pass_rate: 0.5 },
+  });
+
+  assert.deepEqual(parseGrading(raw, 2), JSON.parse(raw));
+});
+
+test('rejects grader results that omit expectations', () => {
+  const raw = JSON.stringify({
+    expectations: [
+      { text: 'first expectation', passed: true, evidence: 'observed in the trace' },
+    ],
+    summary: { passed: 1, failed: 0, total: 1, pass_rate: 1 },
+  });
+
+  assert.equal(parseGrading(raw, 2), null);
+});
+
+test('rejects incomplete or inconsistent grader summaries', () => {
+  const expectation = { text: 'expected behavior', passed: false, evidence: 'not observed' };
+  const cases = [
+    {
+      expectations: [],
+      summary: { passed: 0, failed: 0, total: 0, pass_rate: 0 },
+    },
+    {
+      expectations: [{ text: 'expected behavior', passed: false }],
+      summary: { passed: 0, failed: 1, total: 1, pass_rate: 0 },
+    },
+    {
+      expectations: [expectation],
+      summary: { passed: 1, failed: 0, total: 1, pass_rate: 1 },
+    },
+    {
+      expectations: [expectation],
+      summary: { passed: 0, total: 1, pass_rate: 0 },
+    },
+    {
+      expectations: [expectation],
+      summary: { passed: 0, failed: 1, total: 1 },
+    },
+  ];
+
+  for (const grading of cases) {
+    assert.equal(parseGrading(JSON.stringify(grading), 1), null);
+  }
+});
 
 test('fails when a skill has no eval case file', () => {
   const root = makeSandbox();

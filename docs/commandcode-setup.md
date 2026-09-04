@@ -12,7 +12,7 @@ The Command Code binary is available as `cmd` (with aliases `cmdc` on Windows an
 cmd skills add addyosmani/agent-skills
 ```
 
-In an interactive terminal this shows a multi-select so you can choose which of the 24 skills to install. Pipe/non-interactive invocations install all discovered skills.
+In an interactive terminal this shows a multi-select so you can choose which of the 25 skills to install. Pipe/non-interactive invocations install all discovered skills.
 
 **Install a specific skill:**
 

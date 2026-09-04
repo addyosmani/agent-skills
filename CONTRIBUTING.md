@@ -12,8 +12,9 @@ This pack already covers most of the development lifecycle, and many proposals o
 
 1. **Search the catalog.** Browse [the skill list in the README](README.md) and skim `skills/` for an existing skill that covers your idea, whole or in part.
 2. **Check open PRs.** Run `gh pr list --state open` (or browse the PRs tab) and look for proposals on the same topic. Clusters of near-duplicate skills already exist; don't add to them.
-3. **Read the anatomy.** Confirm your idea fits the format in [docs/skill-anatomy.md](docs/skill-anatomy.md), an actionable workflow with verification, not vague advice.
-4. **Justify the gap in your PR description.** State explicitly why this isn't covered by an existing skill or open PR. If it overlaps, propose extending the existing skill instead of adding a new one.
+3. **Check rejected proposals.** Search the [skill-change rejection ledger](evals/skill-impact.md) for earlier proposals that overlap with your idea and review their eval evidence before repeating the work.
+4. **Read the anatomy.** Confirm your idea fits the format in [docs/skill-anatomy.md](docs/skill-anatomy.md), an actionable workflow with verification, not vague advice.
+5. **Justify the gap in your PR description.** State explicitly why this isn't covered by an existing skill, open PR, or previously rejected proposal. If it overlaps, propose extending the existing skill instead of adding a new one.
 
 If your idea is a refinement of an existing skill, prefer a focused edit to that skill over a new directory.
 
@@ -62,9 +63,13 @@ The frontmatter fields above are required. The section anatomy is a recommended 
 
 ## Modifying Existing Skills
 
+Before proposing a change, search the [skill-change rejection ledger](evals/skill-impact.md) for previous attempts affecting the same skill and review their eval evidence.
+
 - Keep changes focused and minimal
 - Preserve the existing structure and tone
 - Test that YAML frontmatter remains valid after edits
+
+If a skill or description change is rejected based on eval results, add one row to the ledger with the date, affected skill, concise attempted change, before-to-after rank-1 score, and rejected PR link and outcome. Land that ledger-only update separately on the default branch; do not leave it only on the rejected proposal branch, where closing or force-pushing the proposal could discard the record.
 
 ## Repo-scoped files
 

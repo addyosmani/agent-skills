@@ -34,6 +34,12 @@ jobs:
       - name: Run skill evals (trigger + routing)
         run: node scripts/run-evals.js --min-rank1 80
 
+      - name: Validate references/ links in skills
+        run: node scripts/validate-reference-links.js
+
+      - name: Test reference-link validator
+        run: node --test scripts/validate-reference-links-test.js
+
   validate-commands:
     name: Validate command parity and description sync
     runs-on: ubuntu-latest

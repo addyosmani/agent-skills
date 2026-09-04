@@ -56,15 +56,16 @@ One file per skill: `evals/cases/<skill-name>.json`.
     {
       "id": 1,
       "kind": "execution",
-      "prompt": "Fix the reported rounding bug in the invoice totals, test-first.",
-      "expected_output": "A failing test demonstrating the bug, a minimal fix turning it green, full suite passing",
+      "prompt": "Finance filed the reconciliation bug written up in BUG.md. Fix it.",
+      "expected_output": "A failing reproduction test for the lost-cent case, a fix preserving both README invariants (exact sum, earliest-shares fairness), the fairness invariant covered by its own test, full suite passing",
       "files": [
         "test-driven-development"
       ],
       "expectations": [
-        "A failing test is written and shown failing before the fix",
-        "The implementation is the minimum needed to pass",
-        "The full suite is run after the fix to catch regressions"
+        "A test reproducing the lost-cent case from BUG.md is added and shown failing before src/split.js is modified",
+        "The final implementation satisfies the full README fairness invariant (leftover cents go to the earliest shares): splitCents(10000, 3) returns [3334, 3333, 3333] as BUG.md expects and splitCents(100, 7) returns [15, 15, 14, 14, 14, 14, 14] as the README example shows; dumping the whole remainder on a single share would violate both",
+        "The fairness invariant from the README has its own test case in the suite on an input with remainder of at least 2 (such as splitCents(100, 7)), where dumping the whole remainder on one share would fail it, beyond the reported lost-cent case",
+        "The full suite is run with the repository's own command after the fix"
       ]
     }
   ]
