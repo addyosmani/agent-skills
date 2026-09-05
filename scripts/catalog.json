@@ -1,0 +1,188 @@
+{
+  "_comment": "Presentation data for the generated catalog regions (see scripts/sync-catalog.js). Skill existence, names, and counts come from skills/*/SKILL.md — this file only supplies the phase and the editorial one-liners, in the order the README lists them. Adding a skill requires an entry here; sync-catalog.js fails if disk and this file disagree.",
+  "phases": [
+    { "name": "Meta", "heading": "Meta - Discover which skill applies" },
+    { "name": "Define", "heading": "Define - Clarify what to build" },
+    { "name": "Plan", "heading": "Plan - Break it down" },
+    { "name": "Build", "heading": "Build - Write the code" },
+    { "name": "Verify", "heading": "Verify - Prove it works" },
+    { "name": "Review", "heading": "Review - Quality gates before merge" },
+    { "name": "Ship", "heading": "Ship - Deploy with confidence" }
+  ],
+  "skills": [
+    {
+      "name": "using-agent-skills",
+      "phase": "Meta",
+      "does": "Maps incoming work to the right skill workflow and defines shared operating rules",
+      "when": "Starting a session or deciding which skill applies"
+    },
+    {
+      "name": "interview-me",
+      "phase": "Define",
+      "does": "One-question-at-a-time interview that extracts what the user actually wants instead of what they think they should want, until ~95% confidence",
+      "when": "The ask is underspecified, or the user invokes \"interview me\" / \"grill me\"",
+      "summary": "Surface what the user actually wants before any plan, spec, or code exists"
+    },
+    {
+      "name": "idea-refine",
+      "phase": "Define",
+      "does": "Structured divergent/convergent thinking to turn vague ideas into concrete proposals",
+      "when": "You have a rough concept that needs exploration",
+      "summary": "Refine ideas through structured divergent and convergent thinking"
+    },
+    {
+      "name": "spec-driven-development",
+      "phase": "Define",
+      "does": "Write a PRD covering objectives, commands, structure, code style, testing, and boundaries before any code",
+      "when": "Starting a new project, feature, or significant change",
+      "summary": "Requirements and acceptance criteria before code"
+    },
+    {
+      "name": "constraint-driven-development",
+      "phase": "Define",
+      "does": "Interviews you for a quality bar with sane default thresholds, writes CONSTRAINTS.md, places each check by cost, and catches agents silencing checks or skipping tests to get green",
+      "when": "No standards are written down, or an agent is producing more than anyone reads",
+      "summary": "Write the quality bar down once, then enforce it everywhere"
+    },
+    {
+      "name": "planning-and-task-breakdown",
+      "phase": "Plan",
+      "does": "Decompose specs into small, verifiable tasks with acceptance criteria and dependency ordering",
+      "when": "You have a spec and need implementable units",
+      "summary": "Decompose into small, verifiable tasks"
+    },
+    {
+      "name": "incremental-implementation",
+      "phase": "Build",
+      "does": "Thin vertical slices - implement, test, verify, commit. Feature flags, safe defaults, rollback-friendly changes",
+      "when": "Any change touching more than one file",
+      "summary": "Thin vertical slices, test each before expanding"
+    },
+    {
+      "name": "test-driven-development",
+      "phase": "Build",
+      "does": "Red-Green-Refactor, test pyramid (80/15/5), test sizes, DAMP over DRY, Beyonce Rule, browser testing",
+      "when": "Implementing logic, fixing bugs, or changing behavior",
+      "summary": "Failing test first, then make it pass"
+    },
+    {
+      "name": "context-engineering",
+      "phase": "Build",
+      "does": "Feed agents the right information at the right time - rules files, context packing, MCP integrations",
+      "when": "Starting a session, switching tasks, or when output quality drops",
+      "summary": "Right context at the right time"
+    },
+    {
+      "name": "source-driven-development",
+      "phase": "Build",
+      "does": "Ground every framework decision in official documentation - verify, cite sources, flag what's unverified",
+      "when": "You want authoritative, source-cited code for any framework or library",
+      "summary": "Verify against official docs before implementing"
+    },
+    {
+      "name": "doubt-driven-development",
+      "phase": "Build",
+      "does": "Adversarial fresh-context review of every non-trivial decision in-flight - CLAIM → EXTRACT → DOUBT → RECONCILE → STOP, with optional user-authorized cross-model escalation",
+      "when": "Stakes are high (production, security, irreversible), working in unfamiliar code, or a confident output is cheaper to verify now than to debug later",
+      "summary": "Adversarial fresh-context review of every non-trivial decision"
+    },
+    {
+      "name": "frontend-ui-engineering",
+      "phase": "Build",
+      "does": "Component architecture, design systems, state management, responsive design, WCAG 2.1 AA accessibility",
+      "when": "Building or modifying user-facing interfaces",
+      "summary": "Production-quality UI with accessibility"
+    },
+    {
+      "name": "api-and-interface-design",
+      "phase": "Build",
+      "does": "Contract-first design, Hyrum's Law, One-Version Rule, error semantics, boundary validation",
+      "when": "Designing APIs, module boundaries, or public interfaces",
+      "summary": "Stable interfaces with clear contracts"
+    },
+    {
+      "name": "browser-testing-with-devtools",
+      "phase": "Verify",
+      "does": "Chrome DevTools MCP for live runtime data - DOM inspection, console logs, network traces, performance profiling",
+      "when": "Building or debugging anything that runs in a browser",
+      "summary": "Chrome DevTools MCP for runtime verification"
+    },
+    {
+      "name": "debugging-and-error-recovery",
+      "phase": "Verify",
+      "does": "Five-step triage: reproduce, localize, reduce, fix, guard. Stop-the-line rule, safe fallbacks",
+      "when": "Tests fail, builds break, or behavior is unexpected",
+      "summary": "Reproduce → localize → fix → guard"
+    },
+    {
+      "name": "code-review-and-quality",
+      "phase": "Review",
+      "does": "Five-axis review, change sizing (~100 lines), severity labels (Nit/Optional/FYI), review speed norms, splitting strategies",
+      "when": "Before merging any change",
+      "summary": "Five-axis review with quality gates"
+    },
+    {
+      "name": "code-simplification",
+      "phase": "Review",
+      "does": "Chesterton's Fence, Rule of 500, reduce complexity while preserving exact behavior",
+      "when": "Code works but is harder to read or maintain than it should be",
+      "summary": "Preserve behavior while reducing unnecessary complexity"
+    },
+    {
+      "name": "security-and-hardening",
+      "phase": "Review",
+      "does": "OWASP Top 10 prevention, auth patterns, secrets management, dependency auditing, three-tier boundary system",
+      "when": "Handling user input, auth, data storage, or external integrations",
+      "summary": "OWASP prevention, input validation, least privilege"
+    },
+    {
+      "name": "performance-optimization",
+      "phase": "Review",
+      "does": "Measure-first approach - Core Web Vitals targets, profiling workflows, bundle analysis, anti-pattern detection",
+      "when": "Performance requirements exist or you suspect regressions",
+      "summary": "Measure first, optimize only what matters"
+    },
+    {
+      "name": "git-workflow-and-versioning",
+      "phase": "Ship",
+      "does": "Trunk-based development, atomic commits, change sizing (~100 lines), the commit-as-save-point pattern",
+      "when": "Making any code change (always)",
+      "summary": "Atomic commits, clean history"
+    },
+    {
+      "name": "ci-cd-and-automation",
+      "phase": "Ship",
+      "does": "Shift Left, Faster is Safer, feature flags, quality gate pipelines, failure feedback loops",
+      "when": "Setting up or modifying build and deploy pipelines",
+      "summary": "Automated quality gates on every change"
+    },
+    {
+      "name": "deprecation-and-migration",
+      "phase": "Ship",
+      "does": "Code-as-liability mindset, compulsory vs advisory deprecation, migration patterns, zombie code removal",
+      "when": "Removing old systems, migrating users, or sunsetting features",
+      "summary": "Remove old systems and migrate users safely"
+    },
+    {
+      "name": "documentation-and-adrs",
+      "phase": "Ship",
+      "does": "Architecture Decision Records, API docs, inline documentation standards - document the *why*",
+      "when": "Making architectural decisions, changing APIs, or shipping features",
+      "summary": "Document the why, not just the what"
+    },
+    {
+      "name": "observability-and-instrumentation",
+      "phase": "Ship",
+      "does": "Structured logging, RED metrics, OpenTelemetry tracing, symptom-based alerting - instrument as you build",
+      "when": "Adding telemetry, or shipping anything that runs in production",
+      "summary": "Structured logs, RED metrics, traces, symptom-based alerts"
+    },
+    {
+      "name": "shipping-and-launch",
+      "phase": "Ship",
+      "does": "Pre-launch checklists, feature flag lifecycle, staged rollouts, rollback procedures, monitoring setup",
+      "when": "Preparing to deploy to production",
+      "summary": "Pre-launch checklist, monitoring, rollback plan"
+    }
+  ]
+}

@@ -24,6 +24,9 @@ If your idea is a refinement of an existing skill, prefer a focused edit to that
 2. Add a `SKILL.md` following the format in [docs/skill-anatomy.md](docs/skill-anatomy.md)
 3. Include YAML frontmatter with `name` and `description` fields
 4. Ensure the `description` starts with what the skill does (third person), then includes one or more `Use when` trigger conditions
+5. Add the skill to `scripts/catalog.json` (its phase and one-line editorial text) and run `node scripts/sync-catalog.js --write`
+
+The catalog listings in the README, `CLAUDE.md`, the meta-skill Quick Reference, and the skill-gap issue form are generated from `skills/` plus `scripts/catalog.json`, so don't hand-edit the regions between the `catalog:start` / `catalog:end` markers. CI runs `node scripts/sync-catalog.js --check` and fails when they drift. The README project tree and the meta-skill discovery decision tree are checked for membership but written by hand — add your skill to both where it belongs.
 
 ### Skill Quality Bar
 

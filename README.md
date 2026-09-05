@@ -46,7 +46,7 @@ Skills also activate automatically based on what you're doing — designing an A
 **Fastest path — any agent, one command.** The open [skills CLI](https://github.com/vercel-labs/skills) installs into 70+ agents (Claude Code, Cursor, Codex, Copilot, Cline, and more):
 
 ```bash
-npx skills add addyosmani/agent-skills            # install all 25 skills
+npx skills add addyosmani/agent-skills            # install every skill
 npx skills add addyosmani/agent-skills --list     # browse before installing
 ```
 
@@ -217,9 +217,19 @@ Already installed? How you roll the pack out depends on your codebase. The **[Ad
 
 ---
 
-## All 24 Skills
+<a id="all-24-skills"></a>
 
-The commands above are entry points. The pack includes 25 skills total — 24 lifecycle skills plus the `using-agent-skills` meta-skill. Each skill is a structured workflow with steps, verification gates, and anti-rationalization tables. You can also reference any skill directly.
+## All Skills
+
+The commands above are entry points. Each skill is a structured workflow with steps, verification gates, and anti-rationalization tables. You can also reference any skill directly.
+
+<!-- catalog:start:skill-counts -->
+
+The pack includes 25 skills total — 24 lifecycle skills plus the `using-agent-skills` meta-skill.
+
+<!-- catalog:end:skill-counts -->
+
+<!-- catalog:start:skills-table -->
 
 ### Meta - Discover which skill applies
 
@@ -280,6 +290,8 @@ The commands above are entry points. The pack includes 25 skills total — 24 li
 | [documentation-and-adrs](skills/documentation-and-adrs/SKILL.md) | Architecture Decision Records, API docs, inline documentation standards - document the *why* | Making architectural decisions, changing APIs, or shipping features |
 | [observability-and-instrumentation](skills/observability-and-instrumentation/SKILL.md) | Structured logging, RED metrics, OpenTelemetry tracing, symptom-based alerting - instrument as you build | Adding telemetry, or shipping anything that runs in production |
 | [shipping-and-launch](skills/shipping-and-launch/SKILL.md) | Pre-launch checklists, feature flag lifecycle, staged rollouts, rollback procedures, monitoring setup | Preparing to deploy to production |
+
+<!-- catalog:end:skills-table -->
 
 ---
 
@@ -349,7 +361,7 @@ Every skill follows a consistent anatomy:
 
 ```
 agent-skills/
-├── skills/                            # 25 skills (24 lifecycle + 1 meta)
+├── skills/                            # every skill (lifecycle + meta)
 │   ├── interview-me/                  #   Define
 │   ├── idea-refine/                   #   Define
 │   ├── spec-driven-development/       #   Define
