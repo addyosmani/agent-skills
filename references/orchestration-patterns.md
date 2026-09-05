@@ -32,12 +32,12 @@ user → code-reviewer → report → user
 A slash command that wraps one persona with the project's skills. Saves the user from re-explaining the workflow every time.
 
 ```
-/review → code-reviewer (with code-review-and-quality skill) → report
+/code-review → code-reviewer (with code-review-and-quality skill) → report
 ```
 
 **Use when:** the same single-persona invocation happens repeatedly with the same setup.
 
-**Examples in this repo:** `/review`, `/test`, `/code-simplify`.
+**Examples in this repo:** `/code-review`, `/test`, `/code-simplify`.
 
 **Cost:** same as direct invocation. The slash command is just a saved prompt.
 
@@ -80,7 +80,7 @@ If any answer is "no," fall back to direct invocation or a single-persona comman
 The user runs slash commands in a defined order, carrying context (or commit history) between them. There is no orchestrator agent — the user IS the orchestrator.
 
 ```
-user runs:  /spec  →  /plan  →  /build  →  /test  →  /review  →  /ship
+user runs:  /spec  →  /plan  →  /build  →  /test  →  /code-review  →  /ship
 ```
 
 **Use when:** the workflow has dependencies (each step needs the previous step's output) and human judgment between steps adds value.
@@ -292,7 +292,7 @@ A persona whose job is to decide which other persona to call.
 **Why it fails:**
 - Pure routing layer with no domain value
 - Adds two paraphrasing hops → information loss + roughly 2× token cost
-- The user already knew they wanted a review; they could have called `/review` directly
+- The user already knew they wanted a review; they could have called `/code-review` directly
 - Replicates the work that slash commands and intent mapping in `AGENTS.md` already do
 
 **What to do instead:** add or refine slash commands. Document intent → command mapping in `AGENTS.md`.
