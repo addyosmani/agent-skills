@@ -1,0 +1,81 @@
+{
+  "skill_name": "repository-memory",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Every new session I have to re-explain how the auth subsystem works, is there a way to save that knowledge in the repo so the next agent finds it?",
+        "top_k": 3
+      },
+      {
+        "prompt": "We spent an hour working out why the scheduler double-fires, remember this for future agents touching this module",
+        "top_k": 3
+      },
+      {
+        "prompt": "There's an AGENT_MEMORY.md in src/billing, can I trust what it says before I refactor?",
+        "top_k": 1
+      },
+      {
+        "prompt": "Note down which approaches we tried and reverted in this experiment so a future run doesn't redo them",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Pick which files and rules to load as context before starting this refactor",
+        "owner": "context-engineering"
+      },
+      {
+        "prompt": "Write an ADR explaining why we chose Postgres over DynamoDB",
+        "owner": "documentation-and-adrs"
+      },
+      {
+        "prompt": "The build broke after my change, help me find the root cause",
+        "owner": "debugging-and-error-recovery"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "execution",
+      "prompt": "Fix the typo in the user-facing error message ('Invalide amount') in the utility module. Follow the repository-memory skill when deciding whether anything from this task should be persisted as repository memory.",
+      "expected_output": "The typo is fixed and no repository memory of any kind is written, because a typo fix fails the promotion gate",
+      "files": [
+        "repository-memory"
+      ],
+      "expectations": [
+        "The typo in src/util/format.js is fixed",
+        "No new file of any name is created and no file other than src/util/format.js is modified; in particular no AGENT_MEMORY.md or AGENT_LOG.md appears anywhere",
+        "If memory promotion is considered at all, it is declined because a typo fix is not durable, non-obvious repository knowledge"
+      ]
+    },
+    {
+      "id": 2,
+      "kind": "execution",
+      "prompt": "Add a rate limit of five renewals per minute per session to token renewal. An AGENT_MEMORY.md exists in src/auth; follow the repository-memory skill to decide what of it you can rely on.",
+      "expected_output": "The capsule is treated as unverifiable memory yielding no trusted content, renewal is mapped by direct investigation of the code, and the rate limit covers both renewal sites",
+      "files": [
+        "repository-memory-degraded"
+      ],
+      "expectations": [
+        "The capsule is not treated as verified memory: the workspace offers no way to establish its state, and the agent does not manufacture trust by pointing the checker at HEAD or another local ref",
+        "The agent independently establishes where token renewal happens and identifies src/routes/refresh.js as a second renewal site, rather than accepting the capsule's single-owner claim",
+        "The rate limit accounts for both renewal sites"
+      ]
+    },
+    {
+      "id": 3,
+      "kind": "execution",
+      "prompt": "Scheduled jobs sometimes fire twice around daylight-saving changes. Find and fix the root cause. Follow the repository-memory skill: if the investigation surfaces durable, non-obvious knowledge about this codebase, persist it the way the skill prescribes.",
+      "expected_output": "The mixed timestamp formats are fixed so rescheduling goes through lib/clock, and a minimal AGENT_MEMORY.md capsule colocated with the affected code records the cross-module timestamp invariant with valid scope and evidence",
+      "files": [
+        "repository-memory-admission"
+      ],
+      "expectations": [
+        "The root cause is traced across files: jobs/store.js persists nextRun through lib/clock.serialize (zone-less local time) while jobs/scheduler.js reschedules with toISOString, so the same field carries two formats that diverge around DST",
+        "An AGENT_MEMORY.md is created colocated with the affected code, its frontmatter declares scope and evidence, and its body of roughly 150 words or less records the invariant that persisted timestamps must flow through lib/clock",
+        "The capsule is the only memory file created: a small delta shipped with the fix, not a per-directory summary sweep"
+      ]
+    }
+  ]
+}
