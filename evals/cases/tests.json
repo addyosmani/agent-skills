@@ -1,0 +1,122 @@
+{
+  "skill_name": "tests",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Run the relevant tests for this project and tell me the exact commands that passed or failed",
+        "top_k": 1
+      },
+      {
+        "prompt": "Execute the existing API and contract suites separately, then summarize their results",
+        "top_k": 1
+      },
+      {
+        "prompt": "Figure out this repo's test commands and run a time-bounded set for my change",
+        "top_k": 1
+      },
+      {
+        "prompt": "The CI test job failed; rerun that command locally and report evidence without fixing it",
+        "top_k": 1
+      },
+      {
+        "prompt": "Run the frontend and backend integration suites separately and report what each one exercised",
+        "top_k": 1
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Implement the checkout validator test-first, starting with a failing example",
+        "owner": "test-driven-development"
+      },
+      {
+        "prompt": "Set up a CI/CD pipeline that runs test jobs as pull-request quality gates",
+        "owner": "ci-cd-and-automation"
+      },
+      {
+        "prompt": "The API test is failing intermittently; find the root cause and fix it",
+        "owner": "debugging-and-error-recovery"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Work in the tests-backend project. Run the relevant existing tests for a backend-only change to POST /checkout validation. Its request and response contract, frontend behavior, and persistence are unchanged. Do not write tests or fix code.",
+      "expected_output": "A bounded Verify change plan that discovers project-owned commands, runs unit and API tests, leaves unrelated layers unselected with reasons, and reports exact per-command evidence without edits.",
+      "files": [
+        "tests-backend"
+      ],
+      "expectations": [
+        "Project documentation and package scripts are inspected before commands are selected",
+        "The Test Execution Plan selects Verify change mode and states a finite command cap plus per-command timeouts",
+        "npm run test:unit and npm run test:api are actually executed and pass",
+        "API endpoint behavior is kept distinct from consumer/provider Contract coverage",
+        "The Contract, Frontend Integration, Backend Integration, and E2E commands are not executed, and each relevant omission is explained from the stated change scope or project policy",
+        "The final report includes working directory, display-safe exact commands, exit codes, test counts, measured or unknown durations, and PASS outcomes",
+        "No source files, tests, snapshots, or expected outputs are edited"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Work in the tests-backend project and run npm run test:empty with a finite timeout. Report the result accurately without changing files.",
+      "expected_output": "The command executes, but its zero-test result is reported as NO_TESTS rather than PASS.",
+      "files": [
+        "tests-backend"
+      ],
+      "expectations": [
+        "npm run test:empty is actually executed with a finite bound",
+        "The zero exit code and zero passed, failed, and total counts are recorded",
+        "The empty selection is classified as NO_TESTS rather than PASS",
+        "The report identifies incomplete verification and does not claim the requested behavior was tested",
+        "No project file is edited"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Work in the tests-backend project. Reproduce npm run test:failure once with a finite timeout and report the evidence. Do not diagnose the root cause, rerun broader suites, write tests, or fix anything.",
+      "expected_output": "The failing command executes once, is classified as FAIL, and retains actionable assertion evidence while fake credentials from raw output are redacted.",
+      "files": [
+        "tests-backend"
+      ],
+      "expectations": [
+        "The Test Execution Plan selects Reproduce failure mode with a one-command bound",
+        "npm run test:failure is executed exactly once and its exit code 1 is recorded",
+        "The outcome is FAIL and the checkout status assertion is preserved as the first actionable evidence",
+        "The user-facing report redacts the fake bearer token and database password even though they appear in raw command output",
+        "Test counts and a measured or unknown duration are reported without invention",
+        "No broader suite is run and no diagnosis, source edit, test edit, snapshot update, or fix is attempted"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Work in the tests-backend project. Run all documented required test gates for a release with finite per-command timeouts and report release test readiness only.",
+      "expected_output": "Release gate mode runs every suite required by the fixture's release test policy without taking ownership of lint, build, optional integration, or E2E commands.",
+      "files": [
+        "tests-backend"
+      ],
+      "expectations": [
+        "The Test Execution Plan selects Release gate mode, discovers the documented release test policy, and sets finite bounds",
+        "npm run test:unit, npm run test:api, and npm run test:contract are all actually executed",
+        "npm run lint, npm run build, npm run test:frontend-integration, npm run test:backend-integration, and npm run test:e2e are not executed because they are not required release test gates",
+        "The final report includes exact per-command exits, counts, durations, and PASS outcomes",
+        "The conclusion claims release test readiness only and does not claim overall release readiness"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Work in the tests-backend project. Check whether npm run test:backend-integration can run safely in this environment. Execute it only if its documented prerequisite is present, then report the requested command's outcome without changing files.",
+      "expected_output": "The missing test-database prerequisite is detected during preflight, the suite is not started, and the command is honestly reported as NOT_RUN with unavailable execution fields.",
+      "files": [
+        "tests-backend"
+      ],
+      "expectations": [
+        "The package script and its documented test-database prerequisite are discovered before execution",
+        "Preflight checks only whether CHECKOUT_FIXTURE_TEST_DATABASE_URL is set and does not reveal environment values",
+        "npm run test:backend-integration is not executed when the prerequisite is absent",
+        "The exact planned command is classified as NOT_RUN with the missing prerequisite as its reason",
+        "Exit code, counts, and duration are reported as n/a rather than invented, and the result is not called PASS, FAIL, or NO_TESTS",
+        "No project file is edited"
+      ]
+    }
+  ]
+}
