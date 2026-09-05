@@ -109,6 +109,7 @@ The `.claude/commands/` directory contains slash commands for Claude Code:
 | Command | Skill Invoked |
 |---------|---------------|
 | `/spec` | spec-driven-development |
+| `/constraints` | constraint-driven-development |
 | `/plan` | planning-and-task-breakdown |
 | `/build` | incremental-implementation + test-driven-development |
 | `/build auto` | planning-and-task-breakdown → incremental-implementation + test-driven-development (whole plan, one approval) |
