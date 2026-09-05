@@ -63,14 +63,9 @@ if [ -z "$CONTENT" ]; then
 fi
 dbg "extracted content bytes=${#CONTENT}"
 
-# Must match the pre hook: sha256(URL), first 32 hex chars.
-hash_key() {
-  if command -v shasum >/dev/null 2>&1; then
-    printf '%s' "$1" | shasum -a 256 | cut -c1-32
-  else
-    printf '%s' "$1" | sha256sum | cut -c1-32
-  fi
-}
+# Source shared library
+# shellcheck source=hooks/sdd-cache-lib.sh
+. "$(dirname "$0")/sdd-cache-lib.sh"
 
 CACHE_DIR="${CLAUDE_PROJECT_DIR:-$PWD}/.claude/sdd-cache"
 mkdir -p "$CACHE_DIR"
@@ -83,27 +78,10 @@ HEAD_OUT=$(curl -sI -L --max-time 5 "$URL" 2>/dev/null | tr -d '\r' || true)
 
 # Take only the final response's headers (last paragraph) to avoid picking
 # up validators from intermediate 301/302 hops.
-FINAL_HEADERS=$(printf '%s' "$HEAD_OUT" | awk '
-  BEGIN { RS = ""; last = "" }
-  { last = $0 }
-  END { print last }
-')
+FINAL_HEADERS=$(get_final_headers "$HEAD_OUT")
 
-extract_header() {
-  local name="$1"
-  printf '%s' "$FINAL_HEADERS" | awk -v h="$name" '
-    BEGIN { FS = ":" }
-    tolower($1) == tolower(h) {
-      sub(/^[^:]*:[ \t]*/, "")
-      sub(/[ \t]+$/, "")
-      print
-      exit
-    }
-  '
-}
-
-ETAG=$(extract_header "ETag")
-LAST_MOD=$(extract_header "Last-Modified")
+ETAG=$(extract_header "$FINAL_HEADERS" "ETag")
+LAST_MOD=$(extract_header "$FINAL_HEADERS" "Last-Modified")
 dbg "HEAD etag=$ETAG last_modified=$LAST_MOD"
 
 if [ -z "$ETAG" ] && [ -z "$LAST_MOD" ]; then

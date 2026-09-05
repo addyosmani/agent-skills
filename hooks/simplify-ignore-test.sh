@@ -13,25 +13,9 @@ trap 'rm -rf "$TMPDIR"' EXIT
 export CACHE="$TMPDIR/cache"
 mkdir -p "$CACHE"
 
-# Extract function definitions we need
-hash_cmd() {
-  if command -v shasum >/dev/null 2>&1; then shasum
-  elif command -v sha1sum >/dev/null 2>&1; then sha1sum
-  else printf '%s\n' "error: missing shasum or sha1sum" >&2; exit 1; fi
-}
-file_id() { printf '%s' "$1" | hash_cmd | cut -c1-16; }
-block_hash() { printf '%s' "$1" | hash_cmd | cut -c1-8; }
-escape_glob() {
-  local s="$1"
-  s="${s//\\/\\\\}"
-  s="${s//\*/\\*}"
-  s="${s//\?/\\?}"
-  s="${s//\[/\\[}"
-  printf '%s' "$s"
-}
-
-# Extract filter_file from the hook script (line 59 "filter_file()" to line 142 closing brace)
-eval "$(sed -n '/^filter_file()/,/^}/p' hooks/simplify-ignore.sh)"
+# Source shared library
+# shellcheck source=hooks/simplify-ignore-lib.sh
+. "$(dirname "$0")/simplify-ignore-lib.sh"
 
 assert_eq() {
   local label="$1" expected="$2" actual="$3"

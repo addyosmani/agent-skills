@@ -38,14 +38,9 @@ URL=$(printf '%s' "$INPUT" | jq -r '.tool_input.url // empty' 2>/dev/null || tru
 if [ -z "$URL" ]; then dbg "no url in tool_input, exit"; exit 0; fi
 dbg "url=$URL"
 
-# Cache key is sha256(URL), truncated to 128 bits.
-hash_key() {
-  if command -v shasum >/dev/null 2>&1; then
-    printf '%s' "$1" | shasum -a 256 | cut -c1-32
-  else
-    printf '%s' "$1" | sha256sum | cut -c1-32
-  fi
-}
+# Source shared library
+# shellcheck source=hooks/sdd-cache-lib.sh
+. "$(dirname "$0")/sdd-cache-lib.sh"
 
 CACHE_DIR="${CLAUDE_PROJECT_DIR:-$PWD}/.claude/sdd-cache"
 CACHE_FILE="$CACHE_DIR/$(hash_key "$URL").json"
@@ -53,10 +48,13 @@ CACHE_FILE="$CACHE_DIR/$(hash_key "$URL").json"
 if [ ! -f "$CACHE_FILE" ]; then dbg "no cache file at $CACHE_FILE, exit"; exit 0; fi
 dbg "cache file exists: $CACHE_FILE"
 
-FETCHED_AT=$(jq -r '.fetched_at // 0' "$CACHE_FILE" 2>/dev/null || echo 0)
-ORIGINAL_PROMPT=$(jq -r '.prompt // empty' "$CACHE_FILE" 2>/dev/null || true)
-ETAG=$(jq -r '.etag // empty' "$CACHE_FILE" 2>/dev/null || true)
-LAST_MOD=$(jq -r '.last_modified // empty' "$CACHE_FILE" 2>/dev/null || true)
+# Use a single jq call to extract all fields at once for performance.
+eval "$(jq -r '
+  "FETCHED_AT=" + ((.fetched_at // 0) | @sh),
+  "ORIGINAL_PROMPT=" + ((.prompt // "") | @sh),
+  "ETAG=" + ((.etag // "") | @sh),
+  "LAST_MOD=" + ((.last_modified // "") | @sh)
+' "$CACHE_FILE" 2>/dev/null || echo "FETCHED_AT=0; ORIGINAL_PROMPT=''; ETAG=''; LAST_MOD=''")"
 
 # No validator means we cannot verify freshness — never serve from cache.
 if [ -z "$ETAG" ] && [ -z "$LAST_MOD" ]; then
