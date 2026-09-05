@@ -219,7 +219,7 @@ Already installed? How you roll the pack out depends on your codebase. The **[Ad
 
 ---
 
-## All 24 Skills
+## All 25 Skills
 
 The commands above are entry points. The pack includes 25 skills total — 24 lifecycle skills plus the `using-agent-skills` meta-skill. Each skill is a structured workflow with steps, verification gates, and anti-rationalization tables. You can also reference any skill directly.
 
@@ -243,6 +243,7 @@ The commands above are entry points. The pack includes 25 skills total — 24 li
 | Skill | What It Does | Use When |
 |-------|-------------|----------|
 | [planning-and-task-breakdown](skills/planning-and-task-breakdown/SKILL.md) | Decompose specs into small, verifiable tasks with acceptance criteria and dependency ordering | You have a spec and need implementable units |
+| [test-case-design](skills/test-case-design/SKILL.md) | Analyze test basis and risk, apply the 80/15/5 cost guideline, and produce a Test Planner with concrete Case Specifications | Deciding what to test, reviewing coverage gaps, or preparing cases for TDD |
 
 ### Build - Write the code
 
