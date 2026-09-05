@@ -169,8 +169,10 @@ Using the standalone `copilot` CLI? Install it as a plugin — see [docs/copilot
 </details>
 
 <details>
-  <summary><b>Kiro IDE & CLI </b></summary>
-  Skills for Kiro reside under ".kiro/skills/" and can be stored under Project or Global level. Kiro also supports Agents.md. See Kiro docs at https://kiro.dev/docs/skills/
+<summary><b>Kiro</b></summary>
+
+Import individual skills through Kiro's Agent Steering & Skills panel, or copy this repo's `skills/` directories into `.kiro/skills/` for workspace scope or `~/.kiro/skills/` for global scope. See [docs/kiro-setup.md](docs/kiro-setup.md).
+
 </details>
 
 <details>
