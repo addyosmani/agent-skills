@@ -132,9 +132,12 @@ ${line}"
     printf '%s\n' "$buf" >> "$dest"
   fi
 
-  # Preserve trailing newline status of source
+  # Preserve trailing newline status of source. When the source has no trailing
+  # newline but $dest (built with printf '%s\n') does, strip dest's trailing
+  # newline. $(...) strips all trailing newlines, so this is a POSIX-safe
+  # replacement for `perl -pe 'chomp if eof'` and avoids a hard perl dependency.
   if [ -s "$dest" ] && [ -s "$src" ] && [ -n "$(tail -c 1 "$src")" ]; then
-    perl -pe 'chomp if eof' "$dest" > "${dest}.nnl" && \
+    printf '%s' "$(cat "$dest")" > "${dest}.nnl" && \
       cat "${dest}.nnl" > "$dest" && rm -f "${dest}.nnl"
   fi
 
@@ -264,9 +267,11 @@ if [ "$TOOL_NAME" = "Edit" ] || [ "$TOOL_NAME" = "Write" ]; then
     ;; esac
     printf '%s\n' "$line" >> "$EXPANDED"
   done < "$FILE_PATH"
-  # Preserve trailing newline status
+  # Preserve trailing newline status. $(...) strips all trailing newlines, so
+  # this is a POSIX-safe replacement for `perl -pe 'chomp if eof'` and avoids a
+  # hard perl dependency (perl is absent on minimal CI/container images).
   if [ -s "$EXPANDED" ] && [ -s "$FILE_PATH" ] && [ -n "$(tail -c 1 "$FILE_PATH")" ]; then
-    perl -pe 'chomp if eof' "$EXPANDED" > "${EXPANDED}.nnl" && \
+    printf '%s' "$(cat "$EXPANDED")" > "${EXPANDED}.nnl" && \
       cat "${EXPANDED}.nnl" > "$EXPANDED" && rm -f "${EXPANDED}.nnl"
   fi
   # Warn if model deleted a protected block entirely
