@@ -80,9 +80,40 @@ const SKILL_REF_PATTERNS = [
 /**
  * Strip fenced code blocks from markdown content so that headings, references,
  * and trigger phrases inside examples or templates are not matched by lint rules.
+ *
+ * Scans line by line rather than matching a single regex, so the three fence
+ * forms CommonMark allows — tilde fences, fences indented up to three spaces,
+ * and closing fences longer than their opener — are stripped like plain
+ * ```-fences. A regex over the whole document misses all three, which lets a
+ * heading inside such a block satisfy the required-section check.
  */
 function stripFencedCodeBlocks(content) {
-  return content.replace(/^(`{3,})[^\n]*\n[\s\S]*?^\1\s*$/gm, '');
+  const kept = [];
+  let fence = null;
+
+  for (const line of content.split(/\r?\n/)) {
+    if (fence) {
+      const closingFence = line.match(/^ {0,3}(`+|~+)[ \t]*$/);
+      if (
+        closingFence
+        && closingFence[1][0] === fence.marker
+        && closingFence[1].length >= fence.length
+      ) {
+        fence = null;
+      }
+      continue;
+    }
+
+    const openingFence = line.match(/^ {0,3}(`{3,}|~{3,})/);
+    if (openingFence) {
+      fence = { marker: openingFence[1][0], length: openingFence[1].length };
+      continue;
+    }
+
+    kept.push(line);
+  }
+
+  return kept.join('\n');
 }
 
 /**
