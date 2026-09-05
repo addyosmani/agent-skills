@@ -118,6 +118,22 @@ Long conversations accumulate stale context. Manage this:
 - **Summarize progress** when context is getting long: "So far we've completed X, Y, Z. Now working on W."
 - **Compact deliberately** — if the tool supports it, compact/summarize before critical work
 
+### Restartable Session Boundaries
+
+A fresh session is safe at a completed task boundary, not at an arbitrary token count. Before leaving the current session, persist:
+
+1. the accepted scope and decisions in the spec or plan;
+2. the current task status and the next pending task;
+3. the files changed and the working-tree state;
+4. the exact verification commands and outcomes;
+5. unresolved questions, risks, and required approvals.
+
+Commit the completed task only when the user or repository workflow authorizes it. Otherwise, leave the working tree intact and record that the changes are uncommitted.
+
+In the fresh session, read the rules, spec, plan, task status, and actual `git status` before acting. Re-run verification when its recorded baseline is missing, the code has moved, or the next task depends on it. Do not infer approval from a previous conversation unless the durable artifact records it.
+
+An external harness may automate exit and restart between these boundaries. That loop must treat the artifacts and repository state as the source of truth, preserve human approval gates, and distinguish a completed task from a crashed process. The skill defines the handoff contract; process supervision and model selection belong to the harness.
+
 ## Context Packing Strategies
 
 ### The Brain Dump
