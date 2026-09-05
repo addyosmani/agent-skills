@@ -7,6 +7,7 @@ const { readFileSync } = require("node:fs");
 
 const manifestPaths = [
   "plugin.json",
+  "reasonix-plugin.json",
   ".codex-plugin/plugin.json",
   ".claude-plugin/plugin.json",
   ".claude-plugin/marketplace.json",
