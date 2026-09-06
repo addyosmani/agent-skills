@@ -203,6 +203,21 @@ Installed skills show up in the TUI slash menu, e.g. `/spec-driven-development`.
 </details>
 
 <details>
+<summary><b>fx</b></summary>
+
+fx discovers skills natively — a workspace `skills/` directory (this repo's layout) works with zero configuration, and existing `.claude/skills/` or `.agents/skills/` installs are picked up too:
+
+```bash
+git clone https://github.com/addyosmani/agent-skills.git
+cd agent-skills && fx                                # project scope, zero config
+cp -R skills/* ~/.fx/skills/                         # user scope, all projects
+```
+
+Browse with `/skills`, search with `$` in the composer. See [docs/fx-setup.md](docs/fx-setup.md).
+
+</details>
+
+<details>
 <summary><b>Other Agents</b></summary>
 
 Skills are plain Markdown - they work with any agent that accepts system prompts or instruction files. See [docs/getting-started.md](docs/getting-started.md).
