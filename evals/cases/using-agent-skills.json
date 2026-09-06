@@ -21,7 +21,8 @@
         "owner": "debugging-and-error-recovery"
       },
       {
-        "prompt": "Make the modal accessible for keyboard users"
+        "prompt": "Make the modal accessible for keyboard users",
+        "owner": "frontend-ui-engineering"
       }
     ]
   },
