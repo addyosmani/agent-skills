@@ -81,14 +81,16 @@ We don't accept translations of the documentation (README, `docs/`) or of skills
 
 ## Testing Hooks
 
-The session-start hook (`hooks/session-start.sh`) injects the `using-agent-skills` meta-skill into every new Claude Code session. A regression test at `hooks/session-start-test.sh` validates the hook's JSON payload — both when `jq` is available and when it isn't.
+The session-start hook (`hooks/session-start.mjs`) injects the `using-agent-skills` meta-skill into every new Claude Code session. It is Node rather than bash + `jq` so it runs unchanged on Windows, where Claude Code falls back to PowerShell when Git Bash is absent (#488); `hooks/session-start.sh` is kept for direct invocation. A regression test at `hooks/session-start-test.sh` validates the hook's JSON payload — both when `jq` is available and when it isn't.
 
 Run it before opening any PR that touches:
 
-- `hooks/session-start.sh`
+- `hooks/session-start.mjs` or `hooks/session-start.sh`
+- `hooks/hooks.json`
 - `skills/using-agent-skills/SKILL.md` (the meta-skill content embedded by the hook)
 
 ```bash
+node --test hooks/session-start-node-test.js
 bash hooks/session-start-test.sh
 ```
 
