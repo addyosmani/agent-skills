@@ -72,16 +72,26 @@ test('passes matching command twins and maps plan to planning', () => {
   assert.match(result.stdout, /1 commands checked — 0 error\(s\) — PASSED/);
 });
 
-test('fails when a Claude command is missing a TOML twin', () => {
+test('rejects commands that shadow Claude Code built-ins', () => {
   const root = makeSandbox();
-  const description = 'Review a change';
-  writeClaudeCommand(root, 'review', `description: ${description}`);
-  writeTomlCommand(root, path.join('.gemini', 'commands'), 'review', `description = "${description}"`);
+  writeMatchingCommands(root, 'review', 'Review a change');
 
   const result = run(root);
 
   assert.equal(result.status, 1, result.stdout + result.stderr);
-  assert.match(result.stdout, /review — missing in: commands/);
+  assert.match(result.stdout, /review: conflicts with a Claude Code built-in command/);
+});
+
+test('fails when a Claude command is missing a TOML twin', () => {
+  const root = makeSandbox();
+  const description = 'Review a change';
+  writeClaudeCommand(root, 'audit', `description: ${description}`);
+  writeTomlCommand(root, path.join('.gemini', 'commands'), 'audit', `description = "${description}"`);
+
+  const result = run(root);
+
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /audit .* missing in: commands/);
   assert.match(result.stdout, /1 commands checked — 1 error\(s\) — FAILED/);
 });
 
@@ -99,9 +109,9 @@ test('fails when a TOML command has no Claude twin', () => {
 
 test('reports all descriptions when command twins drift', () => {
   const root = makeSandbox();
-  writeClaudeCommand(root, 'review', 'description: Review a change');
-  writeTomlCommand(root, path.join('.gemini', 'commands'), 'review', 'description = "Inspect a change"');
-  writeTomlCommand(root, 'commands', 'review', 'description = "Audit a change"');
+  writeClaudeCommand(root, 'audit', 'description: Review a change');
+  writeTomlCommand(root, path.join('.gemini', 'commands'), 'audit', 'description = "Inspect a change"');
+  writeTomlCommand(root, 'commands', 'audit', 'description = "Audit a change"');
 
   const result = run(root);
 
@@ -113,33 +123,33 @@ test('reports all descriptions when command twins drift', () => {
 
 test('fails with an actionable error for a malformed description', () => {
   const root = makeSandbox();
-  writeMatchingCommands(root, 'review', 'Review a change');
+  writeMatchingCommands(root, 'audit', 'Review a change');
   writeFile(
     root,
-    path.join('.gemini', 'commands', 'review.toml'),
+    path.join('.gemini', 'commands', 'audit.toml'),
     'prompt = "Missing description"\n',
   );
 
   const result = run(root);
 
   assert.equal(result.status, 1, result.stdout + result.stderr);
-  assert.match(result.stdout, /\.gemini\/commands\/review — missing or malformed description/);
+  assert.match(result.stdout, /\.gemini\/commands\/audit .* missing or malformed description/);
   assert.match(result.stdout, /1 commands checked — 1 error\(s\) — FAILED/);
 });
 
 test('parses escaped quotes in double-quoted TOML descriptions', () => {
   const root = makeSandbox();
-  writeClaudeCommand(root, 'review', 'description: Review "important" changes');
+  writeClaudeCommand(root, 'audit', 'description: Review "important" changes');
   writeTomlCommand(
     root,
     path.join('.gemini', 'commands'),
-    'review',
+    'audit',
     'description = "Review \\"important\\" changes"',
   );
   writeTomlCommand(
     root,
     'commands',
-    'review',
+    'audit',
     'description = "Review \\"important\\" changes"',
   );
 

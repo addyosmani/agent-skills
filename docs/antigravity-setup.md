@@ -55,7 +55,7 @@ Use the native plugin skills directly while that importer limitation applies:
 | `/planning` | `/agent-skills:planning-and-task-breakdown` | Antigravity's built-in `/planning` command is a separate plan-mode control |
 | `/build` | `/agent-skills:incremental-implementation` | Also invoke `/agent-skills:test-driven-development`; wrapper-only `/build auto` orchestration is unavailable |
 | `/test` | `/agent-skills:test-driven-development` | Runs the red-green-refactor workflow |
-| `/review` | `/agent-skills:code-review-and-quality` | Runs the five-axis review workflow |
+| `/code-review` | `/agent-skills:code-review-and-quality` | Runs the five-axis review workflow |
 | `/code-simplify` | `/agent-skills:code-simplification` | Simplifies without changing behavior |
 | `/ship` | `/agent-skills:shipping-and-launch` | The wrapper's automatic persona fan-out is unavailable; invoke specialist agents separately |
 | `/webperf` | Select `web-performance-auditor` from `/agents` | This workflow is a persona, not a skill |

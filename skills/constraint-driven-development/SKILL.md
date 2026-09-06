@@ -191,7 +191,7 @@ The single biggest mistake is running everything everywhere. A check that stalls
 |-------|---------|-----------|--------|
 | BUILD | `/build` | Types, lint, secrets, the floor | under 5s, changed file only |
 | VERIFY | `/test` | Related tests, coverage on changed lines | under 90s |
-| REVIEW | `/review` | Everything, plus the guards below | minutes |
+| REVIEW | `/code-review` | Everything, plus the guards below | minutes |
 | SHIP | `/ship` | Direction checks, no regressions | CI |
 
 Two rules that keep this tolerable:
