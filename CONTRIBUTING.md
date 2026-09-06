@@ -81,18 +81,21 @@ We don't accept translations of the documentation (README, `docs/`) or of skills
 
 ## Testing Hooks
 
-The session-start hook (`hooks/session-start.sh`) injects the `using-agent-skills` meta-skill into every new Claude Code session. A regression test at `hooks/session-start-test.sh` validates the hook's JSON payload — both when `jq` is available and when it isn't.
+The session-start hooks (`hooks/session-start.sh` and `hooks/session-start.ps1`) inject the `using-agent-skills` meta-skill into every new session. Regression tests validate the JSON payload on POSIX and Windows, including the POSIX fallback when `jq` is not available.
 
 Run it before opening any PR that touches:
 
 - `hooks/session-start.sh`
+- `hooks/session-start.ps1`
+- `hooks/hooks.json`
 - `skills/using-agent-skills/SKILL.md` (the meta-skill content embedded by the hook)
 
 ```bash
 bash hooks/session-start-test.sh
+node --test hooks/session-start-windows-test.js
 ```
 
-Expected output: `session-start JSON payload OK`. The script exits non-zero on any assertion failure.
+Expected output: `session-start JSON payload OK` followed by passing Node test output. On non-Windows systems, the Node test still validates the hook configuration and skips the PowerShell runtime cases; CI runs those cases on Windows. Both commands exit non-zero on any assertion failure.
 
 ### Reproducing the no-jq fallback
 

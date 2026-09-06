@@ -6,6 +6,19 @@ on:
   workflow_dispatch:
 
 jobs:
+  test-windows-session-start-hook:
+    name: Test Windows session-start hook
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - run: node --test hooks/session-start-windows-test.js
+
   validate-skills:
     name: Validate skill content
     runs-on: ubuntu-latest
