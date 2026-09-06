@@ -153,6 +153,67 @@ interface CreateTaskInput {
 | Boolean fields | is/has/can prefix | `isComplete`, `hasAttachments` |
 | Enum values | UPPER_SNAKE | `"IN_PROGRESS"`, `"COMPLETED"` |
 
+### 6. Honouring an Idempotency Key
+
+Accepting an `Idempotency-Key` is the contract. Honouring it is the implementation, and it is where the money is lost — a key the server accepts but handles carelessly is worse than no key at all, because the client now believes retrying is safe.
+
+**Derive the key from the intent, not the attempt.** The key must be stable across retries of one intent and different across distinct intents:
+
+```typescript
+crypto.randomUUID()                    // ✗ new key per attempt — every retry is a new charge
+`${userId}:${amount}`                  // ✗ two legitimate $50 charges collapse into one
+`${orderId}:${Date.now()}`             // ✗ a timestamp is randomUUID() wearing a hat
+
+req.headers['idempotency-key']         // ✓ client generates once, reuses on retry
+`charge:v1:${orderId}`                 // ✓ derived from an immutable identifier
+```
+
+The key comes from the client or the initiating event — never from the layer doing the retrying.
+
+**Claim atomically. A check followed by an act is a race:**
+
+```typescript
+// ✗ TOCTOU: two concurrent retries both read "not seen", both charge
+if (!(await db.exists(key))) {
+  await chargeCard(amount);
+  await db.insert(key);
+}
+
+// ✓ let the unique constraint pick the winner
+try {
+  await db.insert({ key, state: 'in_progress', requestHash });
+} catch (e) {
+  if (isUniqueViolation(e)) return replayOrReject(key);
+  throw;
+}
+const result = await chargeCard(amount);
+await db.update({ key, state: 'succeeded', response: result });
+```
+
+The unique constraint *is* the mechanism. A store that cannot enforce uniqueness in one operation cannot back this.
+
+**Guard the payload.** Same key with a different body is a client bug, and must fail loudly rather than serving the first response to a second request:
+
+```typescript
+if (existing.requestHash !== hash(req.body)) {
+  return res.status(422).json({ error: 'idempotency key reused with a different payload' });
+}
+```
+
+**Decide what an in-flight duplicate gets.** The first request is still running when the second arrives — the common case under retry storms:
+
+| Strategy | Response | Use when |
+|---|---|---|
+| Reject | `409 Conflict` | Client can retry later; simplest and safest |
+| Wait | Block for the result, bounded | Caller needs it synchronously |
+| Return pending | `202` + status URL | Long-running effects |
+
+Never let the second caller through because the first "seems stuck". A stalled attempt whose fate is unknown is exactly when duplicating costs most.
+
+**Every call has three outcomes, not two: success, failure, and _unknown_.** A timeout tells you nothing about whether the effect applied. Record the intent *before* calling out, so a crash between the call and the response leaves evidence something must resolve later — rather than a silently retried charge.
+
+**Set retention from the longest retry chain**, not from disk cost. Keys must outlive every path that can re-deliver the same intent, including a dead-letter queue replayed a week later and any provider dispute window. A 24-hour key TTL behind a 7-day DLQ is a duplicate waiting to happen.
+
 ## REST API Patterns
 
 ### Resource Design
@@ -270,6 +331,9 @@ function getTask(id: TaskId): Promise<Task> { ... }
 | "Nobody uses that undocumented behavior" | Hyrum's Law: if it's observable, somebody depends on it. Treat every public behavior as a commitment. |
 | "We can just maintain two versions" | Multiple versions multiply maintenance cost and create diamond dependency problems. Prefer the One-Version Rule. |
 | "Internal APIs don't need contracts" | Internal consumers are still consumers. Contracts prevent coupling and enable parallel work. |
+| "Accepting the Idempotency-Key header is enough" | The header is the contract; storing the key against the result is the implementation. A key you accept but don't honour tells the client retrying is safe when it isn't. |
+| "Our queue guarantees exactly-once delivery" | No queue does across a consumer crash — the broker's ack and your side effect are not in one transaction. Design for at-least-once with idempotent processing. |
+| "Duplicate requests are rare" | They're *correlated*. Retries spike exactly when a dependency is degraded — the moment duplicates are most likely and most expensive. |
 
 ## Red Flags
 
@@ -280,6 +344,10 @@ function getTask(id: TaskId): Promise<Task> { ... }
 - List endpoints without pagination
 - Verbs in REST URLs (`/api/createTask`, `/api/getUsers`)
 - Third-party API responses used without validation or sanitization
+- A `SELECT` for an idempotency key followed by an `INSERT` — that's a race, not a guard
+- An idempotency key derived from a UUID, timestamp, or anything else regenerated per attempt
+- The same key accepted with a different request body, silently returning the first response
+- A key retention window shorter than the longest path that can re-deliver the request
 
 ## Verification
 
@@ -292,58 +360,8 @@ After designing an API:
 - [ ] New fields are additive and optional (backward compatible)
 - [ ] Naming follows consistent conventions across all endpoints
 - [ ] API documentation or types are committed alongside the implementation
-
-## Least Privilege coverage for api and interface design (curve-guided-rsi cycle-4 substantive edit)
-
-This skill — **Design stable, well-documented interfaces that are hard to misuse** — sits in a domain that benefits from explicit least-privilege hardening (sandbox, capabilities, ProtectSystem, NoNewPrivileges, dynamic user, rootless patterns) coverage. Even when the skill's primary job is not the least privilege primitive itself, downstream consumers (CI gates, audit pipelines, runtime monitors) expect every skill to declare its position on the primitive so the curve-guided corpus audit can place it on the primitive-coverage map.
-
-For api and interface design, the least privilege primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the least privilege layer of the yubiOS pipeline, and consumers that reason about least privilege coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full least privilege primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
-
-Concrete implications for api and interface design: any change to the skill should be reviewed for impact on least privilege coverage; gaps in least privilege that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
-
-## Segmentation coverage for api and interface design (curve-guided-rsi cycle-5 substantive edit)
-
-This skill — **API contract, type safety, interface stability** — sits in a domain that benefits from explicit segmentation coverage (process, container, VM, network, hardware). Cycle-5 of `curve-guided-rsi` was run on the expanded 69-skill corpus; this skill's fit coordinate was (u=1.000, v=0.553), PC1+PC2 = 0.4615, holdout R² = +0.2244.
-
-For api and interface design, the segmentation primitive applies as follows: this skill contributes to the segmentation primitive at the API layer; well-designed boundaries reduce blast radius. yubiOS's segmentation stack composes nspawn containers (per `nspawn-containers`), vfio-user device boundaries (per ADR-031), and CISA ZTMM microsegmentation primitives (per `internal-big-picture`); this skill is one contributor.
-
-Concrete implications for api and interface design: any change should be reviewed for impact on segmentation coverage; gaps are tracked in the cycle-5 run log.
-
-
----
-
-## Cycle 5 RSI primitive-closure (2026-08-06)
-
-The hyperspherical-harmonic-curve corpus audit identified this skill as having a `trust chain` coverage gap in the 10-primitive yubiOS framework. **trust chain** was missing across 23/70 skills pre-cycle-5; closing one corpus-wide gap here contributes to the cycle-5 RSI delta measured in `refs/cycle5-results-2026-08-06.md`.
-
-**Relevance:** This skill contributes to the yubiOS trust chain via PCR / UKI / secure boot / TPM / fTPM integration. Specifically it covers: trust chain, PCR, UKI.
-
-**Keywords introduced in this skill (cycle-5 RSI):** `trust chain`, `PCR`, `UKI`, `secure boot`
-
-**Audit-trail:** This addition closes one corpus-wide primitive gap (corpus-wide `trust chain` count moved 23→24/70). Per-skill impact is recorded in the cycle-5 results artifact. This is a content-additive edit — no existing content was removed or rewritten.
-
-## Changelog
-
-- **2026-08-06 cycle 5 RSI**: closed `trust chain` primitive gap (corpus-wide count 23→24/70). See `refs/cycle5-results-2026-08-06.md` for the corpus-fit delta measurement.
-
-
----
-
-## Cycle 6 RSI primitive-closure (2026-08-06)
-
-This skill's `cryptographic identity` primitive is closed by cycle-6 RSI. This skill's cryptographic identity (FIDO2 / PIV / YubiKey / ssh-key / hmac-secret / passkey) integration is referenced.
-
-The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `cryptographic identity` primitive gap.
-
-
----
-
-## Cycle 7 RSI primitive-closure (2026-08-06)
-
-This skill's `declarative policy` primitive is closed by cycle-7 RSI (3rd-priority MOVABLE per skill, post-cycle-6 baseline). This skill's declarative policy (.rego / OPA / Build Policy) integration is referenced.
-
-The audit-trail entry: 2026-08-06 cycle 7 RSI — closed `declarative policy` primitive gap.
-
-## Continuous / adaptive coverage
-
-This skill supports the yubiOS continuous-monitoring layer — runtime detection (falco / tracee / tetragon / kubeArmor), adaptive policy, real-time monitoring. The skill is observable from the runtime-detect surface; alerts/metrics feed into the audit-evidence rollup.
+- [ ] State-changing endpoints either honour an idempotency key or are documented as unsafe to retry
+- [ ] The key is claimed in one atomic operation, guarded by a unique constraint
+- [ ] A reused key with a different payload fails loudly rather than replaying the wrong response
+- [ ] The in-flight-duplicate response is a deliberate choice (409, wait, or 202) rather than whatever falls out
+- [ ] Key retention outlives the longest retry path, including dead-letter replay

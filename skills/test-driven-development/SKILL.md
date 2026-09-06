@@ -345,6 +345,7 @@ This separation ensures the test is written without knowledge of the fix, making
 ## See Also
 
 Apply the testing patterns and anti-patterns described above across whichever framework the project uses.
+For JavaScript/TypeScript testing patterns illustrating these principles — Jest, React Testing Library, Supertest, Playwright — see `../../references/testing-patterns.md`. The principles transfer to any ecosystem; the syntax and tools there are JS/TS-specific.
 
 ## Common Rationalizations
 

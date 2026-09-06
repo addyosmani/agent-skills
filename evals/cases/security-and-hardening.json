@@ -13,6 +13,14 @@
       {
         "prompt": "Harden the webhook endpoint that fetches user-supplied URLs",
         "top_k": 3
+      },
+      {
+        "prompt": "Run a dependency audit and triage the findings",
+        "top_k": 3
+      },
+      {
+        "prompt": "Is this new package safe to install? Check for typosquatting and supply chain risk",
+        "top_k": 3
       }
     ],
     "negative": [

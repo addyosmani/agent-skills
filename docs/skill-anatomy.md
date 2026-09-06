@@ -11,10 +11,11 @@ skills/
   skill-name/
     SKILL.md           # Required: The skill definition
     scripts/           # Optional: Runnable helpers used by the skill workflow
+    references/        # Optional: Skill-specific reference documentation
     supporting-file.md # Optional: Reference material loaded on demand
 ```
 
-`SKILL.md` is the only required file. Add `scripts/` only when the skill actually ships runnable helpers, and omit the directory entirely for markdown-only skills.
+`SKILL.md` is the only required file. Add `scripts/` or `references/` only when the skill actually needs them, and omit them entirely for simpler skills.
 
 ## SKILL.md Format
 
@@ -152,7 +153,8 @@ When a skill ships runnable helpers under `scripts/`, each script follows these 
 - Skill directories: `lowercase-hyphen-separated`
 - Skill files: `SKILL.md` (always uppercase)
 - Supporting files: `lowercase-hyphen-separated.md`
-- References: stored in `references/` at the project root, not inside skill directories (see [Shared References](#shared-references) for why)
+- Shared references: stored in the root `references/` directory, not inside skill directories (see [Shared References](#shared-references) for why).
+- Skill-specific references: a single supporting doc can stay as a loose file in the skill directory (the `Supporting files` entry above); when several related docs travel with the skill, the emerging convention for self-contained, distributable skills is to group them in a `references/` directory inside the skill directory, so the skill carries its own supporting docs.
 
 ## Cross-Skill References
 

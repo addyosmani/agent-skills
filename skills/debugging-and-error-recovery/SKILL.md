@@ -72,7 +72,7 @@ Cannot reproduce on demand:
     └── Document the conditions observed and revisit when it recurs
 ```
 
-For test failures:
+For test failures (npm shown — substitute the repository's own test command, per the test-driven-development skill's Discover the Stack First section):
 ```bash
 # Run the specific failing test
 npm test -- --grep "test name"
@@ -105,7 +105,7 @@ git bisect start
 git bisect bad                    # Current commit is broken
 git bisect good <known-good-sha> # This commit worked
 # Git will checkout midpoint commits; run your test at each
-git bisect run npm test -- --grep "failing test"
+git bisect run npm test -- --grep "failing test"  # substitute the repository's focused-test command
 ```
 
 ### Step 3: Reduce
@@ -153,7 +153,7 @@ This test will prevent the same bug from recurring. It should fail without the f
 
 ### Step 6: Verify End-to-End
 
-After fixing, verify the complete scenario:
+After fixing, verify the complete scenario with the repository's own commands (npm shown):
 
 ```bash
 # Run the specific test

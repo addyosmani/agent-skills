@@ -140,6 +140,14 @@ The `references/` directory contains supplementary checklists:
 
 Load a reference when you need detailed patterns beyond what the skill covers.
 
+If you install one skill with `npx skills add ... --skill <name>`, only the
+selected `skills/<name>/` directory is copied. The skill still works, but paths
+to supplementary checklists in the repo-level `references/` directory are
+unavailable. Use a whole-repo integration, clone the repository, or copy the
+needed checklist into a `references/` directory inside the installed skill.
+This portability gap is tracked in
+[addyosmani/agent-skills#361](https://github.com/addyosmani/agent-skills/issues/361).
+
 ## Spec and task artifacts
 
 The `/spec` and `/plan` commands create working artifacts (`SPEC.md`, `tasks/plan.md`, `tasks/todo.md`). Treat them as **living documents** while the work is in progress:
@@ -147,6 +155,23 @@ The `/spec` and `/plan` commands create working artifacts (`SPEC.md`, `tasks/pla
 - Keep them in version control during development so the human and the agent have a shared source of truth.
 - Update them when scope or decisions change.
 - If your repo doesn’t want these files long‑term, delete them before merge or add the folder to `.gitignore` — the workflow doesn’t require them to be permanent.
+
+### Working across sessions
+
+The same artifacts are the handoff between sessions. For a small task, run the whole lifecycle in one session. For anything non-trivial, a fresh session per phase (spec → plan → build → review) keeps context focused — what carries the work forward is the approved files, not the conversation:
+
+- the spec — `SPEC.md`, or wherever your spec actually lives
+- `tasks/plan.md` and `tasks/todo.md` — or the external tracker the plan identifies, if you use one
+
+**Before switching**, make sure those files reflect the decisions that still apply, the scope you approved, the questions still open, the next task, and the current verification state (which tests ran, against what).
+
+**In the new session**, read the actual files and look at `git status` before doing anything. Don't assume approvals you can't see in the artifacts. Treat a recorded "tests pass" as a claim about a specific baseline: re-run the checks it covers if the code has moved since, if it doesn't say what was run against what, or if you're about to touch the area it covered. If the baseline still holds, take it and get on with the next task — the point is a check proportional to what changed, not a full suite at every handoff.
+
+This doesn't need the `/spec` and `/plan` wrappers — plain requests work in any agent, including a `npx skills add` install that only has the skills:
+
+> Read SPEC.md, then break it into small verifiable tasks with acceptance criteria and dependency order. Save them to tasks/plan.md and tasks/todo.md. No product code yet — show me the plan first.
+
+> Read SPEC.md, tasks/plan.md and tasks/todo.md, then check where things actually stand — `git status`, plus re-running whatever checks the recorded verification state no longer covers. Tell me the next unchecked task and anything still open, then stop: I'll confirm the scope before you start it. If the plan looks incomplete, say what's missing rather than rewriting it.
 
 ## Tips
 

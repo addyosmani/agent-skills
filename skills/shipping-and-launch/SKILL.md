@@ -32,7 +32,7 @@ Ship with confidence. The goal is not just to deploy — it's to deploy safely, 
 ### Security
 
 - [ ] No secrets in code or version control
-- [ ] `npm audit` shows no critical or high vulnerabilities
+- [ ] The ecosystem's dependency audit (`npm audit`, `pip-audit`, `cargo audit`, ...) shows no critical or high vulnerabilities
 - [ ] Input validation on all user-facing endpoints
 - [ ] Authentication and authorization checks in place
 - [ ] Security headers configured (CSP, HSTS, etc.)
@@ -235,6 +235,19 @@ In the first hour after launch:
 6. Confirm rollback mechanism works (dry run if possible)
 ```
 
+## Error Budget Release Gate
+
+Your service's error budget — the fraction of requests or time your SLO allows to fail — determines whether it's safe to ship. Use it as an objective gate — not a negotiation:
+
+```
+Budget remaining > 20%  →  Ship normally; monitor closely
+Budget remaining 0–20%  →  Slow rollouts only; no high-risk changes
+Budget exhausted        →  Freeze feature work; focus entirely on reliability
+Budget resets           →  Resume normal pace; bake in the fix that recovered it
+```
+
+A high burn rate during a canary (consuming budget faster than the baseline pace) is a **hold** signal in the rollout thresholds table above — treat it the same as an elevated error rate.
+
 ## Rollback Strategy
 
 Every deployment needs a rollback plan before it happens:
@@ -267,6 +280,11 @@ Every deployment needs a rollback plan before it happens:
 
 - Every change must clear the project-wide Definition of Done (tests pass, no regressions, behavior verified at runtime, docs updated) before this checklist applies
 - Security, performance, and accessibility pre-launch checks are covered by the `security-and-hardening`, `performance-optimization`, and `frontend-ui-engineering` skills respectively
+- For the project-wide Definition of Done that every change must clear before this checklist, see `../../references/definition-of-done.md`
+- For security pre-launch checks, see `../../references/security-checklist.md`
+- For performance pre-launch checklist, see `../../references/performance-checklist.md`
+- For accessibility verification before launch, see `../../references/accessibility-checklist.md`
+- For the alerting rules and SLO-tied thresholds, see `observability-and-instrumentation`
 
 ## Common Rationalizations
 
@@ -277,6 +295,7 @@ Every deployment needs a rollback plan before it happens:
 | "Monitoring is overhead" | Not having monitoring means you discover problems from user complaints instead of dashboards. |
 | "We'll add monitoring later" | Add it before launch. You can't debug what you can't see. |
 | "Rolling back is admitting failure" | Rolling back is responsible engineering. Shipping a broken feature is the failure. |
+| "The error rate looks fine, let's keep shipping" | Check the burn rate, not just the current error rate. Consuming budget faster than baseline is a hold signal even when individual thresholds are green. |
 
 ## Red Flags
 
@@ -287,6 +306,7 @@ Every deployment needs a rollback plan before it happens:
 - No one monitoring the deploy for the first hour
 - Production environment configuration done by memory, not code
 - "It's Friday afternoon, let's ship it"
+- Error budget exhausted but feature work continues unchanged
 
 ## Verification
 
@@ -365,3 +385,6 @@ This skill applies least-privilege hardening: Linux capabilities (drop + ambient
 ## Declarative policy coverage
 
 This skill integrates with the yubiOS declarative-policy substrate — OPA/Rego policy files, signing-config JSON, policy-as-code workflows. Policy gates are named at the integration point; policy evaluation is the gate, not an afterthought.
+For every shipped service:
+
+- [ ] Error budget policy in place: know what action to take when budget drops below 20% and when it's exhausted

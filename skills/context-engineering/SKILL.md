@@ -118,6 +118,8 @@ Long conversations accumulate stale context. Manage this:
 - **Summarize progress** when context is getting long: "So far we've completed X, Y, Z. Now working on W."
 - **Compact deliberately** — if the tool supports it, compact/summarize before critical work
 
+For the proactive discipline that makes these last resorts unnecessary — what to cut first, what to protect, and when to start — see **Context Budget Management** below.
+
 ## Context Packing Strategies
 
 ### The Brain Dump
@@ -176,6 +178,49 @@ Key files: validation.ts, errors.ts, db.ts
 ```
 
 Load only the relevant section when working on a specific area.
+
+## Context Budget Management
+
+The context window is not a filing cabinet — it's a working desk. As a session runs, conversation history, tool output, and exploration accumulate. Most of it becomes deadweight. Budget proactively: waiting until the window is full causes abrupt quality drops; managing regularly keeps the agent coherent through long tasks.
+
+**Start trimming at 75% capacity, not 100%.** By the time the window is genuinely full, the model's attention is already fragmented across too many signals. The 75% threshold gives room to compress gracefully rather than cut desperately mid-task.
+
+### What to cut first
+
+| Content | When to cut |
+|---|---|
+| Past failed attempts and their error output | Once you've moved past them — keep the conclusion, not the journey |
+| Verbose tool output (long `find` results, full file listings) | After you've extracted what you needed |
+| Conversational back-and-forth | As soon as the decision is reached |
+| Earlier drafts of code that were replaced | Immediately on replacement — the current file is the record |
+
+### What to protect until the end
+
+- The original task definition and key constraints
+- The current error message or failing test output you are actively debugging
+- The file currently being edited, or its most recent version
+- Any hard constraints the agent has been asked to enforce (auth rules, naming conventions, etc.)
+
+### Compress before dropping
+
+Summarizing beats deleting. Before removing a long stretch of exploration, reduce it to one sentence capturing the conclusion:
+
+```
+Before: [8 messages debugging a failing import — various attempts, error logs, dead ends]
+After:  "Import issue traced to a circular dependency in src/lib/db.ts —
+         resolved by moving the shared type to src/types/index.ts."
+```
+
+The detail is gone; the decision is preserved. If the detail turns out to matter, the summary is a breadcrumb for re-investigation.
+
+### Order for recency
+
+Put the most task-critical content **last** in context. Models recall content at the start and end of the window more reliably than the middle (the lost-in-the-middle effect — Liu et al., 2023). Keep stable rules and specs at the start; put the active task material last, closest to the generation point:
+
+```
+← session start                              generation point →
+[background: rules, specs, architecture]  [working: current file, error, task]
+```
 
 ## MCP Integrations
 
@@ -260,6 +305,7 @@ This catches wrong directions before you've built on them. It's a 30-second inve
 | Missing examples | Agent invents a new style instead of following yours | Include one example of the pattern to follow |
 | Implicit knowledge | Agent doesn't know project-specific rules | Write it down in rules files — if it's not written, it doesn't exist |
 | Silent confusion | Agent guesses when it should ask | Surface ambiguity explicitly using the confusion management patterns above |
+| Context cliff | Waiting until the window is full before managing it — attention fragments and output quality drops abruptly at the limit | Start trimming at 75% capacity; compress rather than cut |
 
 ## Common Rationalizations
 
@@ -275,7 +321,7 @@ This catches wrong directions before you've built on them. It's a 30-second inve
 - Agent output doesn't match project conventions
 - Agent invents APIs or imports that don't exist
 - Agent re-implements utilities that already exist in the codebase
-- Agent quality degrades as the conversation gets longer
+- Agent quality degrades mid-task as the conversation grows — failed attempts, replaced drafts, and verbose tool output are not being trimmed
 - No rules file exists in the project
 - External data files or config treated as trusted instructions without verification
 
@@ -287,62 +333,5 @@ After setting up context, confirm:
 - [ ] Agent output follows the patterns shown in the rules file
 - [ ] Agent references actual project files and APIs (not hallucinated ones)
 - [ ] Context is refreshed when switching between major tasks
-
-## Note on audit/evidence coverage (curve-guided-rsi v1 gap-fix)
-
-This skill produces audit evidence — logs, journal, SBOM, SLSA provenance, attestation, rekor, cosign, or per-step log artifacts. See `internal-big-picture` for the full audit/evidence primitive.
-
-## Least Privilege coverage for context engineering (curve-guided-rsi cycle-4 substantive edit)
-
-This skill — **Feed agents the right information at the right time** — sits in a domain that benefits from explicit least-privilege hardening (sandbox, capabilities, ProtectSystem, NoNewPrivileges, dynamic user, rootless patterns) coverage. Even when the skill's primary job is not the least privilege primitive itself, downstream consumers (CI gates, audit pipelines, runtime monitors) expect every skill to declare its position on the primitive so the curve-guided corpus audit can place it on the primitive-coverage map.
-
-For context engineering, the least privilege primitive applies as follows: the skill's outputs (artifacts, scripts, patterns) feed into the least privilege layer of the yubiOS pipeline, and consumers that reason about least privilege coverage (curve-guided-rsi's sparse-cell detector, the security-and-hardening review, the audit-evidence rollup) can credit this skill's contribution. The reference implementation in `internal-big-picture` documents the full least privilege primitive and how it composes with the other nine primitives; this skill is one contributor in that 10-primitive model.
-
-Concrete implications for context engineering: any change to the skill should be reviewed for impact on least privilege coverage; gaps in least privilege that are attributable to this skill are tracked in the corpus audit (curve-guided-rsi cycle log at `refs/` on `yubi-OS/yubiOS`).
-
-## Least privilege coverage for context engineering (curve-guided-rsi cycle-5 substantive edit)
-
-This skill — **AGENTS.md, rules, session setup** — sits in a domain that benefits from explicit least-privilege hardening (sandbox, capabilities, ProtectSystem, NoNewPrivileges, dynamic user, rootless patterns). Cycle-5 of `curve-guided-rsi` was run on the expanded 69-skill corpus; this skill's fit coordinate was (u=0.522, v=0.583), PC1+PC2 = 0.4615, holdout R² = +0.2244.
-
-For context engineering, the least privilege primitive applies as follows: this skill contributes to least-privilege via scoped context loading; skills only load on match, reducing the attack surface of misloaded context. yubiOS's least-privilege model composes user-namespace isolation (per `nspawn-containers`), rootless containers (per `rootless-container-builds`, `docker-buildx-rootless`), and systemd sandbox directives (per `systemd-hardening`); this skill contributes to that model.
-
-Concrete implications for context engineering: any change should be reviewed for impact on least-privilege coverage; gaps are tracked in the cycle-5 run log at `refs/curve-guided-rsi-v2-cycle5-deep-research-2026-08-04.md` on `yubi-OS/yubiOS`.
-
-
----
-
-## Cycle 5 RSI primitive-closure (2026-08-06)
-
-The hyperspherical-harmonic-curve corpus audit identified this skill as having a `trust chain` coverage gap in the 10-primitive yubiOS framework. **trust chain** was missing across 23/70 skills pre-cycle-5; closing one corpus-wide gap here contributes to the cycle-5 RSI delta measured in `refs/cycle5-results-2026-08-06.md`.
-
-**Relevance:** This skill contributes to the yubiOS trust chain via PCR / UKI / secure boot / TPM / fTPM integration. Specifically it covers: trust chain, PCR, UKI.
-
-**Keywords introduced in this skill (cycle-5 RSI):** `trust chain`, `PCR`, `UKI`, `secure boot`
-
-**Audit-trail:** This addition closes one corpus-wide primitive gap (corpus-wide `trust chain` count moved 23→24/70). Per-skill impact is recorded in the cycle-5 results artifact. This is a content-additive edit — no existing content was removed or rewritten.
-
-## Changelog
-
-- **2026-08-06 cycle 5 RSI**: closed `trust chain` primitive gap (corpus-wide count 23→24/70). See `refs/cycle5-results-2026-08-06.md` for the corpus-fit delta measurement.
-
-
----
-
-## Cycle 6 RSI primitive-closure (2026-08-06)
-
-This skill's `cryptographic identity` primitive is closed by cycle-6 RSI. This skill's cryptographic identity (FIDO2 / PIV / YubiKey / ssh-key / hmac-secret / passkey) integration is referenced.
-
-The audit-trail entry: 2026-08-06 cycle 6 RSI — closed `cryptographic identity` primitive gap.
-
-
----
-
-## Cycle 7 RSI primitive-closure (2026-08-06)
-
-This skill's `declarative policy` primitive is closed by cycle-7 RSI (3rd-priority MOVABLE per skill, post-cycle-6 baseline). This skill's declarative policy (.rego / OPA / Build Policy) integration is referenced.
-
-The audit-trail entry: 2026-08-06 cycle 7 RSI — closed `declarative policy` primitive gap.
-
-## Continuous / adaptive coverage
-
-This skill supports the yubiOS continuous-monitoring layer — runtime detection (falco / tracee / tetragon / kubeArmor), adaptive policy, real-time monitoring. The skill is observable from the runtime-detect surface; alerts/metrics feed into the audit-evidence rollup.
+- [ ] During long sessions, context is actively managed: failed attempts and replaced drafts removed, live error and task definition protected
+- [ ] Task-critical content (current error, active constraint) is positioned last in context, not buried under background material

@@ -426,7 +426,7 @@ function materializeWorkspace(ev) {
   return workspace;
 }
 
-function parseGrading(raw) {
+function parseGrading(raw, expectedCount) {
   // Grader output may arrive fenced; extract the JSON object and validate shape.
   const m = raw.match(/\{[\s\S]*\}/);
   if (!m) return null;
@@ -436,14 +436,36 @@ function parseGrading(raw) {
   } catch {
     return null;
   }
+  const expectations = g.expectations;
+  const summary = g.summary;
+  const passed = Array.isArray(expectations)
+    ? expectations.filter((expectation) => expectation.passed === true).length
+    : 0;
   const ok =
-    Array.isArray(g.expectations) &&
-    g.expectations.every((e) => typeof e.text === 'string' && typeof e.passed === 'boolean') &&
-    g.summary && typeof g.summary.passed === 'number' && typeof g.summary.total === 'number';
+    Number.isInteger(expectedCount) && expectedCount > 0 &&
+    Array.isArray(expectations) && expectations.length === expectedCount &&
+    expectations.every((expectation) =>
+      typeof expectation.text === 'string' &&
+      typeof expectation.passed === 'boolean' &&
+      typeof expectation.evidence === 'string') &&
+    summary &&
+    Number.isInteger(summary.passed) && summary.passed === passed &&
+    Number.isInteger(summary.failed) && summary.failed === expectedCount - passed &&
+    Number.isInteger(summary.total) && summary.total === expectedCount &&
+    typeof summary.pass_rate === 'number' && Number.isFinite(summary.pass_rate);
   return ok ? g : null;
 }
 
+// Skill name must be a valid kebab-case identifier — no path separators,
+// no "..", no absolute paths. Without this, --behavioral "../../x" would
+// resolve to files outside the project tree for both reads and writes.
+const VALID_SKILL_NAME = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
 function runBehavioral(skillName, dryRun) {
+  if (!skillName || !VALID_SKILL_NAME.test(skillName)) {
+    console.error(`Invalid skill name: "${skillName}" — must be kebab-case (e.g. "my-skill")`);
+    process.exit(1);
+  }
   const caseFile = path.join(CASES_DIR, `${skillName}.json`);
   if (!fs.existsSync(caseFile)) {
     console.error(`No eval case file for "${skillName}"`);
@@ -489,6 +511,7 @@ function runBehavioral(skillName, dryRun) {
     // edit files and run commands in the throwaway workspace; without it,
     // headless denials would force the exact narrate-instead-of-perform
     // failure mode that trace grading exists to catch.
+    try {
     const trace = execFileSync(
       'claude',
       ['-p', '--verbose', '--output-format', 'stream-json',
@@ -516,7 +539,7 @@ function runBehavioral(skillName, dryRun) {
     // The trace can be megabytes; pass the grader prompt via stdin, never
     // argv, or it would blow past the OS argument-size limit (E2BIG).
     const raw = execFileSync('claude', ['-p'], { input: graderPrompt, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, timeout: GRADER_TIMEOUT_MS });
-    const grading = parseGrading(raw);
+    const grading = parseGrading(raw, ev.expectations.length);
     const base = path.join(RESULTS_DIR, `${skillName}.eval-${ev.id}`);
     if (!grading) {
       fs.writeFileSync(`${base}.grading.raw.txt`, raw);
@@ -527,6 +550,11 @@ function runBehavioral(skillName, dryRun) {
     fs.writeFileSync(`${base}.grading.json`, JSON.stringify(grading, null, 2) + '\n');
     console.log(`eval ${ev.id}: ${grading.summary.passed}/${grading.summary.total} expectations passed -> ${path.relative(ROOT, base)}.grading.json`);
     if (grading.summary.passed < grading.summary.total) failures++;
+    } finally {
+      // Clean up throwaway workspace to prevent leaking fixture data
+      // into world-readable temp directories.
+      try { fs.rmSync(workspace, { recursive: true, force: true }); } catch { /* best-effort */ }
+    }
   }
   process.exit(failures ? 1 : 0);
 }
@@ -558,4 +586,4 @@ function main(args = process.argv.slice(2)) {
 
 if (require.main === module) main();
 
-module.exports = { materializeWorkspace };
+module.exports = { materializeWorkspace, parseGrading };
