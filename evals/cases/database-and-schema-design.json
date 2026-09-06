@@ -1,0 +1,46 @@
+{
+  "skill_name": "database-and-schema-design",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Design the schema for orders and order lines, including constraints and foreign keys",
+        "top_k": 3
+      },
+      {
+        "prompt": "Write an expand/contract schema migration to rename users.name to full_name without downtime",
+        "top_k": 1
+      },
+      {
+        "prompt": "What indexes belong on this new orders table given our foreign keys and list query?",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "This API endpoint is slow because of an N+1 query — help me fix the query",
+        "owner": "performance-optimization"
+      },
+      {
+        "prompt": "We are sunsetting the v1 public API for external consumers",
+        "owner": "deprecation-and-migration"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Using the product brief in schema-brief.md, design the initial schema and the migration plan to introduce it safely. Focus on entities, constraints, and expand/contract discipline — not API routes.",
+      "expected_output": "Entity model with constraints, plus an expand/contract migration plan with a tested down path",
+      "files": [
+        "database-and-schema-design"
+      ],
+      "expectations": [
+        "Entities and relationships are explicit, with foreign keys and nullability decided deliberately",
+        "Destructive or rename-style changes use expand/contract rather than in-place edits",
+        "Migrations include a reversible down path and avoid locking backfills",
+        "Indexes are justified from stated query shapes, not added speculatively",
+        "Money and timestamps use safe representations (integer minor units, timezone-aware)"
+      ]
+    }
+  ]
+}

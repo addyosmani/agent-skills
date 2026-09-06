@@ -96,7 +96,7 @@ Expected output: `session-start JSON payload OK`. The script exits non-zero on a
 
 ### Reproducing the no-jq fallback
 
-The hook gracefully degrades to an `INFO`-priority payload when `jq` isn't on `PATH`. To exercise that branch locally, strip `jq`'s directory from `PATH` for the test invocation:
+The hook gracefully degrades to a SessionStart envelope whose `additionalContext` explains that `jq` is missing when it isn't on `PATH`. To exercise that branch locally, strip `jq`'s directory from `PATH` for the test invocation:
 
 ```bash
 JQ_DIR=$(dirname "$(command -v jq)")
@@ -106,7 +106,7 @@ PATH=$(echo "$PATH" | tr ':' '\n' | grep -v "^${JQ_DIR}$" | tr '\n' ':' | sed 's
 
 This works cleanly when `jq` lives in its own directory (e.g. `/opt/homebrew/bin` from Homebrew, `/usr/local/bin` from a manual install). If your `jq` shares a system bin with other tools the test depends on (such as `mktemp` in `/usr/bin`), the simpler approach is to install `jq` via a separate package manager so it has its own bin directory, then re-run.
 
-The hook's `command -v jq` check fails under the stripped `PATH`, the `INFO`-priority fallback runs, and the test asserts the `jq is required` guidance message instead of the normal payload.
+The hook's `command -v jq` check fails under the stripped `PATH`, the fallback envelope runs, and the test asserts the `jq is required` guidance message instead of the normal meta-skill payload.
 
 ## Reporting Issues
 

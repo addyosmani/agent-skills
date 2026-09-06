@@ -2,7 +2,7 @@
 
 How to roll out agent-skills depends heavily on where your codebase is in its life. A greenfield project can adopt the full lifecycle from commit one. A codebase with years of history needs an incremental path that respects what already exists, its conventions, its undocumented decisions, and its lack of test coverage in places you'd rather not touch blind.
 
-This guide covers both paths. For installation mechanics, see [getting-started.md](getting-started.md) and the per-tool setup guides. For what each skill does, see the [skill catalog in the README](../README.md#all-24-skills).
+This guide covers both paths. For installation mechanics, see [getting-started.md](getting-started.md) and the per-tool setup guides. For what each skill does, see the [skill catalog in the README](../README.md#all-25-skills).
 
 ---
 
@@ -57,6 +57,7 @@ Run the lifecycle in order for the project's first real feature:
 | When                                | Load                                                          |
 | ----------------------------------- | ------------------------------------------------------------- |
 | First public API or module boundary | `api-and-interface-design`                                    |
+| First schema or migration           | `database-and-schema-design`                                  |
 | First UI work                       | `frontend-ui-engineering` (+ `browser-testing-with-devtools`) |
 | First CI pipeline                   | `ci-cd-and-automation`                                        |
 | First production deploy             | `observability-and-instrumentation`, `shipping-and-launch`    |

@@ -9,6 +9,15 @@ description: Discovers and invokes agent skills. Use when starting a session or 
 
 Agent Skills is a collection of engineering workflow skills organized by development phase. Each skill encodes a specific process that senior engineers follow. This meta-skill helps you discover and apply the right skill for your current task.
 
+## When to Use
+
+- Starting a new session and deciding which skill applies
+- A task could match more than one skill and you need a routing decision
+- You are about to implement without checking whether a skill governs the work
+- Re-orienting after a phase change (define → plan → build → verify → review → ship)
+
+**When NOT to use as a substitute:** Once the matching skill is identified, follow that skill's process — do not stay in the meta-skill and improvise.
+
 ## Skill Discovery
 
 When a task arrives, identify the development phase and apply the corresponding skill:
@@ -24,6 +33,7 @@ Task arrives
     ├── Implementing code? ────────────→ incremental-implementation
     │   ├── UI work? ─────────────────→ frontend-ui-engineering
     │   ├── API work? ────────────────→ api-and-interface-design
+    │   ├── Schema / migrations / indexes? → database-and-schema-design
     │   ├── Need better context? ─────→ context-engineering
     │   ├── Need doc-verified code? ───→ source-driven-development
     │   └── Stakes high / unfamiliar code? ──→ doubt-driven-development
@@ -177,6 +187,7 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 | Build | context-engineering | Right context at the right time |
 | Build | frontend-ui-engineering | Production-quality UI with accessibility |
 | Build | api-and-interface-design | Stable interfaces with clear contracts |
+| Build | database-and-schema-design | Schema modeling, safe migrations, indexes, constraints |
 | Verify | test-driven-development | Failing test first, then make it pass |
 | Verify | browser-testing-with-devtools | Chrome DevTools MCP for runtime verification |
 | Verify | debugging-and-error-recovery | Reproduce → localize → fix → guard |
@@ -190,3 +201,31 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 | Ship | documentation-and-adrs | Document the why, not just the what |
 | Ship | observability-and-instrumentation | Structured logs, RED metrics, traces, symptom-based alerts |
 | Ship | shipping-and-launch | Pre-launch checklist, monitoring, rollback plan |
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|---|---|
+| "This is too small for a skill" | Small tasks still hit the failure modes skills prevent. Check first; skip only if genuinely none apply. |
+| "I'll gather context first, then pick a skill" | Discovery is the first step. Routing after improvisation means the skill never governs the work. |
+| "I know this workflow already" | Skills encode verification and anti-rationalization, not just familiarity. Follow the skill anyway. |
+| "Multiple skills apply, so I'll freestyle" | Sequence them. A feature often runs define → plan → build → verify → review → ship. |
+| "The meta-skill is enough guidance" | This skill routes; the matched skill's process and verification are mandatory. |
+
+## Red Flags
+
+- Starting implementation without naming the skill in force
+- Treating skill descriptions as the full workflow (skipping the loaded `SKILL.md`)
+- Skipping verification because "it looks right"
+- Staying in this meta-skill after a better-matching skill is obvious
+- Ignoring the lifecycle sequence for non-trivial features
+
+## Verification
+
+After routing and completing work:
+
+- [ ] The applicable skill(s) were identified before substantive implementation
+- [ ] Each applied skill's process was followed (not just its description summary)
+- [ ] Each applied skill's verification checklist passed with evidence
+- [ ] Assumptions were surfaced; confusion was resolved rather than guessed through
+- [ ] Scope stayed within the request — no opportunistic unrelated cleanup
