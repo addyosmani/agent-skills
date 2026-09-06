@@ -40,6 +40,9 @@ jobs:
       - name: Test reference-link validator
         run: node --test scripts/validate-reference-links-test.js
 
+      - name: Test session-start hook payload
+        run: bash hooks/session-start-test.sh
+
   validate-commands:
     name: Validate command parity and description sync
     runs-on: ubuntu-latest
