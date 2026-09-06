@@ -147,6 +147,12 @@ Don't silently fill in ambiguous requirements. The spec's entire purpose is to s
 [Anything unresolved that needs human input]
 ```
 
+**External spec tools:** This workflow is format-agnostic. If the project
+already uses OpenSpec or another specification system, keep that system's
+artifact format and storage conventions instead of creating a duplicate
+`SPEC.md`. This skill owns the clarification, content, and approval gates; the
+external tool owns how the approved spec is represented.
+
 **Reframe instructions as success criteria.** When receiving vague requirements, translate them into concrete conditions:
 
 ```
