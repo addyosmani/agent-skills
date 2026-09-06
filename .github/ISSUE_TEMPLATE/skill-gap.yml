@@ -15,11 +15,13 @@ body:
       label: Affected skill
       description: Which skill did not work as expected?
       options:
+        # catalog:start:skill-options
         - api-and-interface-design
         - browser-testing-with-devtools
         - ci-cd-and-automation
         - code-review-and-quality
         - code-simplification
+        - constraint-driven-development
         - context-engineering
         - debugging-and-error-recovery
         - deprecation-and-migration
@@ -39,6 +41,7 @@ body:
         - spec-driven-development
         - test-driven-development
         - using-agent-skills
+        # catalog:end:skill-options
         - other / not sure
     validations:
       required: true

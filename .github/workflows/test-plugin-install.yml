@@ -22,6 +22,12 @@ jobs:
       - name: Validate all skills
         run: node scripts/validate-skills.js
 
+      - name: Check the generated catalog matches skills/
+        run: node scripts/sync-catalog.js --check
+
+      - name: Test catalog sync generator
+        run: node --test scripts/sync-catalog-test.js
+
       - name: Validate manifest versions
         run: node scripts/validate-versions.js
 
