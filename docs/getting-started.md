@@ -35,9 +35,11 @@ Copy the relevant `SKILL.md` content into your agent's system prompt, rules file
 
 **Conversation:** Reference the skill when giving instructions: "Follow the test-driven-development process for this change."
 
-### 4. Use the meta-skill for discovery
+### 4. Use the meta-skill for discovery when needed
 
-Start with the `using-agent-skills` skill loaded. It contains a flowchart that maps task types to the appropriate skill.
+If your agent does not route skills natively, start with the `using-agent-skills` skill loaded. It contains a flowchart that maps task types to the appropriate skill.
+
+If your host already discovers and activates skills from their descriptions, do not also paste `using-agent-skills` into an always-on system prompt or rules file. That creates two routers for the same task. Install the individual skills and let the host activate them on demand instead.
 
 ## Recommended Setup
 
