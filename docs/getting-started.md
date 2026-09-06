@@ -2,6 +2,11 @@
 
 agent-skills works with any AI coding agent that accepts Markdown instructions. This guide covers the universal approach. For tool-specific setup, see the dedicated guides.
 
+Want a worked example before setting up your own project? The
+[interactive tutorials](https://skills.addy.ie/tutorials/) walk through a
+greenfield build, a brownfield feature, and a safe automation loop with
+copyable prompts for Claude Code, Codex, or any other agent.
+
 ## How Skills Work
 
 Each skill is a Markdown file (`SKILL.md`) that describes a specific engineering workflow. When loaded into an agent's context, the agent follows the workflow — including verification steps, anti-patterns to avoid, and exit criteria.
