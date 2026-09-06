@@ -26,9 +26,11 @@ For more details, refer [Creating agent skills for GitHub Copilot](https://docs.
 
 Copilot supports specialized agent personas. Use the agent-skills agents:
 
-> **Important:** GitHub Copilot requires custom agent files to be named `*.agent.md`.
-> Files named `*.md` are silently ignored by Copilot.
-> See [VS Code custom agents docs](https://code.visualstudio.com/docs/copilot/customization/custom-agents#_custom-agent-file-structure) for details.
+> **Important:** Use the `*.agent.md` extension for compatibility across VS Code and GitHub Copilot coding agent.
+> VS Code also detects plain `*.md` files in `.github/agents`, but other Copilot surfaces may not.
+> See [VS Code custom agents docs](https://code.visualstudio.com/docs/agent-customization/custom-agents#_custom-agent-file-structure) for details.
+
+Skills and personas are separate customizations. Installing or copying skills does not install the personas. The commands below assume this repository is already cloned; replace `/path/to/agent-skills` with the path to that clone.
 
 ```bash
 # Create the agents directory and copy agent definitions
@@ -36,12 +38,33 @@ mkdir -p .github/agents
 cp /path/to/agent-skills/agents/code-reviewer.md .github/agents/code-reviewer.agent.md
 cp /path/to/agent-skills/agents/test-engineer.md .github/agents/test-engineer.agent.md
 cp /path/to/agent-skills/agents/security-auditor.md .github/agents/security-auditor.agent.md
+cp /path/to/agent-skills/agents/web-performance-auditor.md .github/agents/web-performance-auditor.agent.md
 ```
 
-Invoke agents in Copilot Chat:
-- `@code-reviewer Review this PR`
-- `@test-engineer Analyze test coverage for this module`
-- `@security-auditor Check this endpoint for vulnerabilities`
+Open the target repository root in VS Code. In Copilot Chat, select the persona from the agent picker, then enter the task:
+
+- Select `code-reviewer`, then enter `Review this PR`.
+- Select `test-engineer`, then enter `Analyze test coverage for this module`.
+- Select `security-auditor`, then enter `Check this endpoint for vulnerabilities`.
+- Select `web-performance-auditor`, then enter `Audit this web application`.
+
+Custom agents are modes in current VS Code releases, not agent skills or `@` mentions. If they do not appear, run **Chat: Open Customizations** to inspect discovery, then run **Developer: Reload Window** after adding the files.
+
+In GitHub Copilot CLI, run from the target repository root:
+
+```bash
+copilot --agent code-reviewer
+```
+
+To target a repository without changing directories:
+
+```bash
+copilot -C "/path/to/repository" --agent code-reviewer
+```
+
+In an interactive CLI session, use `/agent` to switch personas.
+
+For Copilot cloud agent, commit the `.github/agents/*.agent.md` files and merge them into the repository's default branch. The personas then appear in the custom-agent dropdown on GitHub.
 
 ### Custom Instructions (User Level)
 
