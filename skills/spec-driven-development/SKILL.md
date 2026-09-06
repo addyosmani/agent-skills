@@ -33,7 +33,13 @@ SPECIFY ──→ PLAN ──→ TASKS ──→ IMPLEMENT
 
 ### Phase 0: Scope Check
 
-Most requests describe one capability. If this one does, skip this phase and go straight to Specify — Phase 0 exists for the exception, not the rule, and it puts no hierarchy on single-capability features.
+**0. Existing Capability Map Audit.** Before creating any spec, check if `specs/capability-map.md` already exists:
+- **If a capability map exists:** Inspect the existing module IDs and responsibilities.
+  - **Belongs to an existing module?** **DO NOT CREATE A NEW SPEC FILE.** Update the existing `specs/SPEC-<module-id>.md` (add or modify objectives, acceptance criteria, or boundaries) to keep domain ownership cohesive and prevent accidental spec duplication/fragmentation.
+  - **Genuinely new capability?** Propose adding the new Module ID, responsibility, and dependency direction to `specs/capability-map.md`, get human approval, and then create `specs/SPEC-<new-module-id>.md`.
+- **If no capability map exists:** Proceed with standard single vs. multi-capability detection below.
+
+Most requests describe one capability. If this one does (and no existing capability map contains it), skip this phase and go straight to Specify — Phase 0 exists for the exception, not the rule, and it puts no hierarchy on single-capability features.
 
 **Detection.** Decompose before specifying when a single requirement bundles several independently testable capabilities:
 
@@ -62,7 +68,7 @@ Build order: identity → billing, notifications → reporting
 
 **The map is gated like every phase.** The human reviews module boundaries, dependency direction, and build order before any module spec is written. Getting the map wrong is expensive; reviewing ten lines is not.
 
-**Then recurse per module.** Run Specify → Plan → Tasks → Implement for each module in dependency order. Each module gets its own spec, scoped to that module's objective, boundaries, and success criteria. Save the approved map at the project root and each module's spec alongside it, named by module id (`SPEC-identity.md`, `SPEC-billing.md`) — the map, not filename guessing, is the index of what exists.
+**Then recurse per module.** Run Specify → Plan → Tasks → Implement for each module in dependency order. Each module gets its own spec, scoped to that module's objective, boundaries, and success criteria. Save the approved map inside the `specs/` directory (`specs/capability-map.md`) and each module's spec alongside it, named by module id (`specs/SPEC-identity.md`, `specs/SPEC-billing.md`) — the map, not filename guessing, is the index of what exists.
 
 ### Phase 1: Specify
 
@@ -221,6 +227,7 @@ The spec is a living document, not a one-time artifact:
 | "The user knows what they want" | Even clear requests have implicit assumptions. The spec surfaces those assumptions. |
 | "It's one big feature; splitting it is overhead" | If acceptance criteria cluster into independently testable groups, a monolithic spec forces every downstream task to reason over the whole contract. A ten-line capability map is the cheap alternative. |
 | "I'll decompose during planning" | Planning slices tasks within a spec. By then the oversized artifact already exists — module boundaries and dependency direction must be decided before the spec is written, not after. |
+| "This is a new sub-feature; I'll make a new SPEC-<feature>.md file" | If the feature belongs to an existing domain module in `specs/capability-map.md`, creating a separate spec fractures domain ownership. Update the existing module spec instead of creating duplicate spec files. |
 
 ## Red Flags
 
@@ -231,6 +238,7 @@ The spec is a living document, not a one-time artifact:
 - Skipping the spec because "it's obvious what to build"
 - One spec whose requirements span several independently testable capabilities
 - Module boundaries or build order decided implicitly during implementation because no capability map was approved up front
+- Creating a new spec file for a feature that belongs inside an existing domain module in `specs/capability-map.md`
 
 ## Verification
 
@@ -240,6 +248,7 @@ Before proceeding to implementation, confirm:
 - [ ] The human has reviewed and approved the spec
 - [ ] Success criteria are specific and testable
 - [ ] Boundaries (Always/Ask First/Never) are defined
-- [ ] The spec is saved to a file in the repository
-- [ ] If the request bundles several independently testable capabilities, a capability map (module ids, dependency direction, build order) was approved before any module spec was written
-- [ ] Every module spec traces to a module id in the approved map
+- [ ] The spec is saved inside the `specs/` directory (`specs/SPEC.md` or `specs/SPEC-<module>.md`)
+- [ ] If `specs/capability-map.md` exists, confirmed whether this ask updates an existing module spec before creating any new spec file
+- [ ] If the request bundles several independently testable capabilities, a capability map (module ids, dependency direction, build order) was approved and saved to `specs/capability-map.md` before any module spec was written
+- [ ] Every module spec traces to a module id in the approved map inside `specs/`

@@ -34,6 +34,7 @@ const ROOT = path.resolve(__dirname, '..');
 // this list and update every guarded file to match — CI enforces the pairing.
 const ARTIFACT_ALLOWLIST = new Set([
   'SPEC.md',        // spec, project root (produced by /spec, read by /build)
+  'specs/SPEC.md',  // spec, dedicated specs directory (Option A)
   'docs/SPEC.md',   // spec, alternate location accepted by /build
   'tasks/plan.md',  // plan (produced by /plan, read by /build)
   'tasks/todo.md',  // task list (produced by /plan)
