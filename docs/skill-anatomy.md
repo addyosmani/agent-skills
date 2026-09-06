@@ -32,6 +32,12 @@ description: Guides agents through [task/workflow]. Use when [specific trigger c
 - `name`: Lowercase, hyphen-separated. Must match the directory name.
 - `description`: Start with what the skill does in third person, then include one or more clear "Use when" trigger conditions. Include both *what* and *when*. Maximum 1024 characters.
 
+Published names are compatibility identifiers. In particular,
+`browser-testing-with-devtools` is the stable upstream name because other
+skills refer to it directly. A downstream catalog may rename it, but that
+catalog owns the alias or migration mapping; downstream-only aliases are not
+maintained in this repository.
+
 **Why this matters:** Agents discover skills by reading descriptions. The description is injected into the system prompt, so it must tell the agent both what the skill provides and when to activate it. Do not summarize the workflow — if the description contains process steps, the agent may follow the summary instead of reading the full skill.
 
 ### Standard Sections (Recommended Pattern)
