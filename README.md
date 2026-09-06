@@ -217,6 +217,9 @@ Skills are plain Markdown - they work with any agent that accepts system prompts
 
 Already installed? How you roll the pack out depends on your codebase. The **[Adoption Guide](docs/adoption-guide.md)** covers two paths: the full lifecycle from day one for a greenfield project, or an incremental, verification-first rollout for an established codebase.
 
+Prefer to watch a complete run? See the **[community videos](docs/community-videos.md)**
+for an end-to-end build and a maintainer walkthrough.
+
 ---
 
 ## All 24 Skills
