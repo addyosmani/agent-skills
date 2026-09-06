@@ -1,0 +1,1 @@
+../../hooks/pre/session-start.js

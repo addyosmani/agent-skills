@@ -98,6 +98,22 @@ claude --plugin-dir /path/to/agent-skills
 </details>
 
 <details>
+<summary><b>Oh My Pi</b></summary>
+
+**Marketplace install:**
+
+```
+/marketplace add addyosmani/agent-skills
+/marketplace install agent-skills@addy-agent-skills
+```
+
+Then `/reload-plugins`. Restart the session for task agents and the session-start extension. See [docs/omp-setup.md](docs/omp-setup.md).
+
+**Local checkout:** open this repo in Oh My Pi. `.omp/skills`, `.omp/commands`, and `.omp/agents` are symlinks into the shared trees — no extra install.
+
+</details>
+
+<details>
 <summary><b>Cursor</b></summary>
 
 Put workflow skills under `.cursor/skills/` (sync from `agent-skills/skills/`) and short policies in `.cursor/rules/*.mdc` — do not paste full skills into rules. See [docs/cursor-setup.md](docs/cursor-setup.md).
@@ -379,10 +395,12 @@ agent-skills/
 │   └── using-agent-skills/            #   Meta: how to use this pack
 ├── agents/                            # 4 specialist personas
 ├── references/                        # 7 supplementary checklists
-├── hooks/                             # Session lifecycle hooks
-├── .claude/commands/                  # 8 slash commands (Claude Code)
-├── .gemini/commands/                  # 8 slash commands (Gemini CLI)
-├── commands/                          # 8 slash commands (Antigravity CLI)
+├── hooks/                             # Session lifecycle hooks (Claude bash + OMP JS)
+├── .omp/                              # Oh My Pi native discovery (symlinks + rules)
+├── .omp-plugin/                       # Oh My Pi marketplace + plugin manifests
+├── .claude/commands/                  # 9 slash commands (Claude Code; OMP via .omp/commands)
+├── .gemini/commands/                  # 9 slash commands (Gemini CLI)
+├── commands/                          # 9 slash commands (Antigravity CLI)
 ├── plugin.json                        # Antigravity plugin manifest
 └── docs/                              # Setup guides per tool
 ```

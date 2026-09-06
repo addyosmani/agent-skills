@@ -14,7 +14,7 @@ The repo has five composable layers. Understanding what each one is *for* preven
 |---|---|---|---|
 | **Skills** | `skills/<name>/SKILL.md` | Step-by-step workflows with verification gates | *How* |
 | **Personas** | `agents/<role>.md` | Roles with a perspective and output format | *Who* |
-| **Commands** | `.claude/commands/`, `.gemini/commands/`, `commands/` | User-facing entry points; the orchestration layer | *When* |
+| **Commands** | `.claude/commands/`, `.gemini/commands/`, `commands/` (Oh My Pi uses `.omp/commands` → `.claude/commands/`) | User-facing entry points; the orchestration layer | *When* |
 | **References** | `references/*.md` | Checklists skills pull in on demand | *What to check* |
 | **Evals** | `evals/cases/<name>.json` | Proof that skills trigger and behave correctly | *Does it work* |
 
@@ -45,7 +45,10 @@ To try the pack live against a local checkout:
 
 ```bash
 claude --plugin-dir /path/to/agent-skills
+# Oh My Pi: open this repo, or `omp plugin marketplace add /path/to/agent-skills`
 ```
+
+Oh My Pi native discovery is `.omp/` (symlinks into `skills/`, `.claude/commands/`, and `agents/`). Full install and command names: [omp-setup.md](omp-setup.md).
 
 ## 3. The verification loop
 
@@ -64,9 +67,10 @@ node scripts/run-evals.js
 # Tier 3, behavioral (on demand, spends tokens; --dry-run prints the plan)
 node scripts/run-evals.js --behavioral <skill-name> --dry-run
 
-# Hook regression test, required if you touch hooks/session-start.sh
-# or skills/using-agent-skills/SKILL.md
+# Hook regression tests, required if you touch hooks/session-start.sh,
+# hooks/pre/session-start.js, or skills/using-agent-skills/SKILL.md
 bash hooks/session-start-test.sh
+node --test scripts/omp-session-start-test.mjs
 ```
 
 The three eval tiers are worth understanding even if you never touch the harness, because a red Tier 2 usually means *fix your skill's description*, not the eval: Tier 2 is a lexical approximation of routing (stemmed TF-IDF over descriptions), and its two target failure modes are a description missing the vocabulary users actually say, and an over-broad description that outranks the right skill. The full design, schema, and trust-level rules are in [evals/README.md](../evals/README.md).

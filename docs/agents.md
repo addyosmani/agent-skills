@@ -114,6 +114,15 @@ Subagents only report results back to the main agent. Agent Teams let teammates 
 
 Plugin agents do not support `hooks`, `mcpServers`, or `permissionMode` frontmatter — those fields are silently ignored. Avoid relying on them when authoring new personas here.
 
+## Oh My Pi interop
+
+The same persona files load as Oh My Pi task agents when this plugin is enabled or when you open this checkout (`.omp/agents` → `agents/`):
+
+- Dispatch with the `task` tool: `agent` set to `code-reviewer`, `security-auditor`, `test-engineer`, or `web-performance-auditor`.
+- `/ship` fans out the first three in one `tasks[]` array. `/webperf` spawns `web-performance-auditor`.
+- User-level `.omp/agents/` and `~/.omp/agent/agents/` shadow the plugin copies.
+- Do not use Claude Code's Agent tool (`subagent_type`) on Oh My Pi. See [omp-setup.md](omp-setup.md).
+
 ## Adding a new persona
 
 1. Create `agents/<role>.md` with the same frontmatter format used by existing personas.
