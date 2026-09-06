@@ -121,6 +121,14 @@ The gate is an explicit "yes." The following are **not** yes:
 
 If they correct you, fold the correction in and restate. Loop until you get an explicit yes.
 
+### Step 6: Terminal Turn & Stop Rule (CRITICAL)
+
+When the user confirms the statement of intent with an explicit "yes":
+
+1. **Deliver the confirmed Statement of Intent.**
+2. **Offer downstream paths** (offer to save it to `docs/intent/[topic].md`, draft a spec with `spec-driven-development`, or move to task planning after the spec).
+3. **STOP YOUR TURN IMMEDIATELY.** Do NOT invoke tools or start downstream work in this turn. Hand control back to the user to choose the next step.
+
 ### The 95% Confidence Stop
 
 You're done when you can answer yes to this:
@@ -204,6 +212,7 @@ Two questions in, the agent has discovered the actual ask isn't "a dashboard." I
 - A question without your hypothesis attached: that's surveying, not committing
 - Accepting "whatever you think is best" as a terminal answer
 - Producing a spec, plan, or task list before the user has explicitly confirmed your restate
+- Invoking tools or starting downstream work immediately upon intent confirmation instead of stopping the turn
 - Questions framed as "what would be best practice?" instead of "what do you actually want?"
 - The user gives a sophistication-signaling answer ("scalable", "clean", "modern") and you accept it without probing whether it's what they actually want
 - Three or more rounds without your confidence visibly rising: you're asking the wrong questions, step back and reframe
@@ -222,4 +231,5 @@ After applying interview-me:
 - [ ] A concrete restate (Outcome / User / Why now / Success / Constraint / Out of scope) was written back to the user
 - [ ] The user confirmed the restate with an explicit yes (not "whatever you think," not "sounds good," not silence)
 - [ ] At the stop point, the agent could predict reactions to the next three questions it would ask
+- [ ] Upon receiving explicit confirmation, stopped the turn immediately without invoking tools or starting downstream work
 - [ ] Any handoff to a downstream skill (`idea-refine`, `spec-driven-development`) was framed in terms of the confirmed intent, not the original underspecified ask
