@@ -297,6 +297,7 @@ For the server-side implementation details behind that contract, see [§6. Honou
 |--------|-------------|-------|
 | GET, HEAD | Yes | Never mutate state |
 | PUT | Yes | Full replacement — repeating is safe |
+| PATCH | No (by default) | [RFC 5789 §2](https://www.rfc-editor.org/rfc/rfc5789#section-2): PATCH can be made idempotent; use conditional requests such as `If-Match` when the patch depends on a known base |
 | DELETE | Yes | Repeat must succeed (or 404), not error |
 | POST | No (by default) | Use an idempotency key to make it safe |
 
@@ -314,15 +315,14 @@ Make `DELETE` idempotent: deleting an already-deleted resource should return `20
 
 Rate limits are part of the contract, not an afterthought. Tell clients where they stand:
 
-- Return the standard headers on every response: `RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset`.
+- The older `RateLimit-Limit`, `RateLimit-Remaining`, and `RateLimit-Reset` names are commonly used, but they are not an RFC standard. The active [IETF HTTPAPI Internet-Draft](https://datatracker.ietf.org/doc/draft-ietf-httpapi-ratelimit-headers/) currently defines `RateLimit-Policy` and `RateLimit`; because it is still a draft, document the exact fields and semantics your API implements.
 - On `429 Too Many Requests`, include `Retry-After` so clients back off instead of hammering.
 
 ```
 HTTP/1.1 429 Too Many Requests
-RateLimit-Limit: 100
-RateLimit-Remaining: 0
-RateLimit-Reset: 30
-Retry-After: 30
+Retry-After: 20
+RateLimit-Policy: "default";q=100;w=60
+RateLimit: "default";r=0;t=20
 ```
 
 ### HTTP Caching
@@ -331,21 +331,21 @@ Caching is a correctness concern, not just performance — wrong directives serv
 
 - `Cache-Control` drives it. Note `no-cache` does **not** mean "don't cache" — it means "revalidate before using." Use `no-store` for anything sensitive (auth responses, PII).
 - Support **ETag** + `If-None-Match` so clients revalidate cheaply and get `304 Not Modified` when nothing changed.
-- Set `Vary` (e.g. `Vary: Accept, Authorization`) when the response depends on request headers, or shared caches will serve the wrong variant.
+- Set `Vary` (e.g. `Vary: Accept-Encoding, Accept-Language`) when the response representation depends on request headers, or caches can serve the wrong variant. Avoid using `Authorization` as the teaching example: authenticated requests have additional shared-cache rules under [RFC 9111 §3.5](https://www.rfc-editor.org/rfc/rfc9111#section-3.5).
 
 ```
 Cache-Control: private, max-age=0, must-revalidate
 ETag: "a1b2c3"
-Vary: Accept, Authorization
+Vary: Accept-Encoding, Accept-Language
 ```
 
 ### Security
 
-API security overlaps heavily with the `security-and-hardening` skill — follow it (and the [security checklist](../../references/security-checklist.md)) rather than duplicating it here. API-specific reminders:
+API security overlaps heavily with the `security-and-hardening` skill. Use it (and the [security checklist](../../references/security-checklist.md)) for the general security review process; keep the API-specific checks below explicit rather than assuming that skill covers them.
 
 - Set defensive headers on API responses: `X-Content-Type-Options: nosniff`, `Content-Security-Policy: default-src 'none'`, `Referrer-Policy: no-referrer`.
 - Require TLS 1.2+ ([RFC 9325 / BCP 195](https://www.rfc-editor.org/rfc/rfc9325)).
-- For authn/authz design — the OWASP API Security Top 10 (BOLA, mass assignment, SSRF), JWT algorithm allowlisting, and OAuth2 + PKCE — see `security-and-hardening`.
+- Review relevant OWASP API Security Top 10 risks explicitly, including BOLA, mass assignment, and SSRF; allowlist accepted JWT algorithms; and, for OAuth 2.0 public clients, use Authorization Code + PKCE where applicable.
 
 ## TypeScript Interface Patterns
 
@@ -432,7 +432,7 @@ function getTask(id: TaskId): Promise<Task> { ... }
 - The same key accepted with a different request body, silently returning the first response
 - A key retention window shorter than the longest path that can re-deliver the request
 - State-changing `POST`s with no idempotency-key support
-- `429` responses with no `Retry-After`, or responses with no rate-limit headers at all
+- `429` responses with no `Retry-After`, or responses with no documented rate-limit contract
 - `no-cache` and `no-store` used interchangeably, or sensitive responses without `no-store`
 - New enum values added without documenting that clients must tolerate unknown ones
 
@@ -441,7 +441,7 @@ function getTask(id: TaskId): Promise<Task> { ... }
 After designing an API:
 
 - [ ] Every endpoint has typed input and output schemas
-- [ ] Error responses follow a single consistent format
+- [ ] Error responses follow a single consistent format (RFC 9457 Problem Details for public APIs, or one documented internal shape)
 - [ ] Validation happens at system boundaries only
 - [ ] List endpoints support pagination
 - [ ] New fields are additive and optional (backward compatible)
@@ -452,7 +452,6 @@ After designing an API:
 - [ ] A reused key with a different payload fails loudly rather than replaying the wrong response
 - [ ] The in-flight-duplicate response is a deliberate choice (409, wait, or 202) rather than whatever falls out
 - [ ] Key retention outlives the longest retry path, including dead-letter replay
-- [ ] Error responses follow one format (RFC 9457 for public APIs, or a single consistent shape)
-- [ ] Rate-limit headers are present, and `429` responses include `Retry-After`
+- [ ] Rate-limit behavior and header semantics are documented, and `429` responses include `Retry-After`
 - [ ] `Cache-Control`/`ETag`/`Vary` are set deliberately; sensitive responses use `no-store`
 - [ ] Breaking changes emit `Deprecation`/`Sunset` headers and follow a versioning strategy
