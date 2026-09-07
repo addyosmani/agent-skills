@@ -294,7 +294,7 @@ function useToggleTask() {
 
 ## See Also
 
-For detailed accessibility requirements and testing tools, see `../../references/accessibility-checklist.md`.
+Use the accessibility guidance in this skill for the affected UI: semantic structure, keyboard access, visible focus, labels, contrast, and relevant assistive-technology checks. Respect the project's accessibility target; do not invent a missing external checklist.
 
 ## Common Rationalizations
 

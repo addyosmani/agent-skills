@@ -234,9 +234,9 @@ After any refactoring or implementation change, check for orphaned code:
 
 1. Identify code that is now unreachable or unused
 2. List it explicitly
-3. **Ask before deleting:** "Should I remove these now-unused elements: [list]?"
+3. **Respect scope and ownership:** Remove verified dead code only when cleanup is within the authorized change. Preserve unrelated or ambiguous code; ask only about a consequential unresolved deletion.
 
-Don't leave dead code lying around — it confuses future readers and agents. But don't silently delete things you're not sure about. When in doubt, ask.
+Verify callers and compatibility before deletion. During a review-only task, report findings without editing; do not turn a cleanup finding into an automatic permission question.
 
 ```
 DEAD CODE IDENTIFIED:
@@ -348,8 +348,8 @@ For triaging `npm audit` findings and supply-chain risk (typosquatting, compromi
 ```
 ## See Also
 
-- For detailed security review guidance, see `../../references/security-checklist.md`
-- For performance review checks, see `../../references/performance-checklist.md`
+- For this review, check changed trust boundaries, authorization, validation, secret handling, and dependencies as described in the Security section above.
+- Use the Performance section above to assess affected hot paths, bounded work, queries, and resource use; profile only when a concrete risk warrants it.
 
 ## Common Rationalizations
 

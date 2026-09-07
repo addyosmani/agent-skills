@@ -278,11 +278,12 @@ Special consideration for AI agent context:
 
 ## Verification
 
-After documenting:
+Apply these checks to the requested documentation and changed behavior:
 
-- [ ] ADRs exist for all significant architectural decisions
-- [ ] README covers quick start, commands, and architecture overview
-- [ ] API functions have parameter and return type documentation
-- [ ] Known gotchas are documented inline where they matter
-- [ ] No commented-out code remains
-- [ ] Rules files (CLAUDE.md etc.) are current and accurate
+- Significant decisions in scope are recorded using the project's convention.
+- Affected setup instructions and API documentation are accurate.
+- Relevant gotchas and non-obvious constraints are discoverable.
+- Do not remove unrelated commented-out code or rewrite rules files merely to satisfy this checklist.
+
+
+- Any rules-file changes were requested or necessary within scope, and preserve unrelated instructions.

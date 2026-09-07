@@ -1,6 +1,6 @@
 ---
 name: incremental-implementation
-description: Delivers changes incrementally. Use when implementing any feature or change that touches more than one file. Use when you're about to write a large amount of code at once, or when a task feels too big to land in one step.
+description: Implement substantial changes in coherent, verifiable slices. Use when dependencies or risk warrant checkpoints; skip small changes already easy to verify as a unit.
 ---
 
 # Incremental Implementation
@@ -11,10 +11,10 @@ Build in thin vertical slices — implement one piece, test it, verify it, then 
 
 ## When to Use
 
-- Implementing any multi-file change
+- Implementing a substantial change with separable outcomes or integration risks
 - Building a new feature from a task breakdown
 - Refactoring existing code
-- Any time you're tempted to write more than ~100 lines before testing
+- Changes large enough that a focused checkpoint helps localize failures
 
 **When NOT to use:** Single-file, single-function changes where the scope is already minimal.
 
@@ -36,9 +36,9 @@ Build in thin vertical slices — implement one piece, test it, verify it, then 
 For each slice:
 
 1. **Implement** the smallest complete piece of functionality
-2. **Test** — run the test suite (or write a test if none exists)
-3. **Verify** — confirm the slice works as expected (tests pass, build succeeds, manual check)
-4. **Commit** -- save your progress with a descriptive message (see `git-workflow-and-versioning` for atomic commit guidance)
+2. **Test** — run relevant existing checks; add meaningful behavior or regression tests where they establish correctness
+3. **Verify** — select tests, build, or runtime checks appropriate to the slice and required project gates
+4. **Checkpoint** — review the diff; commit when within scope and consistent with the project workflow (see `git-workflow-and-versioning`)
 5. **Move to the next slice** — carry forward, don't restart
 
 ## Slicing Strategies
@@ -123,14 +123,7 @@ Do NOT:
 - Add features not in the spec because they "seem useful"
 - Modernize syntax in files you're only reading
 
-If you notice something worth improving outside your task scope, note it — don't fix it:
-
-```
-NOTICED BUT NOT TOUCHING:
-- src/utils/format.ts has an unused import (unrelated to this task)
-- The auth middleware could use better error messages (separate task)
-→ Want me to create tasks for these?
-```
+Mention unrelated findings only when materially useful; do not fix them, create tracker items, or ask about cosmetic cleanup during the requested work.
 
 ### Rule 1: One Thing at a Time
 
@@ -142,7 +135,7 @@ Each increment changes one logical thing. Don't mix concerns:
 
 ### Rule 2: Keep It Compilable
 
-After each increment, the project must build and existing tests must pass. Don't leave the codebase in a broken state between slices.
+Keep each increment coherent and verify affected behavior with relevant checks. Run builds when compilation or integration is affected or the project requires them. Diagnose new failures before building dependent work; report pre-existing failures without expanding scope automatically.
 
 ### Rule 3: Feature Flags for Incomplete Features
 
@@ -177,7 +170,7 @@ Each increment should be independently revertable:
 
 - Additive changes (new files, new functions) are easy to revert
 - Modifications to existing code should be minimal and focused
-- Database migrations should have corresponding rollback migrations
+- Database migrations need a recovery strategy appropriate to data effects; a reverse migration is not always safe
 - Avoid deleting something in one commit and replacing it in the same commit — separate them
 
 ## Working with Agents
@@ -196,19 +189,14 @@ verify nothing is broken."
 
 Be explicit about what's in scope and what's NOT in scope for each increment.
 
-## Increment Checklist
+## Increment checklist
 
-After each increment, verify with the repository's own commands (see the test-driven-development skill's Discover the Stack First section):
+- The change delivers a coherent part of the requested outcome.
+- Relevant checks and required project gates pass; unresolved failures are explained.
+- Runtime behavior is checked when it materially establishes acceptance criteria.
+- The diff preserves unrelated work; commits follow the authorized workflow.
 
-- [ ] The change does one thing and does it completely
-- [ ] All existing tests still pass (the repository's test command: `npm test`, `./gradlew test`, `pytest`, ...)
-- [ ] The build succeeds (the repository's build command)
-- [ ] Type checking passes, where the stack has one (`npx tsc --noEmit`, `mypy`, ...)
-- [ ] Linting passes (the repository's lint command)
-- [ ] The new functionality works as expected
-- [ ] The change is committed with a descriptive message
-
-**Note:** Run each verification command after a change that could affect it. After a successful run, don't repeat the same command unless the code has changed since — re-running on unchanged code adds no information.
+Reuse passing evidence until subsequent changes, failures, required gates, or unresolved concerns justify repeating or expanding checks. No fixed test, build, lint, or commit sequence applies to every increment.
 
 ## Common Rationalizations
 
@@ -223,7 +211,7 @@ After each increment, verify with the repository's own commands (see the test-dr
 
 ## Red Flags
 
-- More than 100 lines of code written without running tests
+- Large behavior changes accumulated without a useful verification checkpoint
 - Multiple unrelated changes in a single increment
 - "Let me just quickly add this too" scope expansion
 - Skipping the test/verify step to move faster
@@ -236,14 +224,8 @@ After each increment, verify with the repository's own commands (see the test-dr
 
 ## Verification
 
-After completing all increments for a task:
-
-- [ ] Each increment was individually tested and committed
-- [ ] The full test suite passes
-- [ ] The build is clean
-- [ ] The feature works end-to-end as specified
-- [ ] No uncommitted changes remain
+Acceptance criteria are met, integration is checked where affected, and relevant required gates pass. Report material limitations honestly. Leave unrelated uncommitted changes intact; a clean working tree is not a completion requirement.
 
 ## See Also
 
-Per-increment verification is the local check. Before declaring a task done, apply the project-wide Definition of Done as the final gate, the standing bar every increment clears regardless of the task. See `../../references/definition-of-done.md`.
+Use the repository's actual completion requirements. Update documentation only where the change makes it inaccurate or the project requires it; do not invent extra completion gates.

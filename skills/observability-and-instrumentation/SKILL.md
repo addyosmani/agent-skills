@@ -1,6 +1,6 @@
 ---
 name: observability-and-instrumentation
-description: Instruments code so production behavior is visible and diagnosable. Use when adding logging, metrics, tracing, or alerting. Use when shipping any feature that runs in production and you need evidence it works. Use when production issues are reported but you can't tell what happened from the available data.
+description: Add or repair logging, metrics, tracing, and alerting. Use when instrumentation is requested or needed to diagnose a concrete visibility gap. Reuse existing telemetry rather than requiring new instrumentation for every feature.
 ---
 
 # Observability and Instrumentation
@@ -11,7 +11,7 @@ Code you can't observe is code you can't operate. Observability is the ability t
 
 ## When to Use
 
-- Building any feature that will run in production
+- Building a production feature whose health cannot be assessed through existing telemetry
 - Adding a new service, endpoint, background job, or external integration
 - A production incident took too long to diagnose ("we couldn't tell what happened")
 - Setting up or reviewing alerting rules
@@ -167,16 +167,17 @@ Rules for every alert you create:
 1. **It must be actionable.** If the response is "ignore it, it self-heals", delete the alert.
 2. **It links to a runbook** — even three lines: what it means, first query to run, escalation path.
 3. **It has a threshold and duration** justified by the SLO or by historical data, not by a guess.
-4. Use two severities only: **page** (user-facing, act now) and **ticket** (degradation, act this week). A third tier becomes noise that trains people to ignore everything.
+4. Follow the existing severity model. Where none exists, distinguish urgent user impact from issues that can wait; do not introduce extra alert tiers without an operational purpose.
 
 ### 7. Verify the telemetry itself
 
-Instrumentation is code; it can be wrong. Before calling the work done, trigger the paths and look at the actual output:
+Verify changed telemetry through existing infrastructure and isolated tests where possible:
 
-- Force an error in staging → find it in the logs by `requestId`, confirm fields are structured (not `[object Object]`)
-- Send test traffic → confirm metric series appear with the expected labels and sane values
-- Follow one request across services in the tracing UI → no broken spans
-- Fire each new alert once (lower the threshold temporarily) → confirm it reaches the right channel and the runbook link works
+- Exercise relevant success and failure paths in an authorized test environment; inspect emitted records, labels, and redaction.
+- Check tracing continuity where tracing is affected and the environment supports it.
+- Test changed alert rules through dry-run evaluation or a test sink. Sending real notifications, inducing shared staging faults, or modifying live thresholds requires authorization for those effects.
+
+If a live check is unavailable or outside scope, complete local checks and report what remains unverified. Do not require a staging incident or page someone merely to satisfy this skill.
 
 ## Common Rationalizations
 
@@ -211,10 +212,10 @@ After instrumenting a feature, confirm:
 - [ ] All log output is structured (JSON), with stable event names and a correlation ID on every line
 - [ ] Every log sink written by more than one entry point carries an entry-point field, set where the run starts and propagated with the correlation ID rather than inferred downstream
 - [ ] No secrets, tokens, or unredacted PII in any log line (spot-check actual output)
-- [ ] RED metrics exist for every new endpoint and every external dependency, with bounded label sets
-- [ ] Latency is a histogram; p95/p99 are queryable
-- [ ] A single request can be followed end-to-end in the tracing UI without broken spans
-- [ ] Every new alert is symptom-based, has a runbook link, and was test-fired once
-- [ ] An induced failure in staging was located via telemetry alone, without reading the source
+- [ ] Relevant new or existing metrics answer the operational questions, with bounded label sets
+- [ ] Where latency measurement is needed, histograms expose relevant percentiles
+- [ ] Changed tracing is checked for continuity using available authorized tooling
+- [ ] New alerts are actionable, link to runbooks, and were evaluated through an authorized test route
+- [ ] Relevant failure-path telemetry was checked safely; unavailable live checks are reported
 
-For the at-a-glance version of this list, including the pre-launch instrumentation gate, see `../../references/observability-checklist.md`.
+Apply the relevant verification items above to changed telemetry and the project's actual launch requirements. Do not require a separate external checklist.

@@ -52,15 +52,11 @@ If you can't name the trust boundaries for a feature, you're not ready to secure
 - **Use httpOnly, secure, sameSite cookies** for sessions
 - **Run the detected package manager's native audit** against the committed lockfile before every release
 
-### Ask First (Requires Human Approval)
+### Resolve scope and permissions
 
-- Adding new authentication flows or changing auth logic
-- Storing new categories of sensitive data (PII, payment info)
-- Adding new external service integrations
-- Changing CORS configuration
-- Adding file upload handlers
-- Modifying rate limiting or throttling
-- Granting elevated permissions or roles
+Implement requested auth, CORS, integration, upload, and rate-limit changes within existing authorization. Do not request approval again solely because the work is security-related. Prepare and verify code before asking about an action needing additional authorization.
+
+Ask when a material decision is unresolved, such as collecting a new sensitive-data category, exposing data to another service, or granting a live privilege outside the authorized task. Code preparation is distinct from deploying changes, collecting real data, and modifying live access. Preserve runtime permissions and user-requested review gates.
 
 ### Never Do
 
@@ -74,7 +70,7 @@ If you can't name the trust boundaries for a feature, you're not ready to secure
 
 ## OWASP Top 10 Prevention Patterns
 
-These are prevention patterns, not a ranking. For the 2021 ordering, see the quick-reference table in `../../references/security-checklist.md`.
+These are prevention patterns, not a ranking. Apply the relevant patterns to the changed trust boundaries; an external ranking table is not needed to perform this work.
 
 ### Injection (SQL, NoSQL, OS Command)
 
@@ -308,8 +304,8 @@ When you defer a fix, document the reason and set a review date.
 
 Do not assume npm or treat the nearest manifest as the install root. Apply this order:
 
-1. **Find the installation boundary and manager.** Use the workspace root that owns the lockfile, or an independent nested project only when it is outside that workspace. There, corroborate `packageManager` (when present), the lockfile, and CI; stop on disagreement or competing lockfiles. Pin the manager version and use the matrix in `../../references/security-checklist.md`.
-2. **Block dependency scripts before first execution.** Bootstrap with scripts disabled or a documented fail-closed policy, inspect the pending script source, approve only the minimum required packages, commit the policy, then verify with a clean frozen/immutable install. Never blanket-approve scripts.
+1. **Find the installation boundary and manager.** Use the workspace root owning the lockfile, or an independent nested project outside that workspace. Corroborate `packageManager`, lockfiles, CI, and installed metadata. Resolve disagreements read-only before installing; pause only dependent installation if material ambiguity remains. Use the repository's pinned manager where specified and verify its supported frozen/immutable install and script-control options in official documentation. Do not invent a missing version matrix or change manager policy for an unrelated task.
+2. **Control dependency scripts when installation is needed.** Preserve the project's reviewed script policy. For new or unreviewed scripts, use supported scripts-disabled or fail-closed options, inspect script source, and permit only what the task needs within existing authorization. Do not blanket-approve scripts. Persist or commit policy changes only when relevant and authorized; verify reproducibility with the project's supported frozen/immutable install when applicable.
 
 Audits only find known advisories; they do not catch a newly malicious or typosquatted package. Therefore:
 
@@ -471,7 +467,7 @@ container.textContent = await llm.reply(userMessage);
 ```
 ## See Also
 
-For detailed security checklists and pre-commit verification steps, see `../../references/security-checklist.md`.
+Use the applicable Security Review Checklist items above. Before committing, inspect the intended diff for secrets, changed trust boundaries, and dependency or permission changes. Follow actual project gates.
 
 ## Common Rationalizations
 

@@ -21,8 +21,8 @@ Ship with confidence. The goal is not just to deploy — it's to deploy safely, 
 
 ### Code Quality
 
-- [ ] All tests pass (unit, integration, e2e)
-- [ ] Build succeeds with no warnings
+- [ ] Release-relevant tests and required repository gates pass
+- [ ] Release build succeeds; new warnings and material existing warnings are triaged
 - [ ] Lint and type checking pass
 - [ ] Code reviewed and approved
 - [ ] No TODO comments that should be resolved before launch
@@ -32,7 +32,7 @@ Ship with confidence. The goal is not just to deploy — it's to deploy safely, 
 ### Security
 
 - [ ] No secrets in code or version control
-- [ ] The ecosystem's dependency audit (`npm audit`, `pip-audit`, `cargo audit`, ...) shows no critical or high vulnerabilities
+- [ ] Dependency findings are triaged for reachability, exposure, and fix risk; material release risks are resolved or explicitly accepted within authorization
 - [ ] Input validation on all user-facing endpoints
 - [ ] Authentication and authorization checks in place
 - [ ] Security headers configured (CSP, HSTS, etc.)
@@ -113,7 +113,7 @@ return null;
 
 ```
 1. DEPLOY to staging
-   └── Full test suite in staging environment
+   └── Required release checks and relevant integration tests in the appropriate environment
    └── Manual smoke test of critical flows
 
 2. DEPLOY to production (feature flag OFF)
@@ -268,7 +268,7 @@ Every deployment needs a rollback plan before it happens:
 3. Communicate: notify team of rollback
 
 ### Database Considerations
-- Migration [X] has a rollback: `npx prisma migrate rollback`
+- Migration [X] has a verified recovery procedure using supported tooling: [backup restore, compatible forward fix, or tested reverse migration]
 - Data inserted by new feature: [preserved / cleaned up]
 
 ### Time to Rollback
@@ -276,13 +276,11 @@ Every deployment needs a rollback plan before it happens:
 - Redeploy previous version: < 5 minutes
 - Database rollback: < 15 minutes
 ```
-## See Also
+## Completion requirements
 
-- For the project-wide Definition of Done that every change must clear before this checklist, see `../../references/definition-of-done.md`
-- For security pre-launch checks, see `../../references/security-checklist.md`
-- For performance pre-launch checklist, see `../../references/performance-checklist.md`
-- For accessibility verification before launch, see `../../references/accessibility-checklist.md`
-- For the alerting rules and SLO-tied thresholds, see `observability-and-instrumentation`
+Apply release checks to the release being prepared, using the repository's required gates and the relevant sections above. Verify material security risks, critical user flows, performance budgets, accessibility, monitoring, and recovery as applicable. Do not extend launch gates to every local edit. Launch authorization does not authorize unrelated team messages or changes to external services.
+
+For alert rules and SLO-tied thresholds, use the installed `observability-and-instrumentation` skill when applicable.
 
 ## Common Rationalizations
 

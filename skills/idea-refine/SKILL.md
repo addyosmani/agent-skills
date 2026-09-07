@@ -19,8 +19,10 @@ This skill is primarily an interactive dialogue. Invoke it with an idea, and the
 
 ```bash
 # Optional: Initialize the ideas directory
-bash skills/idea-refine/scripts/idea-refine.sh
+bash /absolute/path/to/idea-refine/scripts/idea-refine.sh
 ```
+
+Resolve the optional initializer relative to this skill directory and run it from the target project only when a saved artifact is requested. Do not run the illustrative path literally.
 
 **Trigger Phrases:**
 - "Help me refine this idea"
@@ -29,7 +31,7 @@ bash skills/idea-refine/scripts/idea-refine.sh
 
 ## Output
 
-The final output is a markdown one-pager saved to `docs/ideas/[idea-name].md` (after user confirmation), containing:
+The final output is a concise one-pager in conversation, or a file when saving is requested or required by the project. Follow the project convention; otherwise use `docs/ideas/[idea-name].md` for a requested file. Include:
 - Problem Statement
 - Recommended Direction
 - Key Assumptions
@@ -66,7 +68,7 @@ When the user invokes this skill with an idea (`$ARGUMENTS`), guide them through
    - What's been tried before?
    - Why now?
 
-   Use the `AskUserQuestion` tool to gather this input. Do NOT proceed until you understand who this is for and what success looks like.
+   Reuse supplied context and inspect relevant project facts first. Ask only material missing questions using available input tools or plain language. Proceed with supported assumptions for routine choices and continue independent exploration while awaiting consequential answers.
 
 3. **Generate 5-8 idea variations** using these lenses:
    - **Inversion:** "What if we did the opposite?"
@@ -137,7 +139,7 @@ Produce a concrete artifact — a markdown one-pager that moves work forward:
 
 **The "Not Doing" list is arguably the most valuable part.** Focus is about saying no to good ideas. Make the trade-offs explicit.
 
-Ask the user if they'd like to save this to `docs/ideas/[idea-name].md` (or a location of their choosing). Only save if they confirm.
+Save only when requested or required by project conventions, honoring existing authorization without asking again. Otherwise deliver the one-pager in conversation.
 
 ### Anti-patterns to Avoid
 
@@ -158,12 +160,12 @@ Read `examples.md` in this skill directory for examples of what great ideation s
 ## Red Flags
 
 - Generating 20+ shallow variations instead of 5-8 considered ones
-- Skipping the "who is this for" question
+- Leaving the intended audience materially ambiguous after using available context
 - No assumptions surfaced before committing to a direction
 - Yes-machining weak ideas instead of pushing back with specificity
 - Producing a plan without a "Not Doing" list
 - Ignoring existing codebase constraints when ideating inside a project
-- Jumping straight to Phase 3 output without running Phases 1 and 2
+- Forcing repeated exploration after the user has already chosen a direction
 
 ## Verification
 
@@ -175,4 +177,4 @@ After completing an ideation session:
 - [ ] Hidden assumptions are explicitly listed with validation strategies
 - [ ] A "Not Doing" list makes trade-offs explicit
 - [ ] The output is a concrete artifact (markdown one-pager), not just conversation
-- [ ] The user confirmed the final direction before any implementation work
+- [ ] Implementation follows existing authorization and any explicit review gate; ideation alone does not authorize building

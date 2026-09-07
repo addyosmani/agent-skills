@@ -34,7 +34,7 @@ Simplify code by reducing complexity while preserving exact behavior. The goal i
 Don't change what the code does — only how it expresses it. All inputs, outputs, side effects, error behavior, and edge cases must remain identical. If you're not sure a simplification preserves behavior, don't make it.
 
 ```
-ASK BEFORE EVERY CHANGE:
+CHECK BEFORE EACH SIMPLIFICATION (internal review):
 → Does this produce the same output for every input?
 → Does this maintain the same error behavior?
 → Does this preserve the same side effects and ordering?
@@ -156,17 +156,9 @@ Scan for these patterns — each one is a concrete signal, not a vague smell:
 
 ### Step 3: Apply Changes Incrementally
 
-Make one simplification at a time. Run tests after each change. **Submit refactoring changes separately from feature or bug fix changes.** A PR that refactors and adds a feature is two PRs — split them.
+Use coherent, reviewable increments. Run affected checks after a meaningful change and required project gates before completion. Separate unrelated refactors; a small refactor necessary for the requested fix can stay with it. Do not create extra PRs solely to satisfy a template.
 
-```
-FOR EACH SIMPLIFICATION:
-1. Make the change
-2. Run the test suite
-3. If tests pass → commit (or continue to next simplification)
-4. If tests fail → revert and reconsider
-```
-
-Avoid batching multiple simplifications into a single untested change. If something breaks, you need to know which simplification caused it.
+If a check fails, diagnose before making further dependent changes. If undoing an experiment is needed, inspect the current diff and remove only changes you own, preserving unrelated work. Commit when consistent with the authorized workflow.
 
 **The Rule of 500:** If a refactoring would touch more than 500 lines, invest in automation (codemods, sed scripts, AST transforms) rather than making the changes by hand. Manual edits at that scale are error-prone and exhausting to review.
 
@@ -320,7 +312,7 @@ function UserBadge({ user }: Props) {
 
 After completing a simplification pass:
 
-- [ ] All existing tests pass without modification
+- [ ] Relevant existing behavior tests and required gates pass without weakening assertions
 - [ ] Build succeeds with no new warnings
 - [ ] Linter/formatter passes (no style regressions)
 - [ ] Each simplification is a reviewable, incremental change

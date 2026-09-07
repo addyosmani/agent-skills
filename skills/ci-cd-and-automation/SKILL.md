@@ -7,7 +7,7 @@ description: Automates CI/CD pipeline setup. Use when setting up or modifying bu
 
 ## Overview
 
-Automate quality gates so that no change reaches production without passing tests, lint, type checking, and build. CI/CD is the enforcement mechanism for every other skill — it catches what humans and agents miss, and it does so consistently on every single change.
+Automate the project's required quality gates using checks appropriate to its stack and release risks. Preserve policy and scope; example pipelines below are not mandates to add every possible check.
 
 **Shift Left:** Catch problems as early in the pipeline as possible. A bug caught in linting costs minutes; the same bug caught in production costs hours. Move checks upstream — static analysis before tests, tests before staging, staging before production.
 
@@ -23,7 +23,7 @@ Automate quality gates so that no change reaches production without passing test
 
 ## The Quality Gate Pipeline
 
-Every change goes through these gates before merge:
+Follow the repository's required gates. When designing a requested pipeline, choose checks for the stack and affected risks. The following illustrates possible gates; it is not a mandate to add every gate to every project:
 
 ```
 Pull Request Opened
@@ -51,7 +51,7 @@ Pull Request Opened
   Ready for review
 ```
 
-**No gate can be skipped.** If lint fails, fix lint — don't disable the rule. If a test fails, fix the code — don't skip the test.
+**Do not bypass required gates to hide a failure.** Diagnose whether the failure is in code, tests, configuration, or the environment. Change pipeline policy only within the authorized task; do not add unrelated gates or require the user to approve existing policy again.
 
 ## GitHub Actions Configuration
 
@@ -194,7 +194,7 @@ Build error → Agent checks config and dependencies
 
 ### Preview Deployments
 
-Every PR gets a preview deployment for manual testing:
+When preview deployments are part of the requested pipeline, a configuration can look like this:
 
 ```yaml
 # Deploy preview on PR (Vercel/Netlify/etc.)
@@ -299,12 +299,9 @@ updates:
 
 Designate someone responsible for keeping CI green. When the build breaks, the Build Cop's job is to fix or revert — not the person whose change caused the break. This prevents broken builds from accumulating while everyone assumes someone else will fix it.
 
-### PR Checks
+### PR checks
 
-- **Required reviews:** At least 1 approval before merge
-- **Required status checks:** CI must pass before merge
-- **Branch protection:** No force-pushes to main
-- **Auto-merge:** If all checks pass and approved, merge automatically
+Follow existing required reviews, status checks, and branch protection. Propose or configure new policy only within a requested pipeline or repository-policy change. Passing checks do not by themselves authorize merging; merge or enable auto-merge only when that action is authorized. Preserve restrictions on force-pushes to shared branches.
 
 ## CI Optimization
 
@@ -379,12 +376,12 @@ jobs:
 
 ## Verification
 
-After setting up or modifying CI:
+Verify the requested pipeline changes against existing project requirements:
 
-- [ ] All quality gates are present (lint, types, tests, build, audit)
-- [ ] Pipeline runs on every PR and push to main
-- [ ] Failures block merge (branch protection configured)
-- [ ] CI results feed back into the development loop
-- [ ] Secrets are stored in the secrets manager, not in code
-- [ ] Deployment has a rollback mechanism
-- [ ] Pipeline runs in under 10 minutes for the test suite
+- Applicable gates, triggers, and failure behavior match the intended workflow.
+- Required branch protection is respected; policy is changed only within scope.
+- Results provide useful failure diagnostics and secrets remain protected.
+- Deployment recovery is checked when deployment behavior is affected.
+- Pipeline duration meets the project's target where performance is part of the change.
+
+Do not configure deployments, branch protection, or new timing targets merely to satisfy this checklist.

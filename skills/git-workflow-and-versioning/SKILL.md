@@ -1,6 +1,6 @@
 ---
 name: git-workflow-and-versioning
-description: Structures git workflow practices. Use when making any code change. Use when committing, branching, resolving conflicts, opening or reviewing a pull request (PR), pushing to a remote, or when you need to organize work across multiple parallel streams. Use when cutting a release, choosing a semantic version bump, tagging, or writing a changelog.
+description: Organize Git changes, resolve conflicts, and manage releases. Use when the task involves commits, branches, worktrees, pull requests, remote pushes, recovery, or versioning; follow the existing repository workflow.
 ---
 
 # Git Workflow and Versioning
@@ -11,7 +11,7 @@ Git is your safety net. Treat commits as save points, branches as sandboxes, and
 
 ## When to Use
 
-Always. Every code change flows through git.
+Use for Git operations and release organization. Inspect repository status, existing changes, and project conventions first. If the directory is not a repository, use a scoped backup when needed; do not initialize Git merely to satisfy this skill. Examples are conditional on the task and its authorization. Publishing, merging, deleting branches, and removing worktrees require the corresponding scope and runtime permissions.
 
 ## Core Principles
 
@@ -33,7 +33,7 @@ This is the recommended default. Teams using gitflow or long-lived branches can 
 
 ### 1. Commit Early, Commit Often
 
-Each successful increment gets its own commit. Don't accumulate large uncommitted changes.
+When committing is within scope, group verified work into logical commits and preserve the project's workflow. Do not force a commit after every small edit or include other people's changes.
 
 ```
 Work pattern:
@@ -167,79 +167,29 @@ git worktree remove ../project-feature-a
 Benefits:
 - Multiple agents can work on different features simultaneously
 - No branch switching needed (each directory has its own branch)
-- If one experiment fails, delete the worktree — nothing is lost
+- Before removing a worktree, inspect its status and preserve any needed uncommitted work; removal is not automatic failure recovery
 - Changes are isolated until explicitly merged
 
-## The Save Point Pattern
+## Recovery and save points
 
-```
-Agent starts work
-    │
-    ├── Makes a change
-    │   ├── Test passes? → Commit → Continue
-    │   └── Test fails? → Revert to last commit → Investigate
-    │
-    ├── Makes another change
-    │   ├── Test passes? → Commit → Continue
-    │   └── Test fails? → Revert to last commit → Investigate
-    │
-    └── Feature complete → All commits form a clean history
-```
+Record the initial status and diff before modifying a shared or dirty workspace. Keep track of the changes you own, including when the user or another agent edits the same file during the task.
 
-This pattern means you never lose more than one increment of work. If an agent goes off the rails, `git reset --hard HEAD` takes you back to the last successful state.
+When a check fails, inspect the failure, reproduce it where useful, and diagnose whether the cause is new, pre-existing, or environmental. Do not automatically revert to the last commit. If an experiment must be undone, inspect the current diff and remove only its own changes, preserving unrelated and concurrent edits. If ownership is unclear, preserve the current work and ask only about the ambiguous recovery step.
 
-## Change Summaries
+Do not use `git reset --hard`, whole-file restoration, cleanup, or worktree deletion as routine recovery. Destructive discard requires explicit authorization covering the actual affected work and runtime permission. A successful commit is a useful checkpoint, not evidence that all later uncommitted work is disposable.
 
-After any modification, provide a structured summary. This makes review easier, documents scope discipline, and surfaces unintended changes:
+## Change summaries
 
-```
-CHANGES MADE:
-- src/routes/tasks.ts: Added validation middleware to POST endpoint
-- src/lib/validation.ts: Added TaskCreateSchema using Zod
-
-THINGS I DIDN'T TOUCH (intentionally):
-- src/routes/auth.ts: Has similar validation gap but out of scope
-- src/middleware/error.ts: Error format could be improved (separate task)
-
-POTENTIAL CONCERNS:
-- The Zod schema is strict — rejects extra fields. Confirm this is desired.
-- Added zod as a dependency (72KB gzipped) — already in package.json
-```
-
-This pattern catches wrong assumptions early and gives reviewers a clear map of the change. The "DIDN'T TOUCH" section is especially important — it shows you exercised scope discipline and didn't go on an unsolicited renovation.
+Report what changed, why it matters, relevant checks, and material limitations. Use prose or a short list as appropriate. Do not require lists of untouched files or speculative concerns after every edit.
 
 ## Pre-Commit Hygiene
 
-Before every commit:
+Before a commit within the task scope:
 
-```bash
-# 1. Check what you're about to commit
-git diff --staged
-
-# 2. Ensure no secrets
-git diff --staged | grep -i "password\|secret\|api_key\|token"
-
-# 3. Run tests
-npm test
-
-# 4. Run linting
-npm run lint
-
-# 5. Run type checking
-npx tsc --noEmit
-```
-
-Automate this with git hooks:
-
-```json
-// package.json (using lint-staged + husky)
-{
-  "lint-staged": {
-    "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
-    "*.{json,md}": ["prettier --write"]
-  }
-}
-```
+- Inspect staged and unstaged diffs; stage only intended changes, preserving other work.
+- Check for accidental secrets without printing their values. Prefer an existing secret scanner where available.
+- Run applicable checks and required repository gates using discovered commands. Reuse passing results when no relevant changes or required policy demand a rerun.
+- Follow existing hooks and formatting conventions. Do not install hook tooling or rewrite configuration unless that work was requested or necessary and authorized.
 
 ## Handling Generated Files
 
@@ -314,7 +264,7 @@ Write the entry in the same change that makes the change, while the impact is fr
 
 | Rationalization | Reality |
 |---|---|
-| "I'll commit when the feature is done" | One giant commit is impossible to review, debug, or revert. Commit each slice. |
+| "A checkpoint lets me discard all later work" | Inspect ownership first; unrelated or concurrent changes must survive recovery. |
 | "The message doesn't matter" | Messages are documentation. Future you (and future agents) will need to understand what changed and why. |
 | "I'll squash it all later" | Squashing destroys the development narrative. Prefer clean incremental commits from the start. |
 | "Branches add overhead" | Short-lived branches are free and prevent conflicting work from colliding. Long-lived branches are the problem — merge within 1-3 days. |
@@ -343,7 +293,7 @@ For every commit:
 
 - [ ] Commit does one logical thing
 - [ ] Message explains the why, follows type conventions
-- [ ] Tests pass before committing
+- [ ] Relevant checks and required repository gates pass before committing
 - [ ] No secrets in the diff
 - [ ] No formatting-only changes mixed with behavior changes
 - [ ] `.gitignore` covers standard exclusions

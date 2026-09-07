@@ -386,7 +386,9 @@ Then decide, strictly:
 
 **"Neutral" is a revert, not a keep.** This is the step teams skip: the change is already written, throwing it away feels wasteful, so it lands unmeasured, and the codebase accretes complexity that never bought anything. Code you keep, you maintain forever. Make it pay for itself.
 
-**Correctness gates the metric.** The suite stays green *and* the number moves. An "optimization" that wins by dropping work the product needed (skipping a validation, caching something that must be fresh, removing an `await` that was load-bearing) is a regression, not a win.
+**Correctness gates the metric.** Relevant correctness checks and required repository gates stay green *and* the number moves. An "optimization" that wins by dropping work the product needed (skipping a validation, caching something that must be fresh, removing an `await` that was load-bearing) is a regression, not a win.
+
+When discarding an unsuccessful optimization, inspect the diff and undo only that experiment's changes; preserve unrelated or concurrent work. A failed test calls for diagnosis before deciding what to revert.
 
 #### Log every attempt, including the reverted ones
 
@@ -440,7 +442,7 @@ npx lhci autorun
 
 ## See Also
 
-For detailed performance checklists, optimization commands, and anti-pattern reference, see `../../references/performance-checklist.md`.
+For detailed performance checklists, optimization commands, and anti-pattern reference, see the measurement workflow and verification criteria in this skill.
 
 
 ## Common Rationalizations
