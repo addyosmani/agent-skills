@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc --noEmit)",
+      "Bash(npx biome check .)",
+      "Bash(git merge-tree:*)"
+    ]
+  }
+}

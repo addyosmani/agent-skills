@@ -1,0 +1,60 @@
+[
+  {
+    "id": "FINAL-WAVE-20260905-ASSEMBLY-LOCAL-PASS", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent final local-wave outcome, corroborated by independent assembly reviews",
+    "kind": "note", "work_item_id": null, "from": null, "to": null,
+    "summary": "Final assembled candidate is locally green after explicit approval-vector amendment: parent actual CI runner14/14 offline installs42/42checks,1169package+16helper=1185passed0failed0skipped; parent108focused Node+tsx passes. Assembly A independently reran1169+16 and14typecheck/lint; B33focused plus safe probes PASS. All24 source artifacts remain identical; only additional approved approval test/spec/handoff. Uncommitted, staging empty; all taskworkers finished per parent, no background scheduling. Supersedes earlier assembly HOLD measurements without erasing them; local remediation wave accepted, broader initiative blocked.",
+    "source_refs": ["EVIDENCE.md#outcome-and-history", "EVIDENCE.md#candidate-identity-and-digests", "FINAL-HANDOFF.md"],
+    "evidence_refs": ["C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-assembly-a.md", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-assembly-b.md", "EVIDENCE.md"],
+    "context": {"owner": "Parent coordinating session (completed local wave, not legacy ownership)", "worktree": "D:/Repos/agent-skills-worktrees/fl-assembly-20260905", "branch": "feat/foreman-line-FL-ASSEMBLY-20260905", "base_commit": "5ce6ddc7f996d764e506b6b421779fbf3ece689a", "spec_path": "plugins/foreman-line/docs/specs/active/FL-ASSEMBLY-approval-vector.md", "phase": "Final local wave accepted; assembly locally green; all taskworkers finished; no background scheduling", "blocker": "Broader initiative blocked: no hosted CI/main workflow adoption, SDK/DocSpine/installed proof or human/legacy gate clearance", "next_safe_action": "Use FINAL-HANDOFF for an explicit future adoption/evidence decision; no assembly rerun pending and no automatic merge, install, dispatch or gate clearing"}
+  },
+  {
+    "id": "FINAL-WAVE-20260905-R4-ASSEMBLY-EVIDENCE", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent final assembly outcome; local R4 acceptance remains scoped",
+    "kind": "note", "work_item_id": "FL-R4", "from": null, "to": null,
+    "summary": "R4 candidate contributes unchanged bytes to final locally green assembly: actual offline14installs/42checks and1185package+helper passes; independent A full local matrix and B focused review PASS; parent108focused passes separately. Assembly handoff path D:/Repos/agent-skills-worktrees/fl-assembly-20260905/plugins/foreman-line/docs/kickstarters/FL-ASSEMBLY-handoff.md, parent-supplied SHA2564073ce6b1b4c1af8949838d9318669cf27d6bc945211f0ae07c7b021a604f638. No hosted CI; workflow not on main; R4 broader SDK/DocSpine/installed/D4 evidence still incomplete. No state or gate promotion.",
+    "source_refs": ["EVIDENCE.md#outcome-and-history", "EVIDENCE.md#commands-and-counts", "FINAL-HANDOFF.md"],
+    "evidence_refs": ["EVIDENCE.md#candidate-identity-and-digests", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-assembly-a.md", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-assembly-b.md"],
+    "context": {"phase": "Accepted LOCAL candidate; final assembly1185pass0fail0skip; broader R4 evidence incomplete", "blocker": "Hosted CI not run/workflow not on main; SDK/DocSpine/default entrypoints, installed proof and intended-target human D4 unresolved", "next_safe_action": "Preserve final assembly bytes/evidence; obtain explicit adoption/hosted-CI decision and separate default-runtime, installed-session and D4 proof; no pending assembly rerun"}
+  },
+  {
+    "id": "FINAL-WAVE-20260905-R1-COMPOSED", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent final local-wave handoff",
+    "kind": "note", "work_item_id": "FL-R1", "from": null, "to": null,
+    "summary": "R1 reviewed source bytes are identical in the final locally green assembly. Approval timestamp mutation changes the real canonical hash without changing the original fixture; original vector/no-pcc assertions retained. Local candidate acceptance unchanged; structural seal still not authenticated hash/merge or full lifecycle proof.",
+    "source_refs": ["EVIDENCE.md#approval-amendment", "FINAL-HANDOFF.md"], "evidence_refs": ["C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-assembly-a.md", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-assembly-b.md"],
+    "context": {"phase": "Accepted LOCAL R1 candidate; final assembled composition verified locally", "blocker": "No local assembly failure remains; adoption and authenticated/full-lifecycle evidence remain separate", "next_safe_action": "Retain structural-only claims and exact reviewed bytes in FINAL-HANDOFF; seek explicit adoption decision rather than rerunning kickoff/assembly by default"}
+  },
+  {
+    "id": "FINAL-WAVE-20260905-R2-COMPOSED", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent final local-wave handoff",
+    "kind": "note", "work_item_id": "FL-R2", "from": null, "to": null,
+    "summary": "Final stringKeys-reviewed R2 loader/dependency/test bytes are identical in the green assembly. Independent A full matrix passes and parent combined108focused passes corroborate local composition. Earlier R2 and assembly HOLD records remain historical. Report-only semantics and remote-enforcement limits retained.",
+    "source_refs": ["EVIDENCE.md#outcome-and-history", "EVIDENCE.md#candidate-identity-and-digests", "FINAL-HANDOFF.md"], "evidence_refs": ["C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-assembly-a.md", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-assembly-b.md"],
+    "context": {"phase": "Accepted LOCAL R2 candidate; final assembly verified, report-only boundary retained", "blocker": "No local assembly failure remains; adoption/hosted enforcement and human rules remain separate", "next_safe_action": "Preserve final stringKeys hashes and local evidence; carry hosted/report-only decisions explicitly, not a pending assembly rerun"}
+  },
+  {
+    "id": "FINAL-WAVE-20260905-R3-COMPOSED", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent final local-wave handoff",
+    "kind": "note", "work_item_id": "FL-R3", "from": null, "to": null,
+    "summary": "R3 stop-before-PR guard/error-contract bytes remain identical in final green assembly; local integration249passes in reviewer A full matrix, parent108focused passes separately. Existing local acceptance unchanged, no real push/PR execution, merge or goal closure.",
+    "source_refs": ["EVIDENCE.md#commands-and-counts", "FINAL-HANDOFF.md"], "evidence_refs": ["C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-assembly-a.md", "EVIDENCE.md#candidate-identity-and-digests"],
+    "context": {"phase": "Accepted LOCAL R3 candidate; final combined regression evidence supplied", "blocker": "No local assembly failure remains; external SCM effects/adoption still require separate authority", "next_safe_action": "Preserve mocked-seam regression receipts and final bytes; request explicit adoption if desired, never infer a real SCM call from PASS"}
+  },
+  {
+    "id": "FINAL-WAVE-20260905-D1-NARROW-FIX", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent explicit assembly amendment outcome",
+    "kind": "note", "work_item_id": "FL-D1", "from": null, "to": null,
+    "summary": "Assembly-specific approval receipts-directory freeze conflict is resolved locally by explicit FL-ASSEMBLY-approval-vector.md. New real changed-timestamp hash/fixture-preservation assertion binds under independent mutations; original positive vector and no-pcc assertions retained. Final1185passes0fail0skip and independent scoped A/B PASS. Broader freeze/FUP/Jira debt remains proposed, not globally disposed.",
+    "source_refs": ["EVIDENCE.md#approval-amendment", "FINAL-HANDOFF.md"], "evidence_refs": ["C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-assembly-a.md", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-assembly-b.md"],
+    "context": {"phase": "Narrow assembly approval-freeze conflict locally resolved; broader D1 debt unchanged", "blocker": "Remaining named freeze/FUP/Jira obligations lack existing-owner dispositions; no global sweep acceptance", "next_safe_action": "Retain resolved narrow amendment and its behavioral proof; seek deduplicated owner dispositions for remaining debt without deleting controls or replaying the completed fix"}
+  },
+  {
+    "id": "FINAL-WAVE-20260905-R6-BOUNDED-PROBES", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent outcome and independent assembly B scoped composition evidence",
+    "kind": "note", "work_item_id": "FL-R6", "from": null, "to": null,
+    "summary": "Final assembly is locally green. Reviewer B's in-memory real closure/retry probes recompute hashes, preserve partial failure/nonsealing and successful terminal retry, and verify idempotent retry-after-success. This bounded six-stage-start closure evidence is NOT the full failed-build-to-passing-review/normal claim-rich D-to-E lifecycle, live merge, or R6 acceptance.",
+    "source_refs": ["EVIDENCE.md#approval-amendment", "EVIDENCE.md#fk-and-remaining-boundaries", "FINAL-HANDOFF.md"], "evidence_refs": ["C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-assembly-b.md"],
+    "context": {"phase": "R6 proposed; final local assembly and bounded closure/retry probes recorded", "blocker": "Normal failed-build/review/rework identity and claim-rich D/E/F agreed end-to-end evidence remain missing, not assembly failure", "next_safe_action": "Reuse bounded probe evidence as input; obtain exact normal-lifecycle contract/scenario authorization and evidence without claiming existing closure probes discharge all R6 requirements"}
+  },
+  {
+    "id": "FINAL-WAVE-20260905-G05-DEBT-RETAINED", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent final local-wave boundary reconciliation",
+    "kind": "note", "work_item_id": "FL-G05", "from": null, "to": null,
+    "summary": "Final local assembly and package-CI candidate are green, but W4 remains transferred debt. New workflow is not on main, hosted CI not run and human D4 unresolved. Earlier historical delivery and unmet exits remain distinct; no legacy owner packet is marked delivered.",
+    "source_refs": ["EVIDENCE.md#outcome-and-history", "EVIDENCE.md#fk-and-remaining-boundaries", "FINAL-HANDOFF.md"], "evidence_refs": ["EVIDENCE.md"],
+    "context": {"phase": "W4 transferred debt retained after accepted local wave", "blocker": "Closeout D4, hosted/main workflow adoption and remaining legacy exits unresolved", "next_safe_action": "Use final local-wave evidence for the explicit adoption/hosted decision and existing-owner G06/D1/D2 handoffs; no assembly rerun remains pending"}
+  }
+]

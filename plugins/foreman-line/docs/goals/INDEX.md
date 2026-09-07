@@ -11,6 +11,18 @@ from an index row.
 | [hierarchical-coordination-sidecars](hierarchical-coordination-sidecars/charter.md) | `awaiting_coordinator_claim` | `/goal resume hierarchical-coordination-sidecars` | Goal intake requested; Gate 1/2 absent; Gate 3 human |
 | [heterogeneous-agent-worker-fabric](heterogeneous-agent-worker-fabric/charter.md) | `awaiting_coordinator_claim` | `/goal resume heterogeneous-agent-worker-fabric` | Completion requested; Gate 1/2 absent; default-route Gate 3 human |
 
+## Active goals awaiting a human gate
+
+| Goal | Owner | State | Current authority |
+|---|---|---|---|
+| [governed-model-fleet](governed-model-fleet/charter.md) | `/root` | `gmf_p0_shaped_awaiting_gate_2` | D1–D24 plus A1/P0–P9 ratified; P0 draft linted; Gate 2 and external effects absent |
+
+## Frozen or stopped goals
+
+| Goal | State | Current authority |
+|---|---|---|
+| [model-fleet-v1](model-fleet-v1/charter.md) | `stopped_at_mf_p0_no_go` | Frozen predecessor evidence; MF-P1–MF-P4 not dispatched; no active implementation authority |
+
 These are separate goals and require separate owning coordinators. A coordinator may own
 only one of these queues at a time unless a future ratified hierarchy explicitly permits a
 subordinate arrangement. Shared serialization points are sequenced, never co-owned.

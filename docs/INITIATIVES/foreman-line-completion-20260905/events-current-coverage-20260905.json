@@ -1,0 +1,302 @@
+[
+  {
+    "id": "COVERAGE-20260905-R1-BUILT", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent coordinating session (supplied progress report)",
+    "kind": "transition", "work_item_id": "FL-R1", "from": "dispatched", "to": "in-progress",
+    "summary": "Reconcile earlier kickoff with parent-reported completed local implementation: receipts 80 pass, dependent integration 188 pass/1 skip, typecheck/lint pass. This records prior candidate work, not a new launch or phase timestamp.",
+    "source_refs": ["CURRENT-SUMMARY.md#parent-report", "CURRENT-SUMMARY.md#fl-r1"],
+    "evidence_refs": ["C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-a.md"],
+    "context": {"phase": "Local implementation reported complete; retrospective progress reconciliation"}
+  },
+  {
+    "id": "COVERAGE-20260905-R1-REVIEW", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent coordinator, recording independent candidate reviews",
+    "kind": "transition", "work_item_id": "FL-R1", "from": "in-progress", "to": "in-review",
+    "summary": "Independent R1 review A and B both PASS scoped structural sealing. No authenticated hash/merge, complete lifecycle or product-readiness claim.",
+    "source_refs": ["CURRENT-SUMMARY.md#fl-r1"],
+    "evidence_refs": ["C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-a.md", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-b.md"],
+    "context": {"phase": "Scoped independent R1 reviews A/B PASS"}
+  },
+  {
+    "id": "COVERAGE-20260905-R1-ACCEPT-ASSEMBLY", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent coordinator accepting NEW local candidate for ASSEMBLY only",
+    "kind": "transition", "work_item_id": "FL-R1", "from": "in-review", "to": "accepted",
+    "summary": "Parent accepts the R1 local candidate for ASSEMBLY ONLY: 80 receipts passes, typecheck/lint and dependent 188 passes/1 skip, independent A/B PASS. Not merged, installed, goal-closed or release-ready.",
+    "source_refs": ["CURRENT-SUMMARY.md#parent-report", "CURRENT-SUMMARY.md#fl-r1"],
+    "evidence_refs": ["CURRENT-SUMMARY.md#parent-report", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-a.md", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-b.md"],
+    "context": {"phase": "Local candidate accepted by parent for ASSEMBLY ONLY; not merged/installed/goal-closed", "blocker": "Combined assembly not yet green; structural-only scope and separate adoption/gates remain", "next_safe_action": "Consume final parent assembly rerun/review evidence; do not repeat kickoff or claim complete authenticated closure"}
+  },
+  {
+    "id": "COVERAGE-20260905-R2-BUILT", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent coordinating session (supplied final candidate result)",
+    "kind": "transition", "work_item_id": "FL-R2", "from": "dispatched", "to": "in-progress",
+    "summary": "Final loader implementation includes stringKeys protection after earlier B-01 HOLD; parent reports final 239 pass/1 skip and typecheck/lint pass. Earlier 232-pass candidate is not this final result.",
+    "source_refs": ["CURRENT-SUMMARY.md#parent-report", "CURRENT-SUMMARY.md#fl-r2"],
+    "evidence_refs": ["C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-r2-final-b.md"],
+    "context": {"phase": "Final stringKeys implementation reported; earlier HOLD retained as history"}
+  },
+  {
+    "id": "COVERAGE-20260905-R2-REVIEW", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent coordinator, recording final independent candidate reviews",
+    "kind": "transition", "work_item_id": "FL-R2", "from": "in-progress", "to": "in-review",
+    "summary": "Final independent A/B reviews PASS for stringKeys fix; alias mapping keys cannot silently overwrite risk/status/surfaces. Earlier review-b HOLD is superseded for this candidate finding, not erased.",
+    "source_refs": ["CURRENT-SUMMARY.md#fl-r2"],
+    "evidence_refs": ["C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-r2-final-a.md", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-r2-final-b.md"],
+    "context": {"phase": "Final independent R2 A/B PASS; original HOLD preserved"}
+  },
+  {
+    "id": "COVERAGE-20260905-R2-ACCEPT-ASSEMBLY", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent coordinator accepting NEW local candidate for ASSEMBLY only",
+    "kind": "transition", "work_item_id": "FL-R2", "from": "in-review", "to": "accepted",
+    "summary": "Parent accepts final R2 candidate for ASSEMBLY ONLY: final 239 pass/1 skip, typecheck/lint pass, final independent A/B PASS. Report-only exit semantics remain unchanged; not CI enforcement or legacy W4 closure.",
+    "source_refs": ["CURRENT-SUMMARY.md#parent-report", "CURRENT-SUMMARY.md#fl-r2"],
+    "evidence_refs": ["CURRENT-SUMMARY.md#parent-report", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-r2-final-a.md", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-r2-final-b.md"],
+    "context": {"phase": "Final local candidate accepted by parent for ASSEMBLY ONLY", "blocker": "Assembly remains unverified after first failure; remote enforcement and adoption separate", "next_safe_action": "Use final stringKeys-reviewed artifacts in assembly and await final combined evidence; preserve report-only limits"}
+  },
+  {
+    "id": "COVERAGE-20260905-R3-BUILT", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent coordinating session (supplied final candidate result)",
+    "kind": "transition", "work_item_id": "FL-R3", "from": "dispatched", "to": "in-progress",
+    "summary": "Parent reports final failed-push short-circuit candidate 197 pass/1 skip and typecheck/lint pass. This is retrospective progress recording, not live push or PR execution.",
+    "source_refs": ["CURRENT-SUMMARY.md#parent-report", "CURRENT-SUMMARY.md#fl-r3"],
+    "evidence_refs": ["CURRENT-SUMMARY.md#parent-report"],
+    "context": {"phase": "Local R3 implementation and parent final checks reported complete"}
+  },
+  {
+    "id": "COVERAGE-20260905-R3-REVIEW", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent coordinator, recording independent candidate review",
+    "kind": "transition", "work_item_id": "FL-R3", "from": "in-progress", "to": "in-review",
+    "summary": "Independent review-r3 PASS for the local typed PUSH_FAILED and stable replacement error-contract assertion. Review's guarded focused counts are distinct from the parent's final full-suite count.",
+    "source_refs": ["CURRENT-SUMMARY.md#fl-r3"],
+    "evidence_refs": ["C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-r3.md"],
+    "context": {"phase": "Independent R3 candidate review PASS"}
+  },
+  {
+    "id": "COVERAGE-20260905-R3-ACCEPT-ASSEMBLY", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent coordinator accepting NEW local candidate for ASSEMBLY only",
+    "kind": "transition", "work_item_id": "FL-R3", "from": "in-review", "to": "accepted",
+    "summary": "Parent accepts local R3 candidate for ASSEMBLY ONLY: 197 pass/1 skip, typecheck/lint pass and independent scoped PASS. No real SCM action, merge, installed result or goal closure.",
+    "source_refs": ["CURRENT-SUMMARY.md#parent-report", "CURRENT-SUMMARY.md#fl-r3"],
+    "evidence_refs": ["CURRENT-SUMMARY.md#parent-report", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-r3.md"],
+    "context": {"phase": "Local candidate accepted by parent for ASSEMBLY ONLY", "blocker": "First combined assembly failed elsewhere; combined final evidence and separate adoption remain", "next_safe_action": "Retain both mocked SCM seams and consume final assembly regression/review result; do not rerun Step 0 or infer external authority"}
+  },
+  {
+    "id": "COVERAGE-20260905-R4-READY", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent coordinator, owner of NEW R4 candidate",
+    "kind": "transition", "work_item_id": "FL-R4", "from": "proposed", "to": "ready",
+    "summary": "Record previously unjournaled parent-owned local package-CI candidate at the shared baseline. This ready step reconciles supplied completed work and does not invent an execution timestamp or satisfy all baseline R4 evidence requirements.",
+    "source_refs": ["CURRENT-SUMMARY.md#parent-report", "CURRENT-SUMMARY.md#fl-r4"],
+    "evidence_refs": ["C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-r4-a.md"],
+    "context": {"owner": "Parent coordinating session (NEW local package-CI candidate; no legacy takeover)", "worktree": "D:/Repos/agent-skills-worktrees/fl-r4-package-ci-20260905", "branch": "feat/foreman-line-FL-R4-20260905", "base_commit": "5ce6ddc7f996d764e506b6b421779fbf3ece689a", "spec_path": "plugins/foreman-line/docs/specs/active/FL-R4-package-ci.md", "phase": "Parent-owned exact local R4 candidate recorded"}
+  },
+  {
+    "id": "COVERAGE-20260905-R4-DISPATCHED", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent coordinating session (supplied completed candidate work)",
+    "kind": "transition", "work_item_id": "FL-R4", "from": "ready", "to": "dispatched",
+    "summary": "Retrospective dispatch-state reconciliation for the parent-reported implemented R4 candidate; this journal worker did not launch another worker or observe a separate Step 0 timestamp.",
+    "source_refs": ["CURRENT-SUMMARY.md#parent-report", "CURRENT-SUMMARY.md#fl-r4"], "evidence_refs": [],
+    "context": {"phase": "Parent R4 candidate execution recorded retrospectively; no new dispatch by journal worker"}
+  },
+  {
+    "id": "COVERAGE-20260905-R4-BUILT", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent coordinating session (supplied local check matrix)",
+    "kind": "transition", "work_item_id": "FL-R4", "from": "dispatched", "to": "in-progress",
+    "summary": "Parent R4 candidate result: all 14 installs and 42 checks pass; 1091 package tests pass, zero fail/skip; helper 16 pass. This is the new local candidate, not the separate MAIN partial-selection/baseline-failure receipt or live GitHub CI.",
+    "source_refs": ["CURRENT-SUMMARY.md#parent-report", "CURRENT-SUMMARY.md#fl-r4"], "evidence_refs": ["CURRENT-SUMMARY.md#parent-report"],
+    "context": {"phase": "Local R4 candidate implementation/check matrix reported complete; 1091 package + 16 helper passes"}
+  },
+  {
+    "id": "COVERAGE-20260905-R4-REVIEW", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent coordinator, recording independent local CI candidate reviews",
+    "kind": "transition", "work_item_id": "FL-R4", "from": "in-progress", "to": "in-review",
+    "summary": "Independent review-r4-a/b both PASS for local candidate code/security boundaries. Neither reviewer independently executed all package installs/checks or remote CI; their helper 16-pass evidence is distinct.",
+    "source_refs": ["CURRENT-SUMMARY.md#fl-r4"],
+    "evidence_refs": ["C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-r4-a.md", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-r4-b.md"],
+    "context": {"phase": "Scoped independent R4 reviews A/B PASS; no installed/remote/D4 clearance"}
+  },
+  {
+    "id": "COVERAGE-20260905-R4-ACCEPT-ASSEMBLY", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent coordinator accepting NEW local candidate for ASSEMBLY only",
+    "kind": "transition", "work_item_id": "FL-R4", "from": "in-review", "to": "accepted",
+    "summary": "Parent accepts the R4 package-CI candidate for ASSEMBLY ONLY on 14 installs/42 checks, 1091 package passes with zero fail/skip, helper 16 pass and scoped A/B PASS. This is NOT full acceptance of FL-R4's original current-CI/installed-runtime evidence obligation; missing proof stays explicit.",
+    "source_refs": ["CURRENT-SUMMARY.md#parent-report", "CURRENT-SUMMARY.md#fl-r4", "CURRENT-SUMMARY.md#d4-and-runtime"],
+    "evidence_refs": ["CURRENT-SUMMARY.md#parent-report", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-r4-a.md", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-r4-b.md"],
+    "context": {"phase": "Local package-CI candidate accepted for ASSEMBLY ONLY; broader R4 evidence incomplete", "blocker": "Assembly first run not green; remote CI, SDK/default paths, DocSpine, installed proof and human D4 unresolved", "next_safe_action": "Await final assembly outcome; separately obtain default-runtime/installed evidence and intended-target human D4 proof without treating local checks as remote CI"}
+  },
+  {
+    "id": "COVERAGE-20260905-ASSEMBLY-PENDING", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent coordinating session (supplied assembly status)",
+    "kind": "note", "work_item_id": null, "from": null, "to": null,
+    "summary": "Parent assembly combines all 24 source artifacts. First combined run: 1168 package passes/1 failure, plus 16 helper passes, 41/42 checks. Existing approval canonical-parity/receipts-byte-freeze conflict; narrow new FL-ASSEMBLY-approval-vector.md amendment now being fixed. NOT yet green. Final assembly outcome pending parent report; no unregistered work item is created.",
+    "source_refs": ["CURRENT-SUMMARY.md#parent-report", "CURRENT-SUMMARY.md#assembly"], "evidence_refs": ["CURRENT-SUMMARY.md#parent-report"],
+    "context": {"owner": "Parent coordinating session (new assembly only)", "worktree": "D:/Repos/agent-skills-worktrees/fl-assembly-20260905", "branch": "feat/foreman-line-FL-ASSEMBLY-20260905", "base_commit": "5ce6ddc7f996d764e506b6b421779fbf3ece689a", "phase": "Assembly first run failing; narrow approval-vector amendment in progress", "blocker": "Approval canonical-parity receipts-byte-freeze conflict; final combined result not supplied", "next_safe_action": "Parent completes narrow amendment, captures complete combined rerun/review evidence and supplies final assembly event; do not infer green"}
+  },
+  {
+    "id": "COVERAGE-20260905-UTILITY-REVIEW-PASS", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent report corroborated by independent coordinator final review",
+    "kind": "note", "work_item_id": null, "from": null, "to": null,
+    "summary": "review-coordinator-final.md PASS closes F1 missing-DB defect at the recorded unchanged helper hashes; independently 18 tests pass. Earlier HOLD remains historical. This is state-utility review, not a new product gate or live operational-history audit.",
+    "source_refs": ["CURRENT-SUMMARY.md#utility-review"],
+    "evidence_refs": ["C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-coordinator-final.md"],
+    "context": {"phase": "Coordinator F1 independent final review PASS, 18 tests; helper unchanged"}
+  },
+  {
+    "id": "COVERAGE-20260905-G01", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent current coverage reconciliation",
+    "kind": "note", "work_item_id": "FL-G01", "from": null, "to": null,
+    "summary": "Permission profiles remain historically closed. Current local package evidence does not prove native Task applies emitted Claude permission settings or establish OS containment. No legacy goal reopened or accepted anew.",
+    "source_refs": ["CURRENT-SUMMARY.md#every-item-coverage", "CURRENT-SUMMARY.md#parent-report"], "evidence_refs": [],
+    "context": {"phase": "Historical closure retained; current host enforcement separate", "blocker": "No new historical-goal blocker; native-host containment/denial proof remains outside closure", "next_safe_action": "Preserve historical closure and route actual host permission/positive-negative proof through R5 without a containment claim"}
+  },
+  {
+    "id": "COVERAGE-20260905-G02", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent current coverage reconciliation",
+    "kind": "note", "work_item_id": "FL-G02", "from": null, "to": null,
+    "summary": "W1 historical closure retained. New local 14-package candidate checks are not a new live registration/receipt execution or instruction to replay tracker writes.",
+    "source_refs": ["CURRENT-SUMMARY.md#every-item-coverage", "CURRENT-SUMMARY.md#parent-report"], "evidence_refs": [],
+    "context": {"phase": "W1 historically closed; no new goal action", "blocker": "No fresh live-registration evidence claimed or required to rewrite history", "next_safe_action": "Preserve W1 closure and reference local versus live evidence separately; do not replay external registration"}
+  },
+  {
+    "id": "COVERAGE-20260905-G03", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent current coverage reconciliation",
+    "kind": "note", "work_item_id": "FL-G03", "from": null, "to": null,
+    "summary": "W2 remains historically closed. Parent native Task execution exists as reported activity, not proof that the executeDispatch library itself supplies approval/launch enforcement or applies emitted settings.",
+    "source_refs": ["CURRENT-SUMMARY.md#every-item-coverage", "PARENT-UPDATE-20260905.md#parent-authority"], "evidence_refs": [],
+    "context": {"phase": "W2 historical closure retained; orchestration boundary still separate", "blocker": "Full approval-to-actual-worker evidence remains under R5", "next_safe_action": "Keep W2 closed historically and assign precise approval/launch boundary evidence to R5, not a historical replay"}
+  },
+  {
+    "id": "COVERAGE-20260905-G04", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent current coverage reconciliation",
+    "kind": "note", "work_item_id": "FL-G04", "from": null, "to": null,
+    "summary": "W3 historical closure is retained. Accepted R1/R3 component candidates and current package suites do not establish the normal claim-rich failed-to-passing D/E/F lifecycle.",
+    "source_refs": ["CURRENT-SUMMARY.md#every-item-coverage", "CURRENT-SUMMARY.md#parent-report"], "evidence_refs": [],
+    "context": {"phase": "W3 historically closed; normal-chain proof still proposed", "blocker": "R6 integration contract and execution proof remain missing", "next_safe_action": "Preserve W3 history and obtain scoped normal rework/receipt-chain evidence under R6"}
+  },
+  {
+    "id": "COVERAGE-20260905-G05", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent current coverage reconciliation",
+    "kind": "note", "work_item_id": "FL-G05", "from": null, "to": null,
+    "summary": "W4 remains transferred debt, not a fifth historically closed goal. Local R4 CI candidate acceptance does not satisfy closeout D4 or erase the six-parcel historical delivery/exit-debt distinction.",
+    "source_refs": ["CURRENT-SUMMARY.md#every-item-coverage", "CURRENT-SUMMARY.md#d4-and-runtime"], "evidence_refs": [],
+    "context": {"phase": "W4 transferred debt retained; local CI candidate not live exit proof", "blocker": "Closeout D4 and named follow-up dispositions remain outstanding", "next_safe_action": "Keep debt mapped to G06/D1/D2 while awaiting assembly and human current-target evidence"}
+  },
+  {
+    "id": "COVERAGE-20260905-G06", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent report and read-only CI/runtime evidence lane",
+    "kind": "note", "work_item_id": "FL-G06", "from": null, "to": null,
+    "summary": "Current D4 read-only evidence identifies m0r6aN/agent-skills with no required-check rule or PR approval rule. Historical KaseyaOne/kaseya-one-productivity-tools returns 404; this is not proof of nonexistence. No external writes. Closeout remains blocked, not merely awaiting a generic runtime inventory.",
+    "source_refs": ["CURRENT-SUMMARY.md#d4-and-runtime"],
+    "evidence_refs": ["C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/ci-runtime-evidence.md"],
+    "context": {"phase": "Current D4 negative evidence recorded; closeout not complete", "blocker": "Intended repository/rules identity reconciliation and exact human D4 action/effective-rule proof missing", "next_safe_action": "Confirm intended D4 target with existing owner/human; require test and integration-report, approval >=1 and applicable no-bypass proof; do not apply historical IDs blindly"}
+  },
+  {
+    "id": "COVERAGE-20260905-G07", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent current legacy-owner coverage report",
+    "kind": "note", "work_item_id": "FL-G07", "from": null, "to": null,
+    "summary": "Packaging remains incomplete. Prepared parent handoff is not delivered or acknowledged; current local CI work does not provide installed fresh-session P1 proof or establish a packaging coordinator takeover. Seven-parcel graph retained.",
+    "source_refs": ["CURRENT-SUMMARY.md#every-item-coverage", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/owner-handoffs/NEXT-ACTIONS.md"], "evidence_refs": [],
+    "context": {"phase": "Packaging handoff prepared, NOT delivered/acknowledged; P1 installed proof missing", "blocker": "Existing ownership/designation reconciliation and exact fresh-session evidence absent", "next_safe_action": "Obtain owner acknowledgment/designation and P1 installation/discovery evidence under its scope; retain P1-P2-P4-P3-P5-P6-P7 dependency order"}
+  },
+  {
+    "id": "COVERAGE-20260905-G08", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent and independent FL-FK-V0 verification reports; not FK owner acceptance",
+    "kind": "note", "work_item_id": "FL-G08", "from": null, "to": null,
+    "summary": "New isolated FK verification-only root at 0ee1657: tsc/lint/validate/sweep/generate pass, three outputs byte-identical, no source/owner modifications. Original suite timed out with partial 156 pass/1 fail from selected deep TEMP control(e). Short-TEMP retry control(e)1 pass + full semantic440 pass yields 597 latest distinct passes across invocations, NOT a full rerun. Original failure/timeout and retry supervisor post-exit inspection caveat remain preserved. No acceptance.",
+    "source_refs": ["CURRENT-SUMMARY.md#fk-verification"],
+    "evidence_refs": ["C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/owner-handoffs/FL-FK-V0-RESULT.md", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/owner-handoffs/FL-FK-V0-RETRY-RESULT.md"],
+    "context": {"worktree": "D:/Repos/agent-skills-worktrees/fl-fk-v0-verification-20260905", "branch": "feat/foreman-line-FL-FK-V0-20260905", "base_commit": "0ee165720f8d1e3a91eb283cb770400b23f61bf5", "phase": "Verification-only composite597 passes; existing FK owner unchanged; blocked/unaccepted", "blocker": "Exact recovery Step0 source/plan, owner composite reconciliation, builder handoff and fresh owner-directed dual reviews remain; human Gate3 separate", "next_safe_action": "Return original and retry reports together; owner supplies missing Step0 source or explicitly reconciles reconstructed composite, then builder handoff/dual reviews; do not blindly rerun or claim FK green"}
+  },
+  {
+    "id": "COVERAGE-20260905-G09", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent current legacy-owner coverage report",
+    "kind": "note", "work_item_id": "FL-G09", "from": null, "to": null,
+    "summary": "HCS owner/gates remain unchanged. Handoff prepared, not delivered/acknowledged. FK verification-only composite is not owner acceptance, Gate3 or permission to edit the shared charter landing surface.",
+    "source_refs": ["CURRENT-SUMMARY.md#every-item-coverage", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/owner-handoffs/NEXT-ACTIONS.md"], "evidence_refs": [],
+    "context": {"phase": "HCS blocked; handoff prepared but unacknowledged", "blocker": "Explicit FK/HCS boundary agreement or post-merge reconciliation absent; HCS Gate1/2 not inferred", "next_safe_action": "Seek existing-owner landing/serialization agreement OR verified post-merge ownership reconciliation; refresh anchors and request scoped gates, without takeover"}
+  },
+  {
+    "id": "COVERAGE-20260905-G10", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent current legacy-owner coverage report",
+    "kind": "note", "work_item_id": "FL-G10", "from": null, "to": null,
+    "summary": "WF remains with existing Claude owner and P0-only grant. WF-P0-REVIEW-A/B files are prepared prompts, NOT completed reviews, delivery or acknowledgment. Need exact frozen review object, preserved dirty overlay reconciliation, F-21 and three-versus-four Allowed Files reconciliation before AC13 closure; later F-23 closure is not reopened from stale prose.",
+    "source_refs": ["CURRENT-SUMMARY.md#every-item-coverage", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/owner-handoffs/NEXT-ACTIONS.md"],
+    "evidence_refs": ["C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/owner-handoffs/WF-P0-REVIEW-A.md", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/owner-handoffs/WF-P0-REVIEW-B.md"],
+    "context": {"phase": "WF blocked; two review prompts prepared, NOT executed/delivered/acknowledged", "blocker": "Owner-frozen object, F-21/scope reconciliation and actual same-object AC13 dual PASS absent", "next_safe_action": "Existing owner freezes intended object and reconciles fourth-file/F-21 contract, then dispatches fresh dual reviews; P1 verifier and P16 rollback still require later grants"}
+  },
+  {
+    "id": "COVERAGE-20260905-G11", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent current legacy-owner coverage report",
+    "kind": "note", "work_item_id": "FL-G11", "from": null, "to": null,
+    "summary": "GMF stays with existing owner; exact passive P0 Gate2 absent. Prepared request is not delivery, acknowledgment or approval. Five documentation/evidence outputs and 66 specified negative scenarios do not authorize their execution or product code. Read-only input custody and revised graph/exit wording still require owner handling.",
+    "source_refs": ["CURRENT-SUMMARY.md#every-item-coverage", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/owner-handoffs/NEXT-ACTIONS.md"],
+    "evidence_refs": ["C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/owner-handoffs/GMF-P0-GATE2-REQUEST.md"],
+    "context": {"phase": "GMF passive P0 request prepared, NOT delivered/acknowledged/granted", "blocker": "Exact Gate2 and input-custody/owner reconciliation unresolved; separate effects withheld", "next_safe_action": "Seek existing owner's acknowledgment and exact passive P0 gate decision with hash-identical inputs or separately reviewed base; do not commit governing inputs as P0 output"}
+  },
+  {
+    "id": "COVERAGE-20260905-G12", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent current coverage reconciliation",
+    "kind": "note", "work_item_id": "FL-G12", "from": null, "to": null,
+    "summary": "MF remains frozen at predecessor MF-P0 NO-GO, not accepted/closed. New local repair and FK verification outcomes do not overwrite prior sandbox/egress/provenance failures or authorize a predecessor rerun.",
+    "source_refs": ["CURRENT-SUMMARY.md#every-item-coverage", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/owner-handoffs/NEXT-ACTIONS.md"], "evidence_refs": [],
+    "context": {"phase": "MF frozen NO-GO retained", "blocker": "No predecessor resurrection or new acceptance authorized/recorded", "next_safe_action": "Preserve original evidence read-only; successor may reference but not rewrite it; require explicit owner disposition before any change"}
+  },
+  {
+    "id": "COVERAGE-20260905-G13", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent current legacy-owner coverage report",
+    "kind": "note", "work_item_id": "FL-G13", "from": null, "to": null,
+    "summary": "KPP existing owner/gates unchanged; handoff prepared, not delivered/acknowledged. Manual r3 letter-signature-cleared-funds-approved-intake-delivery/economics remains controlling. Technical candidate acceptance supplies no counsel, signature, funds or commercial exit fact.",
+    "source_refs": ["CURRENT-SUMMARY.md#every-item-coverage", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/owner-handoffs/NEXT-ACTIONS.md"], "evidence_refs": [],
+    "context": {"phase": "KPP incomplete; prepared handoff unacknowledged; no new commercial action", "blocker": "Current G2/r3 issue dispositions, counsel clearance and separate preview ownership/evidence remain", "next_safe_action": "Existing owner reconciles KEO-200/G2 and KEO-202 disposals, KEO-203 before signature and preview owner; require actual paid or reviewed negative exit, never date-only completion"}
+  },
+  {
+    "id": "COVERAGE-20260905-G14", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent current legacy-owner coverage report",
+    "kind": "note", "work_item_id": "FL-G14", "from": null, "to": null,
+    "summary": "GTM remains incomplete with existing owner and gates. Prepared maintenance request is not delivered/acknowledged or ratified. P0A's historical local dual acceptance is not integration; maintenance scope precedes P0B/P0C and W0-W8 dispatch.",
+    "source_refs": ["CURRENT-SUMMARY.md#every-item-coverage", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/owner-handoffs/NEXT-ACTIONS.md"],
+    "evidence_refs": ["C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/owner-handoffs/GTM-MAINTENANCE-REQUEST.md"],
+    "context": {"phase": "GTM maintenance packet prepared, NOT delivered/acknowledged; no integration", "blocker": "Exact owner-ratified loop-maintenance Allowed Files and subsequent gates/child authority missing", "next_safe_action": "Seek existing owner acknowledgment and bounded loop maintenance amendment, then P0B/P0C with separate founder/counsel/child-release evidence"}
+  },
+  {
+    "id": "COVERAGE-20260905-G15", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent current coverage reconciliation",
+    "kind": "note", "work_item_id": "FL-G15", "from": null, "to": null,
+    "summary": "Ledgerline remains unknown from the empty goal directory baseline. No owner, intent, charter, implementation or gate is established by this update.",
+    "source_refs": ["CURRENT-SUMMARY.md#every-item-coverage"], "evidence_refs": [],
+    "context": {"phase": "Ledgerline unknown retained; no new work item or charter invented", "blocker": "Human intent/owner or explicit defer/cancel disposition absent", "next_safe_action": "Ask parent to obtain the smallest human intent/ownership disposition; do not create or accept goal-local work by inference"}
+  },
+  {
+    "id": "COVERAGE-20260905-R5", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent current broad-gap coverage reconciliation",
+    "kind": "note", "work_item_id": "FL-R5", "from": null, "to": null,
+    "summary": "Actual parent native Task activity is not full approval-to-worker contract or denial proof. Emitted Claude settings are not enforced by native Task; no sandbox/containment or per-model selection claim follows from local R1-R4 acceptance.",
+    "source_refs": ["CURRENT-SUMMARY.md#every-item-coverage", "PARENT-UPDATE-20260905.md#parent-authority"], "evidence_refs": [],
+    "context": {"phase": "R5 remains proposed; real activity reported but boundary proof incomplete", "blocker": "Explicit approval/denial effect trace and actual-host enforcement/positive controls absent", "next_safe_action": "Shape the narrow approval/native-launch evidence contract with existing dispatch/WF owners; keep verifier semantics in WF-P1 and do not infer permission containment", "emitted_settings_enforced": false}
+  },
+  {
+    "id": "COVERAGE-20260905-R6", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent current broad-gap coverage reconciliation",
+    "kind": "note", "work_item_id": "FL-R6", "from": null, "to": null,
+    "summary": "R1/R3/R4 local candidate acceptance is useful component input, not full failed-to-passing rework or normal claim-rich D-to-E-to-F execution proof. Assembly currently has one failure and is not a lifecycle acceptance run.",
+    "source_refs": ["CURRENT-SUMMARY.md#every-item-coverage", "CURRENT-SUMMARY.md#assembly"], "evidence_refs": [],
+    "context": {"phase": "R6 proposed; normal-chain and retry contract/evidence outstanding", "blocker": "Normal rework identity/receipt semantics and agreed end-to-end scenario evidence missing; assembly ungreen", "next_safe_action": "Define bounded normal D/E/F and failed-to-passing scenarios with current owners, then validate at accepted assembled bytes; no special six-receipt vehicle substitution"}
+  },
+  {
+    "id": "COVERAGE-20260905-R7", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent current broad-gap coverage reconciliation",
+    "kind": "note", "work_item_id": "FL-R7", "from": null, "to": null,
+    "summary": "R1 scoped PASS explicitly preserves structural-only sealing. Hash recomputation, authenticated merge provenance, immutable storage and complete A-F lifecycle proof remain deferred/non-goals, not silently implemented by the predicate repair.",
+    "source_refs": ["CURRENT-SUMMARY.md#every-item-coverage", "CURRENT-SUMMARY.md#fl-r1"],
+    "evidence_refs": ["C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-b.md"],
+    "context": {"phase": "Alpha provenance limitations retained; R7 deferred", "blocker": "No newly chartered authenticated/cryptographic verifier or reviewed disposition beyond existing alpha scope", "next_safe_action": "Keep structural-only public claims and request an explicit owner scope/disposition before strengthening receipt or real-merge guarantees"}
+  },
+  {
+    "id": "COVERAGE-20260905-R8", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent current broad-gap coverage reconciliation",
+    "kind": "note", "work_item_id": "FL-R8", "from": null, "to": null,
+    "summary": "Separate Parcel Compiler scope remains deferred; no new compiler implementation or owner acceptance was reported. NOT_IMPLEMENTED tests cannot be counted as executable compiler completion because package-CI candidates passed.",
+    "source_refs": ["CURRENT-SUMMARY.md#every-item-coverage", "queue.json#FL-R8"], "evidence_refs": [],
+    "context": {"phase": "Compiler scope deferred; no new implementation receipt", "blocker": "Upstream owner/charter and explicit scope/disposition not reconciled", "next_safe_action": "Ask parent for upstream owner/scope disposition if the all-findings completion claim includes compiler; otherwise retain explicit scaffold limitation"}
+  },
+  {
+    "id": "COVERAGE-20260905-R9", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent current broad-gap coverage reconciliation",
+    "kind": "note", "work_item_id": "FL-R9", "from": null, "to": null,
+    "summary": "W5 Smart Triage remains future master-plan scope, not a chartered active queue or implemented result. No current parent update activated it.",
+    "source_refs": ["CURRENT-SUMMARY.md#every-item-coverage", "queue.json#FL-R9"], "evidence_refs": [],
+    "context": {"phase": "W5 deferred future scope retained", "blocker": "No explicit scope/owner/gate activation or completion disposition", "next_safe_action": "Obtain human scope/defer disposition before including W5 in completion; do not invent an active queue or build"}
+  },
+  {
+    "id": "COVERAGE-20260905-R10", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent current broad-gap coverage reconciliation",
+    "kind": "note", "work_item_id": "FL-R10", "from": null, "to": null,
+    "summary": "Coordinator authority attribution, durable events and current next-action documents have improved locally, with utility F1 independent PASS. That is not measured plugin/skill optimization, packaging fresh-session acceptance, removal of personal copies or per-model cost proof. Broader end-user optimization authority remains intact; worker scope is narrower.",
+    "source_refs": ["CURRENT-SUMMARY.md#every-item-coverage", "CURRENT-SUMMARY.md#utility-review", "CHARTER.md#end-user-authorization"], "evidence_refs": [],
+    "context": {"phase": "R10 proposed; coordination docs improved, plugin/skill optimization not accepted", "blocker": "Installed identity/P1 evidence and exact measured optimization/owner scope remain", "next_safe_action": "Use generated STATUS instead of stale kickoff prose; route bounded measured skill/canon changes through the appropriate packaging scope without weakening rules or claiming tool containment"}
+  },
+  {
+    "id": "COVERAGE-20260905-D1", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent supplied assembly finding and existing debt reconciliation",
+    "kind": "note", "work_item_id": "FL-D1", "from": null, "to": null,
+    "summary": "The named freeze-debt class has a concrete current assembly collision: approval canonical-parity receipts-byte-freeze. Parent is fixing only the new FL-ASSEMBLY-approval-vector.md amendment; no final green yet. This does not dispose all freeze-sweep, FUP/Jira or legacy follow-up obligations.",
+    "source_refs": ["CURRENT-SUMMARY.md#assembly", "CURRENT-SUMMARY.md#every-item-coverage"], "evidence_refs": ["CURRENT-SUMMARY.md#parent-report"],
+    "context": {"phase": "Concrete assembly freeze conflict under narrow amendment; broader D1 debt proposed", "blocker": "Final combined rerun/review not supplied; remaining legacy debt not owner-disposed", "next_safe_action": "Finish narrow assertion/contract replacement with behavioral proof, capture assembly result, then ask existing owners for deduplicated remaining freeze/FUP/Jira dispositions; no broad control deletion"}
+  },
+  {
+    "id": "COVERAGE-20260905-D2", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent current CI/runtime and claim-boundary reconciliation",
+    "kind": "note", "work_item_id": "FL-D2", "from": null, "to": null,
+    "summary": "Accepted local R4 runner/workflow defines test and integration-report candidate jobs, not deployed required checks. Audit/DocSpine report-only semantics and gate assembly applied:false are not live enforcement. Current repository required checks/approval absent; SDK/DocSpine unresolved.",
+    "source_refs": ["CURRENT-SUMMARY.md#fl-r4", "CURRENT-SUMMARY.md#d4-and-runtime"],
+    "evidence_refs": ["C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/ci-runtime-evidence.md", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/review-r4-a.md"],
+    "context": {"phase": "D2 proposed; local runner acceptance is not applied enforcement", "blocker": "Actual CI/required-check/human D4 evidence and default DocSpine resolution missing", "next_safe_action": "Keep report-only claims explicit; owner/human decides intended-target enforcement and DocSpine wiring, with real positive/negative proof rather than promoting a local PASS"}
+  },
+  {
+    "id": "COVERAGE-20260905-D3", "baseline_sha256": "8fa91504c2c899db612c368797b75978693fd05ea55be1fc07c60cea7c6c9fd2", "recorded_on": "2026-09-05", "actor": "Parent current FK later-decision reconciliation",
+    "kind": "note", "work_item_id": "FL-D3", "from": null, "to": null,
+    "summary": "FK composite verification does not ratify later architecture mechanisms or accept downstream parcels. U1 CI-backstop independence remains due before FK-P18, not an invented prerequisite to already-permitted FK-P0 verification. A1.8/A1.9 scoped ratification and P1-P21 acceptance remain separate.",
+    "source_refs": ["CURRENT-SUMMARY.md#fk-verification", "CURRENT-SUMMARY.md#every-item-coverage", "C:/Users/clint/AppData/Local/Temp/opencode/foreman-line-analysis-20260905/owner-handoffs/NEXT-ACTIONS.md"], "evidence_refs": [],
+    "context": {"phase": "Later FK U1/ledger decisions remain proposed; no downstream acceptance", "blocker": "Owner-attributed independence/ledger ratification and later parcel gates not supplied", "next_safe_action": "Retain U1-before-P18 and scoped A1.8/A1.9 decision requests with existing FK owner; do not repeat completed isolated verification merely to mask missing owner authority"}
+  }
+]
