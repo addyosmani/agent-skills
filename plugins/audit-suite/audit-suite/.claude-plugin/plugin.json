@@ -3,11 +3,11 @@
   "version": "1.2.0",
   "description": "Security & compliance audit suite: a conductor that profiles your org and recommends scan modules, security-audit (technical findings) and compliance-audit (control mapping) specialists with versioned, toggleable framework modules, plus remediation-plan (optimized fix sequencing) and jira-integration (file the work as tickets).",
   "author": {
-    "name": "Kaseya",
-    "url": "https://github.com/KaseyaOne"
+    "name": "Keon Audit Suite",
+    "url": "https://github.com/m0r6aN/agent-skills/tree/main/plugins/audit-suite/audit-suite"
   },
-  "homepage": "https://github.com/KaseyaOne/kaseya-one-productivity-tools",
-  "repository": "https://github.com/KaseyaOne/kaseya-one-productivity-tools",
+  "homepage": "https://github.com/m0r6aN/agent-skills/tree/main/plugins/audit-suite/audit-suite",
+  "repository": "https://github.com/m0r6aN/agent-skills/tree/main/plugins/audit-suite/audit-suite",
   "license": "Proprietary",
   "keywords": ["security", "compliance", "audit", "soc2", "fedramp", "hipaa", "pci", "owasp", "cmmc", "remediation", "jira"]
 }

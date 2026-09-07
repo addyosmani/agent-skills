@@ -1,6 +1,6 @@
 {
   "name": "foreman-line",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Contract-first development coordination from goal shaping through verified closure.",
   "author": {
     "name": "Clint Morgan"
