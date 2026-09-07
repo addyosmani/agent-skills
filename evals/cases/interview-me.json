@@ -1,0 +1,42 @@
+{
+  "skill_name": "interview-me",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Interview me about what I actually want before you build anything",
+        "top_k": 3
+      },
+      {
+        "prompt": "Grill me on the requirements, the ask is fuzzy",
+        "top_k": 3
+      },
+      {
+        "prompt": "Ask me one question at a time until you understand the feature",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Run the full test suite and report failures",
+        "owner": "test-driven-development"
+      },
+      {
+        "prompt": "Deploy the current build to staging",
+        "owner": "shipping-and-launch"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "dialogue",
+      "prompt": "I want 'a better admin page'. Interview me before proposing anything.",
+      "expected_output": "A one-question-at-a-time interview that converges on validated requirements",
+      "expectations": [
+        "Questions are asked one at a time, not in batches",
+        "The agent does not propose solutions before understanding the need",
+        "The interview surfaces the underlying goal behind the stated ask"
+      ]
+    }
+  ]
+}

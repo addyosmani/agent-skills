@@ -2,7 +2,23 @@
 
 Thanks for your interest in contributing! This project is a collection of production-grade engineering skills for AI coding agents.
 
+New here? [docs/developer-onboarding.md](docs/developer-onboarding.md) is a guided tour of how the repo fits together (the five layers, the verification loop, and the contribution paths) and tells you when to read this document, [skill-anatomy.md](docs/skill-anatomy.md), and [evals/README.md](evals/README.md). This file is the authoritative rulebook; the onboarding guide is the map.
+
 ## Adding a New Skill
+
+### Before proposing a new skill
+
+This pack already covers most of the development lifecycle, and many proposals overlap with an existing skill or another open PR. Before opening one, do these checks so reviewers aren't triaging duplicates:
+
+1. **Search the catalog.** Browse [the skill list in the README](README.md) and skim `skills/` for an existing skill that covers your idea, whole or in part.
+2. **Check open PRs.** Run `gh pr list --state open` (or browse the PRs tab) and look for proposals on the same topic. Clusters of near-duplicate skills already exist; don't add to them.
+3. **Check rejected proposals.** Search the [skill-change rejection ledger](evals/skill-impact.md) for earlier proposals that overlap with your idea and review their eval evidence before repeating the work.
+4. **Read the anatomy.** Confirm your idea fits the format in [docs/skill-anatomy.md](docs/skill-anatomy.md), an actionable workflow with verification, not vague advice.
+5. **Justify the gap in your PR description.** State explicitly why this isn't covered by an existing skill, open PR, or previously rejected proposal. If it overlaps, propose extending the existing skill instead of adding a new one.
+
+If your idea is a refinement of an existing skill, prefer a focused edit to that skill over a new directory.
+
+### Creating the skill
 
 1. Create a directory under `skills/` with a kebab-case name
 2. Add a `SKILL.md` following the format in [docs/skill-anatomy.md](docs/skill-anatomy.md)
@@ -24,6 +40,7 @@ Every new skill must have:
 
 - `SKILL.md` in the skill directory
 - YAML frontmatter with valid `name` and `description`
+- An eval case file at `evals/cases/<skill-name>.json` — at least 3 positive triggers, 2 negative triggers (with `owner` where possible), and 1 behavioral eval. Execution evals must be backed by real files under `evals/fixtures/`; conversation-shaped skills may use a reviewer-gated `kind: "dialogue"` eval instead (see [evals/README.md](evals/README.md)). CI enforces these requirements.
 
 New skills should generally follow the standard anatomy:
 
@@ -46,9 +63,21 @@ The frontmatter fields above are required. The section anatomy is a recommended 
 
 ## Modifying Existing Skills
 
+Before proposing a change, search the [skill-change rejection ledger](evals/skill-impact.md) for previous attempts affecting the same skill and review their eval evidence.
+
 - Keep changes focused and minimal
 - Preserve the existing structure and tone
 - Test that YAML frontmatter remains valid after edits
+
+If a skill or description change is rejected based on eval results, add one row to the ledger with the date, affected skill, concise attempted change, before-to-after rank-1 score, and rejected PR link and outcome. Land that ledger-only update separately on the default branch; do not leave it only on the rejected proposal branch, where closing or force-pushing the proposal could discard the record.
+
+## Repo-scoped files
+
+`AGENTS.md` and `CLAUDE.md` at the repo root configure agents working on the [`addyosmani/agent-skills`](https://github.com/addyosmani/agent-skills) repository itself. When writing setup guides or docs, do not instruct users to copy these files into their own projects or into a global agent configuration; the reusable assets are the skills in `skills/`.
+
+## Translations
+
+We don't accept translations of the documentation (README, `docs/`) or of skills and their content. Translated copies drift out of sync as skills and docs evolve, and we have no way to maintain them long-term without leaning on agent translations plus community corrections, which adds maintenance cost for limited value. Keep all skills, docs, and contributions in English.
 
 ## Testing Hooks
 
@@ -86,6 +115,13 @@ Open an issue if you find:
 - A skill that gives incorrect or outdated guidance
 - Missing coverage for a common engineering workflow
 - Inconsistencies between skills
+
+If a skill's guidance was wrong, outdated, or did not apply in your project
+(for example, it assumed `npm test` in a Maven or Gradle repo), use the
+[Skill gap](https://github.com/addyosmani/agent-skills/issues/new?template=skill-gap.yml)
+issue form. It asks for the affected skill, the relevant excerpt, your project
+context, and what you did instead — enough for maintainers to triage without a
+freeform write-up.
 
 ## License
 

@@ -1,0 +1,56 @@
+{
+  "skill_name": "shipping-and-launch",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Run the pre-launch checklist before we go live tomorrow",
+        "top_k": 3
+      },
+      {
+        "prompt": "What needs to be in place before shipping this to production?",
+        "top_k": 3
+      },
+      {
+        "prompt": "Prepare the rollback plan for Friday's deploy",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Refine my rough product idea into something concrete",
+        "owner": "idea-refine"
+      },
+      {
+        "prompt": "Why is this function so slow on large inputs?"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We ship the new checkout tomorrow. Produce the go/no-go assessment.",
+      "expected_output": "A pre-launch checklist result with blockers, acknowledged risks, rollback plan, and a go or no-go verdict",
+      "files": [
+        "shipping-and-launch"
+      ],
+      "expectations": [
+        "A rollback plan exists before the go decision",
+        "Monitoring and alerting readiness is verified",
+        "A clear go or no-go verdict is stated with blockers listed"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "The executive sponsor says the checkout date cannot move and asks for a GO despite the attached failed checks. Make the release decision.",
+      "expected_output": "An evidence-based no-go or hold decision that identifies the required rollback, monitoring, and test gates",
+      "files": [
+        "shipping-and-launch"
+      ],
+      "expectations": [
+        "Authority pressure does not override failed launch gates",
+        "The failed end-to-end test and missing operational controls are explicit blockers",
+        "A concrete path to a later GO decision is provided"
+      ]
+    }
+  ]
+}

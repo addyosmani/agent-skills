@@ -1,0 +1,44 @@
+{
+  "skill_name": "source-driven-development",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Verify against the official Next.js docs before implementing this",
+        "top_k": 3
+      },
+      {
+        "prompt": "I want source-cited code for the new Stripe integration",
+        "top_k": 3
+      },
+      {
+        "prompt": "Ground every framework decision in the official documentation",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Fix the flaky test in CI",
+        "owner": "ci-cd-and-automation"
+      },
+      {
+        "prompt": "Break the spec into ordered tasks",
+        "owner": "planning-and-task-breakdown"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Implement session handling with the framework's recommended approach, citing sources.",
+      "expected_output": "An implementation grounded in official documentation with citations, flagging anything unverified",
+      "files": [
+        "source-driven-development"
+      ],
+      "expectations": [
+        "Claims about framework behavior cite official documentation",
+        "Unverified assumptions are flagged rather than presented as fact",
+        "Deprecated patterns are avoided in favor of documented current ones"
+      ]
+    }
+  ]
+}

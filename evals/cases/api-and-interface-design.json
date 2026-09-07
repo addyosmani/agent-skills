@@ -1,0 +1,45 @@
+{
+  "skill_name": "api-and-interface-design",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Design a REST endpoint for creating invoices, including error responses and versioning",
+        "top_k": 3
+      },
+      {
+        "prompt": "What should the public interface of this payments module expose to other teams?",
+        "top_k": 3
+      },
+      {
+        "prompt": "Help me define the contract between the frontend and the orders service",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "My unit test is failing with a null pointer exception",
+        "owner": "debugging-and-error-recovery"
+      },
+      {
+        "prompt": "Make this landing page responsive on mobile",
+        "owner": "frontend-ui-engineering"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Design the public API for a URL-shortening service: create, resolve, stats. Produce the endpoint contracts.",
+      "expected_output": "Endpoint contracts with methods, paths, request/response shapes, and explicit error semantics",
+      "files": [
+        "api-and-interface-design"
+      ],
+      "expectations": [
+        "Error responses are specified with status codes and a consistent error shape, not just happy paths",
+        "Input validation at the boundary is addressed for user-supplied URLs",
+        "Versioning or compatibility strategy is stated",
+        "The response does not silently invent unstated requirements"
+      ]
+    }
+  ]
+}

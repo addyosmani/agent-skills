@@ -1,0 +1,72 @@
+{
+  "skill_name": "spec-driven-development",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Write a spec for the new billing feature before we write any code",
+        "top_k": 3
+      },
+      {
+        "prompt": "Draft a PRD with objectives and boundaries for this project",
+        "top_k": 3
+      },
+      {
+        "prompt": "We are starting a new service, define the requirements first",
+        "top_k": 3
+      },
+      {
+        "prompt": "This one requirement covers identity, billing, notifications, and reporting — decompose it into independently specifiable modules first",
+        "top_k": 3
+      },
+      {
+        "prompt": "Before we spec this platform, map the capabilities and their dependency order",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Trace this request across our services",
+        "owner": "observability-and-instrumentation"
+      },
+      {
+        "prompt": "Simplify this clever one-liner into readable code",
+        "owner": "code-simplification"
+      },
+      {
+        "prompt": "Break the approved spec into ordered implementation tasks",
+        "owner": "planning-and-task-breakdown"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We want usage-based billing. Produce the spec before any implementation.",
+      "expected_output": "A SPEC.md covering objectives, behavior, data model, testing strategy, and explicit boundaries",
+      "files": [
+        "spec-driven-development"
+      ],
+      "expectations": [
+        "The spec includes explicit boundaries and non-goals",
+        "Ambiguities are surfaced as questions rather than silently resolved",
+        "A testing strategy is part of the spec",
+        "No implementation code is written"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Read portal-brief.md and produce the spec work for the customer portal initiative.",
+      "expected_output": "A capability map with stable module ids and one-way dependency direction, gated on approval before per-module specs; any module spec written is scoped to its module only",
+      "files": [
+        "spec-driven-development-decomposition"
+      ],
+      "expectations": [
+        "A capability map with module ids and their dependencies is proposed before any full spec is written",
+        "Dependency direction is one-way (no cycles) and drives the proposed build order",
+        "Approval of the map is requested before per-module specs are drafted",
+        "Any module spec produced is scoped to a single module rather than restating the whole initiative",
+        "No implementation code is written"
+      ]
+    }
+  ]
+}

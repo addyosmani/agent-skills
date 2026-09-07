@@ -1,0 +1,44 @@
+{
+  "skill_name": "planning-and-task-breakdown",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Break this spec into small verifiable tasks with acceptance criteria",
+        "top_k": 3
+      },
+      {
+        "prompt": "Turn the PRD into an ordered task list we can execute",
+        "top_k": 3
+      },
+      {
+        "prompt": "Plan the work into implementable chunks before we start coding",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Debug the crash on startup",
+        "owner": "debugging-and-error-recovery"
+      },
+      {
+        "prompt": "Encode the output so it is safe against XSS"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Break the attached notifications spec into an executable plan.",
+      "expected_output": "Ordered tasks in tasks/plan.md, each small, verifiable, with acceptance criteria and dependencies",
+      "files": [
+        "planning-and-task-breakdown"
+      ],
+      "expectations": [
+        "Every task has acceptance criteria",
+        "Tasks are ordered by dependency",
+        "Tasks are vertical slices rather than horizontal layers",
+        "No implementation code is written during planning"
+      ]
+    }
+  ]
+}

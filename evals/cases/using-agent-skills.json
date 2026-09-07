@@ -1,0 +1,43 @@
+{
+  "skill_name": "using-agent-skills",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Which skill should I use for this task?",
+        "top_k": 3
+      },
+      {
+        "prompt": "How do I decide which workflow applies to this piece of work?",
+        "top_k": 3
+      },
+      {
+        "prompt": "Route this request to the right skill in the pack",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Debug the null pointer crash in checkout",
+        "owner": "debugging-and-error-recovery"
+      },
+      {
+        "prompt": "Make the modal accessible for keyboard users"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "A user asks: 'the login page is broken after yesterday's deploy'. Decide which skill applies and why.",
+      "expected_output": "Correct routing through the decision tree with the chosen skill and rationale",
+      "files": [
+        "using-agent-skills"
+      ],
+      "expectations": [
+        "The chosen skill matches the decision tree in the meta-skill",
+        "The rationale references the routing logic rather than guessing",
+        "Core operating behaviors (assumptions surfaced) are respected"
+      ]
+    }
+  ]
+}

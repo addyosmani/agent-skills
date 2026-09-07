@@ -238,8 +238,14 @@ assert_eq "HTML suffix preserved" "1" "$(grep -c '\-\->' "$DEST")"
 # ── Test 10: JSON parsing error warning ──────────────────────────────────
 printf '\nTest 10: Malformed JSON input produces warning\n'
 
+# Without jq the hook's guard exits before parsing input. Assert whichever
+# branch this machine can exercise (same pattern as session-start-test.sh).
 warning_out=$(echo 'NOT_JSON{{{' | bash hooks/simplify-ignore.sh 2>&1) || true
-assert_eq "warning on bad JSON" "1" "$(printf '%s' "$warning_out" | grep -c 'Warning.*failed to parse')"
+if command -v jq >/dev/null 2>&1; then
+  assert_eq "warning on bad JSON" "1" "$(printf '%s' "$warning_out" | grep -c 'Warning.*failed to parse')"
+else
+  assert_eq "missing-jq guard surfaced" "1" "$(printf '%s' "$warning_out" | grep -c 'error: missing jq')"
+fi
 
 # ── Summary ──────────────────────────────────────────────────────────────
 printf '\n══════════════════════════════════════════\n'

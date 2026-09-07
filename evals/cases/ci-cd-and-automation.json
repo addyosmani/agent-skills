@@ -1,0 +1,45 @@
+{
+  "skill_name": "ci-cd-and-automation",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Set up a GitHub Actions pipeline that runs the tests on every pull request",
+        "top_k": 3
+      },
+      {
+        "prompt": "Add a deploy stage to the pipeline with a manual approval gate",
+        "top_k": 3
+      },
+      {
+        "prompt": "Automate the quality gates so nothing merges without passing checks",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Refactor this function so it is easier to read",
+        "owner": "code-simplification"
+      },
+      {
+        "prompt": "Add structured logging to the checkout service",
+        "owner": "observability-and-instrumentation"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a CI pipeline for a Node project: install, lint, test on every PR, and block merge on failure.",
+      "expected_output": "A working workflow definition with correct triggers, steps, and failure behavior",
+      "files": [
+        "ci-cd-and-automation"
+      ],
+      "expectations": [
+        "The workflow triggers on pull requests",
+        "Failure of any quality gate fails the pipeline run",
+        "Steps are ordered logically and cache or setup steps are sane",
+        "No secrets are hardcoded in the workflow"
+      ]
+    }
+  ]
+}

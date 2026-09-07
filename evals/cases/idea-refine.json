@@ -1,0 +1,43 @@
+{
+  "skill_name": "idea-refine",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "I have a rough idea for a habit tracker, help me refine it",
+        "top_k": 3
+      },
+      {
+        "prompt": "Stress-test my plan for the new onboarding flow",
+        "top_k": 3
+      },
+      {
+        "prompt": "Ideate on ways to improve developer retention in the product",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Fix the failing CI pipeline",
+        "owner": "ci-cd-and-automation"
+      },
+      {
+        "prompt": "Audit the upload endpoint for vulnerabilities",
+        "owner": "security-and-hardening"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "dialogue",
+      "prompt": "Refine this vague idea: 'some kind of tool that helps teams share knowledge better'.",
+      "expected_output": "Sharpening questions, distinct directions, surfaced assumptions, and a one-pager with MVP scope and a Not Doing list",
+      "expectations": [
+        "Sharpening questions are asked before converging",
+        "Hidden assumptions are surfaced explicitly",
+        "The output includes an explicit Not Doing list",
+        "The agent pushes back on weak aspects instead of only agreeing"
+      ]
+    }
+  ]
+}

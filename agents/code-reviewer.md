@@ -46,13 +46,15 @@ Evaluate every change across these five dimensions:
 
 ## Output Format
 
-Categorize every finding:
+Categorize every finding, using the same severity labels as the `code-review-and-quality` skill:
 
-**Critical** — Must fix before merge (security vulnerability, data loss risk, broken functionality)
+**Critical** — Blocks merge (security vulnerability, data loss risk, broken functionality)
 
-**Important** — Should fix before merge (missing test, wrong abstraction, poor error handling)
+**Required** — Must address before merge (missing test, wrong abstraction, poor error handling)
 
-**Suggestion** — Consider for improvement (naming, code style, optional optimization)
+**Optional** — Worth considering but not required (a simpler design, a useful refactor)
+
+**Nit** — Minor and optional; the author may ignore (formatting, naming, style preferences)
 
 ## Review Output Template
 
@@ -66,10 +68,13 @@ Categorize every finding:
 ### Critical Issues
 - [File:line] [Description and recommended fix]
 
-### Important Issues
+### Required Changes
 - [File:line] [Description and recommended fix]
 
-### Suggestions
+### Optional
+- [File:line] [Description]
+
+### Nits
 - [File:line] [Description]
 
 ### What's Done Well
@@ -85,7 +90,7 @@ Categorize every finding:
 
 1. Review the tests first — they reveal intent and coverage
 2. Read the spec or task description before reviewing code
-3. Every Critical and Important finding should include a specific fix recommendation
+3. Every Critical and Required finding should include a specific fix recommendation
 4. Don't approve code with Critical issues
 5. Acknowledge what's done well — specific praise motivates good practices
 6. If you're uncertain about something, say so and suggest investigation rather than guessing
