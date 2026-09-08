@@ -50,6 +50,10 @@ npx skills add addyosmani/agent-skills            # install all 25 skills
 npx skills add addyosmani/agent-skills --list     # browse before installing
 ```
 
+> **Using Reasonix?** Reasonix v1.22.0 or newer can install this repository as
+> a native plugin with all 24 skills, 8 slash commands, and 4 specialist
+> personas. See the [Reasonix setup guide](docs/reasonix-setup.md).
+
 Or grab individual skills:
 
 ```bash
@@ -184,6 +188,27 @@ codex plugin add agent-skills@agent-skills
 ```
 
 The first command registers the marketplace; the second installs the plugin. Codex reads the root `skills/` directory directly through `.codex-plugin/plugin.json`. Once installed, invoke skills in chat using `@` (e.g., `@spec-driven-development`). See [docs/codex-setup.md](docs/codex-setup.md) for local installation and troubleshooting.
+
+</details>
+
+<details>
+<summary><b>Reasonix</b></summary>
+
+Requires Reasonix v1.22.0 or newer. Earlier releases may import host-specific
+companion files that the native manifest intentionally excludes.
+
+Install as a native Reasonix plugin after inspecting the capability boundary:
+
+```bash
+reasonix plugin install https://github.com/addyosmani/agent-skills.git --dry-run
+reasonix plugin install https://github.com/addyosmani/agent-skills.git --yes
+```
+
+The Reasonix adapter exports all 24 skills, 8 slash commands, and 4 specialist
+personas. It intentionally excludes the repository-scoped `CLAUDE.md`,
+lifecycle hooks, and MCP configuration. See
+[docs/reasonix-setup.md](docs/reasonix-setup.md) for requirements, local
+installation, usage, and the expected dry-run inventory.
 
 </details>
 
@@ -384,6 +409,7 @@ agent-skills/
 ├── .gemini/commands/                  # 8 slash commands (Gemini CLI)
 ├── commands/                          # 8 slash commands (Antigravity CLI)
 ├── plugin.json                        # Antigravity plugin manifest
+├── reasonix-plugin.json               # Reasonix plugin manifest
 └── docs/                              # Setup guides per tool
 ```
 
