@@ -243,6 +243,7 @@ The commands above are entry points. The pack includes 25 skills total — 24 li
 | Skill | What It Does | Use When |
 |-------|-------------|----------|
 | [planning-and-task-breakdown](skills/planning-and-task-breakdown/SKILL.md) | Decompose specs into small, verifiable tasks with acceptance criteria and dependency ordering | You have a spec and need implementable units |
+| [task-ledger](skills/task-ledger/SKILL.md) | Durable task state in the repo - one record per task with status, dependencies, and outcome receipts; next-ready selection, claims, and resume across sessions | Work spans sessions or agents, or you're updating/resuming a task list |
 
 ### Build - Write the code
 
