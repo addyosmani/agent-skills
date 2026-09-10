@@ -26,7 +26,7 @@ Tier 2 is a **lexical approximation** of routing (stemmed TF-IDF over descriptio
 ```bash
 # Tier 2 — deterministic, runs in CI
 node scripts/run-evals.js
-node scripts/run-evals.js --min-rank1 80  # enforce the current routing floor
+node scripts/run-evals.js --min-rank1 95  # enforce the current routing floor
 
 # Tier 3 — behavioral, runs each eval through headless claude, then grades it
 node scripts/run-evals.js --behavioral test-driven-development            # spends tokens
@@ -83,4 +83,4 @@ Every skill ships with an eval file. When you add `skills/<name>/`, add `evals/c
 
 ## Metrics to watch
 
-The Tier-2 run prints a **trigger rank-1 rate** (share of positive prompts that rank their skill first, not merely top-k). CI runs with `--min-rank1 80`, leaving useful headroom below the checked-in 86% baseline so an unrelated description edit does not immediately turn CI red. Raise the floor as routing improves; never lower it to make a regression pass. Falling numbers mean descriptions are drifting toward each other. The collision check errors at ≥75% pairwise description similarity and warns at ≥50%. Known description-vocabulary gaps surfaced by these evals are tracked in [#351](https://github.com/addyosmani/agent-skills/issues/351).
+The Tier-2 run prints a **trigger rank-1 rate** (share of positive prompts that rank their skill first, not merely top-k). CI runs with `--min-rank1 95`, leaving useful headroom below the checked-in 100% baseline so an unrelated description edit does not immediately turn CI red. Raise the floor as routing improves; never lower it to make a regression pass. Falling numbers mean descriptions are drifting toward each other. The collision check errors at ≥75% pairwise description similarity and warns at ≥50%. When these evals surface a description-vocabulary gap (see [#351](https://github.com/addyosmani/agent-skills/issues/351) for the original examples), fix the description, not the prompt.

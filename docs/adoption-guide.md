@@ -43,7 +43,7 @@ Run the lifecycle in order for the project's first real feature:
 /ship   →  when going live     (shipping-and-launch)
 ```
 
-`/build auto` is a good fit for greenfield: you approve the plan once and every task still runs test-driven and commits individually. The spec and plan artifacts (`SPEC.md`, `tasks/`) are living documents, keep them in version control while the work is in flight.
+`/build auto` is a good fit for greenfield: you approve the plan once and every task still runs test-driven and commits individually. The spec and plan artifacts (`SPEC.md`, `tasks/`) are living documents, keep them in version control while the work is in flight. If the feature spans more than one session, those files are also the handoff, see [working across sessions](getting-started.md#working-across-sessions).
 
 ### From the start, treat these as always-on
 

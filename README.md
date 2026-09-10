@@ -123,7 +123,7 @@ Put workflow skills under `.cursor/skills/` (sync from `agent-skills/skills/`) a
 <details>
 <summary><b>Antigravity CLI</b></summary>
 
-Install as a native plugin for skills, subagents, and slash commands. See [docs/antigravity-setup.md](docs/antigravity-setup.md).
+Install as a native plugin for skills and subagents. In affected Antigravity CLI releases, legacy command TOMLs are reported as converted but their wrapper commands are not discoverable; invoke the underlying namespaced skills directly. See [docs/antigravity-setup.md](docs/antigravity-setup.md#lifecycle-workflows-and-command-compatibility).
 
 **Install from the repo:**
 
@@ -179,6 +179,8 @@ See [docs/opencode-setup.md](docs/opencode-setup.md).
 <summary><b>GitHub Copilot</b></summary>
 
 Use agent definitions from `agents/` as Copilot personas and skill content in `.github/copilot-instructions.md`. See [docs/copilot-setup.md](docs/copilot-setup.md).
+
+Using the standalone `copilot` CLI? Install it as a plugin — see [docs/copilot-cli-setup.md](docs/copilot-cli-setup.md).
 
 </details>
 
