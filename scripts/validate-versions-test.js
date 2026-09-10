@@ -10,6 +10,8 @@ const manifestPaths = [
   ".codex-plugin/plugin.json",
   ".claude-plugin/plugin.json",
   ".claude-plugin/marketplace.json",
+  ".omp-plugin/plugin.json",
+  ".omp-plugin/marketplace.json",
   ".agents/plugins/marketplace.json",
 ];
 

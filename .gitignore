@@ -5,5 +5,7 @@ node_modules/
 *.log
 .claude/.simplify-ignore-cache/
 .claude/sdd-cache/
+.omp/.simplify-ignore-cache/
+.omp/sdd-cache/
 evals/results/
 __pycache__/

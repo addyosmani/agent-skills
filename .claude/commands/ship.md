@@ -8,22 +8,26 @@ Invoke the agent-skills:shipping-and-launch skill.
 
 ## Phase A — Parallel fan-out
 
-Spawn three subagents concurrently using the Agent tool. **Issue all three Agent tool calls in a single assistant turn so they execute in parallel** — sequential calls defeat the purpose of this command.
+Spawn three specialist personas concurrently. Sequential spawns defeat the purpose of this command.
 
-In Claude Code, each call passes `subagent_type` matching the persona's `name` field:
+**Oh My Pi:** one `task` call whose `tasks[]` has three items, each with `agent` set to the persona `name`. Do not issue three separate `task` calls.
+
+**Claude Code:** three Agent tool calls in a single assistant turn, each with `subagent_type` matching the persona `name`.
+
+**Other harnesses:** invoke each persona's system prompt and treat the reports as parallel inputs to the merge phase.
+
+Personas:
 
 1. **`code-reviewer`** — Run a five-axis review (correctness, readability, architecture, security, performance) on the staged changes or recent commits. Output the standard review template.
 2. **`security-auditor`** — Run a vulnerability and threat-model pass. Check OWASP Top 10, secrets handling, auth/authz, dependency CVEs. Output the standard audit report.
 3. **`test-engineer`** — Analyze test coverage for the change. Identify gaps in happy path, edge cases, error paths, and concurrency scenarios. Output the standard coverage analysis.
 
-In other harnesses without an Agent tool, invoke each persona's system prompt sequentially and treat their outputs as if returned in parallel — the merge phase still works.
-
-Constraints (from Claude Code's subagent model):
-- Subagents cannot spawn other subagents — do not let one persona delegate to another.
+Constraints (from the subagent model):
+- Personas cannot spawn other personas — do not let one delegate to another.
 - Each subagent gets its own context window and returns only its report to this main session.
-- If you need teammates that talk to each other instead of just reporting back, use Claude Code Agent Teams and reference these personas as teammate types (see `references/orchestration-patterns.md`).
+- Oh My Pi: use Agent Hub if you need teammates that message each other. Claude Code: Agent Teams (see `references/orchestration-patterns.md`).
 
-**Persona resolution.** If you've defined your own `code-reviewer`, `security-auditor`, or `test-engineer` in `.claude/agents/` or `~/.claude/agents/`, those take precedence over this plugin's versions — `/ship` picks up your customizations automatically. This is intentional: plugin subagents sit at the bottom of Claude Code's scope priority table, so user-level definitions win by design.
+**Persona resolution.** User-level definitions win. Oh My Pi: `.omp/agents/` or `~/.omp/agent/agents/` shadows this plugin. Claude Code: `.claude/agents/` or `~/.claude/agents/` shadows this plugin. That is intentional.
 
 ## Phase B — Merge in main context
 

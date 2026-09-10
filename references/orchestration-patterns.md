@@ -120,7 +120,8 @@ This catalog is harness-agnostic, but most readers will run it on Claude Code. H
 
 ### Where personas live
 
-Plugin subagents go in `agents/` at the plugin root. This repo is a plugin (`.claude-plugin/plugin.json`), so `agents/code-reviewer.md`, `agents/security-auditor.md`, and `agents/test-engineer.md` are auto-discovered when the plugin is enabled. No path configuration needed.
+Plugin subagents go in `agents/` at the plugin root. This repo is a plugin (`.claude-plugin/plugin.json` and `.omp-plugin/plugin.json`), so `agents/code-reviewer.md`, `agents/security-auditor.md`, and `agents/test-engineer.md` are auto-discovered when the plugin is enabled. No path configuration needed. Oh My Pi also discovers them from `.omp/agents` in a local checkout; spawn with `task` (`agent: code-reviewer`), not Claude Code's Agent tool.
+
 
 ### Subagents vs. Agent Teams
 
