@@ -21,6 +21,17 @@ Use Chrome DevTools MCP to give your agent eyes into the browser. This bridges t
 
 **When NOT to use:** Backend-only changes, CLI tools, or code that doesn't run in a browser.
 
+## Compatibility Note: Downstream Renames
+
+The canonical name of this skill is `browser-testing-with-devtools`. Other skills and docs in this repository (for example `using-agent-skills` and `test-driven-development`) reference it by this name.
+
+Downstream catalogs and provider-neutral adaptations sometimes rename this skill (for example to `playwright-cli`) to match the local runtime. A rename is permitted, but it must not orphan existing references: a catalog can pass frontmatter validation while still directing agents to a missing skill. If you rename this skill, do one of the following:
+
+- **Keep a compatibility alias.** Ship a lightweight `browser-testing-with-devtools` entry that points at the canonical skill — either the same content under the old name, or a thin redirect to the renamed skill. This is the preferred option: no consumer changes are required.
+- **Publish a migration rule.** If you cannot keep an alias, document the rename explicitly and update every consumer reference (`using-agent-skills`, `test-driven-development`, the setup docs, and any commands/agents that mention this skill) to the new name.
+
+Do not rename this skill silently — without an alias or a documented migration, consumers that reference the original name break.
+
 ## Setting Up Chrome DevTools MCP
 
 ### Installation
