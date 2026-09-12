@@ -17,6 +17,7 @@ Systematic debugging with structured triage. When something breaks, stop adding 
 - A bug report arrives
 - An error appears in logs or console
 - Something worked before and stopped working
+- A third-party runtime or library sits in the failure path and its behavior doesn't match its docs
 
 ## The Stop-the-Line Rule
 
@@ -108,6 +109,8 @@ git bisect good <known-good-sha> # This commit worked
 git bisect run npm test -- --grep "failing test"  # substitute the repository's focused-test command
 ```
 
+A third-party runtime or library in the failure path, or a symptom that resists reduction, is exactly when the cheap checks in [Cheap Checks Before Reducing](#cheap-checks-before-reducing) pay off — read them before Step 3's more expensive work.
+
 ### Step 3: Reduce
 
 Create the minimal failing case:
@@ -168,6 +171,57 @@ npm run build
 # Manual spot check if applicable
 npm run dev  # Verify in browser
 ```
+
+## Cheap Checks Before Reducing
+
+Building a minimal repro (Step 3) is expensive; these four checks are nearly free. Run them between Localize and Reduce, in this order — each can end the investigation outright. None replaces Steps 1-2, and an empty result from all four doesn't skip Step 3.
+
+**1. Read the artifacts the failure already produced.** Traces, HARs, screenshots, core dumps, and CI run logs are written on every failure whether or not anyone opens them, and the answer is often in one nobody read. Check these before designing new instrumentation: a HAR showing a single request with no response proves the connection died before any headers arrived; a failure screenshot showing a wrong field value proves the request itself was malformed. Both are cheaper to read than to re-derive.
+
+**2. Check the logs, from the process outward.** Do this whenever the symptom appears client-side (a test, a browser, a CLI) but the cause could be server- or system-side — the process that actually failed may never appear in your terminal. **A dead or crashed process is a top-tier hypothesis for any "connection aborted / reset / refused" symptom, and it is invisible from the client:** `ERR_ABORTED`, `ECONNRESET`, and `socket hang up` all deserve a "did the server die?" check before you assume client-side code is at fault.
+
+```bash
+# App / dev-server stderr — the process's own output, if you run it yourself
+
+# Container — is the process still running? Exited containers hide the crash reason
+docker ps -a && docker logs <container-name>
+
+# System — kernel-adjacent service errors, scoped to a unit if you know it
+journalctl -p err --since "45 min ago" --no-pager
+journalctl -u <unit> --since "45 min ago" --no-pager
+
+# Kernel — OOM kills, dropped connections, hardware/driver errors
+dmesg -T | tail -100
+
+# Crash artifacts — least-known of this set, often the most direct answer
+coredumpctl list
+coredumpctl info <pid>   # crashing command line, signal, binary, backtrace
+```
+
+Correlate by timestamp rather than reading unbounded — get the failure time from the artifact or CI run first, then window every query around it. Absence of a log entry is evidence too, but only once you've confirmed the logger was running and the window was right; otherwise it just means you looked in the wrong place.
+
+**3. Check the version delta on third-party components in the failure path.** Compare what you're running against what's current, then read the changelog between them for your symptom. The prompt is often already on screen — a dev-server banner, an `npm outdated` line — and easy to read past for weeks.
+
+```bash
+npm ls <package>      # or: pip show, cargo tree, …
+npm view <package> versions --json | tail -20
+```
+
+**An intermittent failure that resists reduction is often not in your code at all.** Check the dependency's version and changelog before building an elaborate reproduction.
+
+**4. Read the source of the exact pinned version.** Docs describe intent; source is the behavior. Read the version you're actually running, not latest — a changelog entry tells you where to look, the pinned source tells you what happens. This applies to any field or flag you're treating as a diagnostic signal, not just the suspected bug: a signal that turns out to be definitionally redundant with what you're comparing it against can't discriminate anything, and only its source will tell you that.
+
+Per AGENTS.md's "Tooling discovery" section, `opensrc` (npm/PyPI/crates.io/GitHub/gems) resolves and caches a package's source so you can grep it directly:
+
+```bash
+# Prefixes: npm: pypi: crates: gems: github:owner/repo
+rg "<symbol>" $(npx -y opensrc path npm:<package>)/src
+```
+
+Reach for it when behavior contradicts the docs, the docs are silent or ambiguous, or the failure is silent — exactly the cases where documentation has already let you down. Skip it when the failure is clearly in your own code.
+
+**Dispatching a parallel research subagent for steps 3-4 is worth doing early** rather than working through them serially — it can read changelogs and upstream source while you continue locally. Treat its output as a hypothesis, not a finding: verify any specific claim (a line, a PR, a field's semantics) against your own installed copy of the exact version before acting on it. Note that a _generic_ web search on the error string is a different and much weaker technique; what pays off is reading pinned source directly.
+
 
 ## Error-Specific Patterns
 
@@ -259,6 +313,66 @@ Add logging only when it helps. Remove it when done.
 - API error logging with request context
 - Performance metrics at key user flows
 
+**Instrument to distinguish hypotheses, not to confirm one.** Design each measurement so its possible outcomes map onto different root causes — a probe with only one meaningful outcome just confirms what you already suspected. A socket-state snapshot on hang is a good example: its three possible answers (queued, half-open, closed) each point at a different layer, so whichever one comes back narrows the search. It's fine if the result also refutes your leading hypothesis — that's the instrumentation working, not a wasted step.
+
+## Getting Unstuck — the escalation ladder
+
+When the triage loop stalls — hypotheses keep dying, the failure won't
+reproduce, or every probe comes back ambiguous — escalate deliberately
+instead of re-walking dead paths:
+
+1. **Search the issue tracker DIRECTLY, not the web.** `gh search issues
+   --state open --sort updated` (and `gh search prs`) surfaces reports web
+   search cannot rank yet — an issue filed hours or days ago is invisible to
+   a search engine and may be exactly your bug. Read PR _diffs_, not
+   descriptions: a PR whose title sounds like your bug may patch a different
+   component entirely.
+2. **Read the source you are actually running.** Docs describe intent;
+   `node_modules` (or a pinned repo clone) is the behavior. Pin claims to
+   file:line in the INSTALLED version, and before patching anything, prove
+   which file the process loads (stack-trace paths, then `grep` a marker in
+   that exact file).
+3. **Name the error before theorizing about it.** If a tool swallows or
+   blanks error detail (empty messages, generic wrappers), add one line of
+   instrumentation at the swallowing boundary to print the RAW payload —
+   the cheapest, highest-yield move available. It is easy to build several
+   wrong theories on an absence the tooling itself manufactured; one print
+   statement can name the trigger on its next occurrence.
+4. **Build a micro-reproduction from the suspected mechanism.** Collapse a
+   minutes-long, low-probability repro into a seconds-scale deterministic
+   one: extract the mechanism's preconditions (e.g. pooled connections
+   idling across a server's timeout boundary) and sample them densely (many
+   parallel lanes with small timing offsets). Iterate single-variable arms;
+   a zero-failure arm is as load-bearing as a failure — it can split two
+   adjacent hypotheses and kill a wrong mitigation before it ships.
+5. **A/B candidate fixes directly against the installed dist.** Back up the
+   file, apply the candidate (even someone else's proposed patch),
+   parse-check, run the micro-repro. Minutes per hypothesis, and a clean
+   negative — the proposed patch does not stop the failure — is often the
+   most valuable result. Productionize survivors as tracked patches
+   (`pnpm patch` or equivalent), never loose `node_modules` edits.
+6. **Bring fresh adversarial capacity.** A fresh-context reviewer (or
+   stronger reasoning capacity) pointed at your artifacts with the brief
+   "attack these conclusions" can surface wrong claims the primary
+   investigation has normalized. The reviewer must verify against raw
+   artifacts, not your prose, and must never be anchored with your favored
+   hypothesis.
+
+Standing instrument rules that make the ladder work:
+
+- **Validate the instrument before trusting a negative.** A probe that has
+  never returned a positive proves nothing by returning a negative — a
+  sampler can report zero for every sample of a demonstrably healthy system
+  because its underlying command silently failed to run. Run a positive
+  control first.
+- **Assert postconditions, not exit codes.** A mount with `nofail`, a
+  truncated filesystem label, and a formatted-but-unactivated swap device
+  all exit 0 while doing nothing you wanted.
+- **Keep the whole log** (`tee`), never a `tail` — truncation reduces a
+  rare, expensive failure to a useless pass count.
+- **Write disconfirmed leads down** in a CLOSED-LEADS ledger with the
+  evidence that killed them. Re-walking dead paths is often the largest
+  hidden cost of a long investigation.
 ## Common Rationalizations
 
 | Rationalization | Reality |
@@ -268,6 +382,9 @@ Add logging only when it helps. Remove it when done.
 | "It works on my machine" | Environments differ. Check CI, check config, check dependencies. |
 | "I'll fix it in the next commit" | Fix it now. The next commit will introduce new bugs on top of this one. |
 | "This is a flaky test, ignore it" | Flaky tests mask real bugs. Fix the flakiness or understand why it's intermittent. |
+| "The logs won't have anything" | Costs one command, and can name a root cause that several experiments missed. |
+| "It's up to date, versions aren't the issue" | Check anyway. A changelog diff between pinned and latest is one command. |
+| "A web search on the error will find it" | Generic search finds other people's bugs, not the defect in the version you run — read the pinned source. |
 
 ## Treating Error Output as Untrusted Data
 
