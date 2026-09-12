@@ -40,7 +40,31 @@ hash_cmd() {
   elif command -v sha1sum >/dev/null 2>&1; then sha1sum
   else printf '%s\n' "error: missing shasum or sha1sum" >&2; exit 1; fi
 }
-file_id() { printf '%s' "$1" | hash_cmd | cut -c1-16; }
+# Normalize a path to a canonical form before hashing so the same physical
+# file gets one identity regardless of spelling (C:\x vs /c/x, slashes, case
+# of the drive letter). Graceful fallback chain; never aborts under set -e.
+normalize_path() {
+  local p="$1" n=""
+  if command -v cygpath >/dev/null 2>&1; then
+    n=$(cygpath -u "$p" 2>/dev/null) || n=""
+  fi
+  if [ -z "$n" ] && command -v realpath >/dev/null 2>&1; then
+    n=$(realpath -m "$p" 2>/dev/null) || n=""
+  fi
+  [ -z "$n" ] && n="$p"
+  n="${n//\\//}"                          # backslashes -> forward slashes
+  # Lowercase a leading "C:" drive letter -> "/c" (portable, no GNU sed \L).
+  case "$n" in
+    [A-Za-z]:*)
+      local drive rest
+      drive=$(printf '%s' "${n%%:*}" | tr '[:upper:]' '[:lower:]')
+      rest="${n#*:}"
+      n="/${drive}${rest}"
+      ;;
+  esac
+  printf '%s' "$n"
+}
+file_id() { printf '%s' "$(normalize_path "$1")" | hash_cmd | cut -c1-16; }
 block_hash() { printf '%s' "$1" | hash_cmd | cut -c1-8; }
 # Escape glob metacharacters so ${var/pattern/repl} treats pattern as literal.
 # Needed for Bash 3.2 (macOS) where quotes don't suppress globbing in PE patterns.
@@ -132,10 +156,12 @@ ${line}"
     printf '%s\n' "$buf" >> "$dest"
   fi
 
-  # Preserve trailing newline status of source
+  # Preserve trailing newline status of source. Source has no trailing
+  # newline -> strip the single trailing newline from dest. No perl dependency:
+  # read dest and re-emit without a trailing \n.
   if [ -s "$dest" ] && [ -s "$src" ] && [ -n "$(tail -c 1 "$src")" ]; then
-    perl -pe 'chomp if eof' "$dest" > "${dest}.nnl" && \
-      cat "${dest}.nnl" > "$dest" && rm -f "${dest}.nnl"
+    nnl=$(cat "$dest"; printf x); nnl="${nnl%x}"; nnl="${nnl%$'\n'}"
+    printf '%s' "$nnl" > "$dest"
   fi
 
   [ $count -gt 0 ] && return 0 || return 1
@@ -151,7 +177,12 @@ if [ -z "$TOOL_NAME" ]; then
     [ -f "$pathfile" ] || { rm -f "$bak"; continue; }
     orig=$(cat "$pathfile")
     if [ -f "$orig" ]; then
-      cat "$bak" > "$orig"
+      # TOCTOU/symlink guard: only write back to a regular, non-symlink file.
+      if [ -L "$orig" ]; then
+        printf 'Warning: restore target %s is a symlink; skipping write-back\n' "$orig" >&2
+      else
+        cat "$bak" > "$orig"
+      fi
       rm -f "$bak" "$pathfile" "$CACHE/${fid}".block.* "$CACHE/${fid}".reason.* "$CACHE/${fid}".prefix.* "$CACHE/${fid}".suffix.*
       rmdir "$CACHE/${fid}.lock" 2>/dev/null
     else
@@ -176,6 +207,9 @@ fi
 # ── PreToolUse Read: filter in-place ──────────────────────────────────────────
 if [ "$TOOL_NAME" = "Read" ]; then
   [ -f "$FILE_PATH" ] || exit 0
+  # Refuse to operate on symlinks: a symlinked target could redirect our
+  # in-place rewrite/backup/restore at a file outside the intended path.
+  [ -L "$FILE_PATH" ] && exit 0
   case "$(basename "$FILE_PATH")" in simplify-ignore*|SIMPLIFY-IGNORE*) exit 0 ;; esac
 
   mkdir -p "$CACHE"
@@ -206,8 +240,19 @@ if [ "$TOOL_NAME" = "Read" ]; then
   FILTERED="$CACHE/${ID}.$$.tmp"
   rm -f "$FILTERED"
   if filter_file "$FILE_PATH" "$FILTERED" "$ID"; then
+    # Recheck the target is still a regular non-symlink (TOCTOU since entry).
+    if [ -L "$FILE_PATH" ] || [ ! -f "$FILE_PATH" ]; then
+      printf 'Warning: %s is a symlink or not a regular file; skipping in-place filter\n' "$FILE_PATH" >&2
+      rm -f "$FILTERED" "$CACHE/${ID}.bak" "$CACHE/${ID}.path"
+      rmdir "$CACHE/${ID}.lock" 2>/dev/null
+      exit 0
+    fi
+    # Arm restore-on-failure: an abort during the write must not leave the
+    # user's file half-placeholdered with the backup intact but unused.
+    trap 'cat "$CACHE/${ID}.bak" > "$FILE_PATH" 2>/dev/null; rm -f "$FILTERED"; rmdir "$CACHE/${ID}.lock" 2>/dev/null; exit 1' EXIT
     cat "$FILTERED" > "$FILE_PATH"
     rm -f "$FILTERED"
+    trap - EXIT
   else
     rm -f "$FILTERED" "$CACHE/${ID}.bak" "$CACHE/${ID}.path"
     rmdir "$CACHE/${ID}.lock" 2>/dev/null
@@ -264,10 +309,11 @@ if [ "$TOOL_NAME" = "Edit" ] || [ "$TOOL_NAME" = "Write" ]; then
     ;; esac
     printf '%s\n' "$line" >> "$EXPANDED"
   done < "$FILE_PATH"
-  # Preserve trailing newline status
+  # Preserve trailing newline status. No perl dependency: strip the single
+  # trailing newline from EXPANDED when the source lacked one.
   if [ -s "$EXPANDED" ] && [ -s "$FILE_PATH" ] && [ -n "$(tail -c 1 "$FILE_PATH")" ]; then
-    perl -pe 'chomp if eof' "$EXPANDED" > "${EXPANDED}.nnl" && \
-      cat "${EXPANDED}.nnl" > "$EXPANDED" && rm -f "${EXPANDED}.nnl"
+    nnl=$(cat "$EXPANDED"; printf x); nnl="${nnl%x}"; nnl="${nnl%$'\n'}"
+    printf '%s' "$nnl" > "$EXPANDED"
   fi
   # Warn if model deleted a protected block entirely
   for bf in "$CACHE/${ID}".block.*; do
@@ -283,6 +329,18 @@ if [ "$TOOL_NAME" = "Edit" ] || [ "$TOOL_NAME" = "Write" ]; then
       fi
     fi
   done
+  # Symlink/TOCTOU guard: refuse to write through a symlinked target.
+  if [ -L "$FILE_PATH" ] || [ ! -f "$FILE_PATH" ]; then
+    printf 'Warning: %s is a symlink or not a regular file; skipping expand write-back\n' "$FILE_PATH" >&2
+    rm -f "$EXPANDED"
+    exit 0
+  fi
+  # Arm a restore-on-failure guard: from here until placeholders are written,
+  # any unexpected exit must leave the user's file recoverable. Restore the
+  # expanded (real, just-unhidden) content rather than a half-placeholdered file.
+  _guard="$CACHE/${ID}.$$.guard"
+  cp "$EXPANDED" "$_guard" 2>/dev/null || cp "$FILE_PATH" "$_guard"
+  trap 'cat "$_guard" > "$FILE_PATH" 2>/dev/null; rm -f "$_guard" "$EXPANDED"; rmdir "$CACHE/${ID}.lock" 2>/dev/null; exit 1' EXIT
   # Preserve inode and permissions
   cat "$EXPANDED" > "$FILE_PATH"
   rm -f "$EXPANDED"
@@ -294,9 +352,16 @@ if [ "$TOOL_NAME" = "Edit" ] || [ "$TOOL_NAME" = "Write" ]; then
   FILTERED="$CACHE/${ID}.$$.tmp"
   rm -f "$FILTERED"
   if filter_file "$FILE_PATH" "$FILTERED" "$ID"; then
-    cat "$FILTERED" > "$FILE_PATH"
+    if [ -L "$FILE_PATH" ]; then
+      printf 'Warning: %s became a symlink; skipping re-filter write-back\n' "$FILE_PATH" >&2
+    else
+      cat "$FILTERED" > "$FILE_PATH"
+    fi
     rm -f "$FILTERED"
   fi
+  # Success: disarm guard. Backup already holds the real expanded content.
+  trap - EXIT
+  rm -f "$_guard"
 
   exit 0
 fi
