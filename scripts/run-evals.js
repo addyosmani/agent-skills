@@ -397,7 +397,7 @@ function materializeWorkspace(ev) {
     }
     const dest = resolveFixturePath(workspace, rel);
     fs.mkdirSync(path.dirname(dest), { recursive: true });
-    fs.cpSync(src, dest, { recursive: true });
+    fs.cpSync(src, dest, { recursive: true, dereference: true });
     const fixtureRoot = fs.statSync(dest).isDirectory() ? dest : path.dirname(dest);
     setupDirs.add(path.join(fixtureRoot, '.eval'));
   }
