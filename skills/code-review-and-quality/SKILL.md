@@ -348,6 +348,7 @@ For triaging `npm audit` findings and supply-chain risk (typosquatting, compromi
 ```
 ## See Also
 
+- For choosing parseable, non-interactive static-analysis commands, see `../../references/agent-first-clis.md`
 - For detailed security review guidance, see `../../references/security-checklist.md`
 - For performance review checks, see `../../references/performance-checklist.md`
 
