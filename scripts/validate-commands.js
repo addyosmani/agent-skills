@@ -42,6 +42,11 @@ const NAME_MAP_REVERSE = Object.fromEntries(
   Object.entries(NAME_MAP).map(([k, v]) => [v, k])
 );
 
+// Plugin commands with these names hide Claude Code's built-in commands.
+const CLAUDE_BUILT_IN_COMMANDS = new Set([
+  'review',
+]);
+
 // ─── Parsers ──────────────────────────────────────────────────────────────────
 
 function descriptionFromMd(filePath) {
@@ -110,8 +115,18 @@ function main() {
 
   let errors = 0;
 
+  // -- Built-in collision check --
+  console.log('Checking Claude Code built-in command collisions...');
+
+  for (const stem of claudeStems) {
+    if (CLAUDE_BUILT_IN_COMMANDS.has(stem)) {
+      console.log(`  x  ${stem}: conflicts with a Claude Code built-in command`);
+      errors++;
+    }
+  }
+
   // ── Parity check ────────────────────────────────────────────────────────────
-  console.log('Checking command parity...');
+  console.log('\nChecking command parity...');
 
   // Commands in Claude not found in TOML dirs
   for (const stem of claudeStems) {
