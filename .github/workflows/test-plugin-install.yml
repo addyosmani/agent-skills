@@ -63,6 +63,18 @@ jobs:
       - name: Test artifact-path validator
         run: node --test scripts/validate-artifact-paths-test.js
 
+  test-hooks:
+    name: Hook regression tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Test sdd-cache hooks (stubbed curl, no network)
+        run: bash hooks/sdd-cache-test.sh
+
+      - name: Test simplify-ignore hook
+        run: bash hooks/simplify-ignore-test.sh
+
   validate:
     name: Validate plugin structure
     needs: [validate-skills, validate-commands]

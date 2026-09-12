@@ -247,6 +247,108 @@ else
   assert_eq "missing-jq guard surfaced" "1" "$(printf '%s' "$warning_out" | grep -c 'error: missing jq')"
 fi
 
+# ── Tests 11-13: full-lifecycle round-trip fidelity ──────────────────────
+# Run the hook end-to-end (Read → [Edit] → Stop) against an isolated
+# CLAUDE_PROJECT_DIR and assert the original bytes are recovered exactly.
+# These exercise the expand/restore half of the hook, which the
+# function-extraction tests above cannot reach.
+
+if command -v jq >/dev/null 2>&1; then
+
+hook_event() {
+  # hook_event <project_dir> <tool_name|""> <file_path|"">
+  local proj="$1" tool="$2" fp="$3" input
+  if [ -n "$tool" ]; then
+    input=$(jq -n --arg t "$tool" --arg fp "$fp" \
+      '{tool_name:$t, tool_input:{file_path:$fp}}')
+  else
+    input='{}'
+  fi
+  printf '%s' "$input" | CLAUDE_PROJECT_DIR="$proj" bash hooks/simplify-ignore.sh
+}
+
+# ── Test 11: Read → Stop restores the file byte-identically ──────────────
+printf '\nTest 11: Round-trip Read → Stop (byte fidelity)\n'
+PROJ="$TMPDIR/rt11"; mkdir -p "$PROJ"
+RT="$PROJ/roundtrip.js"
+cat > "$RT" <<'EOF'
+const a = `template ${literal}`;
+// simplify-ignore-start: perf-critical
+const secret = "glob*chars? [and] \\backslashes";
+hot_loop($HOME);
+// simplify-ignore-end
+middle line
+/* simplify-ignore-start */ const inline = 1; /* simplify-ignore-end */
+const b = 2;
+EOF
+cp "$RT" "$PROJ/roundtrip.orig"
+
+hook_event "$PROJ" "Read" "$RT"
+assert_eq "blocks hidden on disk after Read" "2" "$(grep -c 'BLOCK_' "$RT")"
+assert_eq "secret absent from disk after Read" "0" "$(grep -c 'secret' "$RT")"
+
+hook_event "$PROJ" "" ""
+if cmp -s "$RT" "$PROJ/roundtrip.orig"; then
+  assert_eq "Stop restores original bytes" "identical" "identical"
+else
+  assert_eq "Stop restores original bytes" "identical" "$(cmp "$RT" "$PROJ/roundtrip.orig" 2>&1 | head -1)"
+fi
+
+# ── Test 12: Round-trip preserves missing trailing newline ────────────────
+printf '\nTest 12: Round-trip with no trailing newline\n'
+PROJ="$TMPDIR/rt12"; mkdir -p "$PROJ"
+RT="$PROJ/nonewline.js"
+printf 'top\n// simplify-ignore-start\nhidden\n// simplify-ignore-end\nbottom' > "$RT"
+cp "$RT" "$PROJ/nonewline.orig"
+
+hook_event "$PROJ" "Read" "$RT"
+assert_eq "block hidden" "1" "$(grep -c 'BLOCK_' "$RT")"
+hook_event "$PROJ" "" ""
+if cmp -s "$RT" "$PROJ/nonewline.orig"; then
+  assert_eq "no-trailing-newline file restored byte-identically" "identical" "identical"
+else
+  assert_eq "no-trailing-newline file restored byte-identically" "identical" "differs"
+fi
+
+# ── Test 13: Read → model edit → Edit event → Stop keeps the edit ────────
+printf '\nTest 13: Round-trip with an edit during the session\n'
+PROJ="$TMPDIR/rt13"; mkdir -p "$PROJ"
+RT="$PROJ/edited.js"
+cat > "$RT" <<'EOF'
+const a = 1;
+// simplify-ignore-start
+const secret = 42;
+// simplify-ignore-end
+const b = 2;
+EOF
+cp "$RT" "$PROJ/edited.orig"
+
+hook_event "$PROJ" "Read" "$RT"
+# Simulate the model editing the filtered file: append a new line.
+printf '%s\n' "const added = true;" >> "$RT"
+hook_event "$PROJ" "Edit" "$RT"
+
+assert_eq "disk still placeholdered after Edit" "1" "$(grep -c 'BLOCK_' "$RT")"
+assert_eq "secret still absent from disk after Edit" "0" "$(grep -c 'secret' "$RT")"
+assert_eq "added line survives re-filter" "1" "$(grep -c 'const added' "$RT")"
+BAK=$(ls "$PROJ/.claude/.simplify-ignore-cache"/*.bak 2>/dev/null | head -1)
+assert_eq "backup holds real content" "1" "$(grep -c 'const secret = 42' "${BAK:-/dev/null}")"
+assert_eq "backup holds the edit" "1" "$(grep -c 'const added' "${BAK:-/dev/null}")"
+
+hook_event "$PROJ" "" ""
+EXPECTED="$PROJ/edited.expected"
+cp "$PROJ/edited.orig" "$EXPECTED"
+printf '%s\n' "const added = true;" >> "$EXPECTED"
+if cmp -s "$RT" "$EXPECTED"; then
+  assert_eq "Stop restores original + edit byte-identically" "identical" "identical"
+else
+  assert_eq "Stop restores original + edit byte-identically" "identical" "differs"
+fi
+
+else
+  printf '\nTests 11-13 skipped: jq not available (hook no-ops without it)\n'
+fi
+
 # ── Summary ──────────────────────────────────────────────────────────────
 printf '\n══════════════════════════════════════════\n'
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
