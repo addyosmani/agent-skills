@@ -17,7 +17,8 @@
     ],
     "negative": [
       {
-        "prompt": "Add a feature flag system to the app"
+        "prompt": "Add a feature flag system to the app",
+        "owner": "incremental-implementation"
       },
       {
         "prompt": "Diagnose why the build broke overnight",
