@@ -1,6 +1,6 @@
 ---
 name: interview-me
-description: Extracts what the user actually wants instead of what they think they should want. Achieves this through one-question-at-a-time interview until ~95% confidence about the underlying intent. Use when an ask is underspecified ("build me X" without "for whom" or "why now"), when the user explicitly invokes ("interview me", "grill me", "are we sure?", "stress-test my thinking"), or when you catch yourself silently filling in ambiguous requirements before any plan, spec, or code exists.
+description: Extracts what the user actually wants instead of what they think they should want. Achieves this through one-question-at-a-time interview until ~95% confidence about the underlying intent. Use when an ask is underspecified ("build me X" without "for whom" or "why now"), when the user explicitly invokes ("interview me", "grill me", "are we sure?", "stress-test my thinking"), or when you catch yourself silently filling in ambiguous requirements before any plan, spec, or code exists. Supports an opt-in collaborative mode — invoked with "give me your take", "propose something", "what would you do here?", or "let's think together" — where the agent contributes proposals with explicit leans and risks, reaching the ~95% threshold through consensus rather than pure extraction.
 ---
 
 # Interview Me
@@ -34,6 +34,24 @@ Apply this skill when:
 ## Loading Constraints
 
 This skill needs a live, responsive user. **Do not invoke in non-interactive contexts** like CI pipelines, scheduled runs, `/loop`, or autonomous-loop. If you're in one of those and the ask is underspecified, flag that as a blocker for the user instead of guessing.
+
+## Collaborative Mode (opt-in)
+
+By default this skill is extraction-shaped: your hypotheses and guesses serve the interview, not your own preferences. Collaborative mode is for when the user wants you as an **interlocutor**, not just an interviewer — they've shaped a question, you've accumulated repo context, and the most useful next move is a proposal with risks attached. The ~95% confidence then arises from consensus between user and agent, not from extraction alone.
+
+The mode is never automatic. Three ways in:
+
+1. **Explicit**: the user invokes it ("give me your take", "propose something", "what would you do here?", "let's think together").
+2. **Promoted from the normal flow**: after Step 3, if you have a defensible opinion, offer it: *"I have a take on this. Want to hear it before I restate, or just restate?"* The user opts in.
+3. **Recovery from delegation**: when the user says "whatever you think" in Step 5, propose with a stated lean and ask for consensus instead of only re-asking with two options.
+
+What the mode is **not**:
+
+- Not the default. Extraction-first stays the baseline; the anchoring risk of proposing early is real.
+- Not a way to skip the interview. Proposals live inside the interview, after at least one round of user signal — never on turn 1.
+- Not a license to list options. The "no widening" rule holds: 2–3 options max, always with your lean stated.
+
+When active, the mode adds Step 3.5, changes the shape of the restate in Step 4, and adds an anti-anchoring sub-check to the stop condition. Everything else is unchanged.
 
 ## The Process
 
@@ -91,6 +109,37 @@ When you hear these, the question to ask is:
 
 That single question often does more work than the previous five.
 
+### Step 3.5 (collaborative mode only): Propose, with lean and risk
+
+Skip this step unless collaborative mode is active. Insert it between listening (Step 3) and restating (Step 4), and only after at least one round of user signal.
+
+Format for a single proposal:
+
+```
+PROPOSAL: <one sentence — what you think is the right move>
+WHY:      <one line — what trade-off this resolves, what info it draws on>
+RISK:     <one line — the assumption that could be wrong, or where context might be missing>
+LEAN:     <strong / soft>
+ASKING:   Does this match what you'd land on, or does it miss something?
+```
+
+Format for 2–3 options:
+
+```
+Two paths I'd consider:
+  A. <option> — solves X, but constrained by Y
+  B. <option> — solves Z, but costs W
+I lean toward A because <reason>. Where do you land?
+```
+
+Rules:
+
+- Max 3 options.
+- LEAN is mandatory. "Either could work" is delegation in disguise.
+- One PROPOSAL per turn. No stacking.
+- Differential confidence: separate what you know (constraints, repo facts) from what is judgment.
+- Don't propose in a domain where the user has a clear expertise advantage — defer and keep extracting instead.
+
 ### Step 4: Restate intent in the user's own words
 
 When your confidence is high, write back what you now think the user wants. Keep it tight (5–8 lines), use their language where possible, and structure it so the user can confirm or correct line by line:
@@ -110,11 +159,22 @@ Yes / no / refine?
 
 Including "Out of scope" is non-negotiable. Half of misalignment is silent disagreement about what is *not* being built.
 
+**In collaborative mode, the restate is negotiated, not extracted** — tag each line with its origin:
+
+```
+- Outcome:      <line>             ← from your answer
+- Success:      <line>             ← from your answer
+- Constraint:   <line>             ← my proposal in 3.5, you accepted
+- Out of scope: <line>             ← my push, you confirmed
+```
+
+This prevents you from laundering your own proposals as the user's intent, and leaves an honest trace of how the conversation converged.
+
 ### Step 5: Confirm — explicit yes, not "whatever you think"
 
 The gate is an explicit "yes." The following are **not** yes:
 
-- "Whatever you think is best." → The user is delegating, which means they don't have 95% confidence either. Re-ask with two concrete options framed as a choice.
+- "Whatever you think is best." → The user is delegating, which means they don't have 95% confidence either. Re-ask with two concrete options framed as a choice — or treat it as an entry into collaborative mode and propose with a stated lean (Step 3.5).
 - "Sounds good." → Ambiguous. Ask: "Anything you'd refine?" Silence isn't confirmation.
 - "Sure, let's go." → Often a polite exit, not an endorsement. Same follow-up.
 - Silence followed by "okay let's start." → The user has given up on the interview, not converged. Stop and ask whether you've missed something.
@@ -130,6 +190,12 @@ You're done when you can answer yes to this:
 If yes, you have shared understanding. Stop interviewing and produce the restate. If no, you're not done; ask the next question.
 
 This is a checkable test, not a vibe. It also has a floor: if you've gone several rounds and still can't predict, that's information about the ask, not a reason to keep grinding. Stop and tell the user: "I've asked X questions and I still can't predict your reactions. Something foundational is missing. Want to step back?"
+
+**In collaborative mode, one sub-check is added at the stop:**
+
+> *Can I distinguish what the user actually wanted from what they accepted because I proposed it well?*
+
+If not, anchoring is suspected. Go back to Step 3 with: *"To check I haven't pulled you — if I hadn't proposed X, what would you have said?"* Run this check early if the user has accepted more than one PROPOSAL with no pushback or refinement.
 
 ## Output
 
@@ -179,10 +245,10 @@ Two questions in, the agent has discovered the actual ask isn't "a dashboard." I
 
 ## Interaction with Other Skills
 
-- **`idea-refine`**: downstream. If the confirmed intent is "I want X but I don't know how to scope it," hand off to `idea-refine` to generate variations against the now-explicit intent.
+- **`idea-refine`**: downstream. If the confirmed intent is "I want X but I don't know how to scope it," hand off to `idea-refine` to generate variations against the now-explicit intent. In collaborative mode, light divergence (2–3 options with a lean) happens inside the interview; deep divergence still belongs in `idea-refine`.
 - **`spec-driven-development`**: downstream. If the confirmed intent is concrete ("I want X for Y users with Z success criteria"), hand off to `spec-driven-development` to write it down.
 - **`planning-and-task-breakdown`**: two hops downstream of this skill (after the spec).
-- **`doubt-driven-development`**: opposite end of the timeline. Interview-me is pre-decision intent extraction; doubt-driven is post-decision artifact review. Both catch divergence, but at different moments.
+- **`doubt-driven-development`**: opposite end of the timeline. Interview-me is pre-decision intent extraction; doubt-driven is post-decision artifact review. Both catch divergence, but at different moments. The boundary holds in collaborative mode: a written plan gets doubt-driven review; intent that isn't fixed yet gets a collaborative interview.
 - **`source-driven-development`**: orthogonal. Interview-me clarifies what the user wants; SDD verifies framework facts. They don't compete.
 
 ## Common Rationalizations
@@ -197,6 +263,10 @@ Two questions in, the agent has discovered the actual ask isn't "a dashboard." I
 | "If I attach my guess, I'm leading them" | Leading is the point. Reacting is faster than generating from scratch. The risk is sycophancy, not leading; mitigate by being visibly willing to be wrong. |
 | "We've talked enough, I get it" | Test it: can you predict their reaction to the next three questions? If not, you don't get it yet. |
 | "The user said yes, we're done" | If the yes followed a vague restate or an open-ended "sounds good," the yes is hollow. Restate concretely and re-confirm. |
+| "I have context, I should just propose" | Propose with rationale AND a risk (Step 3.5). A naked recommendation hides assumptions. |
+| "If I state a lean, I bias them" | A lean is what makes the proposal useful. The user can push back on a lean; they cannot push back on "either is fine." |
+| "More options give them choice" | 2–3 max. More is widening, which is the failure mode this skill exists to avoid. |
+| "They said yes to my proposal, we're done" | Run the anti-anchoring check. Would they have said the same thing if you hadn't proposed it? |
 
 ## Red Flags
 
@@ -211,6 +281,15 @@ Two questions in, the agent has discovered the actual ask isn't "a dashboard." I
 - Saving the intent doc before the user has confirmed (the doc itself implies a yes the user didn't give)
 - Skipping the "Out of scope" line in the restate (silent disagreement about non-goals is half of misalignment)
 
+Collaborative-mode-specific:
+
+- Proposing on turn 1, before any user signal
+- Proposing without a LEAN, or saying "either works"
+- More than 3 options in a single PROPOSAL
+- Accepting the user's yes to a PROPOSAL without the anti-anchoring check
+- Proposing in a domain where the user has a clear expertise advantage (defer, don't propose)
+- A restate that doesn't mark the origin of each line
+
 ## Verification
 
 After applying interview-me:
@@ -223,3 +302,10 @@ After applying interview-me:
 - [ ] The user confirmed the restate with an explicit yes (not "whatever you think," not "sounds good," not silence)
 - [ ] At the stop point, the agent could predict reactions to the next three questions it would ask
 - [ ] Any handoff to a downstream skill (`idea-refine`, `spec-driven-development`) was framed in terms of the confirmed intent, not the original underspecified ask
+
+If collaborative mode was active, additionally:
+
+- [ ] The mode was entered through one of the three entry points (explicit invocation, offered-and-accepted after Step 3, or recovery from delegation) — never assumed
+- [ ] Every PROPOSAL carried WHY, RISK, and a LEAN; no turn stacked more than one PROPOSAL or listed more than 3 options
+- [ ] Each line of the restate was tagged with its origin (user's answer vs. accepted proposal vs. confirmed push)
+- [ ] The anti-anchoring check ran at the stop point (and earlier if more than one PROPOSAL was accepted without pushback)
