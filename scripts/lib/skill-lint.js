@@ -15,9 +15,12 @@
  *   - description does not exceed 1024 characters
  *   - description includes a 'when to use' trigger (skill-anatomy.md: Required)
  *   - required sections are present
+ *   - a skill's subdirectories are non-empty (skill-anatomy.md: Supporting Files)
+ *   - supporting .md filenames are lowercase-hyphen-separated
  *
  * Checks (warnings, do not block CI):
  *   - cross-skill references point to known skills
+ *   - SKILL.md stays under the 500-line context budget
  */
 
 const fs   = require('fs');
@@ -26,6 +29,12 @@ const path = require('path');
 // ─── Config ──────────────────────────────────────────────────────────────────
 
 const MAX_DESCRIPTION_LENGTH = 1024;
+
+// SKILL.md loads in full the moment an agent activates the skill, so its length
+// is paid for on every activation (docs/skill-anatomy.md -> Context Efficiency).
+// A warning, not an error: trimming a skill is an editorial call, and failing
+// CI on line count would block unrelated work on an over-budget skill.
+const MAX_SKILL_LINES = 500;
 
 // A skill directory name must be lowercase-hyphen-separated
 // (docs/skill-anatomy.md → Naming Conventions).
@@ -230,6 +239,17 @@ function lintSkillContent(dirName, content, knownSkills) {
     }
   }
 
+  // ── Context budget ───────────────────────────────────────────────────────
+  // Counted as newlines so the number matches what `wc -l` reports, which is
+  // how a contributor would check this by hand.
+  const lineCount = (content.match(/\n/g) || []).length;
+  if (lineCount > MAX_SKILL_LINES) {
+    warnings.push(
+      `SKILL.md is ${lineCount} lines, over the ${MAX_SKILL_LINES}-line context budget ` +
+      `(skill-anatomy.md: Context Efficiency) — move detail into a supporting file`,
+    );
+  }
+
   // ── Cross-skill references ───────────────────────────────────────────────
   const refs = extractSkillReferences(content);
   for (const ref of refs) {
@@ -241,13 +261,73 @@ function lintSkillContent(dirName, content, knownSkills) {
   return { errors, warnings, exempt };
 }
 
+/** True when dir contains no regular file at any depth. */
+function isEffectivelyEmpty(dir) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isDirectory()) {
+      if (!isEffectivelyEmpty(path.join(dir, entry.name))) return false;
+    } else {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Lint the files that travel with a skill, as opposed to the contents of
+ * SKILL.md. These rules need the filesystem, so they live here rather than in
+ * the pure content linter. Returns an array of error strings.
+ *
+ * Enforced (docs/skill-anatomy.md):
+ *   - Supporting Files: "do not create an empty `scripts/` directory just to
+ *     mirror other skills". Generalized to any subdirectory — an empty
+ *     `references/` is noise for the same reason.
+ *   - Naming Conventions: "Supporting files: lowercase-hyphen-separated.md".
+ *     Scoped to .md, which is what that line covers; `scripts/` helpers carry
+ *     their own conventions under Script Requirements.
+ */
+function lintSkillLayout(skillDir) {
+  const errors = [];
+
+  const walk = (dir, relBase) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      const rel = relBase ? `${relBase}/${entry.name}` : entry.name;
+      const abs = path.join(dir, entry.name);
+
+      if (entry.isDirectory()) {
+        if (isEffectivelyEmpty(abs)) {
+          errors.push(
+            `Empty directory \`${rel}/\` — remove it rather than mirroring another skill's layout ` +
+            `(skill-anatomy.md: Supporting Files)`,
+          );
+        } else {
+          walk(abs, rel);
+        }
+        continue;
+      }
+
+      if (rel === 'SKILL.md' || !entry.name.endsWith('.md')) continue;
+      if (!KEBAB_CASE.test(entry.name.slice(0, -'.md'.length))) {
+        errors.push(
+          `Supporting file \`${rel}\` is not lowercase-hyphen-separated ` +
+          `(skill-anatomy.md: Naming Conventions)`,
+        );
+      }
+    }
+  };
+
+  walk(skillDir, '');
+  return errors;
+}
+
 /**
  * Lint a skill by directory name: reads its SKILL.md, then delegates to
  * lintSkillContent. This is the thin filesystem wrapper the CLI uses.
  * Returns { errors, warnings, exempt }.
  */
 function lintSkill(dirName, skillsDir, knownSkills) {
-  const skillPath = path.join(skillsDir, dirName, 'SKILL.md');
+  const skillDir  = path.join(skillsDir, dirName);
+  const skillPath = path.join(skillDir, 'SKILL.md');
 
   if (!fs.existsSync(skillPath)) {
     return { errors: ['Missing SKILL.md'], warnings: [], exempt: false };
@@ -260,7 +340,9 @@ function lintSkill(dirName, skillsDir, knownSkills) {
     return { errors: [`Unreadable SKILL.md: ${err.message}`], warnings: [], exempt: false };
   }
 
-  return lintSkillContent(dirName, content, knownSkills);
+  const result = lintSkillContent(dirName, content, knownSkills);
+  result.errors.push(...lintSkillLayout(skillDir));
+  return result;
 }
 
 // Export only the linting functions. The policy collections (REQUIRED_SECTIONS,
@@ -271,5 +353,6 @@ module.exports = {
   parseFrontmatter,
   extractSkillReferences,
   lintSkillContent,
+  lintSkillLayout,
   lintSkill,
 };

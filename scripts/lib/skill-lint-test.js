@@ -5,9 +5,28 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 
-const { lintSkillContent } = require('./skill-lint.js');
+const fs   = require('node:fs');
+const os   = require('node:os');
+const path = require('node:path');
+
+const { lintSkillContent, lintSkillLayout } = require('./skill-lint.js');
 
 const KNOWN = new Set(['alpha', 'beta']);
+
+/**
+ * Build a throwaway skill directory. `dirs` are created empty; `files` maps a
+ * path within the skill to its contents, creating parents as needed.
+ */
+function makeSkillDir({ dirs = [], files = {} } = {}) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-layout-'));
+  for (const d of dirs) fs.mkdirSync(path.join(root, d), { recursive: true });
+  for (const [rel, body] of Object.entries(files)) {
+    const abs = path.join(root, rel);
+    fs.mkdirSync(path.dirname(abs), { recursive: true });
+    fs.writeFileSync(abs, body);
+  }
+  return root;
+}
 
 /** A SKILL.md body carrying every required section, so tests can isolate frontmatter. */
 function withAllSections(frontmatter) {
@@ -138,4 +157,83 @@ test('reports a missing frontmatter block', () => {
   const { errors } = lintSkillContent('alpha', '## Overview\nx\n', KNOWN);
   assert.equal(errors.length, 1);
   assert.match(errors[0], /Missing or malformed YAML frontmatter/);
+});
+
+// ─── Context budget ──────────────────────────────────────────────────────────
+
+test('warns when SKILL.md exceeds the 500-line context budget', () => {
+  const padded = withAllSections(VALID_FRONTMATTER) + '\n'.repeat(600);
+
+  const { errors, warnings } = lintSkillContent('alpha', padded, KNOWN);
+
+  assert.equal(errors.length, 0, 'an over-budget skill must not block CI');
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /over the 500-line context budget/);
+});
+
+test('a SKILL.md at exactly the budget is not flagged', () => {
+  const base = withAllSections(VALID_FRONTMATTER);
+  const baseLines = (base.match(/\n/g) || []).length;
+  const atBudget = base + '\n'.repeat(500 - baseLines);
+
+  assert.equal((atBudget.match(/\n/g) || []).length, 500, 'fixture must sit exactly on the boundary');
+  const { warnings } = lintSkillContent('alpha', atBudget, KNOWN);
+
+  assert.equal(warnings.length, 0);
+});
+
+// ─── Layout ──────────────────────────────────────────────────────────────────
+
+test('reports an empty scripts/ directory', () => {
+  const dir = makeSkillDir({ dirs: ['scripts'] });
+
+  const errors = lintSkillLayout(dir);
+
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /Empty directory `scripts\/`/);
+});
+
+test('reports a directory that only nests more empty directories', () => {
+  const dir = makeSkillDir({ dirs: ['references', 'references/deep'] });
+
+  const errors = lintSkillLayout(dir);
+
+  assert.equal(errors.length, 1, 'the outermost empty directory is named once, not every level');
+  assert.match(errors[0], /Empty directory `references\/`/);
+});
+
+test('a directory holding a file is not empty', () => {
+  const dir = makeSkillDir({ files: { 'scripts/helper.sh': '#!/bin/bash\nset -e\n' } });
+
+  assert.deepEqual(lintSkillLayout(dir), []);
+});
+
+test('reports a supporting .md file that is not lowercase-hyphen-separated', () => {
+  const dir = makeSkillDir({ files: { 'Refinement_Criteria.md': 'x\n' } });
+
+  const errors = lintSkillLayout(dir);
+
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /Supporting file `Refinement_Criteria\.md` is not lowercase-hyphen-separated/);
+});
+
+test('names a badly named supporting file by its path within the skill', () => {
+  const dir = makeSkillDir({ files: { 'references/Floor_Guard.md': 'x\n' } });
+
+  const errors = lintSkillLayout(dir);
+
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /`references\/Floor_Guard\.md`/);
+});
+
+test('SKILL.md is exempt from the supporting-file naming rule', () => {
+  const dir = makeSkillDir({ files: { 'SKILL.md': 'x\n', 'examples.md': 'x\n' } });
+
+  assert.deepEqual(lintSkillLayout(dir), []);
+});
+
+test('non-markdown files are left to the Script Requirements conventions', () => {
+  const dir = makeSkillDir({ files: { 'scripts/Idea_Refine.sh': '#!/bin/bash\nset -e\n' } });
+
+  assert.deepEqual(lintSkillLayout(dir), []);
 });
