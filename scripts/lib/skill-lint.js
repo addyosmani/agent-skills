@@ -80,9 +80,50 @@ const SKILL_REF_PATTERNS = [
 /**
  * Strip fenced code blocks from markdown content so that headings, references,
  * and trigger phrases inside examples or templates are not matched by lint rules.
+ *
+ * Scans line by line and follows the CommonMark fence rules rather than a single
+ * whole-document regex, which only recognised a column-zero backtick fence closed
+ * by a run of exactly the same length (#437). The forms that regex let through:
+ *
+ *   - tilde fences (`~~~`)
+ *   - fences indented by one to three spaces (common inside list items)
+ *   - a closing fence longer than its opener
+ *
+ * A fence closes only on a run of the *same* marker at least as long as the
+ * opener; a shorter run, or the other marker, is content. An unterminated fence
+ * runs to end of file, so everything after it is treated as fenced and any
+ * required section below it is reported missing rather than silently accepted.
+ *
+ * Stripped lines are replaced with empty lines so line numbers are preserved
+ * for callers that report positions.
  */
 function stripFencedCodeBlocks(content) {
-  return content.replace(/^(`{3,})[^\n]*\n[\s\S]*?^\1\s*$/gm, '');
+  const out = [];
+  let open = null; // { marker: '`' | '~', length: number } while inside a fence
+
+  for (const line of content.split(/\r?\n/)) {
+    if (open) {
+      const close = line.match(/^ {0,3}(`{3,}|~{3,})[ \t]*$/);
+      if (close && close[1][0] === open.marker && close[1].length >= open.length) {
+        open = null;
+      }
+      out.push('');
+      continue;
+    }
+
+    const start = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+    // CommonMark: the info string of a backtick fence may not contain backticks,
+    // so a line like ````js``` is inline code` is prose, not an opener.
+    if (start && !(start[1][0] === '`' && start[2].includes('`'))) {
+      open = { marker: start[1][0], length: start[1].length };
+      out.push('');
+      continue;
+    }
+
+    out.push(line);
+  }
+
+  return out.join('\n');
 }
 
 /**
