@@ -81,7 +81,7 @@ We don't accept translations of the documentation (README, `docs/`) or of skills
 
 ## Testing Hooks
 
-The session-start hook (`hooks/session-start.sh`) injects the `using-agent-skills` meta-skill into every new Claude Code session. A regression test at `hooks/session-start-test.sh` validates the hook's JSON payload — both when `jq` is available and when it isn't.
+The session-start script (`hooks/session-start.sh`) injects the `using-agent-skills` meta-skill when wired into a host's `SessionStart` hook. The Claude Code plugin does not register it — Claude Code routes skills natively, and always-on injection would create two routers for the same task (see [docs/getting-started.md](docs/getting-started.md)); the script remains for hosts without native skill routing. A regression test at `hooks/session-start-test.sh` validates the script's JSON payload — both when `jq` is available and when it isn't.
 
 Run it before opening any PR that touches:
 

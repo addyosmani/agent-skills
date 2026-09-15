@@ -93,7 +93,7 @@ To enable these, ensure you have the relevant MCP extensions installed in your G
 
 Gemini CLI supports session lifecycle hooks. You can use these to automatically inject context or run validation scripts at the start of a session.
 
-To replicate the `agent-skills` experience from other tools, you can configure a `SessionStart` hook that reminds you of the available skills or loads a meta-skill.
+To replicate the `agent-skills` experience from other tools, you can configure a `SessionStart` hook that reminds you of the available skills or loads a meta-skill. `hooks/session-start.sh` in this repo is a ready-made script for that: it prints the `using-agent-skills` meta-skill as a standard `SessionStart` JSON envelope on stdout.
 
 ### Explicit Context Loading
 
