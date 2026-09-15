@@ -41,6 +41,28 @@ const SKILLS_DIR = path.join(ROOT, 'skills');
 // non-path character so `myreferences/x.md` does not match.
 const REFERENCE_LINK_RE = /(?<![A-Za-z0-9._/-])((?:\.\.\/)*references\/[A-Za-z0-9._-]+\.md)/g;
 
+/**
+ * Report repo-relative paths with `/` on every platform.
+ *
+ * `path.relative` returns native separators, so on Windows this one line printed
+ * `skills\\x\\references\\y.md` while the two lines around it print
+ * `skills/x/SKILL.md` — those are hardcoded with a forward slash — and the
+ * remedy text in the same message says `../../references/<file>.md`. One failure
+ * block, three spellings of the same separator.
+ *
+ * Normalising here rather than loosening the assertion keeps the regression test
+ * able to match one exact string, and keeps the output a user can paste straight
+ * into the link they need to fix.
+ */
+function toPosix(p) {
+  // Replaces backslashes rather than `split(path.sep)`: on a POSIX runner
+  // `path.sep` is '/', so that form is a no-op there and a regression would ship
+  // green through CI. This version is exercisable on every platform, and a
+  // literal backslash inside a repo-relative skill path is not a case this repo
+  // has — every reference link is `references/<name>.md`, validated above.
+  return p.replace(/\\/g, '/');
+}
+
 function findViolations(skillDir, skillFile) {
   const violations = [];
   const lines = fs.readFileSync(skillFile, 'utf8').split(/\r?\n/);
@@ -82,7 +104,7 @@ function main() {
     } else {
       console.log(`  ✗  skills/${name}/SKILL.md`);
       for (const { line, link } of violations) {
-        const resolved = path.relative(ROOT, path.resolve(skillDir, link));
+        const resolved = toPosix(path.relative(ROOT, path.resolve(skillDir, link)));
         console.log(`       L${line}: ${link} — resolves to ${resolved}, which does not exist`);
         errors++;
       }
