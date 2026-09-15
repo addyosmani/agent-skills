@@ -82,7 +82,7 @@ function main() {
     } else {
       console.log(`  ✗  skills/${name}/SKILL.md`);
       for (const { line, link } of violations) {
-        const resolved = path.relative(ROOT, path.resolve(skillDir, link));
+        const resolved = path.relative(ROOT, path.resolve(skillDir, link)).split(path.sep).join('/');
         console.log(`       L${line}: ${link} — resolves to ${resolved}, which does not exist`);
         errors++;
       }
