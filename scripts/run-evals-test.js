@@ -70,72 +70,79 @@ function run(root, args = []) {
 test('accepts a complete and consistent grader result', () => {
   const raw = JSON.stringify({
     expectations: [
-      { text: 'first expectation', passed: true, evidence: 'observed in the trace' },
-      { text: 'second expectation', passed: false, evidence: 'not observed in the trace' },
+      { id: 1, text: 'first expectation', passed: true, evidence: 'observed in the trace' },
+      { id: 2, text: 'second expectation', passed: false, evidence: 'not observed in the trace' },
     ],
     summary: { passed: 1, failed: 1, total: 2, pass_rate: 0.5 },
   });
 
-  assert.deepEqual(parseGrading(raw, 2), JSON.parse(raw));
+  assert.deepEqual(parseGrading(raw, ['first expectation', 'second expectation']), JSON.parse(raw));
 });
 
 test('rejects grader results that omit expectations', () => {
   const raw = JSON.stringify({
     expectations: [
-      { text: 'first expectation', passed: true, evidence: 'observed in the trace' },
+      { id: 1, text: 'first expectation', passed: true, evidence: 'observed in the trace' },
     ],
     summary: { passed: 1, failed: 0, total: 1, pass_rate: 1 },
   });
 
-  assert.equal(parseGrading(raw, 2), null);
+  assert.equal(parseGrading(raw, ['first expectation', 'second expectation']), null);
 });
 
 test('rejects null expectation entries without throwing', () => {
-  for (const expectations of [
-    [null],
-    [{ text: 'first expectation', passed: true, evidence: 'observed' }, null],
-  ]) {
+  const cases = [
+    { results: [null], declared: ['first expectation'] },
+    { results: [{ id: 1, text: 'first expectation', passed: true, evidence: 'observed' }, null], declared: ['first expectation', 'second expectation'] },
+  ];
+  for (const { results, declared } of cases) {
     const raw = JSON.stringify({
-      expectations,
+      expectations: results,
       summary: {
-        passed: expectations.length - 1,
+        passed: results.length - 1,
         failed: 1,
-        total: expectations.length,
-        pass_rate: (expectations.length - 1) / expectations.length,
+        total: results.length,
+        pass_rate: (results.length - 1) / results.length,
       },
     });
 
-    assert.equal(parseGrading(raw, expectations.length), null);
+    assert.equal(parseGrading(raw, declared), null);
   }
 });
 
 test('rejects incomplete or inconsistent grader summaries', () => {
-  const expectation = { text: 'expected behavior', passed: false, evidence: 'not observed' };
+  const declared = ['expected behavior'];
+  const expectation = { id: 1, text: 'expected behavior', passed: false, evidence: 'not observed' };
   const cases = [
     {
       expectations: [],
       summary: { passed: 0, failed: 0, total: 0, pass_rate: 0 },
+      declared: [],
     },
     {
-      expectations: [{ text: 'expected behavior', passed: false }],
+      expectations: [{ id: 1, text: 'expected behavior', passed: false }],
       summary: { passed: 0, failed: 1, total: 1, pass_rate: 0 },
+      declared,
     },
     {
       expectations: [expectation],
       summary: { passed: 1, failed: 0, total: 1, pass_rate: 1 },
+      declared,
     },
     {
       expectations: [expectation],
       summary: { passed: 0, total: 1, pass_rate: 0 },
+      declared,
     },
     {
       expectations: [expectation],
       summary: { passed: 0, failed: 1, total: 1 },
+      declared,
     },
   ];
 
-  for (const grading of cases) {
-    assert.equal(parseGrading(JSON.stringify(grading), 1), null);
+  for (const { declared: d, ...grading } of cases) {
+    assert.equal(parseGrading(JSON.stringify(grading), d), null);
   }
 });
 
@@ -290,6 +297,139 @@ test('rejects an invalid rank-1 floor', () => {
 
   assert.equal(result.status, 1, result.stdout + result.stderr);
   assert.match(result.stderr, /--min-rank1 must be a number from 0 to 100/);
+});
+
+// ---------- parseGrading expectation-binding tests ----------
+
+test('accepts reordered-but-complete grader results', () => {
+  const expectations = ['first expectation', 'second expectation'];
+  const raw = JSON.stringify({
+    expectations: [
+      { id: 2, text: 'second expectation', passed: false, evidence: 'not observed' },
+      { id: 1, text: 'first expectation', passed: true, evidence: 'observed in the trace' },
+    ],
+    summary: { passed: 1, failed: 1, total: 2, pass_rate: 0.5 },
+  });
+  const result = parseGrading(raw, expectations);
+  assert.notEqual(result, null);
+  assert.equal(result.summary.passed, 1);
+  assert.equal(result.summary.failed, 1);
+});
+
+test('rejects duplicate grader results for the same expectation', () => {
+  const expectations = ['first expectation', 'second expectation'];
+  // Valid baseline: each id appears exactly once
+  const validRaw = JSON.stringify({
+    expectations: [
+      { id: 1, text: 'first expectation', passed: true, evidence: 'observed' },
+      { id: 2, text: 'second expectation', passed: false, evidence: 'not observed' },
+    ],
+    summary: { passed: 1, failed: 1, total: 2, pass_rate: 0.5 },
+  });
+  assert.notEqual(parseGrading(validRaw, expectations), null);
+
+  // Duplicate: id 1 appears twice, id 2 is missing
+  const dupRaw = JSON.stringify({
+    expectations: [
+      { id: 1, text: 'first expectation', passed: true, evidence: 'observed' },
+      { id: 1, text: 'first expectation', passed: true, evidence: 'observed again' },
+    ],
+    summary: { passed: 2, failed: 0, total: 2, pass_rate: 1 },
+  });
+  assert.equal(parseGrading(dupRaw, expectations), null);
+});
+
+test('rejects grader results whose ids are not in the declared set', () => {
+  const expectations = ['first expectation', 'second expectation'];
+  // Valid baseline
+  const validRaw = JSON.stringify({
+    expectations: [
+      { id: 1, text: 'first expectation', passed: true, evidence: 'observed' },
+      { id: 2, text: 'second expectation', passed: false, evidence: 'not observed' },
+    ],
+    summary: { passed: 1, failed: 1, total: 2, pass_rate: 0.5 },
+  });
+  assert.notEqual(parseGrading(validRaw, expectations), null);
+
+  // id 3 is out of range 1..2
+  const badIdRaw = JSON.stringify({
+    expectations: [
+      { id: 1, text: 'first expectation', passed: true, evidence: 'observed' },
+      { id: 3, text: 'unknown expectation', passed: false, evidence: 'not found' },
+    ],
+    summary: { passed: 1, failed: 1, total: 2, pass_rate: 0.5 },
+  });
+  assert.equal(parseGrading(badIdRaw, expectations), null);
+});
+
+test('rejects a result set that omits a declared expectation', () => {
+  const expectations = ['first expectation', 'second expectation', 'third expectation'];
+  // Valid baseline
+  const validRaw = JSON.stringify({
+    expectations: [
+      { id: 1, text: 'first expectation', passed: true, evidence: 'observed' },
+      { id: 2, text: 'second expectation', passed: true, evidence: 'observed' },
+      { id: 3, text: 'third expectation', passed: false, evidence: 'not observed' },
+    ],
+    summary: { passed: 2, failed: 1, total: 3, pass_rate: 2 / 3 },
+  });
+  assert.notEqual(parseGrading(validRaw, expectations), null);
+
+  // Only 2 results for 3 expectations (id 3 omitted)
+  const partialRaw = JSON.stringify({
+    expectations: [
+      { id: 1, text: 'first expectation', passed: true, evidence: 'observed' },
+      { id: 2, text: 'second expectation', passed: true, evidence: 'observed' },
+    ],
+    summary: { passed: 2, failed: 0, total: 2, pass_rate: 1 },
+  });
+  assert.equal(parseGrading(partialRaw, expectations), null);
+});
+
+test('derives pass_rate from counters rather than trusting the grader value', () => {
+  const expectations = ['first expectation', 'second expectation'];
+  // Correct pass_rate should be accepted
+  const validRaw = JSON.stringify({
+    expectations: [
+      { id: 1, text: 'first expectation', passed: true, evidence: 'observed' },
+      { id: 2, text: 'second expectation', passed: false, evidence: 'not observed' },
+    ],
+    summary: { passed: 1, failed: 1, total: 2, pass_rate: 0.5 },
+  });
+  const valid = parseGrading(validRaw, expectations);
+  assert.notEqual(valid, null);
+  assert.equal(valid.summary.pass_rate, 0.5);
+
+  // Wrong pass_rate with correct counters: accepted, but recomputed
+  const wrongRaw = JSON.stringify({
+    expectations: [
+      { id: 1, text: 'first expectation', passed: true, evidence: 'observed' },
+      { id: 2, text: 'second expectation', passed: false, evidence: 'not observed' },
+    ],
+    summary: { passed: 1, failed: 1, total: 2, pass_rate: 0.999 },
+  });
+  const corrected = parseGrading(wrongRaw, expectations);
+  assert.notEqual(corrected, null);
+  assert.equal(corrected.summary.pass_rate, 0.5);
+  // The integer counters stay exact checks
+  assert.equal(corrected.summary.passed, 1);
+  assert.equal(corrected.summary.failed, 1);
+});
+
+test('replaces paraphrased grader text with the declared expectation', () => {
+  const expectations = ['first expectation', 'second expectation'];
+  const raw = JSON.stringify({
+    expectations: [
+      { id: 2, text: 'the agent did the second thing', passed: false, evidence: 'not observed' },
+      { id: 1, text: 'roughly the first one', passed: true, evidence: 'observed' },
+    ],
+    summary: { passed: 1, failed: 1, total: 2, pass_rate: 0.5 },
+  });
+
+  const result = parseGrading(raw, expectations);
+  assert.notEqual(result, null);
+  assert.equal(result.expectations.find((r) => r.id === 1).text, 'first expectation');
+  assert.equal(result.expectations.find((r) => r.id === 2).text, 'second expectation');
 });
 
 test('materializes a git baseline and applies a working-tree patch', () => {
