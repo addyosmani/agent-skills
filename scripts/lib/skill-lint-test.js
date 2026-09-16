@@ -139,3 +139,52 @@ test('reports a missing frontmatter block', () => {
   assert.equal(errors.length, 1);
   assert.match(errors[0], /Missing or malformed YAML frontmatter/);
 });
+
+// ─── Context efficiency (skill-anatomy.md line budget) ───────────────────────
+
+/** A valid SKILL.md whose body is padded to exactly `lines` total lines. */
+function skillOfLength(lines) {
+  const base = withAllSections(VALID_FRONTMATTER);
+  const baseLines = base.replace(/\n$/, '').split('\n').length;
+  assert.ok(lines >= baseLines, `fixture wants ${lines} lines, skeleton is already ${baseLines}`);
+  return base.replace(/\n$/, '') + '\npad'.repeat(lines - baseLines) + '\n';
+}
+
+test('a SKILL.md over the line budget warns without failing CI', () => {
+  const { errors, warnings } = lintSkillContent('alpha', skillOfLength(501), KNOWN);
+  assert.deepEqual(errors, [], 'the line budget is Recommended, not Required — it must not error');
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /501 lines, over the 500-line budget/);
+  assert.match(warnings[0], /Context Efficiency/);
+});
+
+test('a SKILL.md exactly at the line budget does not warn', () => {
+  // Off-by-one guard: "under 500 lines" is enforced as "not more than 500",
+  // so 500 is clean and 501 is not.
+  const { errors, warnings } = lintSkillContent('alpha', skillOfLength(500), KNOWN);
+  assert.deepEqual(errors, []);
+  assert.deepEqual(warnings, []);
+});
+
+test('a trailing newline does not inflate the line count', () => {
+  // A file ending in "\n" has no phantom final line. Counting one would report
+  // a file at exactly the budget as over it.
+  const exact = skillOfLength(500);
+  assert.ok(exact.endsWith('\n'), 'fixture should end with a newline');
+  assert.deepEqual(lintSkillContent('alpha', exact, KNOWN).warnings, []);
+  assert.deepEqual(lintSkillContent('alpha', exact.slice(0, -1), KNOWN).warnings, []);
+});
+
+test('the line-budget warning is independent of the other checks', () => {
+  // An oversized skill that is ALSO missing sections must report both, so a
+  // contributor is not sent round the loop twice.
+  const oversized = [
+    VALID_FRONTMATTER,
+    '',
+    '## Overview',
+    'x'.repeat(1),
+  ].join('\n') + '\npad'.repeat(600) + '\n';
+  const { errors, warnings } = lintSkillContent('alpha', oversized, KNOWN);
+  assert.ok(errors.length > 0, 'missing sections should still error');
+  assert.equal(warnings.filter(w => /line budget/.test(w)).length, 1);
+});

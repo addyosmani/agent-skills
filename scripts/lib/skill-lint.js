@@ -18,6 +18,7 @@
  *
  * Checks (warnings, do not block CI):
  *   - cross-skill references point to known skills
+ *   - SKILL.md stays under the line budget (skill-anatomy.md: Context Efficiency)
  */
 
 const fs   = require('fs');
@@ -26,6 +27,16 @@ const path = require('path');
 // ─── Config ──────────────────────────────────────────────────────────────────
 
 const MAX_DESCRIPTION_LENGTH = 1024;
+
+// docs/skill-anatomy.md -> Context Efficiency: "Keep SKILL.md under 500 lines.
+// Move detailed reference material into supporting files." A skill body is
+// loaded whole once an agent decides the skill is relevant, so length is paid
+// for at activation time, not at startup.
+//
+// This is a WARNING, not an error. Context Efficiency sits under Recommended
+// in that doc's own Required vs Recommended split, so it reports like the
+// dead-cross-reference check rather than blocking CI.
+const MAX_SKILL_LINES = 500;
 
 // A skill directory name must be lowercase-hyphen-separated
 // (docs/skill-anatomy.md → Naming Conventions).
@@ -121,6 +132,17 @@ function extractSkillReferences(content) {
     }
   }
   return refs;
+}
+
+/**
+ * Number of lines in `content`, counting a final line that is not newline
+ * terminated and NOT counting a phantom empty line after a trailing newline.
+ * `''` is 0 lines; `'a'` and `'a\n'` are both 1.
+ */
+function countLines(content) {
+  if (content === '') return 0;
+  const withoutTrailingNewline = content.endsWith('\n') ? content.slice(0, -1) : content;
+  return withoutTrailingNewline.split('\n').length;
 }
 
 // ─── Linter ──────────────────────────────────────────────────────────────────
@@ -228,6 +250,19 @@ function lintSkillContent(dirName, content, knownSkills) {
         errors.push(`Workflow declares Step ${step[1]} but has no matching process section`);
       }
     }
+  }
+
+  // ── Context efficiency ───────────────────────────────────────────────────
+  // Count the lines the file actually has. A trailing newline terminates the
+  // last line rather than starting an empty one, so it must not inflate the
+  // count — otherwise a file at exactly the budget reports as over it.
+  const lineCount = countLines(content);
+  if (lineCount > MAX_SKILL_LINES) {
+    warnings.push(
+      `SKILL.md is ${lineCount} lines, over the ${MAX_SKILL_LINES}-line budget ` +
+      `(skill-anatomy.md: Context Efficiency) — move detailed reference material ` +
+      `into supporting files`
+    );
   }
 
   // ── Cross-skill references ───────────────────────────────────────────────
