@@ -247,6 +247,126 @@ else
   assert_eq "missing-jq guard surfaced" "1" "$(printf '%s' "$warning_out" | grep -c 'error: missing jq')"
 fi
 
+# ── Test 11: Stop keeps a change made outside Edit|Write ─────────────────
+printf '\nTest 11: Stop keeps a Bash write made after the last Edit\n'
+
+if ! command -v jq >/dev/null 2>&1; then
+  printf '  SKIP: full lifecycle needs jq (the hook exits at its jq guard)\n'
+else
+  PROJ="$TMPDIR/proj"
+  rm -rf "$PROJ"
+  mkdir -p "$PROJ/.claude"
+  TARGET="$PROJ/app.js"
+  cat > "$TARGET" <<'EOF'
+const editable = 1;
+/* simplify-ignore-start: perf-critical */
+const protectedValue = 42;
+/* simplify-ignore-end */
+EOF
+
+  hook_event() { printf '%s' "$1" | CLAUDE_PROJECT_DIR="$PROJ" bash hooks/simplify-ignore.sh; }
+  read_event=$(printf '{"tool_name":"Read","tool_input":{"file_path":"%s"}}' "$TARGET")
+  edit_event=$(printf '{"tool_name":"Edit","tool_input":{"file_path":"%s"}}' "$TARGET")
+
+  # PreToolUse Read → block hidden behind a placeholder, backup taken
+  hook_event "$read_event"
+  assert_eq "protected block hidden after Read" "1" "$(grep -c 'BLOCK_' "$TARGET")"
+  assert_eq "protected content off disk after Read" "0" "$(grep -c 'protectedValue' "$TARGET")"
+
+  # Model edits the filtered file → PostToolUse Edit refreshes the backup
+  printf 'const added = 3;\n' >> "$TARGET"
+  hook_event "$edit_event"
+
+  # A later write through Bash — no Edit or Write event follows it
+  sed 's/const editable = 1;/const editable = 2;/' "$TARGET" > "$TMPDIR/bash-write.js"
+  cat "$TMPDIR/bash-write.js" > "$TARGET"
+
+  # Stop
+  hook_event '{}'
+
+  assert_eq "Bash write survives Stop" "1" "$(grep -c 'const editable = 2;' "$TARGET")"
+  assert_eq "stale backup value not restored" "0" "$(grep -c 'const editable = 1;' "$TARGET")"
+  assert_eq "edit made through Edit survives Stop" "1" "$(grep -c 'const added = 3;' "$TARGET")"
+  assert_eq "protected block back on disk" "1" "$(grep -c 'const protectedValue = 42;' "$TARGET")"
+  assert_eq "no placeholder left after Stop" "0" "$(grep -c 'BLOCK_' "$TARGET")"
+fi
+
+# ── Test 12: Stop fallback keeps the rewrite in the cache ───────────────
+printf '\nTest 12: Wholesale rewrite is kept in the cache before the backup restore\n'
+
+if ! command -v jq >/dev/null 2>&1; then
+  printf '  SKIP: full lifecycle needs jq (the hook exits at its jq guard)\n'
+else
+  PROJ="$TMPDIR/proj-rewrite"
+  rm -rf "$PROJ"
+  mkdir -p "$PROJ/.claude"
+  TARGET="$PROJ/app.js"
+  cat > "$TARGET" <<'EOF'
+const editable = 1;
+/* simplify-ignore-start: perf-critical */
+const protectedValue = 42;
+/* simplify-ignore-end */
+EOF
+
+  hook_event() { printf '%s' "$1" | CLAUDE_PROJECT_DIR="$PROJ" bash hooks/simplify-ignore.sh; }
+  read_event=$(printf '{"tool_name":"Read","tool_input":{"file_path":"%s"}}' "$TARGET")
+
+  hook_event "$read_event"
+  assert_eq "protected block hidden after Read" "1" "$(grep -c 'BLOCK_' "$TARGET")"
+
+  # Wholesale rewrite — every placeholder is gone, so Stop has nothing to expand
+  printf 'const rewritten = 7;\n' > "$TARGET"
+
+  stop_out=$(hook_event '{}' 2>&1) || true
+
+  PROJ_CACHE="$PROJ/.claude/.simplify-ignore-cache"
+  RECOVERED="$PROJ_CACHE/$(file_id "$TARGET").recovered"
+
+  assert_eq "backup restored over the rewrite" "1" "$(grep -c 'const protectedValue = 42;' "$TARGET")"
+  assert_eq "rewrite kept in cache" "1" "$([ -f "$RECOVERED" ] && echo 1 || echo 0)"
+  assert_eq "cached rewrite has the rewritten content" "const rewritten = 7;" "$(cat "$RECOVERED")"
+  assert_eq "warning names the restored file" "1" \
+    "$(printf '%s' "$stop_out" | grep -c -F "$TARGET")"
+  assert_eq "warning names the cached rewrite" "1" \
+    "$(printf '%s' "$stop_out" | grep -c -F "$RECOVERED")"
+fi
+
+# ── Test 13: Read → direct write with no event → Stop ───────────────────
+printf '\nTest 13: A write with no Edit or Write event survives Stop\n'
+
+if ! command -v jq >/dev/null 2>&1; then
+  printf '  SKIP: full lifecycle needs jq (the hook exits at its jq guard)\n'
+else
+  PROJ="$TMPDIR/proj-noevent"
+  rm -rf "$PROJ"
+  mkdir -p "$PROJ/.claude"
+  TARGET="$PROJ/app.js"
+  cat > "$TARGET" <<'EOF'
+const editable = 1;
+/* simplify-ignore-start: perf-critical */
+const protectedValue = 42;
+/* simplify-ignore-end */
+EOF
+
+  hook_event() { printf '%s' "$1" | CLAUDE_PROJECT_DIR="$PROJ" bash hooks/simplify-ignore.sh; }
+  read_event=$(printf '{"tool_name":"Read","tool_input":{"file_path":"%s"}}' "$TARGET")
+
+  # Read → placeholder on disk, backup taken
+  hook_event "$read_event"
+
+  # Direct write, no Edit or Write event follows it
+  sed 's/const editable = 1;/const editable = 9;/' "$TARGET" > "$TMPDIR/noevent-write.js"
+  cat "$TMPDIR/noevent-write.js" > "$TARGET"
+
+  # Stop
+  hook_event '{}'
+
+  assert_eq "write with no event survives Stop" "1" "$(grep -c 'const editable = 9;' "$TARGET")"
+  assert_eq "stale backup value not restored" "0" "$(grep -c 'const editable = 1;' "$TARGET")"
+  assert_eq "protected block back on disk" "1" "$(grep -c 'const protectedValue = 42;' "$TARGET")"
+  assert_eq "no placeholder left after Stop" "0" "$(grep -c 'BLOCK_' "$TARGET")"
+fi
+
 # ── Summary ──────────────────────────────────────────────────────────────
 printf '\n══════════════════════════════════════════\n'
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
