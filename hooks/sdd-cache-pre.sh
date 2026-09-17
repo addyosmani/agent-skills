@@ -47,11 +47,42 @@ hash_key() {
   fi
 }
 
+# Reject non-https URLs and internal/metadata hosts before any curl runs.
+# Returns 0 if safe to revalidate, 1 otherwise. Conservative: anything that
+# cannot be confidently classified as a public https host is rejected.
+url_is_safe() {
+  local u="$1" host
+  case "$u" in
+    https://*) ;;
+    *) return 1 ;;
+  esac
+  host="${u#https://}"
+  host="${host%%/*}"; host="${host%%\?*}"; host="${host%%#*}"
+  host="${host##*@}"; host="${host%%:*}"
+  host=$(printf '%s' "$host" | tr '[:upper:]' '[:lower:]')
+  case "$host" in
+    localhost|localhost.*|*.localhost) return 1 ;;
+    127.*|0.*|10.*|169.254.*|192.168.*) return 1 ;;
+    172.1[6-9].*|172.2[0-9].*|172.3[0-1].*) return 1 ;;
+    100.6[4-9].*|100.[7-9][0-9].*|100.1[0-1][0-9].*|100.12[0-7].*) return 1 ;;
+    \[*) return 1 ;;                       # bracketed IPv6 literal (e.g. [::1])
+    metadata|metadata.*|*.internal|*.local) return 1 ;;
+    "") return 1 ;;
+  esac
+  return 0
+}
+
 CACHE_DIR="${CLAUDE_PROJECT_DIR:-$PWD}/.claude/sdd-cache"
 CACHE_FILE="$CACHE_DIR/$(hash_key "$URL").json"
 
 if [ ! -f "$CACHE_FILE" ]; then dbg "no cache file at $CACHE_FILE, exit"; exit 0; fi
 dbg "cache file exists: $CACHE_FILE"
+
+# SSRF guard: only ever issue the revalidation request to a public https host.
+if ! url_is_safe "$URL"; then
+  dbg "url failed safety check (scheme/host), bypass without revalidating"
+  exit 0
+fi
 
 FETCHED_AT=$(jq -r '.fetched_at // 0' "$CACHE_FILE" 2>/dev/null || echo 0)
 ORIGINAL_PROMPT=$(jq -r '.prompt // empty' "$CACHE_FILE" 2>/dev/null || true)
@@ -64,12 +95,25 @@ if [ -z "$ETAG" ] && [ -z "$LAST_MOD" ]; then
   exit 0
 fi
 
+# TTL cap: even a 304 must not resurrect a stale entry. Refuse to serve any
+# entry older than SDD_CACHE_MAX_AGE seconds (default 24h). Defends against
+# validator-confused origins and long-lived poisoned entries.
+MAX_AGE="${SDD_CACHE_MAX_AGE:-86400}"
+case "$MAX_AGE" in *[!0-9]*|"") MAX_AGE=86400 ;; esac
+AGE_NOW=$(date +%s 2>/dev/null || echo 0)
+case "$FETCHED_AT" in *[!0-9]*|"") FETCHED_AT=0 ;; esac
+if [ "$AGE_NOW" -gt 0 ] && [ "$FETCHED_AT" -gt 0 ] \
+   && [ $((AGE_NOW - FETCHED_AT)) -ge "$MAX_AGE" ]; then
+  dbg "entry age $((AGE_NOW - FETCHED_AT))s >= max-age ${MAX_AGE}s, refusing to serve"
+  exit 0
+fi
+
 HEADERS=()
 [ -n "$ETAG" ]     && HEADERS+=(-H "If-None-Match: $ETAG")
 [ -n "$LAST_MOD" ] && HEADERS+=(-H "If-Modified-Since: $LAST_MOD")
 
 STATUS=$(curl -sI -o /dev/null -w "%{http_code}" \
-  --max-time 5 -L \
+  --max-time 5 --proto '=https' --max-redirs 0 \
   "${HEADERS[@]}" \
   "$URL" 2>/dev/null || echo "000")
 dbg "revalidation HEAD status=$STATUS"
