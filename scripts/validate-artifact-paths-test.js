@@ -8,23 +8,15 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { afterEach, test } = require('node:test');
+const { makeSandbox, cleanupSandboxes, writeFile } = require('./lib/test-utils');
 
 const VALIDATOR = path.join(__dirname, 'validate-artifact-paths.js');
-const sandboxes = [];
-
-function makeSandbox() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-skills-validate-artifact-paths-test-'));
+function setupSandbox() {
+  const root = makeSandbox('validate-artifact-paths');
   const scriptsDir = path.join(root, 'scripts');
   fs.mkdirSync(scriptsDir, { recursive: true });
   fs.copyFileSync(VALIDATOR, path.join(scriptsDir, 'validate-artifact-paths.js'));
-  sandboxes.push(root);
   return root;
-}
-
-function writeFile(root, relativePath, content) {
-  const file = path.join(root, relativePath);
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, content);
 }
 
 function run(root) {
@@ -34,14 +26,10 @@ function run(root) {
   });
 }
 
-afterEach(() => {
-  for (const root of sandboxes.splice(0)) {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
-});
+afterEach(cleanupSandboxes);
 
 test('passes when producers and consumers use the canonical artifact paths', () => {
-  const root = makeSandbox();
+  const root = setupSandbox();
   writeFile(root, '.claude/commands/spec.md', 'Save the spec as `SPEC.md` in the project root.\n');
   writeFile(root, '.claude/commands/plan.md', 'Save the plan to `tasks/plan.md` and task list to `tasks/todo.md`.\n');
   writeFile(root, '.claude/commands/build.md', 'Look for a spec at `SPEC.md`, `docs/SPEC.md`, or under `spec/`. Require `tasks/plan.md`.\n');
@@ -55,7 +43,7 @@ test('passes when producers and consumers use the canonical artifact paths', () 
 });
 
 test('fails when a producer drifts to an unapproved artifact path (the #93 regression)', () => {
-  const root = makeSandbox();
+  const root = setupSandbox();
   // Only the producers are changed to the per-feature layout; consumers stay on the old paths.
   writeFile(root, '.claude/commands/spec.md', 'Save the spec to `docs/features/[feature-name]/spec.md`.\n');
   writeFile(root, '.claude/commands/plan.md', 'Save the plan to `docs/features/[feature-name]/plan.md`.\n');
@@ -70,7 +58,7 @@ test('fails when a producer drifts to an unapproved artifact path (the #93 regre
 });
 
 test('reports the offending file and line number', () => {
-  const root = makeSandbox();
+  const root = setupSandbox();
   writeFile(root, '.claude/commands/plan.md', 'Intro line.\nSave the plan to `plan.md` in the root.\n');
 
   const result = run(root);
@@ -81,7 +69,7 @@ test('reports the offending file and line number', () => {
 });
 
 test('accepts the docs/SPEC.md alternate spec location', () => {
-  const root = makeSandbox();
+  const root = setupSandbox();
   writeFile(root, '.claude/commands/build.md', 'Look for the spec at `docs/SPEC.md`.\n');
 
   const result = run(root);
@@ -91,7 +79,7 @@ test('accepts the docs/SPEC.md alternate spec location', () => {
 });
 
 test('ignores non-artifact markdown references (no false positives)', () => {
-  const root = makeSandbox();
+  const root = setupSandbox();
   writeFile(
     root,
     'skills/spec-driven-development/SKILL.md',
@@ -105,7 +93,7 @@ test('ignores non-artifact markdown references (no false positives)', () => {
 });
 
 test('skips guarded files that do not exist', () => {
-  const root = makeSandbox();
+  const root = setupSandbox();
   writeFile(root, '.claude/commands/spec.md', 'Save the spec as `SPEC.md`.\n');
   // No other guarded files present.
 

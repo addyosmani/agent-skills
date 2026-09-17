@@ -8,23 +8,15 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { afterEach, test } = require('node:test');
+const { makeSandbox, cleanupSandboxes, writeFile } = require('./lib/test-utils');
 
 const VALIDATOR = path.join(__dirname, 'validate-reference-links.js');
-const sandboxes = [];
-
-function makeSandbox() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-skills-validate-reference-links-test-'));
+function setupSandbox() {
+  const root = makeSandbox('validate-reference-links');
   const scriptsDir = path.join(root, 'scripts');
   fs.mkdirSync(scriptsDir, { recursive: true });
   fs.copyFileSync(VALIDATOR, path.join(scriptsDir, 'validate-reference-links.js'));
-  sandboxes.push(root);
   return root;
-}
-
-function writeFile(root, relativePath, content) {
-  const file = path.join(root, relativePath);
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, content);
 }
 
 function run(root) {
@@ -34,14 +26,10 @@ function run(root) {
   });
 }
 
-afterEach(() => {
-  for (const root of sandboxes.splice(0)) {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
-});
+afterEach(cleanupSandboxes);
 
 test('passes when a skill reaches the shared checklist two levels up', () => {
-  const root = makeSandbox();
+  const root = setupSandbox();
   writeFile(root, 'references/definition-of-done.md', '# Definition of Done\n');
   writeFile(
     root,
@@ -58,7 +46,7 @@ test('passes when a skill reaches the shared checklist two levels up', () => {
 test('fails when a skill links the shared checklist as if it were colocated', () => {
   // The regression: references/ lives at the repo root, but the link is
   // resolved from skills/<name>/, so it points two levels too deep.
-  const root = makeSandbox();
+  const root = setupSandbox();
   writeFile(root, 'references/definition-of-done.md', '# Definition of Done\n');
   writeFile(
     root,
@@ -78,7 +66,7 @@ test('fails when a skill links the shared checklist as if it were colocated', ()
 });
 
 test('checks markdown link syntax, not just backtick mentions', () => {
-  const root = makeSandbox();
+  const root = setupSandbox();
   writeFile(root, 'references/definition-of-done.md', '# Definition of Done\n');
   writeFile(root, 'skills/using-agent-skills/SKILL.md', 'See [DoD](references/definition-of-done.md).\n');
 
@@ -91,7 +79,7 @@ test('checks markdown link syntax, not just backtick mentions', () => {
 test('passes when a skill colocates its own references directory', () => {
   // CLAUDE.md allows self-contained skills to keep references under
   // skills/<name>/references/. Those links are correct as written.
-  const root = makeSandbox();
+  const root = setupSandbox();
   writeFile(root, 'skills/dataviz/references/palette.md', '# Palette\n');
   writeFile(root, 'skills/dataviz/SKILL.md', 'See `references/palette.md`.\n');
 
@@ -102,7 +90,7 @@ test('passes when a skill colocates its own references directory', () => {
 });
 
 test('fails when a link points at a checklist that no longer exists', () => {
-  const root = makeSandbox();
+  const root = setupSandbox();
   writeFile(root, 'references/definition-of-done.md', '# Definition of Done\n');
   writeFile(root, 'skills/shipping-and-launch/SKILL.md', 'See `../../references/renamed.md`.\n');
 
@@ -116,7 +104,7 @@ test('fails when a link points at a checklist that no longer exists', () => {
 test('ignores paths that are not references/ links', () => {
   // Skills legitimately name artifacts the user has yet to create. Widening
   // this validator into a general markdown linter would fail the build on them.
-  const root = makeSandbox();
+  const root = setupSandbox();
   writeFile(root, 'references/definition-of-done.md', '# Definition of Done\n');
   writeFile(
     root,
@@ -137,7 +125,7 @@ test('ignores paths that are not references/ links', () => {
 });
 
 test('reports every unresolvable link, not just the first per skill', () => {
-  const root = makeSandbox();
+  const root = setupSandbox();
   writeFile(root, 'references/security-checklist.md', '# Security\n');
   writeFile(root, 'references/performance-checklist.md', '# Performance\n');
   writeFile(
