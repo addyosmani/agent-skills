@@ -1,0 +1,21 @@
+{
+  "agent": "triage-agent",
+  "workspace": "/work",
+  "sandbox": {
+    "enabled": true,
+    "runtime": "none",
+    "network": "host",
+    "mounts": [
+      { "source": "$HOME", "target": "/home/agent", "mode": "rw" },
+      { "source": "$HOME/.aws", "target": "/home/agent/.aws", "mode": "ro" },
+      { "source": "$PWD", "target": "/work", "mode": "rw" }
+    ]
+  },
+  "env": {
+    "GITHUB_TOKEN": "ghp_REDACTEDCANARY000000000000000000000000",
+    "AWS_PROFILE": "prod-admin"
+  },
+  "autoApprove": ["bash", "write", "git push", "gh pr create"],
+  "installScripts": true,
+  "gitHooks": true
+}

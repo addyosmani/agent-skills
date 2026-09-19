@@ -39,6 +39,7 @@ Task arrives
     ├── Deprecating/migrating? ────────→ deprecation-and-migration
     ├── Writing docs/ADRs? ───────────→ documentation-and-adrs
     ├── Adding logs/metrics/alerts? ───→ observability-and-instrumentation
+    ├── Configuring an agent's sandbox or approvals? → agent-sandbox-and-permissions
     └── Deploying/launching? ─────────→ shipping-and-launch
 ```
 
@@ -183,6 +184,7 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 | Review | code-review-and-quality | Five-axis review with quality gates |
 | Review | code-simplification | Preserve behavior while reducing unnecessary complexity |
 | Review | security-and-hardening | OWASP prevention, input validation, least privilege |
+| Review | agent-sandbox-and-permissions | Capability boundary for the agent's own filesystem, network, credentials, and tool surface |
 | Review | performance-optimization | Measure first, optimize only what matters |
 | Ship | git-workflow-and-versioning | Atomic commits, clean history |
 | Ship | ci-cd-and-automation | Automated quality gates on every change |
