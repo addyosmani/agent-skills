@@ -11,7 +11,7 @@
         "top_k": 3
       },
       {
-        "prompt": "Plan the refactoring roadmap for this legacy service: domain typing per API, generated typed clients, feature-first layout",
+        "prompt": "Plan the refactoring of this legacy monolith: contracts for every consumed API, service boundaries, a backend-driven client one API at a time, then domain typing inside each service",
         "top_k": 3
       }
     ],
@@ -31,12 +31,14 @@
       "id": 1,
       "kind": "dialogue",
       "prompt": "The brain was injected into a repo with three services and no docs. What do we do first?",
-      "expected_output": "An adoption plan: service inventory, service docs created, as-is HLD/LLD/schema per service with unknowns marked, baseline verification recorded, then gap analysis and a roadmap starting with OpenAPI and generated clients",
+      "expected_output": "An adoption plan: service inventory, service docs created, as-is HLD/LLD/schema per service with unknowns marked, baseline verification recorded, a conformance table and a boundaries verdict, then a top-down roadmap: contracts first, service boundaries, a backend-driven client one API at a time, the inside of each service, and a final docs pass; no PRD",
       "expectations": [
         "Documents the current state before proposing refactors",
-        "Every service gets an owner and a baseline verification",
-        "OpenAPI and generated clients are ordered before domain-typing refactors",
-        "Refactors are planned as small PRs with characterization tests"
+        "Every service gets an adoption project and a baseline verification",
+        "Contracts for every consumed API are ordered before service boundaries, the client, and any domain-typing refactor inside a service",
+        "The client is moved onto backend APIs one API at a time, never in a sweep",
+        "Refactors are planned as small PRs with characterization tests",
+        "A docs pass at the end makes the documents current without deleting the old ones"
       ]
     }
   ]
