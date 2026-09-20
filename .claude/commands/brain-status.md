@@ -1,11 +1,11 @@
 ---
-description: Show this session's agent and every subagent with persona, skills, tools, model, harness, thinking effort, and ticket
+description: Show the main agent and every subagent with persona, skills, tools, model, harness, thinking effort, and ticket
 ---
 
-Print the current state of this session's agents, yourself first, then every subagent you spawned, one block each:
+Print the current state of the agents in this session, the main agent (you) first, then every subagent you started, one block each:
 
 ```
-Agent: session | subagent <id>
+Agent: main | subagent <id>
 Persona: <name>
 Skills: <loaded, in load order>
 Tools: <in use>

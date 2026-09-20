@@ -3,9 +3,9 @@
 A fork of [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) used as the base of one engineer's own agent brain: the upstream skills and personas, plus more personas, more skills, the conventions, and the way of working that every project the brain runs into follows.
 
 ```
-you ──▶ /brain [persona] [request]     the session agent adopts one persona, declares
+you ──▶ /brain [persona] [request]     the main agent adopts one persona, declares
                                         persona · skills · tools · model · harness · effort,
-                                        and spawns subagents for long-running work
+                                        and starts subagents for long-running work
 you ──▶ /brain-status                   who is running what, on which model
 ```
 

@@ -1,7 +1,7 @@
-description = "Show this session's agent and every subagent with persona, skills, tools, model, harness, thinking effort, and ticket"
+description = "Show the main agent and every subagent with persona, skills, tools, model, harness, thinking effort, and ticket"
 
 prompt = """
-Print the current state of this session's agents, yourself first, then every subagent you spawned, one block each: Agent (session or subagent id), Persona, Skills (in load order), Tools, Model, Harness, Effort, Ticket, Type (fire-and-forget or fire-and-summarize), State (working, done, blocked).
+Print the current state of the agents in this session, the main agent (you) first, then every subagent you started, one block each: Agent (main, or subagent id), Persona, Skills (in load order), Tools, Model, Harness, Effort, Ticket, Type (fire-and-forget or fire-and-summarize), State (working, done, blocked).
 
 Report only what you know. A subagent that has not declared is UNKNOWN in every field you did not set yourself; ask it to declare rather than guessing. Do nothing else.
 """

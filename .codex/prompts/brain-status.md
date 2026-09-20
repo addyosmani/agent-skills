@@ -10,8 +10,8 @@ Persona: <name>
 Skills: <loaded, in load order>
 Tools: <in use>
 Model: <model>
-Harness: pi
-Effort: <thinking effort>
+Harness: codex
+Effort: <reasoning effort>
 Ticket: <id or ->
 Type: - | fire-and-forget | fire-and-summarize
 State: working | done | blocked

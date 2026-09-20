@@ -31,3 +31,27 @@ After install, invoke a skill in Codex chat with `@` (e.g. `@spec-driven-develop
 - `skills/<name>/SKILL.md` — unchanged. Codex and Claude Code share the same `name` + `description` frontmatter format, so one file serves both platforms.
 
 Slash commands in `.claude/commands/`, personas in `agents/`, and the lifecycle hook under `hooks/` stay Claude Code-specific. On Codex, invoke the underlying skill directly instead of the slash command (e.g. `@spec-driven-development` instead of `/spec`).
+
+## Install the brain into a project
+
+Codex reads `AGENTS.md` from the project root, skills from `.agents/skills/`, and custom prompts from `~/.codex/prompts/` only (prompts are not read from the repository). The brain's `/brain` and `/brain-status` prompts ship in `.codex/prompts/` in the same format Codex expects (`description` and `argument-hint` front matter, `$ARGUMENTS` for the arguments); copy them into the home directory.
+
+```bash
+node scripts/build-brain.js                            # in this repository
+cp build/AGENTS.md build/SOUL.md /path/to/project/
+cp -r build/references build/templates /path/to/project/
+mkdir -p /path/to/project/.agents
+cp -r build/skills /path/to/project/.agents/skills
+cp -r build/agents /path/to/project/.agents/agents     # personas, read by /prompts:brain
+mkdir -p ~/.codex/prompts
+cp build/.codex/prompts/brain*.md ~/.codex/prompts/
+```
+
+Then in the project:
+
+```
+/prompts:brain backend-engineer fix the login timeout
+/prompts:brain-status
+```
+
+Codex runs subagents itself; the prompts only tell the main agent to show the plan and ask for each subagent's model, harness, and effort before starting one. MCP servers for Linear and GitHub go in `~/.codex/config.toml`; see [references/tool-auth.md](../references/tool-auth.md).

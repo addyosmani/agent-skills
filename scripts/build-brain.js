@@ -52,7 +52,7 @@ const org = fs.readFileSync(path.join(ROOT, 'project', 'AGENTS.md'), 'utf8')
   .replace(/^<!-- brain:skills.*$/m, skillList);
 fs.writeFileSync(path.join(OUT, 'AGENTS.md'), org);
 // The /brain commands in every harness format the repository ships.
-for (const dir of ['.claude/commands', '.gemini/commands', 'commands', '.pi/prompts']) {
+for (const dir of ['.claude/commands', '.gemini/commands', 'commands', '.pi/prompts', '.codex/prompts']) {
   for (const f of fs.readdirSync(path.join(ROOT, dir)).filter(f => f.startsWith('brain'))) {
     copy(path.join(ROOT, dir, f), path.join(OUT, dir, f));
   }
@@ -68,7 +68,7 @@ Install into a project:
 
 1. Copy \`AGENTS.md\` and \`SOUL.md\` to the project root (or paste \`AGENTS.md\` into \`CLAUDE.md\`).
 2. Copy \`skills/\` and \`agents/\` to where your tool reads them (Claude Code: \`.claude/skills/\`, \`.claude/agents/\`; Codex: \`.agents/skills/\`; OpenCode: \`.opencode/skills/\`).
-3. Copy \`.claude/commands/brain*.md\` to \`.claude/commands/\`.
+3. Copy the \`/brain\` commands for your tool: \`.claude/commands/brain*.md\` to \`.claude/commands/\`, \`.gemini/commands/brain*.toml\` to \`.gemini/commands/\`, \`.pi/prompts/brain*.md\` to \`.pi/prompts/\`, or \`.codex/prompts/brain*.md\` to \`~/.codex/prompts/\` (Codex reads prompts from the home directory only; invoke as \`/prompts:brain\`).
 4. Copy \`references/\` and \`templates/\` to the project root; create \`docs/\` from \`templates/\`.
 5. Start a session with \`/brain\`.
 `);

@@ -144,19 +144,17 @@ Global defaults, binding in every project. Each row states the rule and the only
 
 Model layering (API, domain, DB) is `coding-standards`; bounded contexts, aggregates, and domain ids are `domain-modeling`; service boundaries and interactions are `hld`. Which skill to load for which situation is each persona's "Skills by activity" table.
 
-## The agent in the session
+## The agent
 
-The agent talking to the user is a generalist with a very high-level view of the repository and of this document, and nothing more until a task arrives. Then it
+There is one kind of agent. The **main agent** is the one you talk to, started by you; a **subagent** is one started by an agent. Nothing else differs, and how a subagent is started, isolated, and reports back is the harness's concern, not the brain's.
 
-1. classifies the task and adopts **exactly one persona** from `agents/` for the session (the user may pick it: `/brain <persona>`);
+An agent starts as a generalist with this file and nothing else: it knows where everything is and has no persona. When a task arrives it
+
+1. classifies the task and adopts **exactly one persona** from `agents/` (the user may pick it: `/brain <persona>`); it never holds two;
 2. fetches the skills the persona's "Skills by activity" table names for the activity at hand, and the persona's tools, and **declares** persona, skills, tools, model, harness, and thinking effort, again whenever it adds a skill or tool at runtime. The persona is the only place that says which skills go together; a skill may name a related skill, never cite its rules line by line;
-3. does the work, or spawns **subagents** for long-running or out-of-persona work so it stays free for the user.
+3. does the work, and starts subagents to help with it: long-running work, work outside its persona, or parallel hands in its own persona, each scoped narrowly (one service, one review). It gives each subagent a persona and a scope, never its skills or tools; the subagent loads those itself and declares them on demand. Before starting one, it shows the plan (persona, scope, ticket, type) and asks the user for the subagent's model, harness, and effort.
 
-The user decides its model, harness, and effort. `/brain-status` prints it and every subagent: persona, skills, tools, model, harness, effort, ticket.
-
-## Subagents
-
-Spawned with a persona of the session agent's choosing, any persona, including its own for parallel hands. A subagent loads its persona's skills and tools itself. Before launching, the spawn plan is shown and the user is **asked** for each subagent's model, harness, and effort. Two types: **fire-and-forget** (nothing comes back) and **fire-and-summarize** (a summary comes back). A subagent declares persona, skills, tools, model, harness, and effort on demand.
+A subagent is **fire-and-summarize** (a summary comes back) or **fire-and-forget** (nothing does); a PM agent that started a backend and a web subagent can tell the user "the feature is complete" without relaying their work. The user decides the main agent's model, harness, and effort. `/brain-status` prints the main agent and every subagent: persona, skills, tools, model, harness, effort, ticket.
 
 ## Personas
 

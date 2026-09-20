@@ -1,6 +1,6 @@
 # Agent Personas
 
-Each persona is a short Markdown file in `agents/`, consumed as a system prompt by your harness and, on Claude Code, discoverable as a subagent. The agent in a session adopts one and spawns the others as subagents; `AGENTS.md` has the rules, [persona-anatomy.md](persona-anatomy.md) the file format.
+Each persona is a short Markdown file in `agents/`, consumed as a system prompt by your harness and, on Claude Code, discoverable as a subagent. The main agent adopts one and starts subagents with the others; `AGENTS.md` has the rules, [persona-anatomy.md](persona-anatomy.md) the file format.
 
 | Persona | Best for |
 |---|---|
@@ -18,7 +18,7 @@ A persona is the *who*: a role, high-level guidelines, and what it never does. T
 
 ## Claude Code interop
 
-The persona files work as Claude Code subagents without modification: enable the plugin (or copy `agents/` to `.claude/agents/`) and use the Agent tool with the persona name. Plugin agents ignore `hooks`, `mcpServers`, and `permissionMode` frontmatter, so personas declare their tools in `tools:` and the session agent enforces them.
+The persona files work as Claude Code subagents without modification: enable the plugin (or copy `agents/` to `.claude/agents/`) and use the Agent tool with the persona name. Plugin agents ignore `hooks`, `mcpServers`, and `permissionMode` frontmatter, so personas declare their tools in `tools:` and the main agent enforces them.
 
 ## Adding a persona
 
