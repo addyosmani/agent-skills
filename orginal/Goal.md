@@ -1,3 +1,18 @@
+- we will not duplicate anything. The source of truth will lie in one place, and the script will run and copy and transform those files into desired folders, formats, etc. acc To the requirement
+-  every agent should follow persona-anatomoy.md. And this md file should be updated if we discover a more relvant strucutre or sub field
+- every task in the org needs to be done by a specialised agent. If a task comes and no agent exists to do it, so surface it out to user. Existing agents should aggresively deny anything outside of their scope.
+- complete visibility in the agent working
+    - which agent is referring to which skill, 
+    - context input, output?
+    - How much of the context is being taken by the skill or the docs?
+    - turns 
+    - cost
+    - context length
+
+
+
+------
+
 I am trying to create my own AI workflow, so I am taking reference from existing AI workflows. 
 You need to help me morph them into the workflow which suite my style.
 
@@ -22,8 +37,9 @@ For better management of skills, skills folders need to be divided into subfolde
 - coding skills, such as LLD, HLD, strong typing etc.
 - domain skills such as security
 
-##
-2. since This will be multi-agent support, and each agent requires files in a different format. but we will not duplicate anything. The source of truth will lie in one place, and the script will run and copy and transform those files into desired folders, formats, etc. acc To the requirement
+
+2. since This will be multi-agent support, and each agent requires files in a different format. but 
+
 
 
 3. An organizational structure 
@@ -137,7 +153,6 @@ repo already had agents. So the structure of the agents you created and the orig
 there is some commonality between the agents. So so that common part should be reconciled, basically. 
 
 ##
-basucally every agent should follow persona-anatomoy.md. And this md file should be updated if we discover a more relvant strucutre or sub field
 
 two duplicate agents test engineer and QA engineer...right? see if They need to be merged
 
@@ -200,7 +215,9 @@ how do I see that how many agents are there, who who who is working, who is not,
 ----- update 11 ---
 --- executed by gpt sol ----
 ##
-I want complete visibility dashboard in the agent working. So let's say, which agent is referring to which skill, first of all. Right? What is the context input, output? How much of the context is being taken by the skill or the docs? And how many turns they are taking, etcetera. Right? You can choose any open source tool, the GitHub tool that is available for such thing, or you can build it on your own. It's up to you. But, yeah, I mean, how many agents are working, like, as a tree first of all, a cruise at which agent is coming under which agent, uh, I should be, uh, accelerator phase, I should be able to, you know, jump to an agent session and, uh, steer it or stop it or whatever. But, yeah, I mean, the complete observability in terms of cost, uh, context, uh, length, uh, tool call, uh, etcetera.
+
+
+You can choose any open source tool, the GitHub tool that is available for such thing, or you can build it on your own. It's up to you. But, yeah, I mean, how many agents are working, like, as a tree first of all, a cruise at which agent is coming under which agent, uh, I should be, uh, accelerator phase, I should be able to, you know, jump to an agent session and, uh, steer it or stop it or whatever. But, yeah, I mean, the complete observability in terms of cost, uh, context, uh, length, uh, tool call, uh, etcetera.
 
 before commititing ..you need to look at few tools
 https://herdr.dev/docs/
