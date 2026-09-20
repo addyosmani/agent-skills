@@ -33,11 +33,12 @@ Each step is a section of `templates/LLD.md`; a section is omitted only when its
 7. **State machines** (any entity with a lifecycle): states as a sum type, transitions, guards, side effects.
 8. **Error handling** (always): the typed error union per module (`coding-standards` C16) and, per error type, whether the caller retries, corrects, or escalates; timeouts and idempotency keys only where an external flow needs them.
 9. **Testing strategy** (always): what is unit, contract, integration, end to end; which fakes are injected (`coding-standards` C19).
-10. **Write** the sections into the service `docs/LLD.md` (Document mechanics below); link from the tasks that implement them; hand it to the user for review. Open questions go on the ticket.
+10. **Rules satisfied**: for each rule in the table below, the section of this design that satisfies it.
+11. **Write** the sections into the service `docs/LLD.md` (Document mechanics below); link from the tasks that implement them; hand it to the user for review. Open questions go on the ticket.
 
-## Showing the design satisfies the rules
+## Rules the design decides
 
-A design, unlike a line of code, decides these rules once for the whole module. The LLD says where each is satisfied; a design that cannot is rewritten before implementation.
+A design, unlike a line of code, decides these rules once for the whole module. The template's "Rules satisfied" section says where each is satisfied; a design that cannot is rewritten before implementation.
 
 | Decided by the design | Rule |
 |---|---|
@@ -79,7 +80,7 @@ A design, unlike a line of code, decides these rules once for the whole module. 
 ## Verification
 
 - [ ] Every applicable section is filled with code-level detail; the class diagram is Mermaid, the schema is drawdb.
-- [ ] Every row of "Showing the design satisfies the rules" points at the section that satisfies it.
+- [ ] "Rules satisfied" names a section for every rule in the table above.
 - [ ] Every task implementing this module links to its LLD section.
 - [ ] Contracts match the HLD's named APIs and the domain glossary.
 - [ ] Both renderings are produced and the document is stored where Document mechanics says.

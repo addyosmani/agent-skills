@@ -15,7 +15,7 @@ The rules are language- and domain-neutral. A full worked example in Python for 
 ## When to Use
 
 - Defining or changing a domain model, an identifier type, an entity or aggregate, an event, or deciding which service a feature belongs to.
-- Writing the shared model section of an HLD (`hld` item 2) or `docs/DOMAIN.md`; writing the domain types section of an LLD (`lld`).
+- Writing the shared model section of an HLD (`hld` § Domain model and glossary) or `docs/DOMAIN.md`; writing the domain types section of an LLD (`lld`).
 - Implementing or extending domain types in a service, especially in a foundation task.
 - A `coding-standards` rule (C1, C3, C23) makes something a domain concept and the concept needs a name, a kind, and invariants.
 - A bug traces back to an ambiguous concept, a raw string standing in for a type, or an impossible state.

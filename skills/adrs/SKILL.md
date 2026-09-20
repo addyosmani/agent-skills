@@ -13,9 +13,9 @@ Architectural decisions worth preserving are recorded as ADRs: one decision per 
 ## When to Use
 
 - Asked for an ADR, or to record a decision as one.
-- An HLD names a one-way door, chooses between alternatives, or draws a service boundary that was not obvious (`hld` item 5 links the ADR).
+- An HLD names a one-way door, chooses between alternatives, or draws a service boundary that was not obvious (the HLD tradeoffs or one-way doors link the ADR).
 - A framework, language, major library, ORM, hosting platform, CI system, auth provider, or database engine is chosen.
-- Scale infrastructure is added: sharding, caches, read replicas (`database` D11, `project-management` M16 require the ADR).
+- Scale infrastructure is added: sharding, caches, read replicas (`database` D11 requires the ADR); a deviation from the stack recorded in `docs/ARCHITECTURE.md`.
 - A process or tooling decision that is expensive to reverse.
 - NOT for the design itself: boundaries, APIs, the domain model, the data model, and patterns are described in the HLD and LLD; the ADR records only the decision among alternatives.
 - NOT for a choice the ticket and the commit message carry (`documentation` W1).
