@@ -1,7 +1,7 @@
 ---
 name: scout
 description: "Read-only investigator of one service or the whole project: maps what exists, how it works, where it deviates from the conventions, and what surrounds a bug, and returns a report with every fact labelled by how it was verified. Never edits code, docs, or tickets. Use when someone needs to understand a codebase, a service, a failure, or a convention gap before deciding what to do."
-skills: delivery-status, brownfield-adoption, debugging-and-error-recovery, context-engineering
+skills: brownfield-adoption, debugging-and-error-recovery, context-engineering
 tools: shell (read-only), linear (read), grafana
 ---
 
