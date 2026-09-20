@@ -10,25 +10,25 @@ category: coding
 
 The rules every line of code in the project follows, each with an id (C1–C23) that other skills, references, and reviews point at. Apply every rule.
 
-`domain-modeling` is the subset of these standards that decides what a domain concept is. When a rule here says "typed id", "enum", "sum type", or "domain object", that skill says how to find the concept, what kind it is, and what it must always satisfy.
+These standards say how code expresses domain concepts. Deciding what the concepts are (bounded contexts, ids, entities, aggregates, events, invariants, the glossary) is `domain-modeling`, not coding.
 
 ## When to Use
 
 - Before writing, refactoring, or reviewing ANY code in any language, even for a "quick fix" or a one-line change.
-- When a review, an LLD (`lld`), or a domain model (`domain-modeling`) cites a C rule by id.
+- When a review, an LLD, or a domain model cites a C rule by id.
 - NOT for deciding the domain concepts themselves: bounded contexts, entities, aggregates, events, invariants, and the glossary are `domain-modeling` (C23).
 
 ## Typing
 
 | ID | Rule |
 | --- | --- |
-| C1 | **No raw strings for closed sets or identifiers, no opaque objects; everything typed.** A closed set is an enum; an identifier is a typed id. Which sets and ids the domain has is `domain-modeling` DD2, DD4. |
+| C1 | **No raw strings for closed sets or identifiers, no opaque objects; everything typed.** A closed set is an enum; an identifier is a typed id. Which sets and ids exist comes from the domain model. |
 | C2 | **Make illegal states unrepresentable:** sum and product types and typed ids in place of boolean-flag combinations, nullable-everything structs, and runtime guards. |
-| C3 | **A defensive check that cannot be avoided becomes a first-class domain object with an explicit error** (`ExpiredToken`, `OverdrawnAccount`), so the failure is explicit, not implicit. Why it is a domain concept: `domain-modeling` DD9. |
+| C3 | **A defensive check that cannot be avoided becomes a first-class domain object with an explicit error** (`ExpiredToken`, `OverdrawnAccount`), so the failure is explicit, not implicit. |
 | C4 | **External inputs are typed at the edges.** Strong types at every boundary (API, persistence, external providers); no untyped boundary. |
 | C5 | **JSON is typed at every boundary** (a schema per JSON shape; never "type json"). |
 | C6 | **Pay cost at compile or build time instead of run time:** types, code generation, and static checks over runtime checks and defensive branches. |
-| C7 | **Per-language strictness.** TypeScript `strict`, no `any`, schemas validated at every I/O boundary. Go: no `interface{}` at boundaries. Python: full type hints, Pydantic at I/O, `Protocol` or ABC for ports. Which construct expresses a closed set, a variant, or an id in each language: the mapping table in `domain-modeling`. |
+| C7 | **Per-language strictness.** TypeScript `strict`, no `any`, schemas validated at every I/O boundary. Go: no `interface{}` at boundaries. Python: full type hints, Pydantic at I/O, `Protocol` or ABC for ports. |
 | C8 | **A linter and a static type checker run on backend and frontend.** TypeScript for the frontend. |
 
 ## Models and boundaries
@@ -76,7 +76,13 @@ C4 and C11 together: static types keep developers honest inside the code; runtim
 
 | ID | Rule |
 | --- | --- |
-| C23 | **Use domain-driven design.** A service is a bounded context; ids, entities, value objects, aggregates, and domain events are modelled before they are coded. The rules and the process are `domain-modeling`. |
+| C23 | **Use domain-driven design.** A service is a bounded context; ids, entities, value objects, aggregates, and domain events are modelled before they are coded. How the concepts are found and shaped is `domain-modeling`. |
+
+## Interaction with other skills
+
+- `domain-modeling` is the subset of these standards that decides what the domain concepts are; these standards say how code expresses them. Fetch both whenever domain code is written.
+- `lld` shows where a design satisfies these standards before code is written; `database` carries the rules for the persistence layer that C9 keeps separate.
+- `test-driven-development` proves what C19 makes testable.
 
 ## Common Rationalizations
 
@@ -112,5 +118,5 @@ C4 and C11 together: static types keep developers honest inside the code; runtim
 Before you commit, every red flag above is absent from the diff, and:
 
 - [ ] The linter and type checker pass with no suppressions added (C7, C8).
-- [ ] Every new type, id, and error names a concept from the domain glossary (C1, C3, C23; `domain-modeling` DD6).
+- [ ] Every new type, id, and error names a concept from the domain glossary (C1, C3, C23).
 - [ ] Existing callers still work (C13).

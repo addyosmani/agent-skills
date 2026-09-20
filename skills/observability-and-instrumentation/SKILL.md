@@ -210,7 +210,7 @@ Reviewers flag observability that is **missing or redundant** (metrics, logs). B
 
 1. New endpoint / job / external call → rate, errors, duration, saturation metrics with bounded labels, and a test that they are emitted (O5).
 2. Logs only at boundaries, transitions, and errors; none in loops or pure logic (O2, O1).
-3. No PII, no secrets, no unbounded label values (O3, `coding-standards` C22).
+3. No PII, no secrets, no unbounded label values (O3; `coding-standards` forbids the same in source and tracker comments).
 4. Product/business metrics only if the PRD names them (O4, O5).
 5. Alerts and dashboards land at the milestone the plan names; runbooks and traces stay deferred (O7, O6).
 

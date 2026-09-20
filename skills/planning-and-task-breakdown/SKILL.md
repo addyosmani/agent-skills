@@ -10,12 +10,12 @@ category: process
 
 Favor quick, incremental delivery over a complete feature. The hierarchy is project → milestones → sprints → stories → tasks. Each milestone gives a user something they can use; each sprint is a fixed time box with a points capacity; each task is small enough to implement, test, and verify in one focused session, with one goal and owned paths disjoint from every other task in flight; shared definitions are built first by one engineer so everyone else can work in parallel. Sprint reviews make spillover and estimation error visible so the next sprint is planned better.
 
-The plan lives in `tasks/plan.md`; milestones, sprints, stories, and tasks live in Linear (`linear`). This skill decides what they contain; `linear` says how to create them.
+The plan lives in `tasks/plan.md`; milestones, sprints, stories, and tasks live in Linear. This skill decides what they contain; `linear` says how to create them.
 
 ## When to Use
 
 - You have a spec, PRD, or reviewed HLD and need to break it into implementable units.
-- A large requirement arrives, even as "plan this out" or "build feature X": it gets a plan, milestones, sprints, stories, and tasks before code (`linear` M1).
+- A large requirement arrives, even as "plan this out" or "build feature X": it gets a plan, milestones, sprints, stories, and tasks before code.
 - A task feels too large or vague to start; the implementation order isn't obvious; work must be parallelised across agents.
 - A sprint starts and needs planning, or ends and needs a review; a milestone closes and the next needs planning.
 - Scope changes mid-milestone, or unplanned work is discovered.
@@ -41,15 +41,15 @@ Database schema
     └── Seed data / migrations
 ```
 
-Implementation order follows the graph bottom-up. A dependency's shape is resolved before anything is built on it (`development-setup` DS9).
+Implementation order follows the graph bottom-up. A dependency's shape is resolved before anything is built on it.
 
 ### 3. Cut milestones from the first usable outcome
 
-Find the smallest slice a user (or a consuming service) can exercise end to end; deterministic stubs are allowed when the milestone says so. Cut milestones backwards from the full scope: each adds one usable outcome, has a budget, and a verification command or manual check. Order by user value, then by unblocking other services. The MVP is milestone 1 (`continuous-delivery` L5); "infrastructure only" is not a milestone.
+Find the smallest slice a user (or a consuming service) can exercise end to end; deterministic stubs are allowed when the milestone says so. Cut milestones backwards from the full scope: each adds one usable outcome, has a budget, and a verification command or manual check. Order by user value, then by unblocking other services. The MVP is milestone 1; "infrastructure only" is not a milestone.
 
 ### 4. Identify the foundation task
 
-For milestone 1, and any later milestone that introduces new shared definitions: folder structure, shared types, API models and contracts, domain model definitions, test scaffolding, basic startup. One engineer owns it; nothing else in the milestone starts until it is merged (`development-setup` DS7, DS8). It is the cheapest task in the plan and unblocks all parallelism.
+For milestone 1, and any later milestone that introduces new shared definitions: folder structure, shared types, API models and contracts, domain model definitions, test scaffolding, basic startup. One engineer owns it; nothing else in the milestone starts until it is merged. It is the cheapest task in the plan and unblocks all parallelism.
 
 ### 5. Slice vertically into stories
 
@@ -64,7 +64,7 @@ A story is a user-observable outcome, INVEST (independent, negotiable, valuable,
 
 ### 6. Write tasks
 
-One goal per task, in one observable sentence. Each carries: acceptance criteria (testable; each gets a test, `end-to-end-testing` T2), a verification command that runs in this repository, owned paths, interfaces consumed and provided, the LLD section, dependencies, and points. It depends only on merged tasks or the foundation task, and its PR stays inside `git-workflow-and-versioning` P11 and is deployable on its own, flagged off if the feature is incomplete.
+One goal per task, in one observable sentence. Each carries: acceptance criteria (testable; each gets a test), a verification command that runs in this repository, owned paths, interfaces consumed and provided, the LLD section, dependencies, and points. It depends only on merged tasks or the foundation task, and its PR stays inside the PR size limit and is deployable on its own, flagged off if the feature is incomplete.
 
 Owned paths of concurrent tasks are disjoint. When two tasks need the same file: split the file, extract a shared contract owned by one task, serialise the tasks, or bundle them into one assignment. Never let two engineers edit one file concurrently.
 
@@ -86,17 +86,17 @@ Parallelise only where it does not raise integration risk: independent slices an
 
 ### 8. Order and checkpoint
 
-Every task leaves the app working (`continuous-delivery` L3). A verification checkpoint after every two or three tasks and at every milestone: tests pass, the build is clean, the core flow works end to end, the user reviews before the next phase.
+Every task leaves the app working. A verification checkpoint after every two or three tasks and at every milestone: tests pass, the build is clean, the core flow works end to end, the user reviews before the next phase.
 
 ### 9. Record it
 
 - The plan in `tasks/plan.md` (template below). **Never overwrite an incomplete plan**: if the file exists with unchecked work for different work, stop and ask; if it is the same work being revised, update in place.
-- Milestones, sprints, stories, and tasks in Linear with labels, points, and `blocks` relations from the foundation task (`linear` concept mapping and templates). The plan's task list is an ordered index of Linear ids, never a duplicate checklist. `tasks/todo.md` is used only when no tracker is configured.
+- Milestones, sprints, stories, and tasks in Linear with labels, points, and `blocks` relations from the foundation task. The plan's task list is an ordered index of Linear ids, never a duplicate checklist. `tasks/todo.md` is used only when no tracker is configured.
 - The user reviews and approves the plan before execution.
 
 ### 10. Close every sprint with a review
 
-Delivered points; spilled-over points, each re-pointed with the reason, never silently carried; estimation error per ticket with the cause; unplanned work pulled in; blockers hit; the capacity for the next sprint. Posted as the sprint review on the cycle (`linear` sprint record). Re-cut the milestone when the review says the plan is wrong.
+Delivered points; spilled-over points, each re-pointed with the reason, never silently carried; estimation error per ticket with the cause; unplanned work pulled in; blockers hit; the capacity for the next sprint. Posted as the sprint review on the cycle. Re-cut the milestone when the review says the plan is wrong.
 
 ### 11. Keep the design current
 
@@ -104,10 +104,10 @@ Update the service `HLD.md` and `LLD.md` with the sections the plan defines.
 
 ## Scope discipline
 
-- Requirements are gathered before they are cut; phased PRDs and milestoned stories keep scope creep out (`prd-writing`).
+- Requirements are gathered before they are cut; phased PRDs and milestoned stories keep scope creep out.
 - Discovered work is classified before it enters scope: MVP requirement, MVP blocker, or later. Only the first two enter automatically; everything else becomes a ticket in the backlog with a reason. Deferred work is always marked explicitly.
-- Every story carries the PM's success target from the PRD (`prd-writing`); engineers do not invent one.
-- Where a slice is technically impossible, the ticket says so (`continuous-delivery` L6).
+- Every story carries the PM's success target from the PRD; engineers do not invent one.
+- Where a slice is technically impossible, the ticket says so.
 
 ## Milestone record
 
@@ -146,6 +146,12 @@ Update the service `HLD.md` and `LLD.md` with the sections the plan defines.
 ## Open questions
 <what needs the user>
 ```
+
+## Interaction with other skills
+
+- Upstream: `prd-writing` for the stories and success targets; `hld` and `lld` for the design the tasks implement.
+- Alongside: `linear` creates the objects this skill defines; `continuous-delivery` decides what a shippable slice is; `development-setup` puts the contract first so parallel tasks do not block.
+- Downstream: `test-driven-development` writes the test behind every acceptance criterion; `git-workflow-and-versioning` sets the PR size a task must fit.
 
 ## Common Rationalizations
 

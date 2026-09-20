@@ -17,7 +17,7 @@ How any requirement is planned and shipped: `main` is always releasable, the app
 - You wonder whether to ship behind a flag.
 - The user gives you a large scope, even if they just say "build feature X".
 - Cutting a release: semver and the changelog (L1).
-- NOT for the mechanics of commits, branches, PR size, and merge (`git-workflow-and-versioning` P1, P2, P11); the agent's environment and how parallel work is set up (`development-setup`); replacing a flow that is in use (`deprecation-and-migration`).
+- NOT for the mechanics of commits, branches, PR size, and merge (`git-workflow-and-versioning`); the agent's environment and how parallel work is set up (`development-setup`); replacing a flow that is in use (`deprecation-and-migration`).
 
 ## Rules
 
@@ -27,17 +27,22 @@ How any requirement is planned and shipped: `main` is always releasable, the app
 | L2 | **Every merged change is deployable; `main` is always releasable:** CI is green, migrations are backward compatible for one release, and anything incomplete is behind a flag that defaults off. A change that cannot be deployed on its own is not ready to merge. |
 | L3 | **A progressively usable product: the app works at every point.** Create one API, test it, commit it, then the next; never make the product unusable to make progress, however large the scope. Stories and sprints are cut so the user gets usable increments. "Localhost keeps working after every commit" is an explicit acceptance criterion on every task, because historically it was not met. |
 | L4 | **Feature flags, and code without an entry point, for what is not ready.** Flags default off. |
-| L5 | **An MVP ships first for any requirement, however big; the original scope continues after.** Discovered work is classified before it enters scope; only MVP requirements and MVP blockers enter automatically (`planning-and-task-breakdown`). |
+| L5 | **An MVP ships first for any requirement, however big; the original scope continues after.** Discovered work is classified before it enters scope; only MVP requirements and MVP blockers enter automatically. |
 | L6 | **Where slicing is technically impossible (some migrations), say so on the ticket.** The user may ask for one-shot development, the whole change in one pass with one round of testing, when speed is required: only on an explicit user instruction, recorded in `docs/LEARNINGS.md` and noted on the ticket. |
 
 ## Planning recipe for a large scope
 
-1. Get the API contract, the DB model, and every dependency's shape resolved before parallel work starts (`development-setup` DS7–DS9).
+1. Get the API contract, the DB model, and every dependency's shape resolved before parallel work starts.
 2. Cut the MVP; everything else stays on the ticket as later scope (L5).
 3. Order the slices so each leaves the app working; put unfinished paths behind a flag or leave them without an entry point (L3, L4).
-4. One API at a time: implement, test, commit, PR (L3; commit and PR size per `git-workflow-and-versioning` P2, P11).
+4. One API at a time: implement, test, commit, PR (L3).
 5. Bump semver and add the changelog line on merge (L1).
 6. If a slice cannot keep the app working, say so on the ticket; if the user asks for one-shot, record the override in `docs/LEARNINGS.md` (L6).
+
+## Interaction with other skills
+
+- `planning-and-task-breakdown` cuts the scope these rules ship; `development-setup` puts the contract, environment, and parallel work in place before a slice starts.
+- `git-workflow-and-versioning` carries the mechanics of commits, PR size, merge, and versioning; `deprecation-and-migration` replaces a flow that is in use.
 
 ## Common Rationalizations
 

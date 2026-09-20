@@ -15,14 +15,14 @@ What is in place before development starts: an environment that belongs to this 
 - At the start of every task that writes, runs, tests, or debugs code.
 - Before running the app or tests for a ticket.
 - When several agents work on the same repository, or the frontend and the backend build the same feature at once.
-- NOT for the branch, commit, and PR rules (`git-workflow-and-versioning`), how to slice and ship the work (`continuous-delivery`), or the testing rules (`end-to-end-testing`).
+- NOT for the branch, commit, and PR rules (`git-workflow-and-versioning`), how to slice and ship the work (`continuous-delivery`), or the testing rules (`test-driven-development`).
 
 ## Environment
 
 | ID | Rule |
 | --- | --- |
 | DS1 | **Every agent creates its own environment.** Everything below is ephemeral and belongs to this agent only; the user's checkout stays untouched. |
-| DS2 | **A git worktree at the project root**, `<project-root>/<ticket>-<slug>` (branch per `git-workflow-and-versioning` P5), never inside the harness's directory (not a `herdr` root or a `claude` root) or the agent brain. Removed after the PR is open. |
+| DS2 | **A git worktree at the project root**, `<project-root>/<ticket>-<slug>`, never inside the harness's directory (not a `herdr` root or a `claude` root) or the agent brain. Removed after the PR is open. |
 | DS3 | **The service runs in its own Docker containers**; Docker is the local development standard. Never reuse another agent's containers. |
 | DS4 | **LocalStack mocks AWS.** Never real AWS from a development environment. |
 | DS5 | **Its own data:** a snapshot of the database or a seed script. Never the shared database. |
@@ -41,8 +41,13 @@ What is in place before development starts: an environment that belongs to this 
 1. `git worktree add <project-root>/<ticket>-<slug>` from the project root (DS2).
 2. Start Docker and LocalStack for the services you touch (DS3, DS4); snapshot or seed the database (DS5).
 3. Confirm the API contract, DB model, and every dependency's shape exist for the slice you are about to build (DS7–DS9); if not, that is the first task, not a thing to work around.
-4. Work; run the app and tests inside this environment (`end-to-end-testing` T2, T12).
+4. Work; run the app and tests inside this environment.
 5. Open the PR, then remove the worktree, containers, and snapshot (DS2).
+
+## Interaction with other skills
+
+- `git-workflow-and-versioning` owns the branch, commit, and PR rules the worktree serves; `continuous-delivery` owns how the work is sliced and shipped.
+- `test-driven-development` runs its tests inside this environment and against the contract mocks set up here.
 
 ## Common Rationalizations
 

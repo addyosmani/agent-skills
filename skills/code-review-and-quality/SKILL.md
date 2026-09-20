@@ -23,7 +23,7 @@ Multi-dimensional code review with quality gates. Every reviewer runs the fixed 
 
 ## Reviewer roles
 
-- The existing agent takes the role of a reviewer **by importing the relevant skill** (this one plus the discipline skill, e.g. `observability-and-instrumentation`, `end-to-end-testing`, `coding-standards`). Roles: **code reviewer, QA reviewer, perf reviewer, security reviewer**, etc. Reviewers are **optional** — review may be made optional on the ticket.
+- The existing agent takes the role of a reviewer **by importing the relevant skill** (this one plus the discipline skill, e.g. `observability-and-instrumentation`, `test-driven-development`, `coding-standards`). Roles: **code reviewer, QA reviewer, perf reviewer, security reviewer**, etc. Reviewers are **optional** — review may be made optional on the ticket.
 - Reviewed-class PRs merge only on the **discipline code reviewer's approval**; every review comment is resolved by a commit or an explained reply.
 - Detail lives in `../../references/merge-and-review.md`.
 
@@ -41,7 +41,7 @@ Check, in order, and report each hit:
 | 6 | **Domain conventions not followed.** |
 | 7 | **Use of strings** (where an enum or typed id belongs). |
 
-Additional checks that follow from the other skills: commit granularity and message (`git-workflow-and-versioning` P1, P3, P2), PR size (`git-workflow-and-versioning` P11), tests mapped to acceptance criteria and not weakened (`end-to-end-testing` T2), and from `coding-standards`: no secrets (C22), backward compatibility (C13), no edits to generated/vendor files (C14).
+Additional checks that follow from the other skills: commit granularity and message (`git-workflow-and-versioning` P1, P3, P2), PR size (`git-workflow-and-versioning` P11), tests mapped to acceptance criteria and not weakened (`test-driven-development` T2), and from `coding-standards`: no secrets (C22), backward compatibility (C13), no edits to generated/vendor files (C14).
 
 ## Process rules
 

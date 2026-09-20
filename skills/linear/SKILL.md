@@ -22,12 +22,12 @@ Linear is the source of truth for all work: what was asked, what was decided, wh
 
 | ID | Rule |
 | --- | --- |
-| M1 | **A ticket, sub-tickets included, before any work, filed under the right project.** A large requirement has its plan, milestones, sprints, stories, and tasks in Linear before code (`planning-and-task-breakdown`); a small one gets a ticket and starts. |
+| M1 | **A ticket, sub-tickets included, before any work, filed under the right project.** A large requirement has its plan, milestones, sprints, stories, and tasks in Linear before code; a small one gets a ticket and starts. |
 | M2 | **A ticket created from a direct user request carries the prompt verbatim.** |
 | M3 | **A loop step that is skipped is recorded on the ticket with the reason.** An override of any convention (one-shot development, a migration plan change) is accepted only on an explicit user instruction and is recorded in `docs/LEARNINGS.md`, with a note on the ticket. |
 | M4 | **The ticket carries the reasoning; the code and the commit carry the ticket id.** The ticket and the commit message together replace most documentation: do not repeat on one what the other already says. |
 | M5 | **Every state change, reassignment, or re-pointing is a structured status update** (template below): by whom, what changed, why, the evidence, the next action; a `Blocked` update carries the blocker block. |
-| M6 | **Linear is the single place.** No markdown TODO lists, notes files, or chat threads for work; bugs live only as `bug` issues; reviewers file findings as `review` issues (`code-review-and-quality` R3). |
+| M6 | **Linear is the single place.** No markdown TODO lists, notes files, or chat threads for work; bugs live only as `bug` issues; reviewers file findings as `review` issues. |
 | M7 | **Read before write; write, then read back.** Search for the project, milestone, cycle, or issue first and never create a duplicate; quote the identifier of what you created or changed; if a call fails, report the failure and retry once. Never fabricate an identifier. |
 
 ## Setup
@@ -64,7 +64,7 @@ Every ticket carries these, filled to the degree the work type warrants. Not eve
 | **Iteration policy** | how the agent decides what to try next after each attempt |
 | **Blocked stop condition** | when the agent stops and reports that no defensible path remains under the current limits |
 
-The anatomy bends to the type: a story adds the user story, acceptance criteria (each gets a test, `end-to-end-testing` T2), and the success target; a bug adds reproduction, expected and actual, evidence, and severity; a chore adds only what a reader needs. Add a section when a ticket demands one; if it keeps recurring, propose it for this page.
+The anatomy bends to the type: a story adds the user story, acceptance criteria (each gets a test), and the success target; a bug adds reproduction, expected and actual, evidence, and severity; a chore adds only what a reader needs. Add a section when a ticket demands one; if it keeps recurring, propose it for this page.
 
 ## Templates
 
@@ -153,6 +153,11 @@ RCA required: yes | no
 - Blockers hit: <ticket: blocker type, resolution>
 - Next sprint capacity: <points> (basis)
 ```
+
+## Interaction with other skills
+
+- `planning-and-task-breakdown` decides what the milestones, sprints, stories, and tasks contain; this skill creates and tracks them.
+- `github` links the PR to the ticket; `test-driven-development` writes the test behind every acceptance criterion.
 
 ## Common Rationalizations
 

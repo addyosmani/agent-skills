@@ -187,10 +187,10 @@ For a schema, this is the **backfill** and **contract** phases: copy the data ac
 
 ## How this fits the other rules
 
-- The new flow ships behind a feature flag or without an entry point until step 5 (`continuous-delivery` L4).
-- Schema changes stay backward compatible for one release with rollback (`database` D4); where slicing is impossible, say so on the ticket (`continuous-delivery` L6).
-- Touching existing code stays backward compatible (`coding-standards` C13); the freeze in step 3 is what makes that cheap.
-- Each step is its own small, working commit and PR (`git-workflow-and-versioning` P1, P11).
+- The new flow ships behind a feature flag or without an entry point until step 5 (`continuous-delivery`).
+- Schema changes stay backward compatible for one release with rollback (`database`); where slicing is impossible, say so on the ticket (`continuous-delivery`).
+- Touching existing code stays backward compatible (`coding-standards`); the freeze in step 3 is what makes that cheap.
+- Each step is its own small, working commit and PR (`git-workflow-and-versioning`).
 
 ## Database Schema Migrations (Expand/Contract)
 

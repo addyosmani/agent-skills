@@ -8,15 +8,15 @@ category: design
 
 ## Overview
 
-How a document is written well: whether at all, how short, in what form, and where. The rules are W1–W11. What goes into a specific document is its own skill (`prd-writing`, `hld`, `lld`, `adrs`); the anatomy of each is in `templates/` and which document holds what is `../../references/documentation-map.md`.
+How a document is written well: whether at all, how short, in what form, and where. The rules are W1–W11. What goes into a PRD, HLD, LLD, or ADR is its own skill; the anatomy of each is in `templates/` and which document holds what is `../../references/documentation-map.md`.
 
 ## When to Use
 
 - Writing, updating, or deciding whether to write any document, README, design doc, RCA, PRD, or index.
 - Deciding where a document lives or how it is rendered.
 - Compacting a document that has grown.
-- NOT for the contents of a PRD, HLD, LLD, or ADR: their skills.
-- NOT for comments in code (`coding-standards` C21) or the changelog (`continuous-delivery` L1).
+- NOT for the contents of a PRD, HLD, LLD, or ADR: `prd-writing`, `hld`, `lld`, `adrs`.
+- NOT for comments in code (`coding-standards`) or the changelog (`continuous-delivery`).
 
 ## Whether to write at all
 
@@ -53,6 +53,11 @@ How a document is written well: whether at all, how short, in what form, and whe
 5. Add it to the document index (W8).
 6. HLD, LLD, or PRD: user review before it is final (W3).
 7. When a doc stabilises, extract the stable part into a skill and shrink the doc (W5).
+
+## Interaction with other skills
+
+- `prd-writing`, `hld`, `lld`, and `adrs` decide what goes into their documents; this skill decides whether, how short, in what form, and where.
+- `coding-standards` owns comments in code; `continuous-delivery` and `git-workflow-and-versioning` own the changelog.
 
 ## Common Rationalizations
 

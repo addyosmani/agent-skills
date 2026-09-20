@@ -10,7 +10,7 @@ category: delivery
 
 Git is your safety net. Treat commits as save points, branches as sandboxes, and history as documentation. With AI agents generating code at high speed, disciplined version control is the mechanism that keeps changes manageable, reviewable, and reversible.
 
-This skill holds the rules (P1–P16) and the git mechanics. The GitHub calls that carry them out (raising a PR, reviewing, merging, releasing) are the `github` tool skill; the review itself is `code-review-and-quality`.
+This skill holds the rules (P1–P16) and the git mechanics. The GitHub calls that carry them out are `github`; what a review produces is `../../references/merge-and-review.md`.
 
 ## When to Use
 
@@ -83,7 +83,7 @@ The `<type>` in the anatomy header explains the *why*, not just the *what*:
 | ID | Rule |
 | --- | --- |
 | P5 | **Branch per ticket named `<ticket>-<slug>`.** |
-| P6 | Work in your own git worktree at the project root (`development-setup`). |
+| P6 | Work in your own git worktree at the project root. |
 | P7 | **Delete the remote and local branch after merge.** |
 
 ### Trunk-based development (P5, P7)
@@ -98,8 +98,8 @@ main ──●──●──●──●──●──●──●──●─
 
 - **Dev branches are costs.** Every day a branch lives, it accumulates merge risk.
 - **Release branches are acceptable** when you need to stabilize a release while main moves forward (P16).
-- **Feature flags > long branches.** Prefer deploying incomplete work behind flags rather than keeping it on a branch for weeks (`continuous-delivery` L4).
-- **One worktree per ticket** (P6) is how parallel agents work on one repository without switching branches; the procedure and cleanup are `development-setup` DS2.
+- **Feature flags > long branches.** Prefer deploying incomplete work behind flags rather than keeping it on a branch for weeks.
+- **One worktree per ticket** (P6) is how parallel agents work on one repository without switching branches.
 
 ## Pull requests
 
@@ -109,12 +109,11 @@ main ──●──●──●──●──●──●──●──●─
 | P9 | **Never hold a PR for a security audit; the audit is a later ticket / next requirement.** |
 | P10 | **Every task ships through a pull request with the PR template; reviewed-class PRs merge only on the discipline code reviewer's approval; every review comment is resolved by a commit or an explained reply.** |
 | P11 | **A PR is never held open to grow.** Open it when the first verifiable slice is ready; at roughly **400 changed lines or 10 files, split it** — land the mechanical part, the contract, or the flagged-off skeleton first. A long-lived branch is a merge conflict accruing interest. |
-| P12 | **Only a change that is deployable on its own merges**; `main` is always releasable (`continuous-delivery` L2). |
-| P13 | **Every merged task adds a changelog line** (global and per service), written in the same change while the impact is fresh (`continuous-delivery` L1). |
-| P14 | Reviewers create Linear issues for findings and comment on the PR while it is open (`code-review-and-quality` R3). |
+| P12 | **Only a change that is deployable on its own merges**; `main` is always releasable. |
+| P13 | **Every merged task adds a changelog line** (global and per service), written in the same change while the impact is fresh. |
+| P14 | Reviewers create Linear issues for findings and comment on the PR while it is open. |
 
-- One ticket per PR; the title starts with the ticket id; the PR links the ticket and the ticket links the PR (P2, P4). The GitHub calls are the `github` skill.
-- See the splitting strategies in `code-review-and-quality` for how to break down a PR that passed the P11 limit.
+- One ticket per PR; the title starts with the ticket id; the PR links the ticket and the ticket links the PR (P2, P4).
 
 ## Merge
 
@@ -222,7 +221,7 @@ git log --grep="validation" --oneline
 
 ## Release & Versioning
 
-Releases follow semver and add a `CHANGELOG.md` entry listing the tickets (`continuous-delivery` L1). Commits are how *you* track change; a **version** is how your *consumers* track it. The moment anything else depends on your code — another team, a published package, a deployed client — "latest on main" stops being a sufficient answer to "what am I running, and is it safe to upgrade?" A version number and a changelog are the contract that answers it.
+Releases follow semver and add a `CHANGELOG.md` entry listing the tickets. Commits are how *you* track change; a **version** is how your *consumers* track it. The moment anything else depends on your code — another team, a published package, a deployed client — "latest on main" stops being a sufficient answer to "what am I running, and is it safe to upgrade?" A version number and a changelog are the contract that answers it.
 
 ### Semantic Versioning
 
@@ -234,7 +233,7 @@ For anything with consumers, version `MAJOR.MINOR.PATCH` and let the number carr
   PATCH  bug fix, backward-compatible — safe to upgrade
 ```
 
-The number is a promise, so make the code match it. A "patch" that changes behavior consumers relied on is a major change wearing a disguise (Hyrum's Law — see the `api-and-interface-design` skill). When unsure whether a change is breaking, assume it is; a surprise major is far cheaper than a broken consumer.
+The number is a promise, so make the code match it. A "patch" that changes behavior consumers relied on is a major change wearing a disguise (Hyrum's Law; see `api-and-interface-design`). When unsure whether a change is breaking, assume it is; a surprise major is far cheaper than a broken consumer.
 
 ### Tag the release, and let the tag be the source of truth
 
@@ -261,7 +260,12 @@ A changelog is not `git log`. It's the curated, consumer-facing answer to "what 
 - `GET /v1/tasks/all` — use the paginated `GET /v1/tasks` (removal in 2.0)
 ```
 
-Write the entry in the same change that makes the change, while the impact is fresh — not reconstructed from commit archaeology at release time. Breaking changes get a migration note and a deprecation window (follow the `deprecation-and-migration` skill); shipping the actual release is the `shipping-and-launch` skill's job — this section is the versioning contract that feeds it.
+Write the entry in the same change that makes the change, while the impact is fresh — not reconstructed from commit archaeology at release time. Breaking changes get a migration note and a deprecation window; this section is the versioning contract that shipping consumes.
+
+## Interaction with other skills
+
+- `github` carries the GitHub calls for the PR, review, merge, and release rules here; `development-setup` carries the worktree procedure behind P6.
+- `continuous-delivery` owns releasability and the changelog rule that P12 and P13 serve; `deprecation-and-migration` owns the migration window a breaking change needs; `shipping-and-launch` ships the release this section versions.
 
 ## Common Rationalizations
 
@@ -310,7 +314,7 @@ Before you push — checklist:
 1. Does the app still run after this commit alone? (P1, P2, P12)
 2. Is the diff one capability, under ~400 lines / 10 files? If not, split. (P2, P11)
 3. Message has ticket id, model, thinking effort, harness. (P3, P2)
-4. Unfinished paths behind a flag defaulting off or without an entry point. (P12, `continuous-delivery` L4)
+4. Unfinished paths behind a flag defaulting off or without an entry point. (P12)
 5. Changelog line added. (P13)
 6. PR opened from `<ticket>-<slug>` with the template; review required or explicitly optional per the ticket. (P5, P10, P8)
 7. Never wait for a security audit. (P9)

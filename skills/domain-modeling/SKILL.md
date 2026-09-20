@@ -8,19 +8,19 @@ category: design
 
 ## Overview
 
-Domain-driven design is mandatory (`coding-standards` C23). `coding-standards` says a closed set is an enum, an id is a typed id, an unavoidable check is a domain object, and an error is a domain citizen (C1, C2, C3, C15). This skill is how those concepts are found and shaped: which service owns them, what kind each one is, what it must always satisfy, and how the parts contract with each other, so a reader and a type checker can answer "what is this, what does it accept, what does it produce, what is invalid, and where exactly did it fail" without reverse-engineering dictionaries, strings, and conditionals.
+Domain-driven design is mandatory. `coding-standards` says a closed set is an enum, an id is a typed id, an unavoidable check is a domain object, and an error is a domain citizen. This skill is how those concepts are found and shaped: which service owns them, what kind each one is, what it must always satisfy, and how the parts contract with each other, so a reader and a type checker can answer "what is this, what does it accept, what does it produce, what is invalid, and where exactly did it fail" without reverse-engineering dictionaries, strings, and conditionals.
 
 The rules are language- and domain-neutral. A full worked example in Python for a workflow-graph domain is in `references/typed-workflow-domain-python.md`; use it for mechanics, not as the rule.
 
 ## When to Use
 
 - Defining or changing a domain model, an identifier type, an entity or aggregate, an event, or deciding which service a feature belongs to.
-- Writing the shared model section of an HLD (`hld` § Domain model and glossary) or `docs/DOMAIN.md`; writing the domain types section of an LLD (`lld`).
+- Writing the shared model section of an HLD or `docs/DOMAIN.md`; writing the domain types section of an LLD.
 - Implementing or extending domain types in a service, especially in a foundation task.
-- A `coding-standards` rule (C1, C3, C23) makes something a domain concept and the concept needs a name, a kind, and invariants.
+- A coding rule makes something a domain concept and the concept needs a name, a kind, and invariants.
 - A bug traces back to an ambiguous concept, a raw string standing in for a type, or an impossible state.
 - NOT for the coding rules themselves (typing, edges, errors, testability): `coding-standards`.
-- NOT for UI view models or transport DTOs in isolation; model them as translations of the domain model (`coding-standards` C9).
+- NOT for UI view models or transport DTOs in isolation; model them as translations of the domain model.
 
 ## Rules
 
@@ -34,9 +34,9 @@ The rules are language- and domain-neutral. A full worked example in Python for 
 | DD6 | **The glossary is the vocabulary.** The HLD names the domain models and glossary (`docs/DOMAIN.md`); code uses its terms. Names are domain names (`source_port`, `workflow_definition`, not `data`, `item`, `payload`); an alias must add meaning, never hide it. |
 | DD7 | **Contracts are part of the type.** A part's named, typed inputs and outputs live on the part itself; references point at the precise thing (the port, not just the node); return the narrowest correct type; named typed records instead of maps with known keys. Keep the domain value (what flows), the contract (what a part accepts or produces), and the runtime instance distinct and named. `Any`, `object`, and unbounded maps are escape hatches, isolated at a boundary and documented. |
 | DD8 | **One source of truth per contract.** Parsing, validation, dispatch, UI schema, and serialization derive from one frozen specification object; a registry or dispatch map is never the domain model. |
-| DD9 | **Invariants live near the thing they constrain.** An entity rule on the entity, an aggregate rule in aggregate validation, an execution rule in the execution layer; each becomes a type, a constructor guard, or an aggregate validator, and a test. This is where an unavoidable check becomes a domain object (`coding-standards` C3). |
+| DD9 | **Invariants live near the thing they constrain.** An entity rule on the entity, an aggregate rule in aggregate validation, an execution rule in the execution layer; each becomes a type, a constructor guard, or an aggregate validator, and a test. This is where an unavoidable check becomes a domain object. |
 | DD10 | **Aggregate-level invariants are their own validation layer.** Field validation cannot see cross-object rules (references exist, types are compatible, required inputs are wired, no structural cycles where a DAG is required). Validate them explicitly, in a deterministic order from structural to semantic, collect independent errors instead of stopping at the first, and keep the algorithm independent of the validation framework so tests, tools, and editors reuse it. |
-| DD11 | **A domain error carries a location** that identifies the offending object (`connections[2]`, `nodes[4].scale`), what is wrong, what was expected, what was received, and how to fix it. Report the full path of a cycle and the edge that closes it, never "cycle detected". Never wrap it in a generic exception that loses this (`coding-standards` C15, C16). |
+| DD11 | **A domain error carries a location** that identifies the offending object (`connections[2]`, `nodes[4].scale`), what is wrong, what was expected, what was received, and how to fix it. Report the full path of a cycle and the edge that closes it, never "cycle detected". Never wrap it in a generic exception that loses this. |
 | DD12 | **Polymorphic serialized values carry a stable wire identifier** in a tagged union; never a class or type name, because names change in refactors and wire ids are contract. |
 | DD13 | **Small typed dispatch, not giant conditionals.** Variant-specific behavior lives in typed handlers selected by the discriminator; as variants grow, move to declarative registration from the specification object (DD8). Structural cycles are not runtime loops: retry, iteration, map, and conditional execution are explicit control-flow constructs, never arbitrary cycles in a definition that is supposed to be a DAG. |
 
@@ -48,9 +48,9 @@ The rules are language- and domain-neutral. A full worked example in Python for 
 4. **Define identities** (DD2): a typed id per entity; who generates it; whether it is exposed externally; the stable wire id for each polymorphic kind (DD12).
 5. **Write invariants** per entity and aggregate (DD9): the rules that must always hold, and for each, whether a type, a constructor guard, or an aggregate validator enforces it.
 6. **Define contracts** (DD7): for each part, its named typed inputs and outputs and what references it accepts; the single specification object other layers derive from (DD8).
-7. **Separate layers** per `coding-standards` C9 and write the explicit translations; collapse layers only when they are genuinely identical, and record that decision.
+7. **Separate layers**, API, domain, persistence, and write the explicit translations; collapse layers only when they are genuinely identical, and record that decision.
 8. **Design aggregate validation** (DD10): the ordered list of cross-object checks, the error shape with locations (DD11), and the reusable algorithms behind it.
-9. **Write the types** in the service language with the strictness `coding-standards` C7 requires, using the mapping below. Put them in the LLD and in code in the foundation task.
+9. **Write the types** in the service language with the language's strict typing, using the mapping below. Put them in the LLD and in code in the foundation task.
 10. **Prove it**: one test per invariant, per aggregate check (valid and invalid, including every shape of structural error), per error location and message.
 
 ## Mapping the ideas to a language
@@ -82,6 +82,11 @@ The rules are language- and domain-neutral. A full worked example in Python for 
 - Aggregate checks it participates in: <ordered list>
 ```
 
+## Interaction with other skills
+
+- `coding-standards` is the superset: typing, edges, errors, testability. This skill is the subset that decides what the concepts are; the two are fetched together.
+- `hld` records the glossary and the domain models; `lld` writes the types as code; `database` owns the persistence model the domain model is translated to.
+
 ## Common Rationalizations
 
 | Rationalization | Reality |
@@ -90,7 +95,7 @@ The rules are language- and domain-neutral. A full worked example in Python for 
 | "A uuid is already unique, wrapping it is ceremony." | A raw id admits any uuid anywhere. Wrap it in a domain id, constructed once at the edge (DD2). |
 | "A map of string to value is flexible." | It loses which key carries which type. A named typed record keeps the relationship (DD7). |
 | "Invariants are enforced in the service layer." | Then every caller must remember. Enforce in the type or constructor; aggregate rules in one explicit validator (DD9, DD10). |
-| "The generic parameter tells us the type at runtime." | In most languages it is erased or unreliable. Keep explicit runtime metadata next to the static type (DD12; `coding-standards` C4). |
+| "The generic parameter tells us the type at runtime." | In most languages it is erased or unreliable. Keep explicit runtime metadata next to the static type (DD12). |
 | "The registry is the model." | A dispatch map loses inputs, outputs, and schema. Derive the registry from a specification object (DD8). |
 | "'Cycle detected' is enough." | Nobody can fix that. Report the full path, the closing edge, and the location (DD11). |
 | "Abstract now, it will scale." | Three variants do not justify factories of factories. Every pattern names its problem, after repetition is real (DD5). |
@@ -114,7 +119,7 @@ The rules are language- and domain-neutral. A full worked example in Python for 
 - [ ] Every concept in the glossary has a model record and a type in code; code uses the glossary's terms; every polymorphic kind has a stable wire id (DD3, DD6, DD12).
 - [ ] Every id is a distinct domain type, constructed once at the edge (DD2).
 - [ ] Every invariant and aggregate check has a test, including every shape of structural error the domain can produce (DD9, DD10).
-- [ ] Layer translations are explicit or the collapse is recorded in the LLD (`coding-standards` C9).
+- [ ] Layer translations are explicit or the collapse is recorded in the LLD.
 - [ ] Contracts have one source of truth; no registry or dispatch map is the model (DD8).
 - [ ] Aggregate errors carry locations and actionable messages; algorithms are testable without the validation framework (DD10, DD11).
 - [ ] No `Any`/`object`/unbounded map in domain signatures without a documented boundary reason (DD7).

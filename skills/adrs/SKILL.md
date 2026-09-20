@@ -15,10 +15,10 @@ Architectural decisions worth preserving are recorded as ADRs: one decision per 
 - Asked for an ADR, or to record a decision as one.
 - An HLD names a one-way door, chooses between alternatives, or draws a service boundary that was not obvious (the HLD tradeoffs or one-way doors link the ADR).
 - A framework, language, major library, ORM, hosting platform, CI system, auth provider, or database engine is chosen.
-- Scale infrastructure is added: sharding, caches, read replicas (`database` D11 requires the ADR); a deviation from the stack recorded in `docs/ARCHITECTURE.md`.
+- Scale infrastructure is added: sharding, caches, read replicas; a deviation from the stack recorded in `docs/ARCHITECTURE.md`.
 - A process or tooling decision that is expensive to reverse.
 - NOT for the design itself: boundaries, APIs, the domain model, the data model, and patterns are described in the HLD and LLD; the ADR records only the decision among alternatives.
-- NOT for a choice the ticket and the commit message carry (`documentation` W1).
+- NOT for a choice the ticket and the commit message carry.
 
 ## Match the existing convention first
 
@@ -35,7 +35,7 @@ If the evidence conflicts, surface the conflict instead of silently adding anoth
 1. **Check it qualifies**: a decision among alternatives that would be expensive to reverse or that others will ask about. If the ticket carries it, stop.
 2. **Match the convention** (above). Default: `docs/decisions/NNNN-<slug>.md` for the project, `<service>/docs/decisions/` for a decision local to one service, sequential numbering, one decision per file.
 3. **Write it from `templates/ADR.md`**: status, date, problem, options with why each was rejected, choice, rationale, reversibility (two-way door and how it is undone, or one-way door and why). Present tense, describing the state it creates, so it stays true after the change lands.
-4. **Link it** from the HLD's tradeoffs, the LLD, or the ticket that made the decision, and add it to the document index (`documentation` W8).
+4. **Link it** from the HLD's tradeoffs, the LLD, or the ticket that made the decision, and add it to the document index.
 5. **User review** when the decision is a one-way door; otherwise it is accepted with the PR that lands it.
 
 ## Lifecycle
@@ -46,6 +46,11 @@ Proposed → Accepted → (Superseded or Deprecated)
 
 - Never delete or rewrite an accepted ADR; it is history.
 - When a decision changes, write a new ADR that references and supersedes the old one, and mark the old one superseded.
+
+## Interaction with other skills
+
+- `hld` and `lld` link the ADR from the design that made the decision; `database` and `planning-and-task-breakdown` require one before scale infrastructure is added.
+- `documentation` is how the record is written, indexed, and stored.
 
 ## Common Rationalizations
 
@@ -64,7 +69,7 @@ Proposed → Accepted → (Superseded or Deprecated)
 - An ADR that names a choice with no problem, options, rationale, or reversibility.
 - A second numbering scheme or location next to an existing one.
 - An old ADR edited in place, or deleted.
-- An ADR in a cloud tool instead of the repository (`documentation` W9).
+- An ADR in a cloud tool instead of the repository.
 
 ## Verification
 

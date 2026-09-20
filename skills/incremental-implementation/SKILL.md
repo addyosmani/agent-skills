@@ -66,7 +66,7 @@ Each slice delivers working end-to-end functionality.
 
 ### Contract-First Slicing
 
-When backend and frontend need to develop in parallel (the rules are `development-setup` DS7–DS9):
+When backend and frontend need to develop in parallel (the rules are in `development-setup`):
 
 ```
 Slice 0: Define the API contract (types, interfaces, OpenAPI spec)
@@ -143,11 +143,11 @@ Each increment changes one logical thing. Don't mix concerns:
 
 ### Rule 2: Keep It Compilable
 
-After each increment, the project must build and existing tests must pass. Don't leave the codebase in a broken state between slices. The rule is `continuous-delivery` L3 (the app works at every point) and `git-workflow-and-versioning` P1.
+After each increment, the project must build and existing tests must pass. Don't leave the codebase in a broken state between slices. The rule is in `continuous-delivery` (the app works at every point) and `git-workflow-and-versioning`.
 
 ### Rule 3: Feature Flags for Incomplete Features
 
-If a feature isn't ready for users but you need to merge increments (the rule is `continuous-delivery` L4: flags default off, or code without an entry point):
+If a feature isn't ready for users but you need to merge increments (per `continuous-delivery`: flags default off, or code without an entry point):
 
 ```typescript
 // Feature flag for work-in-progress

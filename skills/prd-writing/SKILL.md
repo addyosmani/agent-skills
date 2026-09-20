@@ -27,9 +27,15 @@ Each step fills a section of `templates/PRD.md`; a section is skipped with one l
 4. **Scope**: cut the MVP phase, the smallest version a user can use, shipped at the earliest. Everything else goes to a later phase, and what is out goes under "Deliberately not" with a reason. Phased PRDs and milestoned stories are how scope creep stays out.
 5. **Requirements by priority, product flows, edge cases.** For every requirement check clarity: what exactly happens, to which entity, in which state, what happens on failure or reload, who decides. Unanswered questions that affect implementation go to the user; never let engineering build around a guess.
 6. **Stories** in user terms, each with acceptance criteria a QA reviewer could verify without asking, the services that change, and whether a contract is needed first.
-7. **Success criteria**: product metrics (usage and funnel) and business metrics (what the success target is measured by); engineers emit them (`observability-and-instrumentation` O4).
+7. **Success criteria**: product metrics (usage and funnel) and business metrics (what the success target is measured by); engineers emit them.
 8. **Non-functional requirements, risks and assumptions, open questions.** Blocking questions are named for the user.
-9. **Publish**: `docs/PRD.md` for the project, the service's `docs/` for a feature (`documentation` W9–W11), linked from the Linear project and every story; hand it to the user for review.
+9. **Publish**: `docs/PRD.md` for the project, the service's `docs/` for a feature, linked from the Linear project and every story; hand it to the user for review.
+
+## Interaction with other skills
+
+- Upstream: `interview-me` and `idea-refine` until the intent is clear; `linear` holds the ticket with the verbatim prompt.
+- Alongside: `documentation` for how the document is written, rendered, and stored.
+- Downstream: `hld` designs from it; `planning-and-task-breakdown` cuts its stories into milestones; `observability-and-instrumentation` emits the metrics it names.
 
 ## Common Rationalizations
 
