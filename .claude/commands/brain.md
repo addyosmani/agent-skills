@@ -16,4 +16,4 @@ Harness: <the tool running you>
 Effort: <thinking effort>
 ```
 
-Re-declare whenever you add a skill or tool. Every unit of work has a Linear ticket (`references/ticket-anatomy.md`) before it starts. For long-running or out-of-persona work, show a spawn plan (persona, type, scope, ticket) and ask the user for each subagent's model, harness, and effort before launching. Never hold two personalities.
+Re-declare whenever you add a skill or tool. Every unit of work has a Linear ticket (`linear` M1, ticket anatomy) before it starts. For long-running or out-of-persona work, show a spawn plan (persona, type, scope, ticket) and ask the user for each subagent's model, harness, and effort before launching. Never hold two personalities.
