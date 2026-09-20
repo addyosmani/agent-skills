@@ -15,7 +15,7 @@ An existing codebase is adopted in three passes: **know it** (inventory, as-is d
 - The brain has just been added to a repository with existing code.
 - A service exists in code but has no `<service>/docs/`.
 - Before any refactoring toward the conventions.
-- NOT for greenfield features; use the normal flow (`prd-writing`, `hld`, `milestone-planning`).
+- NOT for greenfield features; use the normal flow (`prd-writing`, `hld`, `planning-and-task-breakdown`).
 
 ## Process
 
@@ -37,7 +37,7 @@ An existing codebase is adopted in three passes: **know it** (inventory, as-is d
 
 9. **Roadmap** as a PRD per service or area (`prd-writing`): the outcome is "service conforms to conventions X, Y, Z with behavior unchanged"; acceptance criteria are the table rows closed and the baseline still green.
 10. **Order the work**: (a) OpenAPI for every API and generated clients at the repository root, (b) domain typing per API (typed ids, sum types, validation moved to the edges), one endpoint or feature at a time, (c) feature-first folder moves once types are in place, (d) metrics and logging, (e) remaining rows. Contract task first per service.
-11. **Milestones and sprints** as usual (`milestone-planning`); every task is a small PR with a characterization test written first (`test-driven-development`) that pins current behavior, then the refactor, then the same test green.
+11. **Milestones and sprints** as usual (`planning-and-task-breakdown`); every task is a small PR with a characterization test written first (`test-driven-development`) that pins current behavior, then the refactor, then the same test green.
 12. **Track**: each closed row is a status update on its ticket; the adoption milestone shows the conformance count per service.
 
 ## Adoption record

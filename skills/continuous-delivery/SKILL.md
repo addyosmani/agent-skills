@@ -27,7 +27,7 @@ How any requirement is planned and shipped: `main` is always releasable, the app
 | L2 | **Every merged change is deployable; `main` is always releasable:** CI is green, migrations are backward compatible for one release, and anything incomplete is behind a flag that defaults off. A change that cannot be deployed on its own is not ready to merge. |
 | L3 | **A progressively usable product: the app works at every point.** Create one API, test it, commit it, then the next; never make the product unusable to make progress, however large the scope. Stories and sprints are cut so the user gets usable increments. "Localhost keeps working after every commit" is an explicit acceptance criterion on every task, because historically it was not met. |
 | L4 | **Feature flags, and code without an entry point, for what is not ready.** Flags default off. |
-| L5 | **An MVP ships first for any requirement, however big; the original scope continues after.** Discovered work is classified before it enters scope; only MVP requirements and MVP blockers enter automatically (`project-management` M11). |
+| L5 | **An MVP ships first for any requirement, however big; the original scope continues after.** Discovered work is classified before it enters scope; only MVP requirements and MVP blockers enter automatically (`planning-and-task-breakdown`). |
 | L6 | **Where slicing is technically impossible (some migrations), say so on the ticket.** The user may ask for one-shot development, the whole change in one pass with one round of testing, when speed is required: only on an explicit user instruction, recorded in `docs/LEARNINGS.md` and noted on the ticket. |
 
 ## Planning recipe for a large scope

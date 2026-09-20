@@ -1,6 +1,6 @@
 ---
 name: planning-and-task-breakdown
-description: Breaks work into ordered tasks. Use when you have a spec or clear requirements and need to break work into implementable tasks. Use when a task feels too large to start, when you need to estimate scope, or when parallel work is possible.
+description: How a requirement becomes incremental delivery — a plan document, milestones ordered by earliest usable outcome, fixed-length sprints with a points capacity, stories, and small verifiable tasks with acceptance criteria, disjoint owned paths, and dependency order, with a foundation task first so parallel work is safe; scope discipline (phased PRDs, milestoned stories, discovered work classified before it enters scope); and a sprint review at every close. Use when you have a spec, PRD, or reviewed design and must break it into tasks, when a task feels too large to start, when a large requirement arrives ("plan this out"), when a sprint starts or ends, when scope changes mid-milestone, or when unplanned work is discovered.
 category: process
 ---
 
@@ -8,251 +8,188 @@ category: process
 
 ## Overview
 
-Decompose work into small, verifiable tasks with explicit acceptance criteria. Good task breakdown is the difference between an agent that completes work reliably and one that produces a tangled mess. Every task should be small enough to implement, test, and verify in a single focused session.
+Favor quick, incremental delivery over a complete feature. The hierarchy is project → milestones → sprints → stories → tasks. Each milestone gives a user something they can use; each sprint is a fixed time box with a points capacity; each task is small enough to implement, test, and verify in one focused session, with one goal and owned paths disjoint from every other task in flight; shared definitions are built first by one engineer so everyone else can work in parallel. Sprint reviews make spillover and estimation error visible so the next sprint is planned better.
+
+The plan lives in `tasks/plan.md`; milestones, sprints, stories, and tasks live in Linear (`linear`). This skill decides what they contain; `linear` says how to create them.
 
 ## When to Use
 
-- You have a spec and need to break it into implementable units
-- A task feels too large or vague to start
-- Work needs to be parallelized across multiple agents or sessions
-- You need to communicate scope to a human
-- The implementation order isn't obvious
+- You have a spec, PRD, or reviewed HLD and need to break it into implementable units.
+- A large requirement arrives, even as "plan this out" or "build feature X": it gets a plan, milestones, sprints, stories, and tasks before code (`linear` M1).
+- A task feels too large or vague to start; the implementation order isn't obvious; work must be parallelised across agents.
+- A sprint starts and needs planning, or ends and needs a review; a milestone closes and the next needs planning.
+- Scope changes mid-milestone, or unplanned work is discovered.
+- NOT for single-file changes with obvious scope: a ticket, then start.
+- NOT before design approval for large work: planning against an unapproved design creates rework.
+- NOT for creating the Linear objects: `linear`.
 
-**When NOT to use:** Single-file changes with obvious scope, or when the spec already contains well-defined tasks.
+## Process
 
-## The Planning Process
+### 1. Read, write no code
 
-### Step 1: Enter Plan Mode
+Operate read-only: the spec or PRD with its acceptance criteria and success target, the HLD, the domain model and key interfaces, the existing code and its conventions, and the open milestones in Linear. Map dependencies between components; note risks and unknowns. The output is a plan and tickets, never implementation.
 
-Before writing any code, operate in read-only mode:
-
-- Read the spec and relevant codebase sections
-- Identify existing patterns and conventions
-- Map dependencies between components
-- Note risks and unknowns
-
-**Do NOT write code during planning.** The ticket comes before the plan and the plan before any work (`project-management` M1). The output is a plan document saved to `tasks/plan.md` and a task list recorded in the task list target (see Output Files; default `tasks/todo.md`), not implementation.
-
-### Step 2: Identify the Dependency Graph
-
-Map what depends on what:
+### 2. Map the dependency graph
 
 ```
 Database schema
-    │
     ├── API models/types
-    │       │
     │       ├── API endpoints
-    │       │       │
     │       │       └── Frontend API client
-    │       │               │
     │       │               └── UI components
-    │       │
     │       └── Validation logic
-    │
     └── Seed data / migrations
 ```
 
-Implementation order follows the dependency graph bottom-up: build foundations first.
+Implementation order follows the graph bottom-up. A dependency's shape is resolved before anything is built on it (`development-setup` DS9).
 
-### Step 3: Slice Vertically
+### 3. Cut milestones from the first usable outcome
 
-Instead of building all the database, then all the API, then all the UI — build one complete feature path at a time:
+Find the smallest slice a user (or a consuming service) can exercise end to end; deterministic stubs are allowed when the milestone says so. Cut milestones backwards from the full scope: each adds one usable outcome, has a budget, and a verification command or manual check. Order by user value, then by unblocking other services. The MVP is milestone 1 (`continuous-delivery` L5); "infrastructure only" is not a milestone.
 
-**Bad (horizontal slicing):**
+### 4. Identify the foundation task
+
+For milestone 1, and any later milestone that introduces new shared definitions: folder structure, shared types, API models and contracts, domain model definitions, test scaffolding, basic startup. One engineer owns it; nothing else in the milestone starts until it is merged (`development-setup` DS7, DS8). It is the cheapest task in the plan and unblocks all parallelism.
+
+### 5. Slice vertically into stories
+
+Build one complete feature path at a time, not all the schema, then all the API, then all the UI:
+
 ```
-Task 1: Build entire database schema
-Task 2: Build all API endpoints
-Task 3: Build all UI components
-Task 4: Connect everything
-```
-
-**Good (vertical slicing):**
-```
-Task 1: User can create an account (schema + API + UI for registration)
-Task 2: User can log in (auth schema + API + UI for login)
-Task 3: User can create a task (task schema + API + UI for creation)
-Task 4: User can view task list (query + API + UI for list view)
+Bad:   Task 1 entire schema · Task 2 all endpoints · Task 3 all UI · Task 4 connect
+Good:  Story 1 user can register (schema + API + UI) · Story 2 user can log in · Story 3 user can create a task
 ```
 
-Each vertical slice delivers working, testable functionality. How increments, scope, discovered work, and the MVP are cut is `project-management` M9–M12.
+A story is a user-observable outcome, INVEST (independent, negotiable, valuable, estimable, small, testable), pointed 1, 2, 3, 5, or 8, split when larger, target median 3. Every design module maps to at least one story; MVP stories come first.
 
-### Step 4: Write Tasks
+### 6. Write tasks
 
-Each task follows this structure, whether it lands in the markdown task list or as an item in an external tracker (see Output Files):
+One goal per task, in one observable sentence. Each carries: acceptance criteria (testable; each gets a test, `end-to-end-testing` T2), a verification command that runs in this repository, owned paths, interfaces consumed and provided, the LLD section, dependencies, and points. It depends only on merged tasks or the foundation task, and its PR stays inside `git-workflow-and-versioning` P11 and is deployable on its own, flagged off if the feature is incomplete.
+
+Owned paths of concurrent tasks are disjoint. When two tasks need the same file: split the file, extract a shared contract owned by one task, serialise the tasks, or bundle them into one assignment. Never let two engineers edit one file concurrently.
+
+| Points | Files | Scope | Example |
+|---|---|---|---|
+| 1 | 1 | single function or config change | add a validation rule |
+| 2 | 1–2 | one component or endpoint | a new API endpoint |
+| 3 | 3–5 | one feature slice | the registration flow |
+| 5 | 5–8 | multi-component feature | search with filtering and pagination |
+| 8 | 8+ | the maximum; split before it enters a sprint | |
+
+Split further when a task would take more than one focused session, its acceptance criteria need more than three bullets, it touches two independent subsystems, or its title contains "and".
+
+### 7. Plan sprints
+
+Sprints are fixed length (default one week) with a points capacity from the last sprint's delivered points; the first sprint's capacity is an explicit, recorded assumption. Sprint 1 of a milestone starts with the foundation task and then the first usable vertical slice (login API → home API → API client → login screen → home screen). Later sprints each add usable value. Pull tasks by priority until capacity is reached; the rest stay in the milestone backlog. High-risk tasks go early.
+
+Parallelise only where it does not raise integration risk: independent slices and tests for merged features are safe; migrations, shared state, and dependency chains are sequential; anything sharing a contract waits for the contract.
+
+### 8. Order and checkpoint
+
+Every task leaves the app working (`continuous-delivery` L3). A verification checkpoint after every two or three tasks and at every milestone: tests pass, the build is clean, the core flow works end to end, the user reviews before the next phase.
+
+### 9. Record it
+
+- The plan in `tasks/plan.md` (template below). **Never overwrite an incomplete plan**: if the file exists with unchecked work for different work, stop and ask; if it is the same work being revised, update in place.
+- Milestones, sprints, stories, and tasks in Linear with labels, points, and `blocks` relations from the foundation task (`linear` concept mapping and templates). The plan's task list is an ordered index of Linear ids, never a duplicate checklist. `tasks/todo.md` is used only when no tracker is configured.
+- The user reviews and approves the plan before execution.
+
+### 10. Close every sprint with a review
+
+Delivered points; spilled-over points, each re-pointed with the reason, never silently carried; estimation error per ticket with the cause; unplanned work pulled in; blockers hit; the capacity for the next sprint. Posted as the sprint review on the cycle (`linear` sprint record). Re-cut the milestone when the review says the plan is wrong.
+
+### 11. Keep the design current
+
+Update the service `HLD.md` and `LLD.md` with the sections the plan defines.
+
+## Scope discipline
+
+- Requirements are gathered before they are cut; phased PRDs and milestoned stories keep scope creep out (`prd-writing`).
+- Discovered work is classified before it enters scope: MVP requirement, MVP blocker, or later. Only the first two enter automatically; everything else becomes a ticket in the backlog with a reason. Deferred work is always marked explicitly.
+- Every story carries the PM's success target from the PRD (`prd-writing`); engineers do not invent one.
+- Where a slice is technically impossible, the ticket says so (`continuous-delivery` L6).
+
+## Milestone record
 
 ```markdown
-## Task [N]: [Short descriptive title]
-
-**Description:** One paragraph explaining what this task accomplishes.
-
-**Acceptance criteria:**
-- [ ] [Specific, testable condition]
-- [ ] [Specific, testable condition]
-
-**Verification:**
-- [ ] Tests pass: [the repository's focused-test command]
-- [ ] Build succeeds: [the repository's build command]
-- [ ] Manual check: [description of what to verify]
-
-**Dependencies:** [Task numbers this depends on, or "None"]
-
-**Files likely touched:**
-- `src/path/to/file.ts`
-- `tests/path/to/test.ts`
-
-**Estimated scope:** [Small: 1-2 files | Medium: 3-5 files | Large: 5+ files]
+## Milestone <n>: <name>
+- Usable outcome: <what a user can do after this>
+- Budget: <input>/<output> tokens from the team allocation (cost <x or UNKNOWN>)
+- Verification: `<command>` or <manual flow>
+- Foundation task: <ticket> (owner)
+- Sprints: <sprint 1: dates, capacity, planned points> · <sprint 2: ...>
+- Stories and tasks: <ticket ids, with depends-on and points>
+- Deferred to later milestones: <list, with reason>
 ```
 
-### Step 5: Order and Checkpoint
-
-Arrange tasks so that:
-
-1. Dependencies are satisfied (build foundation first)
-2. Each task leaves the system in a working state
-3. Verification checkpoints occur after every 2-3 tasks
-4. High-risk tasks are early (fail fast)
-
-Add explicit checkpoints to the task list target:
+## Plan document template
 
 ```markdown
-## Checkpoint: After Tasks 1-3
-- [ ] All tests pass
-- [ ] Application builds without errors
-- [ ] Core user flow works end-to-end
-- [ ] Review with human before proceeding
-```
-
-## Task Sizing Guidelines
-
-| Size | Files | Scope | Example |
-|------|-------|-------|---------|
-| **XS** | 1 | Single function or config change | Add a validation rule |
-| **S** | 1-2 | One component or endpoint | Add a new API endpoint |
-| **M** | 3-5 | One feature slice | User registration flow |
-| **L** | 5-8 | Multi-component feature | Search with filtering and pagination |
-| **XL** | 8+ | **Too large — break it down further** | — |
-
-If a task is L or larger, it should be broken into smaller tasks. An agent performs best on S and M tasks.
-
-**When to break a task down further:**
-- It would take more than one focused session (roughly 2+ hours of agent work)
-- You cannot describe the acceptance criteria in 3 or fewer bullet points
-- It touches two or more independent subsystems (e.g., auth and billing)
-- You find yourself writing "and" in the task title (a sign it is two tasks)
-
-## Output Files
-
-- **Plan document:** Save the implementation plan to `tasks/plan.md`. This is always a markdown file — design decisions, risks, and open questions don't map cleanly onto individual tracker issues.
-- **Task list:** Record each task in the **task list target** (defined below).
-
-Create the `tasks/` directory if it does not exist.
-
-**Never overwrite an incomplete plan.** Before writing `tasks/plan.md` or `tasks/todo.md`, check whether they already exist and still contain unchecked tasks:
-
-- Same work being replanned (the user asked to revise or extend this plan) → update the existing files in place.
-- Different work → **stop and ask.** The unchecked tasks may be mid-build in another session. Do not delete, overwrite, or rename the existing files on your own; present the conflict and let the user decide (finish the old plan first, explicitly discard it, or tell you where the new plan should go).
-
-The same rule applies to an external task list target: never bulk-close or delete another plan's open tracker items to make room for new ones.
-
-### Task List Target
-
-The task list target is where tasks and checkpoints are recorded. It is defined once, here; every other reference in this skill defers to it.
-
-- **Default: a checklist-style markdown file at `tasks/todo.md`.** This is the convention the `/build` command and other downstream tooling expect. Use it unless the project says otherwise.
-- **External tracker:** if the project's agent rules (`CLAUDE.md`, `AGENTS.md`, etc.) or the user designate an issue tracker (e.g. GitHub Issues, Jira, Linear, `bd`/beads), create one tracker item per task instead of writing `tasks/todo.md`. Map the Step 4 structure onto the tracker's fields: acceptance criteria and verification steps in the item body, dependencies via the tracker's linking mechanism (`bd dep add`, "blocked by", etc.). Record Step 5 checkpoints as tracker items too, or as a checklist in the plan document if the tracker has no natural equivalent.
-
-When using an external tracker, note it in `tasks/plan.md` (e.g. "Tasks tracked in Linear project FOO") so downstream steps and future sessions know where to look, and keep the plan document's Task List section as an ordered index of tracker item IDs or links rather than a duplicate checklist.
-
-## Plan Document Template
-
-```markdown
-# Implementation Plan: [Feature/Project Name]
+# Implementation Plan: <feature>
 
 ## Overview
-[One paragraph summary of what we're building]
+<one paragraph>
 
-## Architecture Decisions
-- [Key decision 1 and rationale]
-- [Key decision 2 and rationale]
+## Decisions
+<links to the HLD tradeoffs and ADRs this plan builds on>
 
-## Task List
+## Milestones
+<milestone records, in order>
 
-### Phase 1: Foundation
-- [ ] Task 1: ...
-- [ ] Task 2: ...
+## Task index
+<ordered Linear ids per milestone and sprint; checkpoints between phases>
 
-### Checkpoint: Foundation
-- [ ] Tests pass, builds clean
-
-### Phase 2: Core Features
-- [ ] Task 3: ...
-- [ ] Task 4: ...
-
-### Checkpoint: Core Features
-- [ ] End-to-end flow works
-
-### Phase 3: Polish
-- [ ] Task 5: ...
-- [ ] Task 6: ...
-
-### Checkpoint: Complete
-- [ ] All acceptance criteria met
-- [ ] Ready for review
-
-## Risks and Mitigations
+## Risks and mitigations
 | Risk | Impact | Mitigation |
-|------|--------|------------|
-| [Risk] | [High/Med/Low] | [Strategy] |
+|---|---|---|
 
-## Open Questions
-- [Question needing human input]
+## Open questions
+<what needs the user>
 ```
-
-When tasks live in an external tracker, keep the Task List section above as an ordered index of tracker item IDs or links instead of a duplicate checklist.
-
-## Parallelization Opportunities
-
-When multiple agents or sessions are available:
-
-- **Safe to parallelize:** Independent feature slices, tests for already-implemented features, documentation
-- **Must be sequential:** Database migrations, shared state changes, dependency chains
-- **Needs coordination:** Features that share an API contract (define the contract first, then parallelize)
 
 ## Common Rationalizations
 
 | Rationalization | Reality |
 |---|---|
-| "I'll figure it out as I go" | That's how you end up with a tangled mess and rework. 10 minutes of planning saves hours. |
-| "The tasks are obvious" | Write them down anyway. Explicit tasks surface hidden dependencies and forgotten edge cases. |
-| "Planning is overhead" | Planning is the task. Implementation without a plan is just typing. |
-| "I can hold it all in my head" | Context windows are finite. Written plans survive session boundaries and compaction. |
-| "The old `tasks/plan.md` is stale, I'll just replace it" | Unchecked tasks may be mid-build in another session. Overwriting them destroys work state that exists nowhere else. Stop and ask. |
+| "I'll figure it out as I go." | That is how work becomes a tangled mess. Ten minutes of planning saves hours; written plans survive session boundaries. |
+| "The tasks are obvious." | Write them down anyway. Explicit tasks surface hidden dependencies and forgotten edge cases. |
+| "We'll build everything then integrate." | Integration at the end is where projects die. A usable slice per milestone finds problems early. |
+| "Milestone 1 can include the nice UI too." | If it is not needed to exercise the outcome, it is milestone 2. |
+| "Everyone can start now, we'll merge conflicts later." | Concurrent edits to shared definitions cause rework. The foundation task removes that. |
+| "More engineers in parallel means faster." | Only when it does not raise integration risk. Capacity and disjoint paths keep integration safe. |
+| "This discovered work is obviously in scope." | It is classified first; only MVP requirements and MVP blockers enter automatically. |
+| "I'll pick a success target myself." | The PM sets it in the PRD. |
+| "Budgets are the PM's problem." | The budget decides routing. Without it you cannot route. |
+| "We'll just move unfinished tickets to the next sprint." | Silent carry-over hides estimation error. Record the spillover, its reason, and re-point it. |
+| "The old plan is stale, I'll replace it." | Unchecked tasks may be mid-build in another session. Stop and ask. |
 
 ## Red Flags
 
-- Starting implementation without a written task list
-- Overwriting a `tasks/plan.md` or `tasks/todo.md` that still has unchecked tasks for different work, without asking
-- Writing `tasks/todo.md` when the project has designated an external tracker (or scattering tasks across both)
-- Tasks that say "implement the feature" without acceptance criteria
-- No verification steps in the plan
-- All tasks are XL-sized
-- No checkpoints between tasks
-- Dependency order isn't considered
+- Implementation started without a plan and tickets; tasks in a markdown list but not in Linear.
+- Milestone 1 has no usable outcome, only infrastructure; a milestone with no verification command.
+- Two ready tasks list the same path; a task depends on something not merged and not the foundation task.
+- A task that says "implement the feature" with no acceptance criteria or verification; a story above 8 points in a sprint unsplit; all tasks at the maximum size.
+- Sprint 1 of a milestone does not end in something a user can exercise.
+- No checkpoints between phases; dependency order not considered; high-risk work left for last.
+- Discovered work entering scope without a class; a story with no success target.
+- A sprint closed without a review, or with tickets carried over without a reason.
+- A `tasks/plan.md` with unchecked tasks for different work overwritten without asking.
 
 ## Verification
 
-Before starting implementation, confirm:
+Before execution starts:
 
-- [ ] Every task has acceptance criteria
-- [ ] Every task has a verification step
-- [ ] Task dependencies are identified and ordered correctly
-- [ ] Tasks are recorded in the task list target (default `tasks/todo.md`)
-- [ ] No pre-existing incomplete plan was overwritten without explicit user confirmation
-- [ ] No task touches more than ~5 files
-- [ ] Checkpoints exist between major phases
-- [ ] The human has reviewed and approved the plan
+- [ ] Every milestone has a usable outcome, budget, verification, and a foundation task where shared definitions are introduced; MVP stories are first.
+- [ ] Every design module maps to a story; every story is INVEST and at most 8 points; dependencies are acyclic.
+- [ ] Every task has one goal, testable acceptance criteria, a verification command that runs, owned paths disjoint from every in-flight task, and dependencies only on merged work or the foundation task.
+- [ ] Every sprint has a record with capacity and planned points; sprint 1 starts with the foundation task and ends in a usable slice.
+- [ ] Deferred and discovered work is classified and marked with a reason; every story carries its success target.
+- [ ] The plan is in `tasks/plan.md` with an index of Linear ids, no incomplete plan was overwritten, and the user approved it.
+
+At every sprint close:
+
+- [ ] The review records delivered, spilled (re-pointed, with reasons), estimation error, unplanned work, and next capacity.
 
 ## See Also
 
-Acceptance criteria are per-task and answer "did we build the right thing?". They sit on top of the project-wide Definition of Done, the standing bar every task clears before it counts as done. See `../../references/definition-of-done.md`.
+Acceptance criteria are per task and answer "did we build the right thing?". They sit on top of the project-wide Definition of Done, the standing bar every task clears before it counts as done: `../../references/definition-of-done.md`.

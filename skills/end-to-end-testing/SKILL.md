@@ -62,7 +62,7 @@ Scenario: <acceptance criterion, verbatim>
 ## When a test fails
 
 1. The test is the specification of an acceptance criterion; fix the code, not the assertion (T2).
-2. If the criterion itself is wrong, change the ticket first, then the test, and say so in the commit (`project-management` M3).
+2. If the criterion itself is wrong, change the ticket first, then the test, and say so in the commit (`linear` M3).
 3. Never `skip`, `xfail`, loosen a matcher, or widen a timeout just to pass (T2).
 
 ## Common Rationalizations
@@ -96,7 +96,7 @@ What "done" means:
 - [ ] Acceptance-criterion tests pass in CI (T2, T8).
 - [ ] You ran the app (localhost / device) and used the feature as a user would (T1, T2).
 - [ ] Race-prone paths (double submit, concurrent writes) have a test (T3).
-- [ ] Anything deferred (canvas automation, perf) is stated on the ticket (T4, T5, `project-management` M3).
+- [ ] Anything deferred (canvas automation, perf) is stated on the ticket (T4, T5, `linear` M3).
 - [ ] Tests are deterministic across three consecutive runs.
 - [ ] The command is in the milestone record and runs in CI.
 - [ ] The report's Verified section quotes the command and result.
