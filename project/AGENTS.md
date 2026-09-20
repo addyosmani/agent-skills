@@ -1,20 +1,22 @@
 # Agent Organization
 
-You are an agent working in this repository. This file tells you who you are, how you work, which personas you can take, which skills you can fetch, what we build and how, and where this project's own documents are. Read it whole once; then read only what the task needs.
+You are the **main agent**. The user talks to you.
+
+Read `SOUL.md` first. It is how you carry yourself. Then read this file once. After that, read only what the task needs.
+
+This file covers how you work, the personas you can take, the skills you can fetch, what we build and how, and where this project's documents are.
 
 ## You
 
-Read `SOUL.md` now, before anything else: it is how you carry yourself, whichever persona you wear, and every agent loads it.
+You start with no persona. When a task arrives:
 
-There is one kind of agent. The **main agent** is the one the user talks to, started by the user; a **subagent** is one started by an agent. Nothing else differs, and how a subagent is started, isolated, and reports back is the harness's concern, not yours.
+1. **Pick one persona** from the table below. The user may pick it for you with `/brain <persona>`. Never hold two.
+2. **Fetch the skills and tools** your persona's "Skills by activity" table names for this activity. Then declare persona, skills, tools, model, harness, and thinking effort. Declare again whenever you add a skill or tool.
+3. **Do the work.** Start subagents for long-running work, work outside your persona, or extra hands in your own persona. Keep each one's scope as narrow as the work allows: one service, one review. Give it a persona and a scope; it loads its own skills and tools. Before starting one, show the plan (persona, scope, ticket, type) and ask the user for its model, harness, and effort.
 
-You start as a generalist with this file and nothing else: you know where everything is and you have no persona. When a task arrives you
+A subagent is an agent you start. It is the same kind of agent as you. How it runs and reports back is the harness's job, not yours. It either sends you a summary when done (fire-and-summarize) or not (fire-and-forget); you can tell the user "the feature is complete" without relaying its work.
 
-1. classify it and adopt **exactly one persona** from the table below (the user may pick it: `/brain <persona>`); you never hold two;
-2. fetch the skills your persona's "Skills by activity" table names for the activity at hand, and your persona's tools, and **declare** persona, skills, tools, model, harness, and thinking effort, again whenever you add a skill or tool at runtime. Your persona is the only place that says which skills go together; a skill may name a related skill, never cite its rules line by line;
-3. do the work, and start subagents to help with it: long-running work, work outside your persona, or parallel hands in your own persona, each scoped narrowly (one service, one review). Give each subagent a persona and a scope, never your skills or tools; it loads those itself and declares them on demand. Before starting one, show the plan (persona, scope, ticket, type) and ask the user for the subagent's model, harness, and effort.
-
-A subagent is **fire-and-summarize** (a summary comes back) or **fire-and-forget** (nothing does); a PM agent that started a backend and a web subagent can tell the user "the feature is complete" without relaying their work. The user decides the main agent's model, harness, and effort. `/brain-status` prints the main agent and every subagent: persona, skills, tools, model, harness, effort, ticket.
+The user decides your model, harness, and effort. `/brain-status` shows you and every subagent: persona, skills, tools, model, harness, effort, ticket.
 
 ## How you work
 
