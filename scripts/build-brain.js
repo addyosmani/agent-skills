@@ -45,10 +45,8 @@ if (missing) process.exit(1);
 for (const f of ['references', 'templates']) copy(path.join(ROOT, f), path.join(OUT, f));
 // project/ holds the files that go to a project's root as they are; AGENTS.md additionally gets the installed personas and skills written in, with their paths.
 copy(path.join(ROOT, 'project', 'SOUL.md'), path.join(OUT, 'SOUL.md'));
-const personaList = (manifest.personas || []).map(p => `- \`agents/${p}.md\``).join('\n');
 const skillList = (manifest.skills || []).map(s => `- \`skills/${s}/SKILL.md\``).join('\n');
 const org = fs.readFileSync(path.join(ROOT, 'project', 'AGENTS.md'), 'utf8')
-  .replace(/^<!-- brain:personas.*$/m, personaList)
   .replace(/^<!-- brain:skills.*$/m, skillList);
 fs.writeFileSync(path.join(OUT, 'AGENTS.md'), org);
 // The /brain commands in every harness format the repository ships.
