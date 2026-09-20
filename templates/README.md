@@ -1,6 +1,6 @@
 # Documents
 
-The index for progressive discovery. Start here; open only what the task needs. Every document is short, high level, current, and lives in the repository, never in the agent brain. Diagrams are code (Mermaid, draw.io, drawdb). Each markdown document may have an interactive HTML rendering for humans next to it.
+The index for progressive discovery. Start here; open only what the task needs.
 
 | Document | Answers | Level |
 |---|---|---|
@@ -11,9 +11,9 @@ The index for progressive discovery. Start here; open only what the task needs. 
 | [DOMAIN.md](DOMAIN.md) | the domain design product, business, and tech all refer to | project |
 | [DEVELOPMENT.md](DEVELOPMENT.md) · [DEPLOYMENT.md](DEPLOYMENT.md) · [DEBUGGING.md](DEBUGGING.md) | how to run, ship, and diagnose it | project |
 | `AGENTS.md` · `SOUL.md` | the organization and how every agent carries itself; copied from the brain as they are | project root |
-| `CONVENTIONS.md` | the rules; copied from the brain, not overridable | project |
 | [CHANGELOG.md](CHANGELOG.md) | what shipped, for web, mobile, and backend | project |
 | [LEARNINGS.md](LEARNINGS.md) | what the user taught the agents | project |
+| [ADR.md](ADR.md) | one decision worth preserving, in `decisions/` | project, and per service |
 | `<service>/docs/` | that service's PRD, HLD, LLD, and RCAs | service |
 
-Not every feature needs a doc update. The ticket and the commit message carry most of the reasoning. Compact a document that grows by extracting the stable part into a skill.
+Whether, how, and where a document is written is `documentation` W1–W11.

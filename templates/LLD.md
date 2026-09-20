@@ -1,6 +1,6 @@
 # <feature or service> Low-Level Design
 
-Anyone with the `lld` skill may edit. Reviewed by the user before it counts. Kept in sync with the code: the PR that changes a contract, schema, or type updates this file. Principles: illegal states unrepresentable, validation at the edges only, typed ids and enums, no raw strings, injected dependencies and clocks, composition over inheritance, flat feature-first layout, comments rare and only for the why.
+Anyone with the `lld` skill may edit. Reviewed by the user before it counts. Kept in sync with the code: the PR that changes a contract, schema, or type updates this file. The design satisfies `coding-standards`, `domain-modeling`, and `database`; each section says where.
 
 - HLD: <link> · Schema: `schema.ddb` (drawdb) · OpenAPI: `<path>` → generated client `<sdk path>`
 
