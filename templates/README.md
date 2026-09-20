@@ -2,6 +2,8 @@
 
 The index for progressive discovery. Start here; open only what the task needs.
 
+Linear team: `<TEAM-KEY>` (one per repository; its workflow is created by `skills/linear/scripts/create-workflow.sh`).
+
 A template is the anatomy of a document: its headings and a one-line hint per section, nothing else. How to fill it, and the rules it must satisfy, are the skill named in its first line; a template never restates them.
 
 | Document | Answers | Level |

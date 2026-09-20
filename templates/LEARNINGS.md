@@ -9,8 +9,8 @@ The test is one question: **would this change a rule, a skill, or a persona?** I
 | Kind | Record when |
 |---|---|
 | `feedback` | The user corrects something a rule, skill, or persona told you to do, or corrects the same kind of output twice. Not a one-off preference about one piece of work. |
-| `gap` | A rule or skill was silent, ambiguous, or wrong for the situation you were in, and you had to decide without it. |
-| `workaround` | You wrote code, a script, or a manual step to get around a missing capability, a tool limitation, or a hole in the conventions. |
+| `gap` | A rule or skill was silent, ambiguous, or wrong for the situation you were in, and you had to decide without it. Includes the tracker: a workflow state, a label, or a template Linear should have had and did not. |
+| `workaround` | You wrote code, a script, or a manual step to get around a missing capability, a tool limitation, or a hole in the conventions. Includes bending Linear: the same state skipped every time, a field left blank every time, a label or a comment invented to carry what no field holds, work tracked outside it. |
 | `override` | The user explicitly directed you to do something a convention forbids or does differently. Do it, then record it; the same override twice means the rule is wrong. |
 
 ## Procedure

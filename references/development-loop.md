@@ -4,11 +4,7 @@ How a development agent moves from a request to a deployed change. Loaded by the
 
 ## The loop
 
-```
-spec → plan (PRD → HLD → LLD) → code + tests → PR → review → QA → merge → build → deploy
-```
-
-It is the default, not the law. Given a requirement, an agent may decide to skip a step ("I'll write the code without a design doc"). The decision and its reason go on the ticket, never only in chat. The user may short-circuit the loop ("write code and deploy"); record that too.
+The loop is the Linear workflow (`linear` § Workflow): one ordered set of states from the user's request to production, on the issue itself, so the ticket always shows where the work is. It is the default, not the law. Not every issue needs every state: a bug skips spec and design, a small issue starts at `Todo`, the user may short-circuit ("write code and deploy"). Every skipped state is recorded on the issue with the reason, never only in chat.
 
 Every HLD, LLD, and PRD is reviewed by the user before it counts as approved.
 

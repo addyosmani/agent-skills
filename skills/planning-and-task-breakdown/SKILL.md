@@ -10,7 +10,7 @@ category: process
 
 Favor quick, incremental delivery over a complete feature. The hierarchy is project → milestones → sprints → stories → tasks. Each milestone gives a user something they can use; each sprint is a fixed time box with a points capacity; each task is small enough to implement, test, and verify in one focused session, with one goal and owned paths disjoint from every other task in flight; shared definitions are built first by one engineer so everyone else can work in parallel. Sprint reviews make spillover and estimation error visible so the next sprint is planned better.
 
-The plan lives in `tasks/plan.md`; milestones, sprints, stories, and tasks live in Linear. This skill decides what they contain; `linear` says how to create them.
+The plan lives in `tasks/plan.md`; the work lives in Linear, in Linear's terms: a feature is a **project**, divided into **milestones**, each made of **issues**; an issue is the smallest unit tracked and the one an agent works on (what this skill calls a task); a story from the PRD is delivered by the issues of the milestone that ships it; a sprint is a **cycle**. This skill decides what they contain; `linear` says how to create them.
 
 ## When to Use
 
