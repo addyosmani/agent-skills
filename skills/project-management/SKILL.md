@@ -48,7 +48,7 @@ Tool: **Linear for all project management flow**. The rules below (M1–M18) say
 | ID | Rule |
 | --- | --- |
 | M15 | **Every meaningful design decision records problem, options, choice, rationale, and reversibility; one-way doors are named.** |
-| M16 | Scale infrastructure needs a current requirement recorded in `DECISIONS.md`. |
+| M16 | Scale infrastructure needs a current requirement recorded in an ADR (`adrs`). |
 | M17 | Stack deviations are "recorded decisions" (the project's `docs/ARCHITECTURE.md`). |
 | M18 | Every HLD, LLD, and PRD is reviewed by the user. |
 
@@ -116,7 +116,7 @@ Every state change, reassignment, or re-pointing is a structured status update o
 - Discovered work entering scope without a scope class (M11).
 - A feature with no PM-set success target or PRD-named metrics (M13, M14).
 - A design decision without options, rationale, or reversibility; a one-way door not named (M15).
-- Scale infrastructure with no current requirement in `DECISIONS.md` (M16).
+- Scale infrastructure with no current requirement in an ADR (M16).
 - An HLD, LLD, or PRD treated as final without user review (M18).
 - A state change with no structured status update (Changes).
 

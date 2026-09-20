@@ -30,7 +30,7 @@ The rules for every persistent store in the project, each with an ID (D1–D11) 
 | D8 | **Be deliberate about DB models** during planning; the HLD/LLD includes the DB schema. |
 | D9 | Once the DB model and the API contracts are decided, backend services work concurrently. |
 | D10 | DB model is separate from domain and API models; persistence models never leak into public APIs. |
-| D11 | No sharding, caches, or read replicas without a current requirement recorded in `DECISIONS.md`. |
+| D11 | No sharding, caches, or read replicas without a current requirement recorded in an ADR (`adrs`). |
 
 ## Migration checklist
 
@@ -50,7 +50,7 @@ The rules for every persistent store in the project, each with an ID (D1–D11) 
 | "The ORM models are the schema." | The schema lives separately from the code (D5). |
 | "The schema diagram can be drawn later, or lives in a wiki." | It is a drawdb file next to `LLD.md`, committed and reviewed like code, updated in the same PR (D6, D7). |
 | "Return the row as the API response, it's the same shape." | Persistence models never leak into public APIs (D10). |
-| "We'll need a cache or a read replica eventually, add it now." | Not without a current requirement recorded in `DECISIONS.md` (D11). |
+| "We'll need a cache or a read replica eventually, add it now." | Not without a current requirement recorded in an ADR (`adrs`) (D11). |
 
 ## Red Flags
 
@@ -60,7 +60,7 @@ The rules for every persistent store in the project, each with an ID (D1–D11) 
 - A persistent service with no drawdb schema file or DB design document, or a schema change in a PR that leaves them untouched (D6, D7).
 - A DB schema decided during implementation instead of in the HLD/LLD (D8).
 - A persistence model in a public API response (D10).
-- Sharding, a cache, or a read replica with no `DECISIONS.md` entry (D11).
+- Sharding, a cache, or a read replica with no ADR (D11).
 
 ## Verification
 
@@ -70,4 +70,4 @@ The rules for every persistent store in the project, each with an ID (D1–D11) 
 - [ ] The schema lives separately from the code (D5).
 - [ ] The drawdb schema file and the DB design document are updated in the same PR (D6, D7).
 - [ ] The DB schema is in the HLD/LLD and the DB model is separate from the domain and API models (D8, D10).
-- [ ] Any sharding, cache, or read replica has a current requirement recorded in `DECISIONS.md` (D11).
+- [ ] Any sharding, cache, or read replica has a current requirement recorded in an ADR (`adrs`) (D11).

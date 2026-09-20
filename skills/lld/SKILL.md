@@ -52,10 +52,10 @@ A design, unlike a line of code, decides these rules once for the whole module. 
 
 ## Document mechanics
 
-- Write in the `templates/` anatomy; fill only what the work demands (`documentation-and-adrs` W2); keep it short and high level (`documentation-and-adrs` W7).
+- Write in the `templates/` anatomy; fill only what the work demands (`documentation` W2); keep it short and high level (`documentation` W4).
 - `LLD.md` with the drawdb schema beside it; Mermaid inline.
-- Store in `docs/` or `<service>/docs/`, never in the agent brain (`documentation-and-adrs` W12). Produce the Markdown and HTML renderings (`documentation-and-adrs` W9).
-- Submit for user review (`documentation-and-adrs` W3).
+- Store in `docs/` or `<service>/docs/`, never in the agent brain (`documentation` W9). Produce the Markdown and HTML renderings (`documentation` W6).
+- Submit for user review (`documentation` W3).
 
 ## Common Rationalizations
 
