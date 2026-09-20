@@ -3,7 +3,7 @@
   "trigger": {
     "positive": [
       {
-        "prompt": "Implement the next task from the plan as a small verifiable slice",
+        "prompt": "Implement the next task incrementally: one small verifiable slice, tested and committed before the next",
         "top_k": 3
       },
       {

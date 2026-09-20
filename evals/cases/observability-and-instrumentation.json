@@ -13,6 +13,10 @@
       {
         "prompt": "What alerts should we page on for this new endpoint?",
         "top_k": 3
+      },
+      {
+        "prompt": "Instrument our coding-agent organization so I can see its hierarchy, loaded skills and docs, context usage, tool calls, turns, tokens, and cost",
+        "top_k": 3
       }
     ],
     "negative": [

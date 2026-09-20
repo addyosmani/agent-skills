@@ -11,7 +11,7 @@
         "top_k": 3
       },
       {
-        "prompt": "This test passed yesterday and fails today, figure out what broke",
+        "prompt": "This test passed yesterday and fails today, debug what broke",
         "top_k": 3
       }
     ],

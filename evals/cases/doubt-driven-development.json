@@ -3,7 +3,7 @@
   "trigger": {
     "positive": [
       {
-        "prompt": "This change touches production auth, cross-examine every assumption before we proceed",
+        "prompt": "This change touches production auth, give every assumption an adversarial review before we proceed",
         "top_k": 3
       },
       {
