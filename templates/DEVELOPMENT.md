@@ -1,35 +1,80 @@
 # Development
 
-How to run this project locally.
+Everything an agent needs to set up, run, test, and debug this project. Kept current: the PR that changes a command or a setup step updates this file.
 
-## Local setup
+## Local stack
 
-<prerequisites, containers, environment variables, seed or snapshot>
+<prerequisites and versions; environment variables and where the example file is; how secrets are obtained, never their values>
 
-## Dev commands
+### Containers
+
+| Purpose | Command |
+|---|---|
+| Start the stack | |
+| Start one service | |
+| Stop and remove | |
+| Logs of a service | |
+| Rebuild after a dependency change | |
+
+### Data
+
+<how to take a snapshot of the database or run the seed script; how to reset>
+
+### Per-agent environment
+
+<the commands that create and remove one agent's worktree, containers, and data here>
+
+## Commands
+
+### Dev
 
 | Purpose | Command |
 |---|---|
 | Install | |
-| Lint and type check | |
+| Lint | |
+| Format | |
+| Type check | |
 | Generate clients | |
+| Migrate | |
 
-## Run commands
+### Run
 
-| Surface | Command |
-|---|---|
-| Backend | |
-| Web | |
-| Mobile | |
+| Surface | Locally | Remotely (SSH) |
+|---|---|---|
+| Backend | | |
+| Web | | |
+| Mobile | | |
 
-## Testing
+<how to reach a remote environment: host, user, how access is granted; what may and may not be run there>
+
+### Test
 
 | Level | Command |
 |---|---|
 | Unit | |
 | Integration | |
 | End to end | |
+| Milestone verification | |
 
-## Per-agent environment
+## Debugging
 
-<the commands that create and remove one agent's worktree, containers, and data here (`development-setup`)>
+### Where to look
+
+| Signal | Where | How |
+|---|---|---|
+| Logs | | |
+| Metrics | | |
+| Errors | | |
+| Traces | | |
+
+### Steps
+
+<the order to work through a failure here: reproduce, localize, reduce, fix, guard; which tools at each step; the emulator or the browser for a client>
+
+### Reproducing locally
+
+<how to bring up a copy with production-like data: snapshot or seed, containers, mocked AWS; the emulator for mobile>
+
+### Known failure modes
+
+<one line each; the RCA in the service's `docs/` has the depth>

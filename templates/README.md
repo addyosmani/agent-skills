@@ -10,7 +10,7 @@ A template is the anatomy of a document: its headings and a one-line hint per se
 | [PRD.md](PRD.md) | what the product must do, from the user's and the backend's point of view | project; per service where it makes sense |
 | [HLD.md](HLD.md) · [LLD.md](LLD.md) | boundaries and APIs; types, UML, schema, contracts | project, and per service |
 | [DOMAIN.md](DOMAIN.md) | the domain design product, business, and tech all refer to | project |
-| [DEVELOPMENT.md](DEVELOPMENT.md) · [DEPLOYMENT.md](DEPLOYMENT.md) · [DEBUGGING.md](DEBUGGING.md) | how to run, ship, and diagnose it | project |
+| [DEVELOPMENT.md](DEVELOPMENT.md) · [DEPLOYMENT.md](DEPLOYMENT.md) | how to set up, run, test, and debug it; how to ship it | project |
 | `AGENTS.md` · `SOUL.md` | the organization and how every agent carries itself; copied from the brain as they are | project root |
 | [CHANGELOG.md](CHANGELOG.md) | what shipped, for web, mobile, and backend | project |
 | [LEARNINGS.md](LEARNINGS.md) | what the user taught the agents | project |

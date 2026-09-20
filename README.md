@@ -18,7 +18,7 @@ you ──▶ /brain-status                   who is running what, on which mode
 | `agents/` | personas: root, product manager, backend, web, and mobile engineers, scout, the reviewers |
 | `skills/` | the flat skill dump, including the convention skills, each a table of rules with ids, none overridable; `manifest.json` names the ones in the brain |
 | `references/` | ticket anatomy, commit and PR anatomy, review guidelines, the development loop, the documentation map, context scope, the upstream checklists |
-| `templates/` | the documents a project fills in: ARCHITECTURE, PRD, HLD, LLD, DOMAIN, DEVELOPMENT, DEPLOYMENT, DEBUGGING, CHANGELOG, LEARNINGS |
+| `templates/` | the documents a project fills in: ARCHITECTURE, PRD, HLD, LLD, DOMAIN, ADR, DEVELOPMENT, DEPLOYMENT, CHANGELOG, LEARNINGS |
 | `docs/` | skill and persona anatomies, per-tool setup guides |
 | `evals/` | trigger and routing evals for every skill |
 

@@ -5,9 +5,12 @@ Docs
     - infra.md
     - other relevant sections
 4 mobile arch.md
+
 2. development.md
-3. Deployment.md
 4. Debugging.md
+
+3. Deployment.md
+
 5. PRD.md 
     at project level 
     at each service level (wherever it makes sense)

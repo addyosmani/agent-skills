@@ -8,7 +8,7 @@ Which document holds what, and where it lives.
 | `PRD.md` | the product from the user's and the backend's point of view, phased, with success targets | `docs/`, and `<service>/docs/` where it makes sense |
 | `HLD.md`, `LLD.md` | boundaries, APIs, scale; types, UML, schema, contracts | `docs/` for the project, `<service>/docs/` per service |
 | `DOMAIN.md` | the domain design product, business, and tech refer to | `docs/` |
-| `DEVELOPMENT.md`, `DEPLOYMENT.md`, `DEBUGGING.md` | local setup and commands; pipeline and environments; where to look | `docs/` |
+| `DEVELOPMENT.md`, `DEPLOYMENT.md` | local stack, commands (local and over SSH), lint, containers, testing, debugging steps, and how to reproduce locally; pipeline and environments | `docs/` |
 | `CHANGELOG.md` | what shipped, per release, for web, mobile, and backend | `docs/` |
 | `LEARNINGS.md` | what the user taught the agents | `docs/` |
 | RCA | one file per incident, template to come | `<service>/docs/` |
