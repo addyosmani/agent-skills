@@ -6,8 +6,7 @@ A template is the anatomy of a document: its headings and a one-line hint per se
 
 | Document | Answers | Level |
 |---|---|---|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | what exists, the stack, the features, where the API reference is | project |
-| [BACKEND-ARCHITECTURE.md](BACKEND-ARCHITECTURE.md) · [WEB-ARCHITECTURE.md](WEB-ARCHITECTURE.md) · [MOBILE-ARCHITECTURE.md](MOBILE-ARCHITECTURE.md) | how each surface is put together; backend carries infra | surface |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | what exists, the stack, the features, where the API reference is, and how the backend, web, and mobile surfaces are put together | project; a surface or service may keep its own in its folder |
 | [PRD.md](PRD.md) | what the product must do, from the user's and the backend's point of view | project; per service where it makes sense |
 | [HLD.md](HLD.md) · [LLD.md](LLD.md) | boundaries and APIs; types, UML, schema, contracts | project, and per service |
 | [DOMAIN.md](DOMAIN.md) | the domain design product, business, and tech all refer to | project |

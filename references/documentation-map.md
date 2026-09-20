@@ -4,8 +4,7 @@ Which document holds what, and where it lives.
 
 | Document | Holds | Where |
 |---|---|---|
-| `ARCHITECTURE.md` | project structure, tech stack, features (linking the PRD), the API reference (Swagger link), links to the surface docs | `docs/` |
-| `BACKEND-ARCHITECTURE.md`, `WEB-ARCHITECTURE.md`, `MOBILE-ARCHITECTURE.md` | how each surface is put together; backend carries infra | `docs/` |
+| `ARCHITECTURE.md` | project structure, tech stack, features (linking the PRD), the API reference (Swagger link), and the backend, web, and mobile architecture | `docs/`; a surface or service may keep its own in its folder's `docs/`, linked from here |
 | `PRD.md` | the product from the user's and the backend's point of view, phased, with success targets | `docs/`, and `<service>/docs/` where it makes sense |
 | `HLD.md`, `LLD.md` | boundaries, APIs, scale; types, UML, schema, contracts | `docs/` for the project, `<service>/docs/` per service |
 | `DOMAIN.md` | the domain design product, business, and tech refer to | `docs/` |
