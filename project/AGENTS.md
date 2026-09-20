@@ -184,5 +184,5 @@ Model layering (API, domain, DB) is `coding-standards`; bounded contexts, aggreg
 - `docs/README.md` is the index of this project's documents. Read it first, then only what the task needs.
 - `docs/ARCHITECTURE.md` is the map of the code, the stack, the features, and where a change belongs; each service keeps its `HLD.md` and `LLD.md` in its own `docs/`.
 - `docs/PRD.md` says what the product must do; `docs/DOMAIN.md` is the vocabulary; `docs/DEVELOPMENT.md` is how to set up, run, test, and debug it; `docs/decisions/` holds the ADRs; `docs/LEARNINGS.md` is where you record what you learn.
-- The Linear team key is at the top of `docs/README.md`. When a project starts, or the team lacks the workflow states, run `skills/linear/scripts/create-workflow.sh <TEAM-KEY>` with `LINEAR_API_KEY` set; it creates the missing states and touches nothing else (`linear`).
+- The Linear team key and API key are `LINEAR_TEAM` and `LINEAR_API_KEY` in the local `.env`, never in the repository. The team's workflow states are created once by the user with `skills/linear/scripts/create-workflow.sh`; when a project starts, check the states exist and ask the user to run the script if any is missing (`linear`).
 - `/brain [persona] [request]` starts a session in a persona; `/brain-status` shows who is running what.

@@ -33,16 +33,16 @@ Linear is the source of truth for all work: what was asked, what was decided, wh
 
 ## Setup
 
-- **The team.** Every project this organisation runs has one Linear team; its key is recorded in the project's `docs/README.md`. One team per repository unless the user says otherwise.
-- **The workflow.** When a project starts, or when the team lacks the states, run `skills/linear/scripts/create-workflow.sh <TEAM-KEY>` with `LINEAR_API_KEY` set. It reads `skills/linear/workflow.json`, enables triage, creates the missing states in their categories, never touches existing ones, and prints the team's states as JSON. Then create the labels below once.
-- **The MCP server** (`mcp.json` in this skill) authenticates with OAuth on first use. Tools with only a global config and the CLI fallback are in `../../references/tool-auth.md`. Verify with a read-only call before writing.
+- **The team and the key** come from the project's local `.env`, never from the repository: `LINEAR_TEAM` is the team key, `LINEAR_API_KEY` a personal API key. One team per repository unless the user says otherwise.
+- **The workflow** is created once per team by the user: `skills/linear/scripts/create-workflow.sh` reads `LINEAR_TEAM` and `LINEAR_API_KEY` from the environment and `skills/linear/workflow.json` from this skill, enables triage, creates the missing states in their categories, never touches existing ones, and prints the team's states as JSON. When a project starts, list the team's states; if any of the workflow's states is missing, ask the user to run the script. Create the labels below yourself, once.
+- Verify with a read-only call before writing anything.
 
 ## Linear objects and how we use them
 
 | Linear object | What it is | How we use it |
 |---|---|---|
 | **Workspace** | the container for all teams, projects, and issues | one |
-| **Team** | owns its workflow, triage, and cycles | one per repository; its key in `docs/README.md`; the workflow created once by the script |
+| **Team** | owns its workflow, triage, and cycles | one per repository; its key is `LINEAR_TEAM` in the local `.env`; the workflow created once by the user with the script, checked by you |
 | **Initiative** | a strategic effort above projects | optional: a roadmap theme grouping several feature projects; the PM owns it |
 | **Project** | **a feature**: a clear outcome or completion date, comprised of issues and optional documents; can be shared across teams | one per feature. Lead = the persona driving it; members = the personas working it; description = `templates/project.md`; documents = the PRD, HLD, and ADR links; a target date at the certainty the user has; a project update (`templates/project-update.md`) at every milestone close and when health changes |
 | **Milestone** | a stage of a project, dividing its issues; progress is the percentage of its issues started and completed; belongs to one project | **a usable outcome**: something a user can exercise after it; ordered by earliest usable outcome; an optional target date; description = the milestone record from `planning-and-task-breakdown`; the first milestone is the MVP |
@@ -105,7 +105,7 @@ The agent doing the work moves the issue, with a status update on every move (M5
 | "I'll explain the reasoning in a code comment." | The issue carries the reasoning; the code carries the issue id (M4). |
 | "A one-line comment is enough for this state change." | Without the structured update nobody can later tell why the issue moved (M5). |
 | "I'll track this small thing in the PR description / a notes file." | Linear is the single place; things that live elsewhere get lost and cannot be queried, assigned, or linked (M6). |
-| "The MCP call failed, I'll note the id I expected." | A guessed identifier corrupts every report that quotes it. Report the failure and retry once (M7). |
+| "The call failed, I'll note the id I expected." | A guessed identifier corrupts every report that quotes it. Report the failure and retry once (M7). |
 | "A feature is just a big issue." | A feature is a project: it has milestones, a lead, documents, and project updates; an issue is one unit of work inside a milestone. |
 | "I'll nest sub-issues to organise the milestone." | Milestones organise a project's issues. A sub-issue is only for an issue too large to be one issue and too small to be a project. |
 | "The team's states are close enough; I'll map ours onto them." | Run the script; it adds what is missing and touches nothing else. Every project uses the same workflow. |
@@ -123,7 +123,7 @@ The agent doing the work moves the issue, with a status update on every move (M5
 
 ## Verification
 
-- [ ] The team has the workflow states and labels; its key is in `docs/README.md`.
+- [ ] The team has the workflow states and labels; `LINEAR_TEAM` and `LINEAR_API_KEY` are in the local `.env`, not in the repository.
 - [ ] The issue exists in the right project and milestone before any work; a large requirement has its project, milestones, and issues (M1).
 - [ ] A request is filed with `templates/request.md` and carries the prompt verbatim; skipped states and overrides are recorded (M2, M3).
 - [ ] The issue is in the workflow state its work is in; a skipped state has a status update with the reason (M3, M5).

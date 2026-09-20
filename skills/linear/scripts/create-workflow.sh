@@ -1,8 +1,9 @@
 #!/bin/bash
 # create-workflow.sh — create the organisation's workflow states in a Linear team.
 #
-# Usage: skills/linear/scripts/create-workflow.sh <TEAM-KEY>      (or LINEAR_TEAM=<key>)
-# Needs: LINEAR_API_KEY (a Linear personal API key), python3, network access.
+# Usage: skills/linear/scripts/create-workflow.sh            LINEAR_TEAM and LINEAR_API_KEY from the local .env
+#        skills/linear/scripts/create-workflow.sh <TEAM-KEY> overrides LINEAR_TEAM
+# Run once per team by the user. Needs python3 and network access.
 #
 # Idempotent: reads the team's existing states, creates only the missing ones from
 # workflow.json next to this script's folder, enables triage on the team, and prints
@@ -12,8 +13,10 @@ set -e
 HERE="$(cd "$(dirname "$0")" && pwd)"
 WORKFLOW="$HERE/../workflow.json"
 TEAM_KEY="${1:-${LINEAR_TEAM:-}}"
-[ -n "$TEAM_KEY" ] || { echo "usage: create-workflow.sh <TEAM-KEY>  (or set LINEAR_TEAM)" >&2; exit 2; }
-[ -n "${LINEAR_API_KEY:-}" ] || { echo "set LINEAR_API_KEY to a Linear personal API key" >&2; exit 2; }
+[ -f .env ] && [ -z "${LINEAR_API_KEY:-}" ] && { set -a; . ./.env; set +a; }
+TEAM_KEY="${TEAM_KEY:-${LINEAR_TEAM:-}}"
+[ -n "$TEAM_KEY" ] || { echo "set LINEAR_TEAM in .env (or pass <TEAM-KEY>)" >&2; exit 2; }
+[ -n "${LINEAR_API_KEY:-}" ] || { echo "set LINEAR_API_KEY in .env (a Linear personal API key)" >&2; exit 2; }
 [ -f "$WORKFLOW" ] || { echo "missing $WORKFLOW" >&2; exit 2; }
 TMP="$(mktemp -t linear-workflow.XXXXXX)"
 trap 'rm -f "$TMP"' EXIT
