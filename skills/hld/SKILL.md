@@ -1,6 +1,6 @@
 ---
 name: hld
-description: What goes in a High-Level Design — API interface, domain models and glossary, service interactions and boundaries, tradeoffs, assumptions, goals, non-goals, diagrams, constraints, high-level observability (metrics, logs, alerts), alternatives considered, dependencies/infra, SLOs, and the LLD elements the HLD carries (important classes and interactions, DB schema, API contracts), plus scale estimations, ownership of every responsibility, and one-way doors, for a feature or a service from a reviewed PRD. Use when you write, review, or are asked for an HLD, design doc, architecture proposal, tech spec, or "how should we design X", or when an engineer has a reviewed PRD that touches more than one module or service, or introduces one, and before planning or implementation.
+description: What goes in a High-Level Design — API interface, domain models and glossary, service interactions and boundaries, tradeoffs, assumptions, goals, non-goals, diagrams, constraints, high-level observability (metrics, logs, alerts), linked ADRs for decisions worth preserving, dependencies/infra, SLOs, and the LLD elements the HLD carries (important classes and interactions, DB schema, API contracts), plus scale estimations, ownership of every responsibility, and one-way doors, for a feature or a service from a reviewed PRD. Use when you write, review, or are asked for an HLD, design doc, architecture proposal, tech spec, or "how should we design X", or when an engineer has a reviewed PRD that touches more than one module or service, or introduces one, and before planning or implementation.
 category: design
 ---
 
@@ -34,16 +34,13 @@ The template is `templates/HLD.md`; the table below is what it holds, and the pr
 | 6 | **Assumptions** |
 | 7 | **Goals** |
 | 8 | **Non-goals** |
-| 9 | **Diagrams** — as code: Mermaid flows, `.drawio` architecture next to `HLD.md` (`documentation-and-adrs`, W10) |
+| 9 | **Diagrams** — as code: Mermaid flows, `.drawio` architecture next to `HLD.md` (`documentation` W7) |
 | 10 | **Constraints** |
-| 11 | Separation of API models, domain/application models, and DB models so each layer can evolve independently (three layers: API, domain, DB) |
-| 12 | Don't put comments in the code; put comments in the ticket and link the ticket in the code (read together with item 13: comments rare, "why" only) |
-| 13 | **Dependencies / infra** |
-| 14 | **SLOs** |
-| 15 | **Constraints** (same as item 10) |
-| 16 | **Some LLD:** (a) important classes, their interfaces and interactions among them; (b) DB schema (drawdb file next to `LLD.md`); (c) API contracts (OpenAPI) |
+| 11 | **Dependencies / infra** |
+| 12 | **SLOs** |
+| 13 | **Some LLD:** (a) important classes, their interfaces and interactions among them; (b) DB schema (drawdb file next to `LLD.md`); (c) API contracts (OpenAPI) |
 
-Tradeoffs and alternatives double as the decision record: problem, options, choice, rationale, reversibility, one-way doors. Be deliberate about DB models, main classes/interfaces, composition and inheritance, and patterns — each pattern names the problem it solves.
+Tradeoffs (item 5) state what the chosen design gives up and link the ADR for every decision worth preserving: one-way doors, a non-obvious boundary, a technology choice. The options, rejections, and rationale live in the ADR (`adrs`), never restated in the HLD.
 
 ## Process
 
@@ -54,10 +51,10 @@ Tradeoffs and alternatives double as the decision record: problem, options, choi
 5. **Domain model and glossary** (item 2) with the `domain-modeling` skill: entities, value objects, typed ids, states as sum types, invariants. One vocabulary across services, kept in `docs/DOMAIN.md`.
 6. **API interface** (item 1): which APIs exist, which services interact through them, and the gist of request and response. The actual contract is decided in the LLD and lives in OpenAPI.
 7. **Interactions** (item 3) for the critical paths as Mermaid sequence diagrams, showing which service decides what. Backend owns business truth; clients render it (`coding-standards` C10).
-8. **Dependencies / infra** (item 13): external services, packages, Terraform resources, CI/CD needs, data migrations.
-9. **SLOs** (item 14) for the critical paths at the level the PRD justifies.
+8. **Dependencies / infra** (item 11): external services, packages, Terraform resources, CI/CD needs, data migrations.
+9. **SLOs** (item 12) for the critical paths at the level the PRD justifies.
 10. **Sketch observability** at high level: metrics and log points (`../../references/metrics-and-logging.md`). Detail belongs in code, not in the LLD.
-11. **Hand off**: write the HLD where `../../references/documentation-map.md` says (`lld` § Document mechanics); give it to the user for review; then plan with `planning-and-task-breakdown` and `milestone-planning`, then `lld`.
+11. **Hand off**: write the HLD where `../../references/documentation-map.md` says (`lld` § Document mechanics); give it to the user for review; then plan with `planning-and-task-breakdown`, then `lld`.
 
 ## Common Rationalizations
 
@@ -65,7 +62,8 @@ Tradeoffs and alternatives double as the decision record: problem, options, choi
 |---|---|
 | "I'll specify the internals too, to be safe." | That makes the HLD stale on day one. Internals and exact contracts belong to the LLD
 | "Diagrams can be drawn later in a tool." | Diagrams are code, committed with the HLD (item 9). |
-| "SLOs and observability are operational, not design." | They shape timeouts, idempotency, and what to measure. State them now, at high level (item 14). |
+| "SLOs and observability are operational, not design." | They shape timeouts, idempotency, and what to measure. State them now, at high level (item 12). |
+| "I'll explain the options and rationale here, the ADR can come later." | The HLD links the ADR; options and rationale live only there (`adrs`). Write it with the HLD. |
 | "The interface can be defined during implementation." | Then two services implement two interfaces. Names and interactions come first (items 1, 3); the contract follows in the LLD. |
 | "We may need to scale, so design for it now." | Design for the estimated scale. Record scale as a later concern. |
 | "The design is obvious, skip the review." | Every HLD, LLD, and PRD is reviewed by the user. It is a rule, not a preference. |
@@ -75,7 +73,8 @@ Tradeoffs and alternatives double as the decision record: problem, options, choi
 
 - A responsibility with two owners or none.
 - No scale estimation, no non-goals, or no one-way doors section.
-- An exact contract or a folder layout in the HLD beyond item 16.
+- An exact contract or a folder layout in the HLD beyond item 13.
+- A one-way door or technology choice with no linked ADR, or options and rationale restated in the HLD.
 - A diagram that exists only as an image.
 - An HLD treated as approved before the user reviewed it.
 - An HLD that does not say what is left for staff engineers to figure out.
@@ -83,9 +82,10 @@ Tradeoffs and alternatives double as the decision record: problem, options, choi
 ## Verification
 
 - [ ] Every PRD story maps to boundaries and named APIs in the HLD.
-- [ ] Every item in the contents table (1–16) is present or skipped deliberately; scale and one-way doors are present.
+- [ ] Every item in the contents table (1–13) is present or skipped deliberately; scale and one-way doors are present.
+- [ ] Every decision worth preserving has an ADR linked from the tradeoffs section (`adrs`).
 - [ ] The domain model is in `docs/DOMAIN.md` and consistent across services.
 - [ ] Diagrams are committed as code next to the HLD.
-- [ ] One-way doors are recorded in the HLD and on the ticket.
+- [ ] One-way doors are named in the HLD, each with its ADR, and noted on the ticket.
 - [ ] What is left for staff engineers to figure out is called out.
 - [ ] The user has reviewed the HLD.
