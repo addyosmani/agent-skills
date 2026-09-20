@@ -1,6 +1,7 @@
 ---
 name: security-and-hardening
-description: Hardens code against vulnerabilities. Use when handling user input, authentication, data storage, or external integrations. Use when building any feature that accepts untrusted data, manages user sessions, or interacts with third-party services. Use when auditing dependencies for known vulnerabilities, triaging package-manager audit findings, or assessing supply-chain risk in a new package. Use when personal data or privacy compliance (GDPR, CCPA) is involved.
+description: Hardens code against vulnerabilities and checks it against the OWASP Top 10. Use when handling user input, authentication, login or session flows, passwords, tokens, data storage, or external integrations. Use when asking whether something is safe, exploitable, or vulnerable, including injection, cross-site scripting, broken access control, and insecure deserialization. Use when building any feature that accepts untrusted data, manages user sessions, or interacts with third-party services. Use when auditing dependencies for known vulnerabilities, triaging package-manager audit findings, or assessing supply-chain risk in a new package. Use when personal data or privacy compliance (GDPR, CCPA) is involved.
+category: domain
 ---
 
 # Security and Hardening

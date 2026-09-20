@@ -1,6 +1,7 @@
 ---
 name: using-agent-skills
 description: Discovers and invokes agent skills. Use when starting a session or when you need to discover which skill applies to the current task. This is the meta-skill that governs how all other skills are discovered and invoked.
+category: process
 ---
 
 # Using Agent Skills
@@ -127,6 +128,8 @@ These are the subtle errors that look like productivity but create problems:
 8. Removing things you don't fully understand
 9. Building without a spec because "it's obvious"
 10. Skipping verification because "it looks right"
+11. Reporting cached project or agent state as current
+12. Hiding delegation, retry loops, model switching, usage, or cost from the user
 
 ## Skill Rules
 
