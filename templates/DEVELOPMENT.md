@@ -1,8 +1,10 @@
 # Development
 
+How to run this project locally.
+
 ## Local setup
 
-<prerequisites, docker, env, seed or snapshot>
+<prerequisites, containers, environment variables, seed or snapshot>
 
 ## Dev commands
 
@@ -28,6 +30,6 @@
 | Integration | |
 | End to end | |
 
-## Worktrees and environments
+## Per-agent environment
 
-A worktree per agent at the project root, cleaned up after. LocalStack, DB snapshot or seed, docker.
+<the commands that create and remove one agent's worktree, containers, and data here (`development-setup`)>

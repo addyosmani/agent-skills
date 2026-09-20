@@ -1,6 +1,10 @@
 # Mobile architecture
 
-React Native. Backend-driven UI. No business rules in the app.
+How the mobile app is put together today.
+
+## Stack
+
+<framework, language, build>
 
 ## App structure
 
@@ -10,12 +14,12 @@ React Native. Backend-driven UI. No business rules in the app.
 
 ## Pluggable modules
 
-Built once, extractable into any app: auth (OTP and OAuth login), notifications, force update, analytics. Where each lives and its boundary.
+<auth, notifications, force update, analytics: where each lives and its boundary>
 
 ## Data layer
 
-The generated client SDK, client state, offline and slow-network handling.
+<the generated client SDK, client state, offline and slow-network handling>
 
 ## Platform
 
-iOS and Android differences that matter; release and force-update flow.
+<iOS and Android differences that matter; release and force-update flow>

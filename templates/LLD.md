@@ -1,6 +1,6 @@
 # <feature or service> Low-Level Design
 
-Anyone with the `lld` skill may edit. Reviewed by the user before it counts. Kept in sync with the code: the PR that changes a contract, schema, or type updates this file. The design satisfies `coding-standards`, `domain-modeling`, and `database`; each section says where.
+Written with the `lld` skill. Reviewed by the user before it counts. Updated by the PR that changes a contract, schema, or type. Skip a section with one line saying why.
 
 - HLD: <link> · Schema: `schema.ddb` (drawdb) · OpenAPI: `<path>` → generated client `<sdk path>`
 
@@ -21,7 +21,7 @@ Anyone with the `lld` skill may edit. Reviewed by the user before it counts. Kep
 classDiagram
 ```
 
-Main classes, interfaces, composition and inheritance, the patterns used (functional: compose; object: factory, registry) and the problem each solves.
+<the patterns used and the problem each solves>
 
 ## Data model and migrations
 
@@ -40,11 +40,17 @@ Main classes, interfaces, composition and inheritance, the patterns used (functi
 
 ## Error handling
 
-Errors are first-class domain objects; fail loudly.
+| Error | Caller retries / corrects / escalates | Timeout / idempotency key |
+|---|---|---|
 
 ## Testing strategy
 
 | Level | What | Fakes injected |
 |---|---|---|
+
+## Rules satisfied
+
+| Rule | Where in this design |
+|---|---|
 
 ## Open questions

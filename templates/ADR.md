@@ -1,6 +1,6 @@
 # ADR-NNNN: <decision, as a verb phrase>
 
-Anyone with the `adrs` skill may write one. One decision per record; never edited once accepted, superseded by a new record instead. Linked from the HLD, LLD, or ticket that made the decision.
+Written with the `adrs` skill. Linked from the HLD, LLD, or ticket that made the decision.
 
 - Status: Proposed | Accepted | Superseded by ADR-NNNN | Deprecated
 - Date: <YYYY-MM-DD>

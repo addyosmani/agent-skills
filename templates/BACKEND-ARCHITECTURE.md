@@ -1,6 +1,10 @@
 # Backend architecture
 
-Modular monolith of services, each a bounded context and a collection of vertical-slice features, hexagonal inside, deployable as one binary or separately. Detail lives in each service's `docs/`.
+How the backend is put together today. Detail lives in each service's `docs/`.
+
+## Shape
+
+<modular monolith or separate deployables; how a service is structured inside>
 
 ## Services
 
@@ -9,16 +13,16 @@ Modular monolith of services, each a bounded context and a collection of vertica
 
 ## Shared modules
 
-The pluggable modules every project needs: payments, auth (OTP and OAuth), profile. Where they live and how a service plugs one in.
+<the pluggable modules (payments, auth, profile, …): where each lives and how a service plugs one in>
 
 ## Infra
 
-Terraform under `infra/`. Environments, what runs where, and how a service reaches its dependencies. LocalStack for local AWS.
+<what runs where per environment, how a service reaches its dependencies, where the infrastructure code lives>
 
 ## Data
 
-PostgreSQL. Schema lives separately from code, migrations are backward compatible for one release, connection pooling, fail on conflict.
+<engine, where the schema lives, migration tooling, pooling>
 
 ## Observability
 
-Structured logs at boundaries and transitions; tech metrics decided by the backend engineer; alerts, runbooks, and traces deferred.
+<what is emitted where; dashboards and alerts that exist>

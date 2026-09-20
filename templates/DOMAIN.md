@@ -1,6 +1,6 @@
 # Domain design
 
-The one vocabulary product, business, and tech refer to. Always current. Domain-driven: bounded contexts, entities, value objects, aggregates, domain events, typed ids. No raw ids anywhere.
+Written with the `domain-modeling` skill. The one vocabulary product, business, and tech refer to; always current.
 
 ## Bounded contexts
 

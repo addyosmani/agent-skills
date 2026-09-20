@@ -1,8 +1,10 @@
 # Deployment
 
+How this project ships.
+
 ## Pipeline
 
-GitHub Actions: what runs on a PR, what runs on merge, what deploys where.
+<what runs on a PR, what runs on merge, what deploys where>
 
 ## Environments
 
@@ -11,8 +13,8 @@ GitHub Actions: what runs on a PR, what runs on merge, what deploys where.
 
 ## Releases
 
-Semver, a tag, a `CHANGELOG.md` entry listing the tickets.
+<how a release is cut and tagged here; where the changelog entry goes>
 
 ## Feature flags
 
-Where they live, how one is turned on.
+<where they live, how one is turned on>
