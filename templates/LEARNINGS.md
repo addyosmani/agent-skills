@@ -1,15 +1,17 @@
 # Learnings
 
-What the agents learnt in this project. Append-only, newest last; nothing here is a rule by itself. The brain's maintainer reads it to improve the personas, skills, and conventions.
+What this project taught the agents about the personas, skills, and conventions. Append-only, newest last; nothing here is a rule by itself. The maintainer reads it to change what a note points at.
 
 ## What counts
 
+The test is one question: **would this change a rule, a skill, or a persona?** If yes, record it. If no, it is the ordinary work of the task and belongs on the ticket, not here. A user's request, a preference about one output, a decision that already has an ADR, or a discovery that a skill already covers is not a learning.
+
 | Kind | Record when |
 |---|---|
-| `feedback` | The user corrects, rejects, adjusts, or praises something you produced, or states a preference. |
-| `gap` | A rule or skill is silent, ambiguous, or wrong for the situation you are in. |
-| `workaround` | You wrote code, a script, or a manual step to get around a missing capability, a tool limitation, or a gap in the conventions. |
-| `override` | The user explicitly directs you to do something the conventions forbid or do differently. Do it, then record it. |
+| `feedback` | The user corrects something a rule, skill, or persona told you to do, or corrects the same kind of output twice. Not a one-off preference about one piece of work. |
+| `gap` | A rule or skill was silent, ambiguous, or wrong for the situation you were in, and you had to decide without it. |
+| `workaround` | You wrote code, a script, or a manual step to get around a missing capability, a tool limitation, or a hole in the conventions. |
+| `override` | The user explicitly directed you to do something a convention forbids or does differently. Do it, then record it; the same override twice means the rule is wrong. |
 
 ## Procedure
 

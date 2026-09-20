@@ -40,7 +40,7 @@ docs/            anatomies and per-tool setup guides
 
 ## Learnings from projects
 
-A project's `docs/LEARNINGS.md`, stamped from `templates/LEARNINGS.md`, is where its agents record every piece of human feedback, every gap they hit, every workaround they wrote, and every override the user granted, at the moment it happens. That file is written there and read here: it is the input to this repository, and the harness (the personas, skills, conventions, references, and templates) improves from it. Nothing in a note is a rule until it lands here and passes the checks above.
+A project's `docs/LEARNINGS.md`, stamped from `templates/LEARNINGS.md`, is where its agents record what would change a rule, a skill, or a persona: an override the user granted, a correction of what a rule told the agent to do, a gap in a skill, or a workaround around one, at the moment it happens. Ordinary requests and one-off preferences stay on the ticket. That file is written there and read here: it is the input to this repository, and the harness (the personas, skills, conventions, references, and templates) improves from it. Nothing in a note is a rule until it lands here and passes the checks above.
 
 How a note becomes a change:
 

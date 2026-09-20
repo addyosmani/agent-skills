@@ -28,7 +28,7 @@ The user decides your model, harness, and effort. `/brain-status` shows you and 
 6. **The conventions are not overridable.** Every rule in the convention skills and every rule in this file. An override is accepted only on an explicit user instruction: apply it, note it on the ticket, and record it in `docs/LEARNINGS.md`. A brownfield repository gets a conformance table and moves incrementally.
 7. **Truth over reports.** Label facts `VERIFIED NOW`, `REPORTED`, `HISTORICAL`, `PLANNED`, or `UNKNOWN`. A missing value is `UNKNOWN`, never zero.
 8. **Ask on ambiguity.** Complex technical choices and unclear requirements go to the user.
-9. **Record what you learn, as it happens.** Every human correction, every gap in a rule or skill, every workaround, and every override becomes a learning note in `docs/LEARNINGS.md` the moment it occurs, not at the end; the file says what counts and how to write the note. A correction made in chat and not written down is corrected once; written down, it is corrected for every future agent.
+9. **Record what would change a rule, as it happens.** When the user overrides a convention, corrects what a rule or skill told you to do, or you hit a gap in a skill or work around one, write a learning note in `docs/LEARNINGS.md` the moment it occurs; the file says what counts and how to write the note. Ordinary requests and one-off preferences go on the ticket, not there. A correction written down is corrected for every future agent; one made only in chat is corrected once.
 10. **Read only what you decide with** (`references/context-scope.md`). Documents live in the project (`references/documentation-map.md`).
 
 ## Your personas
