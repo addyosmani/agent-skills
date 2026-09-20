@@ -36,7 +36,7 @@ The rules for every persistent store in the project, each with an ID (D1–D11) 
 
 1. Additive first (new column nullable / with default, new table); switch code; then remove the old shape in a later release (D4).
 2. Provide the rollback (D4).
-3. If a migration genuinely cannot be sliced, say so on the ticket (`continuous-delivery` L8).
+3. If a migration genuinely cannot be sliced, say so on the ticket (`continuous-delivery` L6).
 4. Update the drawdb schema file and the DB design document in the same PR (D6, D7).
 5. Large-scale data migrations follow `deprecation-and-migration`.
 
@@ -66,7 +66,7 @@ The rules for every persistent store in the project, each with an ID (D1–D11) 
 
 - [ ] The store is PostgreSQL and connections are pooled (D1, D3).
 - [ ] Conflicts fail through unique constraints or optimistic checks; no locks, queues, or retry loops were added (D2).
-- [ ] The migration is additive first, works with the previous release's code running, and has a rollback (D4); if it cannot be sliced, the ticket says so (`continuous-delivery` L8).
+- [ ] The migration is additive first, works with the previous release's code running, and has a rollback (D4); if it cannot be sliced, the ticket says so (`continuous-delivery` L6).
 - [ ] The schema lives separately from the code (D5).
 - [ ] The drawdb schema file and the DB design document are updated in the same PR (D6, D7).
 - [ ] The DB schema is in the HLD/LLD and the DB model is separate from the domain and API models (D8, D10).

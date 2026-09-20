@@ -66,7 +66,7 @@ Each slice delivers working end-to-end functionality.
 
 ### Contract-First Slicing
 
-When backend and frontend need to develop in parallel (the rule is `continuous-delivery` L9–L11):
+When backend and frontend need to develop in parallel (the rules are `development-setup` DS7–DS9):
 
 ```
 Slice 0: Define the API contract (types, interfaces, OpenAPI spec)
@@ -147,7 +147,7 @@ After each increment, the project must build and existing tests must pass. Don't
 
 ### Rule 3: Feature Flags for Incomplete Features
 
-If a feature isn't ready for users but you need to merge increments (the rule is `continuous-delivery` L5: flags default off, or code without an entry point):
+If a feature isn't ready for users but you need to merge increments (the rule is `continuous-delivery` L4: flags default off, or code without an entry point):
 
 ```typescript
 // Feature flag for work-in-progress

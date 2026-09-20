@@ -107,7 +107,7 @@ refactor/<short-description>  → refactor/auth-module
 | ID | Rule |
 | --- | --- |
 | P5 | **Branch per ticket named `<ticket>-<slug>`.** |
-| P6 | Work in your own git worktree at the project root (`environment-setup`). |
+| P6 | Work in your own git worktree at the project root (`development-setup`). |
 | P7 | **Delete the remote and local branch after merge.** |
 
 ### Trunk-based development
@@ -122,11 +122,11 @@ main ──●──●──●──●──●──●──●──●─
 
 - **Dev branches are costs.** Every day a branch lives, it accumulates merge risk.
 - **Release branches are acceptable** when you need to stabilize a release while main moves forward (P16).
-- **Feature flags > long branches.** Prefer deploying incomplete work behind flags rather than keeping it on a branch for weeks (`continuous-delivery` L5).
+- **Feature flags > long branches.** Prefer deploying incomplete work behind flags rather than keeping it on a branch for weeks (`continuous-delivery` L4).
 
 ### Working with worktrees (P6)
 
-For parallel AI agent work, use git worktrees to run multiple branches simultaneously. The procedure — worktree at the project root, own containers, own data, cleanup — is `environment-setup`.
+For parallel AI agent work, use git worktrees to run multiple branches simultaneously. The procedure — worktree at the project root, own containers, own data, cleanup — is `development-setup`.
 
 ```bash
 # Create a worktree per ticket, from the project root
@@ -358,7 +358,7 @@ Before you push — checklist:
 1. Does the app still run after this commit alone? (P1, P2, P12)
 2. Is the diff one capability, under ~400 lines / 10 files? If not, split. (P2, P11)
 3. Message has ticket id, model, thinking effort, harness. (P3, P2)
-4. Unfinished paths behind a flag defaulting off or without an entry point. (P12, `continuous-delivery` L5)
+4. Unfinished paths behind a flag defaulting off or without an entry point. (P12, `continuous-delivery` L4)
 5. Changelog line added. (P13)
 6. PR opened from `<ticket>-<slug>` with the template; review required or explicitly optional per the ticket. (P5, P10, P8)
 7. Never wait for a security audit. (P9)
