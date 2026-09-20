@@ -10,6 +10,8 @@ category: delivery
 
 Git is your safety net. Treat commits as save points, branches as sandboxes, and history as documentation. With AI agents generating code at high speed, disciplined version control is the mechanism that keeps changes manageable, reviewable, and reversible.
 
+This skill holds the rules (P1–P16) and the git mechanics. The GitHub calls that carry them out (raising a PR, reviewing, merging, releasing) are the `github` tool skill; the review itself is `code-review-and-quality`.
+
 ## When to Use
 
 Always. Every code change flows through git. Whenever you commit, branch, open, update, or merge a PR, or write a commit message — even for a one-line change or "just push it".
@@ -76,32 +78,6 @@ The `<type>` in the anatomy header explains the *why*, not just the *what*:
 - `docs` — Documentation only
 - `chore` — Tooling, dependencies, config
 
-## Branching Strategy
-
-### Feature Branches
-
-```
-main (always deployable)
-  │
-  ├── feature/task-creation    ← One feature per branch
-  ├── feature/user-settings    ← Parallel work
-  └── fix/duplicate-tasks      ← Bug fixes
-```
-
-- Branch from `main` (or the team's default branch)
-- Keep branches short-lived (merge within 1-3 days) — long-lived branches are hidden costs
-- Delete branches after merge
-- Prefer feature flags over long-lived branches for incomplete features
-
-### Branch Naming
-
-```
-feature/<short-description>   → feature/task-creation
-fix/<short-description>       → fix/duplicate-tasks
-chore/<short-description>     → chore/update-deps
-refactor/<short-description>  → refactor/auth-module
-```
-
 ## Branches
 
 | ID | Rule |
@@ -110,44 +86,20 @@ refactor/<short-description>  → refactor/auth-module
 | P6 | Work in your own git worktree at the project root (`development-setup`). |
 | P7 | **Delete the remote and local branch after merge.** |
 
-### Trunk-based development
+### Trunk-based development (P5, P7)
 
-Work in short-lived branches off `main` (or the team's default branch) that merge back within 1-3 days. Long-lived development branches are hidden costs — they diverge, create merge conflicts, and delay integration. DORA research consistently shows trunk-based development correlates with high-performing engineering teams.
+Work in short-lived branches off `main` (or the team's default branch), one per ticket, that merge back within 1-3 days. Long-lived development branches are hidden costs — they diverge, create merge conflicts, and delay integration. DORA research consistently shows trunk-based development correlates with high-performing engineering teams.
 
 ```
 main ──●──●──●──●──●──●──●──●──●──  (always deployable)
         ╲      ╱  ╲    ╱
-         ●──●─╱    ●──╱    ← short-lived feature branches (1-3 days)
+         ●──●─╱    ●──╱    ← PROJ-123-task-creation, PROJ-124-user-settings (1-3 days)
 ```
 
 - **Dev branches are costs.** Every day a branch lives, it accumulates merge risk.
 - **Release branches are acceptable** when you need to stabilize a release while main moves forward (P16).
 - **Feature flags > long branches.** Prefer deploying incomplete work behind flags rather than keeping it on a branch for weeks (`continuous-delivery` L4).
-
-### Working with worktrees (P6)
-
-For parallel AI agent work, use git worktrees to run multiple branches simultaneously. The procedure — worktree at the project root, own containers, own data, cleanup — is `development-setup`.
-
-```bash
-# Create a worktree per ticket, from the project root
-git worktree add ./PROJ-123-task-creation PROJ-123-task-creation
-git worktree add ./PROJ-124-user-settings PROJ-124-user-settings
-
-# Each worktree is a separate directory with its own branch
-# Agents can work in parallel without interfering
-ls
-  PROJ-123-task-creation/    ← ticket PROJ-123
-  PROJ-124-user-settings/    ← ticket PROJ-124
-
-# When done, merge and clean up
-git worktree remove ./PROJ-123-task-creation
-```
-
-Benefits:
-- Multiple agents can work on different features simultaneously
-- No branch switching needed (each directory has its own branch)
-- If one experiment fails, delete the worktree — nothing is lost
-- Changes are isolated until explicitly merged
+- **One worktree per ticket** (P6) is how parallel agents work on one repository without switching branches; the procedure and cleanup are `development-setup` DS2.
 
 ## Pull requests
 
@@ -157,11 +109,11 @@ Benefits:
 | P9 | **Never hold a PR for a security audit; the audit is a later ticket / next requirement.** |
 | P10 | **Every task ships through a pull request with the PR template; reviewed-class PRs merge only on the discipline code reviewer's approval; every review comment is resolved by a commit or an explained reply.** |
 | P11 | **A PR is never held open to grow.** Open it when the first verifiable slice is ready; at roughly **400 changed lines or 10 files, split it** — land the mechanical part, the contract, or the flagged-off skeleton first. A long-lived branch is a merge conflict accruing interest. |
-| P12 | **Every merged change is deployable; `main` is always releasable:** CI green, migrations backward compatible for one release, incomplete work behind a flag defaulting off. A change that cannot be deployed on its own is not ready to merge. |
-| P13 | **Every merged task adds a changelog line** (global and per service). |
-| P14 | Reviewers create Linear issues for findings and comment on the PR while it is open (`code-review-and-quality`). |
+| P12 | **Only a change that is deployable on its own merges**; `main` is always releasable (`continuous-delivery` L2). |
+| P13 | **Every merged task adds a changelog line** (global and per service), written in the same change while the impact is fresh (`continuous-delivery` L1). |
+| P14 | Reviewers create Linear issues for findings and comment on the PR while it is open (`code-review-and-quality` R3). |
 
-- One ticket per PR; the title starts with the ticket id; the PR links the ticket and the ticket links the PR (P2, P4).
+- One ticket per PR; the title starts with the ticket id; the PR links the ticket and the ticket links the PR (P2, P4). The GitHub calls are the `github` skill.
 - See the splitting strategies in `code-review-and-quality` for how to break down a PR that passed the P11 limit.
 
 ## Merge
