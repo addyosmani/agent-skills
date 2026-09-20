@@ -1,0 +1,53 @@
+{
+  "skill_name": "continuous-delivery",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Break this large feature into slices so the app keeps working at every point and an MVP ships first",
+        "top_k": 3
+      },
+      {
+        "prompt": "Should I ship this half-finished feature behind a feature flag or leave it without an entry point?",
+        "top_k": 3
+      },
+      {
+        "prompt": "Plan the sprint: what do we build first so main stays releasable and the user gets a usable increment each time?",
+        "top_k": 3
+      },
+      {
+        "prompt": "The user said build feature X — plan it so main is always releasable and the product stays progressively usable",
+        "top_k": 3
+      },
+      {
+        "prompt": "Cut a release: bump the version with semver and publish the changelog entry listing its tickets",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Rename a database column without downtime",
+        "owner": "deprecation-and-migration"
+      },
+      {
+        "prompt": "Set up my own git worktree, Docker containers and LocalStack before starting the ticket",
+        "owner": "development-setup"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "dialogue",
+      "prompt": "Build the reporting feature: a new reports service, three new endpoints, a dashboard page in the web client, and a nightly export job. Plan how it ships.",
+      "expected_output": "A plan that gets the API contract and DB model resolved first, cuts an MVP with the rest left on the ticket, orders slices so the app works after each one with unfinished paths behind a flag defaulting off, ships one API per commit and PR, and adds semver and changelog on merge",
+      "expectations": [
+        "The API contract and DB model are resolved before parallel work starts",
+        "An MVP is cut first and the remaining scope stays on the ticket",
+        "Each slice leaves the app working; unfinished paths are behind a flag defaulting off or have no entry point",
+        "Each API is implemented, tested, committed and PR'd on its own",
+        "Semver is bumped and a changelog line added on merge",
+        "Any slice that cannot keep the app working is stated on the ticket, and one-shot development happens only on a recorded user instruction"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "skill_name": "database",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Add a column to the orders table with a backward-compatible migration and a rollback",
+        "top_k": 3
+      },
+      {
+        "prompt": "Set up the PostgreSQL connection pooling and the schema for this service, and update the drawdb file next to the LLD",
+        "top_k": 3
+      },
+      {
+        "prompt": "Two writers may insert the same key, how should the database handle the conflict",
+        "top_k": 3
+      },
+      {
+        "prompt": "Store this data: design the DB model and write the migration",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Replace the legacy checkout flow with the new one and retire the old path safely",
+        "owner": "deprecation-and-migration"
+      },
+      {
+        "prompt": "Define the domain model with entities, value objects, and typed identifiers",
+        "owner": "domain-modeling"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "dialogue",
+      "prompt": "Rename the orders.status column to orders.state and make it non-nullable. Users may collide when inserting the same order number. Write the migration and say how the schema docs change.",
+      "expected_output": "An additive-first migration plan that keeps the previous release's code working, with a rollback, a unique constraint for the collision, and the drawdb file and DB design document updated in the same PR",
+      "expectations": [
+        "The migration is additive first: a new column with a default, code switched, the old column removed in a later release (D4)",
+        "A rollback is provided (D4)",
+        "The collision is handled by a unique constraint or optimistic check, not a lock, queue, or retry loop (D2)",
+        "The drawdb schema file and the DB design document are updated in the same PR (D6, D7)",
+        "PostgreSQL is assumed and no cache, replica, or sharding is introduced without an ADR recording a current requirement (D1, D11)"
+      ]
+    }
+  ]
+}

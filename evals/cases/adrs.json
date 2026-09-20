@@ -1,0 +1,45 @@
+{
+  "skill_name": "adrs",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Write an ADR for choosing Postgres over MongoDB",
+        "top_k": 3
+      },
+      {
+        "prompt": "Record the decision to standardise on Next.js across the web projects as an architecture decision record",
+        "top_k": 3
+      },
+      {
+        "prompt": "We switched CI from Jenkins to GitHub Actions; supersede the old ADR with a new one",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Produce the unified high-level design across services",
+        "owner": "hld"
+      },
+      {
+        "prompt": "Does this feature need a doc update, or do the ticket and commit message already cover it?",
+        "owner": "documentation"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Record the decision to adopt event sourcing for the orders service as an ADR.",
+      "expected_output": "An ADR that matches any existing convention in the repository, with problem, options and their rejections, choice, rationale, and reversibility as distinct sections, a status and date, written in the present tense",
+      "files": [
+        "adrs"
+      ],
+      "expectations": [
+        "The agent looks for an existing ADR convention before choosing a location, numbering, or headings",
+        "Problem, options, choice, rationale, and reversibility are distinct sections",
+        "Rejected options are recorded with why they were rejected, not just the winning choice",
+        "The document is written in present tense describing the state it creates"
+      ]
+    }
+  ]
+}

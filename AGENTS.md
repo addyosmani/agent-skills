@@ -1,92 +1,54 @@
-# AGENTS.md
+# agent-brain
 
-This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, Antigravity, etc.) when working with code in this repository.
+This repository is where the brain is built: the personas in `agents/`, the skills in `skills/`, the conventions as skills with rule ids, the shared references in `references/`, the document templates in `templates/`, and the checks and evals that keep them honest. Agents working here maintain those assets. They do not run under the organization the brain ships; that is `project/AGENTS.md`, and its way of working and coding conventions are not rules for this repository.
 
-> **Scope:** This file configures agents working on the [`addyosmani/agent-skills`](https://github.com/addyosmani/agent-skills) repository itself. It is not meant to be copied into other projects or into a global agent configuration; the reusable assets are the skills in `skills/`, not this file.
+## Project structure
 
-## Repository Overview
+```
+AGENTS.md        this file: how to work on the repository
+CLAUDE.md        points here
+project/         files copied as they are to a project's root: AGENTS.md (the organization; the build fills in the installed skills and personas), SOUL.md
+agents/          personas, one file per role (docs/persona-anatomy.md)
+skills/          the flat skill dump (docs/skill-anatomy.md)
+references/      shared checklists and the way-of-working contracts
+templates/       documents a project fills in under docs/: ARCHITECTURE, PRD, HLD, LLD, LEARNINGS, ...
+manifest.json    which skills and personas make up the brain
+scripts/         validators, the eval runner, and build-brain.js
+.claude/commands/ .gemini/commands/ commands/ .pi/prompts/   slash commands: /brain, /brain-status (plus the upstream set in the first three)
+evals/           trigger and routing evals; every skill needs a case
+docs/            anatomies and per-tool setup guides
+```
 
-A collection of skills for Claude.ai and Claude Code for senior software engineers. Skills are packaged instructions and scripts that extend Claude and your coding agents capabilities.
+## Commands
 
-## OpenCode Integration
+| Purpose | Command |
+|---|---|
+| Skill anatomy | `node scripts/validate-skills.js` |
+| Persona anatomy and manifest | `node scripts/validate-agents.js` |
+| Reference links | `node scripts/validate-reference-links.js` |
+| Command parity across tools | `node scripts/validate-commands.js` |
+| Trigger and routing evals | `node scripts/run-evals.js --min-rank1 80` |
+| Assemble the brain from `manifest.json` | `node scripts/build-brain.js` → `build/` |
 
-OpenCode uses a **skill-driven execution model** powered by the `skill` tool and this repository's `/skills` directory.
+## Conventions for this repository
 
-### Core Rules
+- A skill lives at `skills/<kebab>/SKILL.md` with `name`, a `description` that says what it does and then "Use when", an optional `category`, and the sections in [docs/skill-anatomy.md](docs/skill-anatomy.md). A skill copied from elsewhere may keep its own shape until it is refactored after its eval; a skill written here follows the anatomy from the start. Every skill needs `evals/cases/<name>.json`.
+- A persona lives at `agents/<kebab>.md` and follows [docs/persona-anatomy.md](docs/persona-anatomy.md). It lists the only skills and tools it may use, and carries no model or effort. Add it to `manifest.json` and to the persona table in `project/AGENTS.md`.
+- Never duplicate content between a skill, a persona, and a reference. A skill has an unambiguous "Use when" and may name a related skill and the relation between them (an "Interaction with other skills" section), never cite its rules line by line; the persona says which skills are fetched for which activity. A convention rule is cited by id inside its own skill and from tickets, reviews, and references (`coding-standards` C13); the prefix index lives in `project/AGENTS.md`.
+- `Goal.md` and `User.md` are the owner's requirements. Never edit them.
+- Before adding a skill, run the pre-flight in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-- If a task matches a skill, you MUST invoke it
-- Skills are located in `skills/<skill-name>/SKILL.md`
-- Never implement directly if a skill applies
-- Always follow the skill instructions exactly (do not partially apply them)
+## Learnings from projects
 
-### Intent → Skill Mapping
+A project's `docs/LEARNINGS.md`, stamped from `templates/LEARNINGS.md`, is where its agents record every piece of human feedback, every gap they hit, every workaround they wrote, and every override the user granted, at the moment it happens. That file is written there and read here: it is the input to this repository, and the harness (the personas, skills, conventions, references, and templates) improves from it. Nothing in a note is a rule until it lands here and passes the checks above.
 
-The agent should automatically map user intent to skills:
+How a note becomes a change:
 
-- Feature / new functionality → `spec-driven-development`, then `incremental-implementation`, `test-driven-development`
-- Planning / breakdown → `planning-and-task-breakdown`
-- Bug / failure / unexpected behavior → `debugging-and-error-recovery`
-- Code review → `code-review-and-quality`
-- Refactoring / simplification → `code-simplification`
-- API or interface design → `api-and-interface-design`
-- UI work → `frontend-ui-engineering`
+| Kind | What it points at | What changes here |
+|---|---|---|
+| `feedback` | the skill, persona, or rule the correction concerns | reword the rule, add the rationalization it defeated, or move the guidance to the persona if it was a routing mistake |
+| `gap` | a rule or skill that was silent, ambiguous, or wrong | extend the skill that should have covered it, or write the one that will, with its eval case |
+| `workaround` | a missing capability or a tool limitation | the same as a gap: the skill, a reference, or a tool skill's mapping |
+| `override` | a rule the user set aside on purpose | if it recurs, the rule was wrong or its stated override condition was; change the rule, never delete the note |
 
-### Lifecycle Mapping (Implicit Commands)
-
-OpenCode does not support slash commands like `/spec` or `/plan`.
-
-Instead, the agent must internally follow this lifecycle:
-
-- DEFINE → `spec-driven-development`
-- PLAN → `planning-and-task-breakdown`
-- BUILD → `incremental-implementation` + `test-driven-development`
-- VERIFY → `debugging-and-error-recovery`
-- REVIEW → `code-review-and-quality`
-- SHIP → `shipping-and-launch`
-
-### Execution Model
-
-For every request:
-
-1. Determine if any skill applies (even 1% chance)
-2. Invoke the appropriate skill using the `skill` tool
-3. Follow the skill workflow strictly
-4. Only proceed to implementation after required steps (spec, plan, etc.) are complete
-
-### Anti-Rationalization
-
-The following thoughts are incorrect and must be ignored:
-
-- "This is too small for a skill"
-- "I can just quickly implement this"
-- "I’ll gather context first"
-
-Correct behavior:
-
-- Always check for and use skills first
-
-This ensures OpenCode behaves similarly to Claude Code with full workflow enforcement.
-
-## Orchestration: Personas, Skills, and Commands
-
-This repo has three composable layers. They have different jobs and should not be confused:
-
-- **Skills** (`skills/<name>/SKILL.md`) — workflows with steps and exit criteria. The *how*. Mandatory hops when an intent matches.
-- **Personas** (`agents/<role>.md`) — roles with a perspective and an output format. The *who*.
-- **Slash commands** (`.claude/commands/*.md`) — user-facing entry points. The *when*. The orchestration layer.
-
-Composition rule: **the user (or a slash command) is the orchestrator. Personas do not invoke other personas.** A persona may invoke skills.
-
-The only multi-persona orchestration pattern this repo endorses is **parallel fan-out with a merge step** — used by `/ship` to run `code-reviewer`, `security-auditor`, and `test-engineer` concurrently and synthesize their reports. Do not build a "router" persona that decides which other persona to call; that's the job of slash commands and intent mapping.
-
-See [docs/agents.md](docs/agents.md) for the decision matrix and [references/orchestration-patterns.md](references/orchestration-patterns.md) for the full pattern catalog.
-
-**Claude Code interop:** the personas in `agents/` work as Claude Code subagents (auto-discovered from this plugin's `agents/` directory) and as Agent Teams teammates (referenced by name when spawning). Two platform constraints align with our rules: subagents cannot spawn other subagents, and teams cannot nest. Plugin agents silently ignore the `hooks`, `mcpServers`, and `permissionMode` frontmatter fields.
-
-## Creating a New Skill
-
-> **Before you start:** run the pre-flight checks in [CONTRIBUTING.md](CONTRIBUTING.md#before-proposing-a-new-skill), search the catalog, check open PRs (`gh pr list --state open`), confirm the idea fits [docs/skill-anatomy.md](docs/skill-anatomy.md), and justify the gap in your PR description. Most new-skill ideas overlap an existing skill or an open PR; prefer extending an existing skill over adding a near-duplicate. CONTRIBUTING.md is the single source of truth for this workflow.
-
-Skills in this repo are markdown-first: each lives at `skills/<kebab-case-name>/SKILL.md` with YAML frontmatter (`name`, `description`) and follows the section anatomy (Overview, When to Use, Process, Common Rationalizations, Red Flags, Verification). Add a `scripts/` directory only when the skill ships runnable helpers; most skills are markdown only, and there are no per-skill zip packages.
-
-For the full format, naming conventions, frontmatter rules, supporting-file thresholds, and writing principles, see [docs/skill-anatomy.md](docs/skill-anatomy.md), the single source of truth for skill structure. Do not restate that guidance here, link to it.
+A note that recurs across tickets or projects is the signal to act; a single note is evidence to keep. An agent in a project may make an obvious, small fix to a skill in the same task and reference the note; anything larger waits for the maintainer. Notes are never deleted: they are the record of why a skill changed.

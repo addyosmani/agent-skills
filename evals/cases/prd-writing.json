@@ -1,0 +1,43 @@
+{
+  "skill_name": "prd-writing",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Write a detailed product requirements document for this feature with stories, acceptance criteria, affected services, and budget",
+        "top_k": 3
+      },
+      {
+        "prompt": "The user gave me a feature, produce the PRD before design starts",
+        "top_k": 3
+      },
+      {
+        "prompt": "Turn this feature request into a PRD with first usable increment, deferred scope, and per-service budget",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Fix the failing integration test",
+        "owner": "debugging-and-error-recovery"
+      },
+      {
+        "prompt": "Interview me to pin down what this feature should actually do before anything is written",
+        "owner": "interview-me"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "dialogue",
+      "prompt": "The user gave me the 'save cart for later' feature. Write the PRD.",
+      "expected_output": "A PRD with target user, outcome, first usable increment, later and not-doing scope, stories with testable acceptance criteria, affected services, phases, and a success target",
+      "expectations": [
+        "Every story has testable acceptance criteria",
+        "First usable increment and deferred scope are both explicit",
+        "Affected services are named",
+        "Open blocking questions are escalated rather than guessed"
+      ]
+    }
+  ]
+}

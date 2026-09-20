@@ -22,7 +22,7 @@
       },
       {
         "prompt": "Slice the approved plan into sprints with a points capacity",
-        "owner": "milestone-planning"
+        "owner": "planning-and-task-breakdown"
       }
     ]
   },

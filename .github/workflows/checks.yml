@@ -1,0 +1,28 @@
+name: checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - run: node scripts/validate-skills.js
+      - run: node scripts/validate-agents.js
+      - run: node scripts/validate-reference-links.js
+      - run: node scripts/validate-artifact-paths.js
+      - run: node scripts/validate-commands.js
+      - run: node scripts/run-evals.js --min-rank1 80
+      - run: |
+          node --test scripts/lib/skill-lint-test.js
+          node --test scripts/run-evals-test.js
+          node --test scripts/validate-reference-links-test.js
+          node --test scripts/validate-artifact-paths-test.js
+          node --test scripts/validate-commands-test.js
+      - run: node scripts/build-brain.js

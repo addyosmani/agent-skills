@@ -3,15 +3,19 @@
   "trigger": {
     "positive": [
       {
-        "prompt": "Raise the pull request for ENG-42 with the PR template and request review from the backend code reviewer",
+        "prompt": "Raise the pull request for ENG-42 with the PR template through GitHub and request review from the backend code reviewer",
         "top_k": 3
       },
       {
-        "prompt": "Post inline review comments on this pull request and submit a request-changes verdict through GitHub",
+        "prompt": "Post inline review comments on this pull request and submit a request-changes verdict through the GitHub MCP server",
         "top_k": 3
       },
       {
-        "prompt": "Merge the approved PR with squash and cut a semver release with a changelog entry on GitHub",
+        "prompt": "Check the CI status of the PR with gh, then merge it with a merge commit and delete the branch",
+        "top_k": 3
+      },
+      {
+        "prompt": "Tag v1.4.0 and publish the GitHub release with the changelog entry",
         "top_k": 3
       }
     ],
@@ -21,8 +25,8 @@
         "owner": "linear"
       },
       {
-        "prompt": "Write the PRD for the checkout feature",
-        "owner": "prd-writing"
+        "prompt": "Split this messy working tree into clean atomic commits",
+        "owner": "git-workflow-and-versioning"
       }
     ]
   },
@@ -30,12 +34,13 @@
     {
       "id": 1,
       "kind": "dialogue",
-      "prompt": "The web code reviewer approved ENG-42 and CI is green. Finish it.",
-      "expected_output": "PR merged with squash and the ticket id, branch deleted, changelog line added, ticket moved to Engineer Verified with a status update",
+      "prompt": "The web code reviewer approved ENG-42 and CI is green. Finish it on GitHub.",
+      "expected_output": "The approval and green checks confirmed with a read call, the PR merged with a merge commit carrying the ticket id via the mapped MCP or gh call, the branch deleted on the remote, and the PR URL and outcome reflected on the ticket",
       "expectations": [
-        "Merge happens only after the approval and green checks are confirmed",
-        "Squash commit message carries the ticket id",
-        "Ticket state and changelog are updated after the merge"
+        "A read-only call confirms the approval and green checks before any write",
+        "The merge uses a merge commit, never squash or rebase, and the message carries the ticket id",
+        "The branch is deleted on the remote after the merge",
+        "The ticket is updated with the outcome"
       ]
     }
   ]

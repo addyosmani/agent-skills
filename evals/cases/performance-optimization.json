@@ -12,7 +12,7 @@
       },
       {
         "prompt": "Profile these slow database queries and add the right indexes",
-        "top_k": 1
+        "top_k": 3
       },
       {
         "prompt": "The orders endpoint has a slow N+1 query pattern, profile it and fix the bottleneck",

@@ -1,0 +1,48 @@
+{
+  "skill_name": "documentation",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Document this: the setup flow changed, update the docs and decide where the page lives",
+        "top_k": 3
+      },
+      {
+        "prompt": "Does this feature need a doc update, or do the ticket and commit message already cover it?",
+        "top_k": 3
+      },
+      {
+        "prompt": "The architecture doc has grown to 40 pages; compact it and produce the HTML rendering for humans",
+        "top_k": 3
+      },
+      {
+        "prompt": "Add the new service's design doc to the document index and make sure it lives in the repo, not in Notion",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Find the root cause of the memory leak in the worker",
+        "owner": "debugging-and-error-recovery"
+      },
+      {
+        "prompt": "Write an ADR for choosing Postgres over MongoDB",
+        "owner": "adrs"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "dialogue",
+      "prompt": "The user says \"document this\" after a bug fix in the payments service that changed no contract, schema, or behavior beyond the fix. The ticket has the root cause and the commit message has the fix. Decide what, if anything, to write, and where.",
+      "expected_output": "A decision that no new document is written because the ticket and commit message carry it, or, if a document is warranted, one written from its template with only the needed sections, short and high level with no code, saved under docs/ or the service's docs folder, rendered to HTML, and added to the index",
+      "expectations": [
+        "The agent first checks whether the ticket and commit message already carry the information before writing anything",
+        "Any document written uses the template from templates/ with only the sections the work demands",
+        "No code is copied into the document; diagrams, if any, are code",
+        "The document lives in the repository under docs/ or <service>/docs/, never in a cloud tool or the agent brain",
+        "The document is added to the document index"
+      ]
+    }
+  ]
+}

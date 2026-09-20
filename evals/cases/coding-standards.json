@@ -1,0 +1,48 @@
+{
+  "skill_name": "coding-standards",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Apply the coding standards to this backend module: no raw strings, typed ids and enums, errors as domain objects, defensive code only at the edges",
+        "top_k": 3
+      },
+      {
+        "prompt": "Review this TypeScript code for strict typing, low cyclomatic complexity, injected dependencies, and comments that only explain the why",
+        "top_k": 3
+      },
+      {
+        "prompt": "Quick one-line fix in the payment handler, what coding rules do I need to follow before I commit",
+        "top_k": 3
+      },
+      {
+        "prompt": "Refactor this Python service so JSON is typed at every boundary, illegal states are unrepresentable, and no secrets are in source",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Model the domain for orders: bounded context, aggregates, domain events, and typed ids",
+        "owner": "domain-modeling"
+      },
+      {
+        "prompt": "Write a backward-compatible migration with rollback and update the drawdb schema",
+        "owner": "database"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "dialogue",
+      "prompt": "Here is a TypeScript order service where status is a string, the handler catches and logs errors, Date.now() is called inline, and every function starts with null checks. Bring it up to the coding standards.",
+      "expected_output": "A rewrite where the status is an enum or literal union, errors surface as a typed error union, the clock is an injected provider, validation moves to the API edge, and each change cites the C rule it satisfies",
+      "expectations": [
+        "The string status becomes an enum or literal union and ids become branded types (C1, C2)",
+        "No error is caught and swallowed; errors are a typed error union per module (C15, C16)",
+        "Date.now() and any inline dependency construction are replaced by injected providers (C19)",
+        "Null checks inside business logic move to the edge or become a first-class domain object with an explicit error (C3, C11)",
+        "Any comment that narrates what the code does is removed; a why comment carries the ticket id (C21)"
+      ]
+    }
+  ]
+}

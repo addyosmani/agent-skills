@@ -5,5 +5,8 @@ node_modules/
 *.log
 .claude/.simplify-ignore-cache/
 .claude/sdd-cache/
+.claude/settings.local.json
+.mcp.json
 evals/results/
 __pycache__/
+build/

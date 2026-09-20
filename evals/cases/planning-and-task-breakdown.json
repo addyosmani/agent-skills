@@ -11,7 +11,15 @@
         "top_k": 3
       },
       {
-        "prompt": "Plan the work into implementable chunks before we start coding",
+        "prompt": "Break the approved implementation plan for the payments service into milestones ordered by earliest usable outcome, with a foundation task first",
+        "top_k": 3
+      },
+      {
+        "prompt": "Plan the next sprint with a points capacity and close the last one with a review of delivered, spilled, and mis-estimated points",
+        "top_k": 3
+      },
+      {
+        "prompt": "We discovered unplanned work while building checkout; classify it and decide whether it enters scope or becomes a later ticket",
         "top_k": 3
       }
     ],
@@ -21,7 +29,8 @@
         "owner": "debugging-and-error-recovery"
       },
       {
-        "prompt": "Encode the output so it is safe against XSS"
+        "prompt": "Reassign this Linear issue to the backend engineer through the Linear MCP server and post a status update",
+        "owner": "linear"
       }
     ]
   },
@@ -29,14 +38,15 @@
     {
       "id": 1,
       "prompt": "Break the attached notifications spec into an executable plan.",
-      "expected_output": "Ordered tasks in tasks/plan.md, each small, verifiable, with acceptance criteria and dependencies",
+      "expected_output": "A plan in tasks/plan.md with milestones ordered by earliest usable outcome, a foundation task first, small vertical-slice tasks with acceptance criteria, verification commands, disjoint owned paths, points, and dependencies, indexed to tracker ids",
       "files": [
         "planning-and-task-breakdown"
       ],
       "expectations": [
-        "Every task has acceptance criteria",
-        "Tasks are ordered by dependency",
-        "Tasks are vertical slices rather than horizontal layers",
+        "Milestone 1 delivers a usable outcome, not just infrastructure",
+        "A foundation task is identified that blocks the parallel tasks",
+        "Every task has acceptance criteria, a verification command, and points at or below 8",
+        "Tasks are vertical slices ordered by dependency, and no two concurrent tasks share an owned path",
         "No implementation code is written during planning"
       ]
     }

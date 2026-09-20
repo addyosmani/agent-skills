@@ -50,7 +50,7 @@ Run the lifecycle in order for the project's first real feature:
 - **test-driven-development**, coverage debt is cheapest to avoid at zero.
 - **git-workflow-and-versioning**, atomic commits and ~100-line changes are habits, not retrofits.
 - **security-and-hardening**, auth, input validation, and secrets handling are structural; bolting them on later is a migration project.
-- **documentation-and-adrs**, the first architectural decisions are exactly the ones nobody will remember the _why_ of in two years. An ADR now prevents the brownfield archaeology described in Path B.
+- **documentation**, the first architectural decisions are exactly the ones nobody will remember the _why_ of in two years. An ADR now (the `adrs` skill) prevents the brownfield archaeology described in Path B.
 
 ### Add as the project grows
 

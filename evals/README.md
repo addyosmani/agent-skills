@@ -49,7 +49,7 @@ One file per skill: `evals/cases/<skill-name>.json`.
       { "prompt": "Write a failing test for this bug before fixing it", "top_k": 3 }
     ],
     "negative": [
-      { "prompt": "Update the architecture diagram in the docs", "owner": "documentation-and-adrs" }
+      { "prompt": "Update the architecture diagram in the docs", "owner": "documentation" }
     ]
   },
   "evals": [

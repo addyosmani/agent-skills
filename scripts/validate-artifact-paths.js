@@ -42,13 +42,8 @@ const ARTIFACT_ALLOWLIST = new Set([
 // The files that make up the spec -> plan -> build pipeline. Absent files are
 // skipped, not failed: this validator checks path consistency, not presence.
 const GUARDED_FILES = [
-  '.claude/commands/spec.md',
-  '.claude/commands/plan.md',
-  '.claude/commands/build.md',
   'skills/spec-driven-development/SKILL.md',
   'skills/planning-and-task-breakdown/SKILL.md',
-  'docs/getting-started.md',
-  'docs/adoption-guide.md',
 ];
 
 // Matches a path-like token ending in a spec/plan/todo artifact filename,

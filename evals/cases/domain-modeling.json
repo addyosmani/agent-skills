@@ -22,7 +22,7 @@
     "negative": [
       {
         "prompt": "Write end-to-end tests that drive the system through its real entry points",
-        "owner": "end-to-end-testing"
+        "owner": "test-driven-development"
       },
       {
         "prompt": "Audit this page for Core Web Vitals",

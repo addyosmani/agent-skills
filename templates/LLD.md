@@ -48,9 +48,4 @@ classDiagram
 | Level | What | Fakes injected |
 |---|---|---|
 
-## Rules satisfied
-
-| Rule | Where in this design |
-|---|---|
-
 ## Open questions

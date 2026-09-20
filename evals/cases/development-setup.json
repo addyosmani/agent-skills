@@ -1,0 +1,58 @@
+{
+  "skill_name": "development-setup",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Set up my own git worktree, Docker containers and LocalStack before starting the ticket",
+        "top_k": 3
+      },
+      {
+        "prompt": "Create an isolated development environment for this agent with a database snapshot or seed script",
+        "top_k": 3
+      },
+      {
+        "prompt": "Tear down the worktree, containers and DB snapshot now that the PR is open",
+        "top_k": 3
+      },
+      {
+        "prompt": "Frontend and backend need to build the new endpoints in parallel: set up the API contract first with the frontend mocking it and the backend returning labelled mock data",
+        "top_k": 3
+      },
+      {
+        "prompt": "I need to debug a failing job locally without touching anyone else's containers or the shared database",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Resolve the merge conflict on this feature branch",
+        "owner": "git-workflow-and-versioning"
+      },
+      {
+        "prompt": "Configure the CI pipeline to run the test suite on every push",
+        "owner": "ci-cd-and-automation"
+      },
+      {
+        "prompt": "Break this large feature into slices so the app keeps working at every point and an MVP ships first",
+        "owner": "continuous-delivery"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "dialogue",
+      "prompt": "You are starting ticket PROJ-42 (add a webhook endpoint, consumed by the web client) on a repository other agents are also working on. Set up your environment, say what must exist before you and the frontend engineer can work in parallel, and describe what you will remove when done.",
+      "expected_output": "A worktree created from the project root at <project-root>/PROJ-42-<slug>, own Docker containers and LocalStack for the touched services, a database snapshot or seed, the API contract written first so the frontend mocks it while the backend returns labelled mock data, dependency shapes resolved before code, the app and tests run inside that environment, and the worktree, containers and snapshot removed after the PR is opened",
+      "expectations": [
+        "The git worktree is created at the project root, never inside the harness's directory",
+        "Docker containers and LocalStack are started for the services touched and not reused from another agent",
+        "The database is snapshotted or seeded for this agent",
+        "The API contract is written before frontend and backend work in parallel; the frontend mocks it and the backend returns labelled mock data",
+        "Any dependency's shape and type is resolved before code is written against it",
+        "The app and tests run inside this environment",
+        "After opening the PR, the worktree, containers and snapshot are removed"
+      ]
+    }
+  ]
+}
