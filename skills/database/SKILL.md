@@ -20,7 +20,7 @@ The rules for every persistent store in the project, each with an ID (D1–D11) 
 
 | ID | Rule |
 | --- | --- |
-| D1 | **PostgreSQL** (SQLite is not an option). |
+| D1 | **PostgreSQL**. |
 | D2 | **Fail on conflict; do not build for hypothetical high concurrency.** Use a fail-on-conflict approach (unique constraints, optimistic checks) rather than locks, queues, or retry loops. |
 | D3 | **Connection pooling.** |
 | D4 | **Migrations, backward compatible for one release, with rollback.** `main` stays releasable: a migration must work with the previous release's code running. |
@@ -44,7 +44,6 @@ The rules for every persistent store in the project, each with an ID (D1–D11) 
 
 | Rationalization | Reality |
 |---|---|
-| "SQLite is enough for now." | SQLite is not an option. PostgreSQL (D1). |
 | "Two writers might collide, add a lock or a retry loop." | Fail on conflict with a unique constraint or an optimistic check; do not build for hypothetical high concurrency (D2). |
 | "We can add the migration rollback later." | A migration without rollback is a one-way door nobody approved (D4). |
 | "Drop the old column in the same release, it's cleaner." | The previous release's code must still run against the migrated schema. Additive first, remove later (D4). |
@@ -55,7 +54,6 @@ The rules for every persistent store in the project, each with an ID (D1–D11) 
 
 ## Red Flags
 
-- A SQLite connection string or file in a service (D1).
 - A lock, queue, or retry loop where a unique constraint or an optimistic check would fail on conflict (D2).
 - A connection opened per request instead of taken from a pool (D3).
 - A migration without a rollback, or one the previous release's code cannot run against (D4).

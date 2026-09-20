@@ -107,7 +107,7 @@ refactor/<short-description>  → refactor/auth-module
 | ID | Rule |
 | --- | --- |
 | P5 | **Branch per ticket named `<ticket>-<slug>`.** |
-| P6 | Work in your own git worktree at the project root (`agent-environment-setup`). |
+| P6 | Work in your own git worktree at the project root (`environment-setup`). |
 | P7 | **Delete the remote and local branch after merge.** |
 
 ### Trunk-based development
@@ -126,7 +126,7 @@ main ──●──●──●──●──●──●──●──●─
 
 ### Working with worktrees (P6)
 
-For parallel AI agent work, use git worktrees to run multiple branches simultaneously. The procedure — worktree at the project root, own containers, own data, cleanup — is `agent-environment-setup`.
+For parallel AI agent work, use git worktrees to run multiple branches simultaneously. The procedure — worktree at the project root, own containers, own data, cleanup — is `environment-setup`.
 
 ```bash
 # Create a worktree per ticket, from the project root

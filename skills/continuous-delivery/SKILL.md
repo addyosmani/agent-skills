@@ -18,7 +18,7 @@ How any requirement is planned and shipped: `main` is always releasable, the app
 - The user gives you a large scope — even if they just say "build feature X"
 - Cutting a release: semver and the changelog (L1)
 
-**NOT for:** the mechanics of commits, branches, PRs and merge (`git-workflow-and-versioning`); creating your own worktree and containers (`agent-environment-setup`); replacing a flow that is in use (`deprecation-and-migration`).
+**NOT for:** the mechanics of commits, branches, PRs and merge (`git-workflow-and-versioning`); creating your own worktree and containers (`environment-setup`); replacing a flow that is in use (`deprecation-and-migration`).
 
 ## Releases
 
@@ -45,7 +45,7 @@ How any requirement is planned and shipped: `main` is always releasable, the app
 | L9 | **API contract first, so frontend and backend work independently.** While working with APIs not created yet, the frontend mocks the API from the contract; the backend returns labelled mock data for integration testing until complete. |
 | L10 | **Once the DB model and the API contracts are decided, backend services work concurrently** (including service-to-service communication). |
 | L11 | **A dependency's shape and type are resolved before anything else is done.** There must be no confusion about the shape or type of a dependency on another service. |
-| L12 | **Every agent creates its own environment** — see `agent-environment-setup`. |
+| L12 | **Every agent creates its own environment** — see `environment-setup`. |
 | L13 | **Large-scale deprecation or migration** — see `deprecation-and-migration`. |
 
 ## Commit and PR granularity (detail in `git-workflow-and-versioning`)

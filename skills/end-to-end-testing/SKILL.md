@@ -37,7 +37,7 @@ category: testing
 | T9 | Test runner, lint, and format commands: project default; override when the service uses a different toolchain. |
 | T10 | Code is testable by construction: injected dependencies, no inline `random()`/`time()` (`coding-standards`). |
 | T11 | Until the backend is complete, the frontend tests against contract mocks and the backend returns labelled mock data for integration testing (`continuous-delivery`). |
-| T12 | Tests run in the agent's own environment with its own DB snapshot/seed (`agent-environment-setup`). |
+| T12 | Tests run in the agent's own environment with its own DB snapshot/seed (`environment-setup`). |
 
 ## Process
 

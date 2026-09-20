@@ -1,6 +1,6 @@
 ---
 name: hld
-description: What a principal engineer puts in a High-Level Design — API interface, domain models and glossary, service interactions and boundaries, tradeoffs, assumptions, goals, non-goals, diagrams, constraints, high-level observability (metrics, logs, alerts), alternatives considered, dependencies/infra, SLOs, and the LLD elements the HLD carries (important classes and interactions, DB schema, API contracts), plus scale estimations, ownership of every responsibility, and one-way doors, for a feature or a service from a reviewed PRD. Use when you write, review, or are asked for an HLD, design doc, architecture proposal, tech spec, or "how should we design X", or when an engineer has a reviewed PRD that touches more than one module or service, or introduces one, and before planning or implementation.
+description: What goes in a High-Level Design — API interface, domain models and glossary, service interactions and boundaries, tradeoffs, assumptions, goals, non-goals, diagrams, constraints, high-level observability (metrics, logs, alerts), alternatives considered, dependencies/infra, SLOs, and the LLD elements the HLD carries (important classes and interactions, DB schema, API contracts), plus scale estimations, ownership of every responsibility, and one-way doors, for a feature or a service from a reviewed PRD. Use when you write, review, or are asked for an HLD, design doc, architecture proposal, tech spec, or "how should we design X", or when an engineer has a reviewed PRD that touches more than one module or service, or introduces one, and before planning or implementation.
 category: design
 ---
 
@@ -10,7 +10,7 @@ category: design
 
 Two altitudes, one skill. The **project** architecture in `docs/ARCHITECTURE.md` says which services exist, what each is for, and where the API reference is. A **feature or service** `HLD.md` says the boundaries, the APIs by name, the domain model, and the scale it is sized for. Anyone with this skill may write either; keep to the altitude of the document you are writing. An HLD makes parallel work possible without rework: it fixes boundaries and API names, and deliberately not internals or exact contracts, which belong to the LLD.
 
-Roles: the **principal engineer (PE)** writes the HLD, keeps it very high level (discussing an item only if they deem fit — items can be skipped), and **calls out what is left for staff engineers to figure out**. The HLD has some elements of LLD. Every HLD, LLD, and PRD is reviewed by the user. Not every feature needs an HLD or LLD.
+The HLD is kept very high level (discussing an item only if deemed fit — items can be skipped) and **calls out what is left to figure out in the LLD**. Every HLD, LLD, and PRD is reviewed by the user. Not every feature needs an HLD or LLD.
 
 The template is `templates/HLD.md`; the table below is what it holds, and the process explains how to fill it.
 
@@ -22,7 +22,7 @@ The template is `templates/HLD.md`; the table below is what it holds, and the pr
 - NOT for a single-service change with existing APIs; update the service `HLD.md` directly in the PR.
 - NOT for internals: folder layout, types, exact contracts, and patterns belong to the `lld` skill.
 
-## HLD contents — the PE covers
+## HLD contents
 
 | # | Item |
 | --- | --- |
@@ -63,13 +63,13 @@ Tradeoffs and alternatives double as the decision record: problem, options, choi
 
 | Rationalization | Reality |
 |---|---|
-| "I'll specify the internals too, to be safe." | That makes the HLD stale on day one. Internals and exact contracts belong to the LLD; the PE calls out what is left for staff engineers. |
+| "I'll specify the internals too, to be safe." | That makes the HLD stale on day one. Internals and exact contracts belong to the LLD
 | "Diagrams can be drawn later in a tool." | Diagrams are code, committed with the HLD (item 9). |
 | "SLOs and observability are operational, not design." | They shape timeouts, idempotency, and what to measure. State them now, at high level (item 14). |
 | "The interface can be defined during implementation." | Then two services implement two interfaces. Names and interactions come first (items 1, 3); the contract follows in the LLD. |
 | "We may need to scale, so design for it now." | Design for the estimated scale. Record scale as a later concern. |
 | "The design is obvious, skip the review." | Every HLD, LLD, and PRD is reviewed by the user. It is a rule, not a preference. |
-| "Every feature needs a full HLD." | Not every feature needs an HLD or LLD, and items can be skipped when the PE deems fit. |
+| "Every feature needs a full HLD." | Not every feature needs an HLD or LLD, and items can be skipped when deemed fit. |
 
 ## Red Flags
 

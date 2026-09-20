@@ -12,12 +12,12 @@ Favor quick, incremental delivery over a complete feature. The hierarchy is proj
 
 ## When to Use
 
-- The PE's HLD, domain models, and implementation plan are approved and your service has work in it.
+- The HLD, domain models, and implementation plan are approved and your service has work in it.
 - A sprint starts and needs planning, or ends and needs a review.
 - A milestone closes and the next one needs planning.
 - Scope changes mid-milestone and the plan must be re-cut.
 - NOT before design approval; planning against an unapproved design creates rework.
-- NOT for cross-service sequencing: the PM owns that, using the PE's implementation plan.
+- NOT for cross-service sequencing: the PM owns that, using the implementation plan.
 
 ## Process
 

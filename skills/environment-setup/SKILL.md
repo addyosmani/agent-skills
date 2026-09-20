@@ -1,10 +1,10 @@
 ---
-name: agent-environment-setup
-description: How an agent sets up and tears down its own isolated development environment before doing any work — a git worktree at the project root (never inside the harness or agent brain directory), Docker containers, LocalStack for AWS, a database snapshot or seed script, and optional private observability for debugging, with cleanup afterwards. Use when starting any coding task an agent performs.
+name: environment-setup
+description: How an agent sets up and tears down its own isolated environment, for development, testing, debugging, or anything else, before doing any work — a git worktree at the project root (never inside the harness or agent brain directory), Docker containers, LocalStack for AWS, a database snapshot or seed script, and optional private observability for debugging, with cleanup afterwards. Use when starting any task an agent performs that needs an environment, whether for development, testing, debugging, or anything else.
 category: delivery
 ---
 
-# Agent environment setup
+# Environment setup
 
 ## Overview
 
@@ -12,7 +12,7 @@ category: delivery
 
 ## When to Use
 
-- At the start of every coding task an agent performs
+- At the start of every task an agent performs that needs a running environment: development, testing, debugging, or anything else
 - Before running the app or tests for a ticket
 - When several agents work on the same repository in parallel
 

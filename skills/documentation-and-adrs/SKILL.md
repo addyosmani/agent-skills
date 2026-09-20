@@ -110,11 +110,6 @@ We need a primary database for the task management application. Key requirements
 - Cons: Our data is inherently relational; would need to manage relationships manually
 - Rejected: Relational data in a document store leads to complex joins or data duplication
 
-### SQLite
-- Pros: Zero configuration, embedded, fast for reads
-- Cons: Limited concurrent write support, no managed hosting for production
-- Rejected: Not suitable for multi-user web application in production
-
 ### MySQL
 - Pros: Mature, widely supported
 - Cons: PostgreSQL has better JSON support, full-text search, and ecosystem tooling
