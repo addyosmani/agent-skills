@@ -1,0 +1,42 @@
+{
+  "skill_name": "github",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Raise the pull request for ENG-42 with the PR template and request review from the backend code reviewer",
+        "top_k": 3
+      },
+      {
+        "prompt": "Post inline review comments on this pull request and submit a request-changes verdict through GitHub",
+        "top_k": 3
+      },
+      {
+        "prompt": "Merge the approved PR with squash and cut a semver release with a changelog entry on GitHub",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Create the Linear milestone and issues for this sprint",
+        "owner": "linear"
+      },
+      {
+        "prompt": "Write the PRD for the checkout feature",
+        "owner": "prd-writing"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "dialogue",
+      "prompt": "The web code reviewer approved ENG-42 and CI is green. Finish it.",
+      "expected_output": "PR merged with squash and the ticket id, branch deleted, changelog line added, ticket moved to Engineer Verified with a status update",
+      "expectations": [
+        "Merge happens only after the approval and green checks are confirmed",
+        "Squash commit message carries the ticket id",
+        "Ticket state and changelog are updated after the merge"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "skill_name": "lld",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Write the low-level design for the orders module: folder structure, types and interfaces as code, data model, migrations, API contracts, state machines",
+        "top_k": 3
+      },
+      {
+        "prompt": "Turn the approved HLD section into an LLD with error handling and testing strategy for this service",
+        "top_k": 3
+      },
+      {
+        "prompt": "Design the service internals in detail before the foundation task starts",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Produce the unified high-level design across services",
+        "owner": "hld"
+      },
+      {
+        "prompt": "Break the plan into milestones for this service",
+        "owner": "milestone-planning"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "dialogue",
+      "prompt": "Write the low-level design for the orders module from the approved HLD section.",
+      "expected_output": "An LLD with folder structure, types and interfaces as code, data model with migrations and rollback, API contracts with errors, state machine, error handling, and testing strategy",
+      "expectations": [
+        "Types and interfaces are given as code",
+        "Every endpoint has an error model",
+        "Migrations include rollback steps",
+        "Patterns used are named with the problem they solve"
+      ]
+    }
+  ]
+}

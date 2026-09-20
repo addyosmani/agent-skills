@@ -1,0 +1,43 @@
+{
+  "skill_name": "brownfield-adoption",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "We just injected the organization into an existing codebase, bring it under the conventions: document the current state, build the conformance table, plan the refactors",
+        "top_k": 3
+      },
+      {
+        "prompt": "Inventory the services in this brownfield repo, write the as-is HLD, LLD, and DB diagram per service, and run a gap analysis against our conventions",
+        "top_k": 3
+      },
+      {
+        "prompt": "Plan the refactoring roadmap for this legacy service: domain typing per API, generated typed clients, feature-first layout",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Write the high-level design for the new subscriptions feature from the PRD",
+        "owner": "hld"
+      },
+      {
+        "prompt": "Slice the approved plan into sprints with a points capacity",
+        "owner": "milestone-planning"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "dialogue",
+      "prompt": "The brain was injected into a repo with three services and no docs. What do we do first?",
+      "expected_output": "An adoption plan: service inventory, service docs created, as-is HLD/LLD/schema per service with unknowns marked, baseline verification recorded, then gap analysis and a roadmap starting with OpenAPI and generated clients",
+      "expectations": [
+        "Documents the current state before proposing refactors",
+        "Every service gets an owner and a baseline verification",
+        "OpenAPI and generated clients are ordered before domain-typing refactors",
+        "Refactors are planned as small PRs with characterization tests"
+      ]
+    }
+  ]
+}

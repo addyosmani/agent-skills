@@ -1,0 +1,44 @@
+{
+  "skill_name": "langfuse",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Add Langfuse tracing to this application so I can see LLM calls, tokens and cost",
+        "top_k": 3
+      },
+      {
+        "prompt": "Fetch the traces from Langfuse and check whether their observation types and names follow Langfuse best practices",
+        "top_k": 3
+      },
+      {
+        "prompt": "Set up an evaluation dataset and an LLM-as-a-judge evaluator for our AI feature",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Write the PRD success metrics for the AI feature before we build it",
+        "owner": "prd-writing"
+      },
+      {
+        "prompt": "Add metrics and logs to the checkout service so we can see it working in production",
+        "owner": "observability-and-instrumentation"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "dialogue",
+      "prompt": "We have Langfuse keys in the environment. Instrument this service and confirm the traces are good.",
+      "expected_output": "Instrumentation implemented from current Langfuse documentation rather than memory, traces actually sent, then fetched back and audited against the best-practices page, with the gaps found and fixed reported",
+      "expectations": [
+        "Fetches current Langfuse documentation before writing any integration code",
+        "Sets specific observation types rather than leaving every step a generic span",
+        "Runs the instrumented path and fetches the resulting traces back instead of declaring success at compile time",
+        "Audits names, nesting, input and output against the best-practices guidance and fixes what fails",
+        "Never asks the user to paste API keys into the conversation"
+      ]
+    }
+  ]
+}

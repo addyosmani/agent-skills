@@ -1,0 +1,43 @@
+{
+  "skill_name": "linear",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Create the Linear project, milestone, cycle, and issues for this feature through the Linear MCP server",
+        "top_k": 3
+      },
+      {
+        "prompt": "Reassign this Linear issue to the backend engineer and mark it blocked with a comment",
+        "top_k": 3
+      },
+      {
+        "prompt": "Update the Linear issue state, labels, and post the report as a comment",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Write the PRD for this feature",
+        "owner": "prd-writing"
+      },
+      {
+        "prompt": "Slice the service work into milestones",
+        "owner": "milestone-planning"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "dialogue",
+      "prompt": "Create the tracker items for milestone 1 of the notifications service: two stories and five tasks, one of them the foundation task.",
+      "expected_output": "A Linear project milestone, issues per story and task with the description template and labels, foundation task blocking its dependents, identifiers quoted back",
+      "expectations": [
+        "Searches for existing project, milestone, and issues before creating",
+        "Each task issue uses the description template and labels",
+        "The foundation task has blocks relations to its dependents",
+        "Identifiers are read back and quoted, never fabricated"
+      ]
+    }
+  ]
+}

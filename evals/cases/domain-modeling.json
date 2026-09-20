@@ -1,0 +1,47 @@
+{
+  "skill_name": "domain-modeling",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Derive explicit domain models from the requirements: entities, value objects, identities, invariants, and lifecycle states",
+        "top_k": 3
+      },
+      {
+        "prompt": "Model the domain types with invariants and separate API, application, domain, and persistence models",
+        "top_k": 3
+      },
+      {
+        "prompt": "Define the shared domain model with typed ids, sum types for closed sets, and state transitions",
+        "top_k": 3
+      },
+      {
+        "prompt": "This API is stringly typed and allows impossible states, make the domain model strongly typed with structured validation errors",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Write end-to-end tests that drive the system through its real entry points",
+        "owner": "end-to-end-testing"
+      },
+      {
+        "prompt": "Audit this page for Core Web Vitals",
+        "owner": "performance-optimization"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "dialogue",
+      "prompt": "Model the domain for a booking system: bookings can be requested, confirmed, cancelled, or completed, and slots must not double-book.",
+      "expected_output": "Model records for each entity with identity, invariants, lifecycle states as closed sets, and explicit layer translations",
+      "expectations": [
+        "Booking status is a closed set (enum or union), not a free string",
+        "The no-double-booking invariant is stated and mapped to a test",
+        "API, domain, and persistence models are separated or the collapse is recorded",
+        "Business rules stay on the backend"
+      ]
+    }
+  ]
+}

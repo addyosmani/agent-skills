@@ -1,0 +1,43 @@
+{
+  "skill_name": "hld",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Produce a unified high-level design across services from the approved PRD with boundaries, ownership, and key interfaces",
+        "top_k": 3
+      },
+      {
+        "prompt": "Write the HLD for this feature: system context, service boundaries, key interactions, and one-way doors",
+        "top_k": 3
+      },
+      {
+        "prompt": "Define the cross-service high-level design and leave service internals to their owners",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Write the low-level design with folder structure, types, and migrations for the orders module",
+        "owner": "lld"
+      },
+      {
+        "prompt": "Write unit tests first",
+        "owner": "test-driven-development"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "dialogue",
+      "prompt": "Here is the approved PRD for in-app subscriptions across the backend, web app, and mobile app. Produce the high-level design.",
+      "expected_output": "A unified HLD with system context, boundaries and owners, shared domain model, key interfaces as types, key interactions, decisions, one-way doors, and what is left to service owners",
+      "expectations": [
+        "Interfaces are expressed as types, not prose",
+        "Every responsibility has exactly one owner",
+        "Service internals are explicitly left to service owners",
+        "One-way doors are named and recorded"
+      ]
+    }
+  ]
+}
