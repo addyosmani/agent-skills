@@ -8,7 +8,7 @@ category: tools
 
 ## Overview
 
-The Linear ticket is the source of truth for everything (`../../references/ticket-anatomy.md`). Every unit of work, from a PRD to a one-line bug fix, is a ticket with a goal. This skill maps the organization's concepts onto Linear objects and gives the exact templates. Swapping the tool means another skill with the same templates.
+The Linear ticket is the source of truth for everything; the rules a ticket follows and the ticket anatomy are `project-management` (M1–M18). This skill maps the organization's concepts onto Linear objects and gives the exact templates. Swapping the tool means another skill with the same templates.
 
 ## When to Use
 
@@ -25,10 +25,10 @@ The Linear MCP server (`mcp.json` in this skill) authenticates with OAuth on fir
 ## Process
 
 1. **Read before write.** Search for the project, milestone, cycle, or issue first. Never create a duplicate.
-2. **File the ticket before working**, under the right project, with the template for its type. A ticket created from a direct user request carries the prompt verbatim.
-3. **Record the loop steps you skip** and why, on the ticket, before code.
+2. **File the ticket before working** (`project-management` M1), under the right project, with the template for its type; a direct user request goes in verbatim (`project-management` M2).
+3. **Record the loop steps you skip** on the ticket before code (`project-management` M3).
 4. **Write, then read back** the created or updated object and quote its identifier.
-5. **Post a structured status update on every state change, reassignment, or re-pointing**; when the new state is `Blocked`, the update carries the blocker block.
+5. **Post a structured status update on every state change, reassignment, or re-pointing** (`project-management`, ticket anatomy § Changes); when the new state is `Blocked`, the update carries the blocker block.
 6. **Query by structure.** Answer "what was this ticket about" or "what changed" from the description and the status updates in order, never from chat.
 
 ## Concept mapping
@@ -50,7 +50,7 @@ The Linear MCP server (`mcp.json` in this skill) authenticates with OAuth on fir
 
 ## Ticket templates
 
-The anatomy bends to the work type; fill what applies and say when a field does not.
+The anatomy is `project-management` § Ticket anatomy; it bends to the work type (§ By work type). Fill what applies and say when a field does not.
 
 ### Story
 

@@ -1,6 +1,6 @@
 ---
 name: deprecation-and-migration
-description: Manages deprecation and migration. Use when removing old systems, APIs, or features. Use when migrating users from one implementation to another. Use when migrating a database schema in production, such as renaming or dropping a column without downtime (expand/contract). Use when deciding whether to maintain or sunset existing code.
+description: "The mandatory procedure for large-scale deprecation, rewrites, or migrations — build the new flow in parallel, freeze and mark the old flow deprecated, test, switch, delete the old flow, then migrate data; never edit the old flow in place, keep it working until the switch, and record any human override. Use when you replace an existing feature, service, schema, or flow; rename or restructure something in use; or the user says \"migrate\", \"deprecate\", \"rewrite\", \"replace the old X\", or \"v2\". Use when removing old systems, APIs, or features, migrating users from one implementation to another, migrating a database schema in production, such as renaming or dropping a column without downtime (expand/contract), or deciding whether to maintain or sunset existing code."
 category: coding
 ---
 
@@ -8,12 +8,14 @@ category: coding
 
 ## Overview
 
-Code is a liability, not an asset. Every line of code has ongoing maintenance cost — bugs to fix, dependencies to update, security patches to apply, and new engineers to onboard. Deprecation is the discipline of removing code that no longer earns its keep, and migration is the process of moving users safely from the old to the new.
+This is the only sanctioned way to replace a flow that is in use.
 
-Most engineering organizations are good at building things. Few are good at removing them. This skill addresses that gap.
+Code is a liability, not an asset. Every line of code has ongoing maintenance cost — bugs to fix, dependencies to update, security patches to apply, and new engineers to onboard. Deprecation is the discipline of removing code that no longer earns its keep, and migration is the process of moving users safely from the old to the new. Most engineering organizations are good at building things. Few are good at removing them. This skill addresses that gap.
 
 ## When to Use
 
+- You replace an existing feature, service, schema, or flow; rename or restructure something in use
+- The user says "migrate", "deprecate", "rewrite", "replace the old X", or "v2"
 - Replacing an old system, API, or library with a new one
 - Sunsetting a feature that's no longer needed
 - Consolidating duplicate implementations
@@ -56,18 +58,19 @@ Before deprecating anything, answer these questions:
    → Security risk, engineer time, opportunity cost of complexity.
 ```
 
-## Compulsory vs Advisory Deprecation
+## The sequence
 
-| Type | When to Use | Mechanism |
-|------|-------------|-----------|
-| **Advisory** | Migration is optional, old system is stable | Warnings, documentation, nudges. Users migrate on their own timeline. |
-| **Compulsory** | Old system has security issues, blocks progress, or maintenance cost is unsustainable | Hard deadline. Old system will be removed by date X. Provide migration tooling. |
+| Step | Rule |
+| --- | --- |
+| 1 | **Create the new flow in parallel** (new parallel features). |
+| 2 | **Mark the old code and flow as deprecated.** |
+| 3 | **Don't allow adding anything new to the old flow** — it is frozen. |
+| 4 | **Test the new flow.** |
+| 5 | **Switch to the new flow.** |
+| 6 | **Delete the old flow.** |
+| 7 | **Migrate old data.** |
 
-**Default to advisory.** Use compulsory only when the maintenance cost or risk justifies forcing migration. Compulsory deprecation requires providing migration tooling, documentation, and support — you can't just announce a deadline.
-
-## The Migration Process
-
-### Step 1: Build the Replacement
+### Step 1: Create the new flow in parallel
 
 Don't deprecate without a working alternative. The replacement must:
 
@@ -75,14 +78,16 @@ Don't deprecate without a working alternative. The replacement must:
 - Have documentation and migration guides
 - Be proven in production (not just "theoretically better")
 
-### Step 2: Announce and Document
+For a schema, the parallel flow is the additive **expand** phase: add the new column, table, or index alongside the old one (see Database Schema Migrations below).
+
+### Step 2: Mark the old code and flow as deprecated
 
 ```markdown
 ## Deprecation Notice: OldService
 
 **Status:** Deprecated as of 2025-03-01
 **Replacement:** NewService (see migration guide below)
-**Removal date:** Advisory — no hard deadline yet
+**Removal:** step 6 of the sequence, after the switch
 **Reason:** OldService requires manual scaling and lacks observability.
             NewService handles both automatically.
 
@@ -92,7 +97,15 @@ Don't deprecate without a working alternative. The replacement must:
 3. Run the migration verification script: `npx migrate-check`
 ```
 
-### Step 3: Migrate Incrementally
+### Step 3: The old flow is frozen
+
+Nothing new lands in the old flow. Invest in the replacement instead.
+
+### Step 4: Test the new flow
+
+Verify behavior matches (tests, integration checks) before any consumer is switched.
+
+### Step 5: Switch to the new flow
 
 Migrate consumers one at a time, not all at once. For each consumer:
 
@@ -106,21 +119,7 @@ Migrate consumers one at a time, not all at once. For each consumer:
 
 **The Churn Rule:** If you own the infrastructure being deprecated, you are responsible for migrating your users — or providing backward-compatible updates that require no migration. Don't announce deprecation and leave users to figure it out.
 
-### Step 4: Remove the Old System
-
-Only after all consumers have migrated:
-
-```
-1. Verify zero active usage (metrics, logs, dependency analysis)
-2. Remove the code
-3. Remove associated tests, documentation, and configuration
-4. Remove the deprecation notices
-5. Celebrate — removing code is an achievement
-```
-
-## Migration Patterns
-
-### Strangler Pattern
+#### Strangler Pattern
 
 Run old and new systems in parallel. Route traffic incrementally from old to new. When the old system handles 0% of traffic, remove it.
 
@@ -132,7 +131,7 @@ Phase 4: New system handles 100%, old system idle
 Phase 5: Remove old system
 ```
 
-### Adapter Pattern
+#### Adapter Pattern
 
 Create an adapter that translates calls from the old interface to the new implementation. Consumers keep using the old interface while you migrate the backend.
 
@@ -149,7 +148,7 @@ class LegacyTaskService implements OldTaskAPI {
 }
 ```
 
-### Feature Flag Migration
+#### Feature Flag Migration
 
 Use feature flags to switch consumers from old to new system one at a time:
 
@@ -162,9 +161,40 @@ function getTaskService(userId: string): TaskService {
 }
 ```
 
-### Database Schema Migrations (Expand/Contract)
+### Step 6: Delete the old flow
 
-A schema change is the riskiest migration because the data is the one thing you cannot roll back by reverting a deploy. The failure mode is coupling the schema change to the code change: rename a column in the same release that starts using the new name, and during the rollout window — when old and new code run at once — one of them is querying a column that doesn't exist. The fix is to **never change a column in place**. Migrate in additive phases so old and new code are both valid at every step.
+Only after all consumers have migrated:
+
+```
+1. Verify zero active usage (metrics, logs, dependency analysis)
+2. Remove the code
+3. Remove associated tests, documentation, and configuration
+4. Remove the deprecation notices
+5. Celebrate — removing code is an achievement
+```
+
+### Step 7: Migrate old data
+
+For a schema, this is the **backfill** and **contract** phases: copy the data across in batches, then drop the old shape in its own later deploy (see Database Schema Migrations below).
+
+## Invariants throughout
+
+| Rule |
+| --- |
+| **Don't edit the old flow in place.** |
+| **The old flow is kept working as you make new changes**, until the switch. |
+| **A human can override the above migration plan** — only on an explicit user instruction, recorded in `docs/LEARNINGS.md` and noted on the ticket. |
+
+## How this fits the other rules
+
+- The new flow ships behind a feature flag or without an entry point until step 5 (`continuous-delivery` L5).
+- Schema changes stay backward compatible for one release with rollback (`database` D4); where slicing is impossible, say so on the ticket (`continuous-delivery` L8).
+- Touching existing code stays backward compatible (`coding-standards` C13); the freeze in step 3 is what makes that cheap.
+- Each step is its own small, working commit and PR (`git-workflow-and-versioning` P1, P11).
+
+## Database Schema Migrations (Expand/Contract)
+
+A schema change is the riskiest migration because the data is the one thing you cannot roll back by reverting a deploy. The failure mode is coupling the schema change to the code change: rename a column in the same release that starts using the new name, and during the rollout window — when old and new code run at once — one of them is querying a column that doesn't exist. The fix is to **never change a column in place**. Migrate in additive phases so old and new code are both valid at every step. Expand is step 1 of the sequence; backfill and contract are step 7.
 
 ```
 EXPAND ──────────────→ MIGRATE ──────────────→ CONTRACT
@@ -206,6 +236,11 @@ Zombie code is code that nobody owns but everybody depends on. It's not actively
 
 | Rationalization | Reality |
 |---|---|
+| "It's faster to edit the old flow into the new one" | Don't edit the old flow in place. Create the new flow in parallel (step 1). |
+| "One more feature in the old flow won't hurt" | The old flow is frozen (step 3); nothing new lands in it. |
+| "Delete the old flow now, we'll switch once the new one is done" | The old flow is kept working until the switch (step 5); deletion is step 6. |
+| "The new flow works, no need to test before switching" | Test the new flow (step 4) before the switch (step 5). |
+| "We'll skip the sequence, it's a small rewrite" | This is the only sanctioned way to replace a flow that is in use; only an explicit user instruction, recorded in `docs/LEARNINGS.md` and noted on the ticket, overrides it. |
 | "It still works, why remove it?" | Working code that nobody maintains accumulates security debt and complexity. Maintenance cost grows silently. |
 | "Someone might need it later" | If it's needed later, it can be rebuilt. Keeping unused code "just in case" costs more than rebuilding. |
 | "The migration is too expensive" | Compare migration cost to ongoing maintenance cost over 2-3 years. Migration is usually cheaper long-term. |
@@ -218,11 +253,16 @@ Zombie code is code that nobody owns but everybody depends on. It's not actively
 
 ## Red Flags
 
+- The old flow edited in place instead of a new flow built in parallel
+- The old flow broken before the switch
+- New features added to a deprecated system (invest in the replacement instead)
+- The switch made before the new flow is tested
+- The old flow deleted before the switch, or data migrated before the old flow is deleted
+- The sequence skipped or reordered with no recorded user instruction
 - Deprecated systems with no replacement available
 - Deprecation announcements with no migration tooling or documentation
 - "Soft" deprecation that's been advisory for years with no progress
 - Zombie code with no owner and active consumers
-- New features added to a deprecated system (invest in the replacement instead)
 - Deprecation without measuring current usage
 - Removing code without verifying zero active consumers
 - A schema change and the code that depends on it shipped in the same deploy
@@ -233,6 +273,11 @@ Zombie code is code that nobody owns but everybody depends on. It's not actively
 
 After completing a deprecation:
 
+- [ ] The new flow was created in parallel; the old flow was never edited in place
+- [ ] The old code and flow were marked deprecated and frozen; nothing new landed in the old flow
+- [ ] The new flow was tested before the switch; the old flow kept working until the switch
+- [ ] The old flow was deleted after the switch, then old data migrated
+- [ ] Any deviation from the sequence has an explicit user instruction recorded in `docs/LEARNINGS.md` and noted on the ticket
 - [ ] Replacement is production-proven and covers all critical use cases
 - [ ] Migration guide exists with concrete steps and examples
 - [ ] All active consumers have been migrated (verified by metrics/logs)

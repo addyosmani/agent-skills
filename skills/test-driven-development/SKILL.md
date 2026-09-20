@@ -365,7 +365,7 @@ For JavaScript/TypeScript testing patterns illustrating these principles — Jes
 
 | Rationalization | Reality |
 |---|---|
-| "I'll write tests after the code works" | You won't. And tests written after the fact test implementation, not behavior. |
+| "I'll write tests after the code works" | You won't. And tests written after the fact test implementation, not behavior. Tests land with the change, not after (`end-to-end-testing` T7). |
 | "This is too simple to test" | Simple code gets complicated. The test documents the expected behavior. |
 | "Tests slow me down" | Tests slow you down now. They speed you up every time you change the code later. |
 | "I tested it manually" | Manual testing doesn't persist. Tomorrow's change might break it with no way to know. |
@@ -382,7 +382,7 @@ For JavaScript/TypeScript testing patterns illustrating these principles — Jes
 - Bug fixes without reproduction tests
 - Tests that test framework behavior instead of application behavior
 - Test names that don't describe the expected behavior
-- Skipping tests to make the suite pass
+- Skipping or weakening tests to make the suite pass (`end-to-end-testing` T2)
 - Running the same test command twice in a row without any intervening code change
 
 ## Verification
@@ -393,7 +393,7 @@ After completing any implementation:
 - [ ] The full suite passes, run with the repository's own test command (`npm test`, `./gradlew test`, `pytest`, `go test ./...`, ...)
 - [ ] Bug fixes include a reproduction test that failed before the fix
 - [ ] Test names describe the behavior being verified
-- [ ] No tests were skipped or disabled
+- [ ] No tests were skipped, disabled, or weakened to pass (`end-to-end-testing` T2)
 - [ ] Coverage hasn't decreased (if tracked)
 
 **Note:** Run each test command after a change that could affect the result. After a clean run, don't repeat the same command unless the code has changed since — re-running on unchanged code adds no confidence.

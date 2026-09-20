@@ -1,6 +1,6 @@
 ---
 name: code-review-and-quality
-description: Conducts multi-axis code review. Use before merging any change. Use when reviewing code written by yourself, another agent, or a human. Use when you need to assess code quality across multiple dimensions before it enters the main branch.
+description: How to review a pull request in any reviewer role (code reviewer, QA reviewer, perf reviewer, security reviewer) — the fixed checklist (unrelated changes, missing feature-flag gating, regression risk, missing or redundant observability, missing or redundant comments, domain conventions, use of strings), filing findings as Linear issues and PR comments, approval and comment-resolution rules, and the "never block for a security audit" rule; conducts multi-axis code review. Use when you are asked to review, approve, critique, or audit a PR, diff, or branch, or when an agent takes on a reviewer role — even if the user only says "take a look at this PR"; before merging any change; when reviewing code written by yourself, another agent, or a human; or when you need to assess code quality across multiple dimensions before it enters the main branch.
 category: coding
 ---
 
@@ -8,7 +8,7 @@ category: coding
 
 ## Overview
 
-Multi-dimensional code review with quality gates. Every change gets reviewed before merge — no exceptions. Review covers five axes: correctness, readability, architecture, security, and performance.
+Multi-dimensional code review with quality gates. Every reviewer runs the fixed checklist and process rules R1–R4 below, then the five axes: correctness, readability, architecture, security, and performance.
 
 **The approval standard:** Approve a change when it definitely improves overall code health, even if it isn't perfect. Perfect code doesn't exist — the goal is continuous improvement. Don't block a change because it isn't exactly how you would have written it. If it improves the codebase and follows the project's conventions, approve it.
 
@@ -19,6 +19,61 @@ Multi-dimensional code review with quality gates. Every change gets reviewed bef
 - When another agent or model produced code you need to evaluate
 - When refactoring existing code
 - After any bug fix (review both the fix and the regression test)
+- When you are asked to review, approve, critique, or audit a PR, diff, or branch, or when an agent takes on a reviewer role — even if the user only says "take a look at this PR"
+
+## Reviewer roles
+
+- The existing agent takes the role of a reviewer **by importing the relevant skill** (this one plus the discipline skill, e.g. `observability-and-instrumentation`, `end-to-end-testing`, `coding-standards`). Roles: **code reviewer, QA reviewer, perf reviewer, security reviewer**, etc. Reviewers are **optional** — review may be made optional on the ticket.
+- Reviewed-class PRs merge only on the **discipline code reviewer's approval**; every review comment is resolved by a commit or an explained reply.
+- Detail lives in `../../references/merge-and-review.md`.
+
+## The checklist
+
+Check, in order, and report each hit:
+
+| # | Check |
+| --- | --- |
+| 1 | **Changes not related to the feature / task.** |
+| 2 | **Changes not feature-flag gated, wherever applicable.** |
+| 3 | **Whether the change risks regression.** |
+| 4 | **Observability missing or redundant** (metrics, logs). |
+| 5 | **Missing or redundant comments.** Comments should be used very sparingly. |
+| 6 | **Domain conventions not followed.** |
+| 7 | **Use of strings** (where an enum or typed id belongs). |
+
+Additional checks that follow from the other skills: commit granularity and message (`git-workflow-and-versioning` P1, P3, P2), PR size (`git-workflow-and-versioning` P11), tests mapped to acceptance criteria and not weakened (`end-to-end-testing` T2), and from `coding-standards`: no secrets (C22), backward compatibility (C13), no edits to generated/vendor files (C14).
+
+## Process rules
+
+| ID | Rule |
+| --- | --- |
+| R1 | **Always raise the PR; don't merge directly. Review can be made optional.** |
+| R2 | **Don't hold the PR for a security audit.** The security audit can be taken up later as a next requirement / later ticket. |
+| R3 | Reviewers **create an issue on Linear** for each finding and **comment on the PR (if the PR is open)**. |
+| R4 | Approval gates merge for reviewed-class PRs; every comment is resolved by a commit or an explained reply. |
+
+## Output format for a review
+
+```
+## Review — <PR title> (<role>)
+Verdict: approve | request changes | comment only
+
+### Findings
+1. [<check #>] <file:line> — <what> — <why it matters> — Linear: <issue id>
+...
+
+### Not blocking
+- <observations that do not block merge>
+```
+
+Post the findings as PR comments while the PR is open, create the Linear issues, and never block on a security audit.
+
+Before the verdict, confirm:
+
+- [ ] I understand what this change does and why
+- [ ] Tests pass
+- [ ] Build succeeds
+- [ ] Manual verification done (if applicable)
 
 ## The Five-Axis Review
 
@@ -130,7 +185,7 @@ Small, focused changes are easier to review, faster to merge, and safer to deplo
 
 ## Change Descriptions
 
-Every change needs a description that stands alone in version control history.
+Commit granularity and message rules: `git-workflow-and-versioning` P1, P2, P3. Every change needs a description that stands alone in version control history.
 
 **First line:** Short, imperative, standalone. "Delete the FizzBuzz RPC" not "Deleting the FizzBuzz RPC." Must be informative enough that someone searching history can understand the change without reading the diff.
 
@@ -300,53 +355,6 @@ Part of code review is dependency review:
 
 For triaging `npm audit` findings and supply-chain risk (typosquatting, compromised maintainers), follow the `security-and-hardening` skill — this section covers the upgrade *workflow*, that one covers the security verdict.
 
-## The Review Checklist
-
-```markdown
-## Review: [PR/Change title]
-
-### Context
-- [ ] I understand what this change does and why
-
-### Correctness
-- [ ] Change matches spec/task requirements
-- [ ] Edge cases handled
-- [ ] Error paths handled
-- [ ] Tests cover the change adequately
-
-### Readability
-- [ ] Names are clear and consistent
-- [ ] Logic is straightforward
-- [ ] No unnecessary complexity
-
-### Architecture
-- [ ] Follows existing patterns
-- [ ] No unnecessary coupling or dependencies
-- [ ] Appropriate abstraction level
-- [ ] Refactors reduce complexity rather than relocate it
-- [ ] No feature logic in shared modules; file stays within a healthy size
-
-### Security
-- [ ] No secrets in code
-- [ ] Input validated at boundaries
-- [ ] No injection vulnerabilities
-- [ ] Auth checks in place
-- [ ] External data sources treated as untrusted
-
-### Performance
-- [ ] No N+1 patterns
-- [ ] No unbounded operations
-- [ ] Pagination on list endpoints
-
-### Verification
-- [ ] Tests pass
-- [ ] Build succeeds
-- [ ] Manual verification done (if applicable)
-
-### Verdict
-- [ ] **Approve** — Ready to merge
-- [ ] **Request changes** — Issues must be addressed
-```
 ## See Also
 
 - For detailed security review guidance, see `../../references/security-checklist.md`
@@ -365,14 +373,24 @@ For triaging `npm audit` findings and supply-chain risk (typosquatting, compromi
 | "It's only a small addition to this file" | Small diffs still push files past a healthy size and bolt branches onto unrelated flows. Judge the resulting structure, not the diff size. |
 | "It's just a version bump" | A bump is a behavior change you didn't write. Read the changelog; semver doesn't guarantee no breakage. |
 | "I'll upgrade everything in one PR to save time" | A bulk bump that breaks the build hides which package did it. One dependency per change keeps the cause and the revert clean. |
+| "It's a one-line fix, I'll merge it straight to main" | Always raise the PR; don't merge directly. Review can be made optional (R1). |
+| "This touches auth, hold the PR until the security audit" | Don't hold the PR for a security audit; it is a later ticket (R2). |
+| "A PR comment is enough for this finding" | Reviewers create an issue on Linear for each finding and comment on the PR (R3). |
+| "That comment is minor, it can stay open" | Every comment is resolved by a commit or an explained reply (R4). |
+| "The extra comments make the code friendlier" | Comments should be used very sparingly; missing or redundant comments are a finding (check 5). |
+| "A string is fine here, it's only used once" | Use of strings where an enum or typed id belongs is a finding (check 7). |
 
 ## Red Flags
 
-- PRs merged without any review
+- A change merged directly without a PR (R1)
+- A PR held open waiting for a security audit (R2)
+- A finding with no Linear issue, or no PR comment while the PR is open (R3)
+- A reviewed-class PR merged with an unresolved comment or without the discipline code reviewer's approval (R4)
+- A review that skips any of checklist items 1–7 or reports no verdict
+- Changes unrelated to the task, or changes not feature-flag gated where applicable, passed without a finding (checks 1, 2)
 - Review that only checks if tests pass (ignoring other axes)
 - "LGTM" without evidence of actual review
-- Security-sensitive changes without security-focused review
-- Large PRs that are "too big to review properly" (split them)
+- Large PRs that are "too big to review properly" (split them; `git-workflow-and-versioning` P11)
 - No regression tests with bug fix PRs
 - Review comments without severity labels — makes it unclear what's required vs optional
 - Accepting "I'll fix it later" — it never happens
@@ -387,8 +405,11 @@ For triaging `npm audit` findings and supply-chain risk (typosquatting, compromi
 
 After review is complete:
 
+- [ ] Checklist items 1–7 were each checked, in order, and every hit reported
+- [ ] Every finding has a Linear issue and, while the PR was open, a PR comment (R3)
+- [ ] The verdict is stated as approve, request changes, or comment only, and the PR was not held for a security audit (R2)
 - [ ] All Critical issues are resolved
-- [ ] All Required (no-prefix) changes are resolved or explicitly deferred with justification
+- [ ] All Required (no-prefix) changes are resolved or explicitly deferred with justification; every comment is resolved by a commit or an explained reply (R4)
 - [ ] Tests pass
 - [ ] Build succeeds
 - [ ] The verification story is documented (what changed, how it was verified)

@@ -8,7 +8,7 @@ category: tools
 
 ## Overview
 
-GitHub is where code review happens and CI runs; the tracker is where state lives. This skill maps the org's PR flow (`../../references/commit-and-pr.md`) onto GitHub operations and keeps the ticket and the PR in sync. Prefer the GitHub MCP server when the tool has it; the `gh` CLI is the equivalent fallback in any tool with a shell.
+GitHub is where code review happens and CI runs; the tracker is where state lives. This skill maps the org's PR flow (`git-workflow-and-versioning` P8–P14) onto GitHub operations and keeps the ticket and the PR in sync. Prefer the GitHub MCP server when the tool has it; the `gh` CLI is the equivalent fallback in any tool with a shell.
 
 ## When to Use
 

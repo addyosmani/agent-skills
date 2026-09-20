@@ -31,7 +31,7 @@ Before writing any code, operate in read-only mode:
 - Map dependencies between components
 - Note risks and unknowns
 
-**Do NOT write code during planning.** The output is a plan document saved to `tasks/plan.md` and a task list recorded in the task list target (see Output Files; default `tasks/todo.md`), not implementation.
+**Do NOT write code during planning.** The ticket comes before the plan and the plan before any work (`project-management` M1). The output is a plan document saved to `tasks/plan.md` and a task list recorded in the task list target (see Output Files; default `tasks/todo.md`), not implementation.
 
 ### Step 2: Identify the Dependency Graph
 
@@ -75,7 +75,7 @@ Task 3: User can create a task (task schema + API + UI for creation)
 Task 4: User can view task list (query + API + UI for list view)
 ```
 
-Each vertical slice delivers working, testable functionality.
+Each vertical slice delivers working, testable functionality. How increments, scope, discovered work, and the MVP are cut is `project-management` M9–M12.
 
 ### Step 4: Write Tasks
 

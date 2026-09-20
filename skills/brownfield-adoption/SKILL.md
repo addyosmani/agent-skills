@@ -8,7 +8,7 @@ category: process
 
 ## Overview
 
-An existing codebase is adopted in three passes: **know it** (inventory, as-is documentation, docs moved to their locations), **judge it** (a conformance table against every row of `CONVENTIONS.md`), **change it** (a roadmap of refactors delivered as ordinary milestones and sprints, one API or feature at a time, with the product runnable throughout). The conventions are not overridable; the table is how the code moves toward them incrementally. Nothing is refactored before it is documented as-is.
+An existing codebase is adopted in three passes: **know it** (inventory, as-is documentation, docs moved to their locations), **judge it** (a conformance table against every rule in the convention skills), **change it** (a roadmap of refactors delivered as ordinary milestones and sprints, one API or feature at a time, with the product runnable throughout). The conventions are not overridable; the table is how the code moves toward them incrementally. Nothing is refactored before it is documented as-is.
 
 ## When to Use
 
@@ -29,7 +29,7 @@ An existing codebase is adopted in three passes: **know it** (inventory, as-is d
 
 ### Pass 2: judge it
 
-6. **Conformance table** per service, one row per convention in `CONVENTIONS.md`: convention id → followed | not followed | partial → evidence (`path:line`) → gap → blast radius. Post it on the adoption milestone and in the service's `docs/`.
+6. **Conformance table** per service, one row per rule in the convention skills: rule id (C1, DD2, D4, L5, P11, T2, O5, R3, M3, W7 ...) → followed | not followed | partial → evidence (`path:line`) → gap → blast radius. Post it on the adoption milestone and in the service's `docs/`.
 7. **Client contracts.** For every API a client consumes, record whether an OpenAPI document exists and whether the client is generated. Missing OpenAPI is the first gap to close; typed clients and backend-only validation depend on it.
 8. **Hand the table to the user.** Gaps that need a product decision are named for the user; the rest are ordered in pass 3.
 
