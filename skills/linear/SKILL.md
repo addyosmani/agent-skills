@@ -34,7 +34,7 @@ Linear is the source of truth for all work: what was asked, what was decided, wh
 ## Setup
 
 - **The team and the key** come from the project's local `.env`, never from the repository: `LINEAR_TEAM` is the team key, `LINEAR_API_KEY` a personal API key. One team per repository unless the user says otherwise.
-- **The workflow** is created once per team by the user: `skills/linear/scripts/create-workflow.sh` reads `LINEAR_TEAM` and `LINEAR_API_KEY` from the environment and `skills/linear/workflow.json` from this skill, enables triage, creates the missing states in their categories, never touches existing ones, and prints the team's states as JSON. When a project starts, list the team's states; if any of the workflow's states is missing, ask the user to run the script. Create the labels below yourself, once.
+- **The workflow** is created once per team by the user: `skills/linear/scripts/create-workflow.sh` reads `LINEAR_TEAM` and `LINEAR_API_KEY` from the environment and `skills/linear/workflow.json` from this skill, enables triage, creates the missing states in their categories, puts them in the workflow's order, never renames or deletes an existing one, and prints the team's states as JSON. `Triage` and `Duplicate` are Linear's own states: enabling triage creates them and they cannot be created by hand, so the script only checks they are there. When a project starts, list the team's states; if any of the workflow's states is missing, ask the user to run the script. Create the labels below yourself, once.
 - Verify with a read-only call before writing anything.
 
 ## Linear objects and how we use them
@@ -63,7 +63,7 @@ A bug is an issue with the `bug` label (`templates/bug.md`), related to the issu
 
 ## Workflow
 
-One workflow per team, the whole cycle from the user's request to production, as ordered Linear workflow states in Linear's categories (Triage, Backlog, Unstarted, Started, Completed, Canceled). It is the development loop: there is no other. `workflow.json` defines it and the script creates it; this table says what each state means. Every issue follows it, but not every issue needs every state: skip what the work does not need and record every skip on the issue with the reason (M3).
+One workflow per team, the whole cycle from the user's request to production, as ordered Linear workflow states in Linear's categories (Triage, Backlog, Unstarted, Started, Completed, Canceled, Duplicate). It is the development loop: there is no other. `workflow.json` defines it and the script creates it; this table says what each state means. Every issue follows it, but not every issue needs every state: skip what the work does not need and record every skip on the issue with the reason (M3).
 
 | Category | State | The issue is here while | It leaves when |
 |---|---|---|---|

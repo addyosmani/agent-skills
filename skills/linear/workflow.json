@@ -1,7 +1,7 @@
 {
-  "$comment": "The organisation's Linear workflow: one per team, in order. type is Linear's state category. scripts/create-workflow.sh creates these states in a team; SKILL.md explains them.",
+  "$comment": "The organisation's Linear workflow: one per team, in order. type is Linear's state category. builtin marks a state Linear owns: enabling triage creates it and workflowStateCreate refuses its type, so the script only checks it is there and describes it. scripts/create-workflow.sh creates the rest; SKILL.md explains them.",
   "states": [
-    { "name": "Triage",      "type": "triage",    "description": "A request arrived in the user's words, not yet classified. Leaves with a persona, a scope class, and a size: small to Todo, large to Spec." },
+    { "name": "Triage",      "type": "triage",    "builtin": true, "description": "A request arrived in the user's words, not yet classified. Leaves with a persona, a scope class, and a size: small to Todo, large to Spec." },
     { "name": "Backlog",     "type": "backlog",   "description": "Accepted, not planned into a cycle." },
     { "name": "Todo",        "type": "unstarted", "description": "Ready: the design section, the contract, and the dependencies it needs exist." },
     { "name": "Spec",        "type": "started",   "description": "Intent being pinned down: interview, refine, spec; a feature gets its phased PRD. Leaves when the user reviewed the PRD or the spec is on the issue." },
@@ -14,6 +14,6 @@
     { "name": "Blocked",     "type": "started",   "description": "Cannot continue; the status update carries the blocker block. Returns to the state it left." },
     { "name": "Done",        "type": "completed", "description": "Deployed and exercised where the issue says (production by default). A regression is a new bug." },
     { "name": "Canceled",    "type": "canceled",  "description": "Will not be done." },
-    { "name": "Duplicate",   "type": "canceled",  "description": "Another issue tracks it; related as duplicate." }
+    { "name": "Duplicate",   "type": "duplicate", "builtin": true, "description": "Another issue tracks it; related as duplicate." }
   ]
 }
