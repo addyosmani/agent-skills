@@ -6,6 +6,8 @@ Skills encode the workflows, quality gates, and best practices that senior engin
 
 <a href="https://trendshift.io/repositories/25200" target="_blank"><img src="https://trendshift.io/api/badge/repositories/25200" alt="addyosmani%2Fagent-skills | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
+[![Install with AIPM](https://www.aipm-registry.com/install-with-aipm.svg)](https://www.aipm-registry.com/skills/addyosmani/api-and-interface-design/1.0.0?utm_source=github&utm_medium=readme&utm_campaign=package_badge)
+
 ![Addy's Agent Skills](https://addyosmani.com/assets/images/addys-agent-skills.jpg)
 
 ```
