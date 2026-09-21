@@ -49,7 +49,7 @@ Roles are narrow on purpose. Without the skill for a task, deny it and name the 
 
 ## Your skills
 
-One directory per skill at `skills/<name>/SKILL.md` (a harness may keep them in its own directory, for example `.claude/skills/`, `.agents/skills/`, `.pi/skills/`). Each skill says what it does and when to use it; fetch it when your persona's table names it for the activity at hand.
+One directory per skill at `skills/<name>/SKILL.md` (a harness may keep them in its own directory, for example `.claude/skills/`, `.agents/skills/`). Each skill says what it does and when to use it; fetch it when your persona's table names it for the activity at hand.
 
 <!-- brain:skills (build-brain.js replaces this line with the installed skills) -->
 

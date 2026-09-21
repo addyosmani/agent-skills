@@ -1,6 +1,6 @@
 # pi Setup
 
-[pi](https://github.com/badlogic/pi-mono) reads `AGENTS.md` from the project root, skills from `.pi/skills/` (or `~/.pi/agent/skills/`), and prompt templates from `.pi/prompts/` (or `~/.pi/agent/prompts/`). A prompt template is a Markdown file whose name is the slash command; `$@` is replaced by the arguments.
+[pi](https://github.com/badlogic/pi-mono) reads `AGENTS.md` from the project root, skills from `.agents/skills/` (already installed with the brain; also `~/.agents/skills/`), and prompt templates from `.pi/prompts/` (or `~/.pi/agent/prompts/`). A prompt template is a Markdown file whose name is the slash command; `$@` is replaced by the arguments. Do not copy skills into `.pi/skills/`.
 
 ## Install into a project
 
@@ -9,8 +9,7 @@ node scripts/build-brain.js                       # in this repository
 cp build/AGENTS.md build/SOUL.md /path/to/project/
 cp -r build/references build/templates /path/to/project/
 mkdir -p /path/to/project/.pi
-cp -r build/skills /path/to/project/.pi/skills
-cp -r build/agents /path/to/project/.pi/agents    # personas, read by /brain
+cp -r build/agents /path/to/project/.pi/agents      # personas, read by /brain
 cp -r build/.pi/prompts /path/to/project/.pi/prompts
 ```
 

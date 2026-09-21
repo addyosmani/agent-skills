@@ -65,7 +65,7 @@ Built from manifest.json: ${(manifest.skills || []).length} skills, ${(manifest.
 Install into a project:
 
 1. Copy \`AGENTS.md\` and \`SOUL.md\` to the project root (or paste \`AGENTS.md\` into \`CLAUDE.md\`).
-2. Copy \`skills/\` and \`agents/\` to where your tool reads them (Claude Code: \`.claude/skills/\`, \`.claude/agents/\`; Codex: \`.agents/skills/\`; OpenCode: \`.opencode/skills/\`).
+2. Copy \`skills/\` and \`agents/\` to where your tool reads them (Claude Code: \`.claude/skills/\`, \`.claude/agents/\`; Codex: \`.agents/skills/\`; OpenCode: \`.opencode/skills/\`). Pi reads that same \`.agents/skills/\`; do not copy skills into \`.pi/skills/\`.
 3. Copy the \`/brain\` commands for your tool: \`.claude/commands/brain*.md\` to \`.claude/commands/\`, \`.gemini/commands/brain*.toml\` to \`.gemini/commands/\`, \`.pi/prompts/brain*.md\` to \`.pi/prompts/\`, or \`.codex/prompts/brain*.md\` to \`~/.codex/prompts/\` (Codex reads prompts from the home directory only; invoke as \`/prompts:brain\`).
 4. Copy \`references/\` and \`templates/\` to the project root; create \`docs/\` from \`templates/\`.
 5. Start a session with \`/brain\`.

@@ -6,7 +6,7 @@ Read `AGENTS.md`. If the arguments start with a persona name from `agents/`, ado
 
 Arguments: $@
 
-Read the persona file. Load its `skills:` from `skills/<name>/SKILL.md` as their triggers match, and its `tools:`. Declare before any work:
+Read the persona file. Load its `skills:` from `.agents/skills/<name>/SKILL.md` as their triggers match, and its `tools:`. Declare before any work:
 
 ```
 Persona: <name>
