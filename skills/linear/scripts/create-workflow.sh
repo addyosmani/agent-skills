@@ -9,8 +9,8 @@
 # ones from workflow.json next to this script's folder, and prints the resulting states
 # as JSON on stdout. Status goes to stderr. Never deletes or renames a state the team
 # already has, but does put them in workflow.json's order. Triage and Duplicate are
-# Linear's own states: enabling triage creates them and workflowStateCreate refuses
-# their types, so they are only checked and, when they carry no description, described.
+# Linear's own reserved states: enabling triage creates them, and Linear refuses both
+# to create them and to write to them, so the script only checks they are there.
 set -e
 HERE="$(cd "$(dirname "$0")" && pwd)"
 WORKFLOW="$HERE/../workflow.json"
@@ -66,11 +66,9 @@ created = []
 for position, st in enumerate(wanted):
     have = existing.get(st["name"])
     if st.get("builtin"):
+        # A reserved state: Linear refuses every write to it, position included.
         if not have:
             sys.stderr.write("WARNING: %s is Linear's own state and this team has none; turn triage on in the team's settings\n" % st["name"])
-        elif not (have.get("description") or "").strip():
-            gql("mutation($id:String!,$d:String!){ workflowStateUpdate(id:$id, input:{description:$d}){ success } }", {"id": have["id"], "d": st["description"]})
-            sys.stderr.write("described %s (%s)\n" % (st["name"], st["type"]))
         continue
     if have:
         if have["type"] != st["type"]:

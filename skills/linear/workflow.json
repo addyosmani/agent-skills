@@ -1,5 +1,5 @@
 {
-  "$comment": "The organisation's Linear workflow: one per team, in order. type is Linear's state category. builtin marks a state Linear owns: enabling triage creates it and workflowStateCreate refuses its type, so the script only checks it is there and describes it. scripts/create-workflow.sh creates the rest; SKILL.md explains them.",
+  "$comment": "The organisation's Linear workflow: one per team, in order. type is Linear's state category. builtin marks a state Linear reserves: enabling triage creates it, and Linear refuses both to create it and to write to it, so the script only checks it is there and the description below is documentation only. scripts/create-workflow.sh creates the rest; SKILL.md explains them.",
   "states": [
     { "name": "Triage",      "type": "triage",    "builtin": true, "description": "A request arrived in the user's words, not yet classified. Leaves with a persona, a scope class, and a size: small to Todo, large to Spec." },
     { "name": "Backlog",     "type": "backlog",   "description": "Accepted, not planned into a cycle." },
