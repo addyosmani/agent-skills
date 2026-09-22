@@ -1,0 +1,9 @@
+{
+  "name": "order-pricing",
+  "version": "0.4.2",
+  "description": "Checkout pricing rules: line discounts, coupons, holiday markdown, shipping, tax.",
+  "private": true,
+  "scripts": {
+    "test": "node --test"
+  }
+}
