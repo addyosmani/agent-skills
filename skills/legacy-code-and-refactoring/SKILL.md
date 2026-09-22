@@ -1,6 +1,6 @@
 ---
 name: legacy-code-and-refactoring
-description: Guides safe changes to legacy code — code without tests, documentation, or anyone who remembers why it works. Use when modifying code that has no test coverage. Use when a change requires refactoring first but there's no safety net. Use when inheriting an unfamiliar codebase and the first instinct is "rewrite it".
+description: Guides safe changes to legacy code — code without tests, documentation, or anyone who remembers why it works. Use when modifying code that has no test coverage. Use when a change requires refactoring first but there's no safety net. Use when inheriting an unfamiliar codebase and the first instinct is "rewrite it". Use when you need characterization tests or a seam to change untested code safely.
 ---
 
 # Legacy Code and Refactoring
