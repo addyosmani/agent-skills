@@ -30,6 +30,7 @@ body:
         - idea-refine
         - incremental-implementation
         - interview-me
+        - legacy-code-and-refactoring
         - observability-and-instrumentation
         - performance-optimization
         - planning-and-task-breakdown
