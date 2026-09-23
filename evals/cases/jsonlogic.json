@@ -1,0 +1,43 @@
+{
+  "skill_name": "jsonlogic",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Turn this into a JsonLogic rule: give 20% off orders over $200",
+        "top_k": 1
+      },
+      {
+        "prompt": "Is this a valid JsonLogic expression? {\"if\": [{\">\": [{\"var\": \"age\"}, 18]}, \"adult\", \"minor\"]}",
+        "top_k": 1
+      },
+      {
+        "prompt": "Run this JsonLogic rule against sample data in Python and show me the result",
+        "top_k": 1
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Write a general JavaScript function that checks if a user is an adult",
+        "owner": "test-driven-development"
+      },
+      {
+        "prompt": "Explain how JSON Schema validation works",
+        "owner": "documentation-and-adrs"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I have orders with fields total and coupon_code. Give a JsonLogic rule for 20% off when total is over $200, and show me it running against {\"total\": 250, \"coupon_code\": null}.",
+      "expected_output": "A JsonLogic rule using > and var on total, run against the given sample data with the discount result shown",
+      "expectations": [
+        "Confirms or uses the given field names (total, coupon_code) rather than inventing new ones",
+        "Produces a well-formed JsonLogic rule using the > and var operators",
+        "Executes the rule against the supplied sample data and shows the actual result",
+        "States which language/library was used to run it"
+      ],
+      "trust_level": "provisional"
+    }
+  ]
+}
