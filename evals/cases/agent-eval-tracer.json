@@ -1,0 +1,44 @@
+{
+  "skill_name": "agent-eval-tracer",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Our multi-agent customer pipeline has a 94% pass rate, but users complain of agents contradicting each other. How should we test this?",
+        "top_k": 3
+      },
+      {
+        "prompt": "Evaluate each agent in our multi-step routing and execution pipeline in isolation",
+        "top_k": 3
+      },
+      {
+        "prompt": "Check our agent's memory layer for fact retention and measure hallucination consistency across repeated runs",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Set up OpenTelemetry distributed tracing and metrics for our microservices",
+        "owner": "observability-and-instrumentation"
+      },
+      {
+        "prompt": "Write unit tests for our checkout pricing function using red-green-refactor",
+        "owner": "test-driven-development"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "dialogue",
+      "prompt": "Our multi-agent customer support bot has an aggregate 92% pass rate in CI, but users report agents contradicting each other and dropping previous ticket context. How should we evaluate and test this system?",
+      "expected_output": "An isolated evaluation plan that maps sub-agents, runs consistency trials to measure hallucination variance, tests memory retention with planted facts across distractor turns, and produces a masking-first diagnostic report.",
+      "expectations": [
+        "The agent identifies that aggregate end-to-end pass rates often mask sub-agent failures",
+        "The agent recommends isolating individual agents with frozen inputs and mocked dependencies",
+        "The agent specifies running identical inputs N times to calculate a consistency ratio and detect hallucination",
+        "The agent proposes planted-fact recall testing separated by distractor turns to evaluate memory and summarization",
+        "The agent structures the findings into a masking-first diagnostic report"
+      ]
+    }
+  ]
+}
