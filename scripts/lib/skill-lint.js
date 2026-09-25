@@ -36,6 +36,21 @@ const MAX_DESCRIPTION_LENGTH = 1024;
 // CI on line count would block unrelated work on an over-budget skill.
 const MAX_SKILL_LINES = 500;
 
+// The only keys the Agent Skills specification allows at the top level of
+// SKILL.md frontmatter. Anything else — model hints, tool lists, turn limits,
+// host-specific switches — belongs under `metadata` or in a per-agent adapter
+// file (docs/advanced-per-agent-configuration.md). Hosts do not promise to
+// ignore unknown top-level keys, and a published skill carrying one can fail
+// packaging on a strict client, so this is an error rather than a warning.
+const SPEC_FRONTMATTER_KEYS = new Set([
+  'name',
+  'description',
+  'license',
+  'compatibility',
+  'metadata',
+  'allowed-tools',
+]);
+
 // A skill directory name must be lowercase-hyphen-separated
 // (docs/skill-anatomy.md → Naming Conventions).
 const KEBAB_CASE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -139,6 +154,23 @@ function stripFencedCodeBlocks(content) {
   }
 
   return out.join('\n');
+}
+
+/**
+ * List the top-level keys in the frontmatter block, in file order. Only
+ * column-zero `key:` lines count: indented lines are children of the key
+ * above them (e.g. fields under `metadata`), and `- item` lines are list
+ * entries. Returns [] when there is no frontmatter block.
+ */
+function topLevelFrontmatterKeys(content) {
+  const match = content.match(/^---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*\r?\n/);
+  if (!match) return [];
+  const keys = [];
+  for (const line of match[1].split(/\r?\n/)) {
+    const m = line.match(/^([A-Za-z0-9_-]+)\s*:/);
+    if (m) keys.push(m[1]);
+  }
+  return keys;
 }
 
 /**
@@ -280,6 +312,18 @@ function lintSkillContent(dirName, content, knownSkills) {
   // The parser above is forgiving by design; the hosts that read this
   // frontmatter are not (#494).
   errors.push(...frontmatterYamlErrors(content));
+
+  // Only the specification's keys may sit at the top level. Vendor and
+  // runtime fields go under `metadata` or in a per-agent adapter file.
+  for (const key of topLevelFrontmatterKeys(content)) {
+    if (!SPEC_FRONTMATTER_KEYS.has(key)) {
+      errors.push(
+        `Frontmatter key '${key}' is not an Agent Skills spec field — top level allows only ` +
+        `${[...SPEC_FRONTMATTER_KEYS].join(', ')}; put vendor or runtime fields under 'metadata' ` +
+        `or in a per-agent adapter file (docs/advanced-per-agent-configuration.md)`
+      );
+    }
+  }
 
   if (!fm.name) {
     errors.push("Frontmatter missing required field: 'name'");
@@ -482,6 +526,7 @@ function lintSkill(dirName, skillsDir, knownSkills) {
 module.exports = {
   stripFencedCodeBlocks,
   parseFrontmatter,
+  topLevelFrontmatterKeys,
   frontmatterYamlErrors,
   extractSkillReferences,
   lintSkillContent,

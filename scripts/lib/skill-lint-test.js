@@ -9,7 +9,7 @@ const fs   = require('node:fs');
 const os   = require('node:os');
 const path = require('node:path');
 
-const { lintSkillContent, lintSkillLayout } = require('./skill-lint.js');
+const { lintSkillContent, lintSkillLayout, topLevelFrontmatterKeys } = require('./skill-lint.js');
 
 const KNOWN = new Set(['alpha', 'beta']);
 
@@ -97,8 +97,10 @@ test('a skill claiming its own exemption without being allowlisted fails loud', 
     ['---', 'name: alpha', 'description: Designs alphas. Use when building one.', 'exempt: sections', '---'].join('\n')
   );
   const { errors } = lintSkillContent('alpha', content, KNOWN);
-  assert.equal(errors.length, 1);
-  assert.match(errors[0], /not in the validator's SECTION_EXEMPT_SKILLS allowlist/);
+  // Two errors: 'exempt' is not a spec key, and the exemption itself is refused.
+  assert.equal(errors.length, 2);
+  assert.equal(errors.filter(e => /not in the validator's SECTION_EXEMPT_SKILLS allowlist/.test(e)).length, 1);
+  assert.equal(errors.filter(e => /Frontmatter key 'exempt' is not an Agent Skills spec field/.test(e)).length, 1);
 });
 
 // ─── Guardrails on the rules this change sits beside ─────────────────────────
@@ -448,4 +450,98 @@ test('non-markdown files are left to the Script Requirements conventions', () =>
   const dir = makeSkillDir({ files: { 'scripts/Idea_Refine.sh': '#!/bin/bash\nset -e\n' } });
 
   assert.deepEqual(lintSkillLayout(dir), []);
+});
+
+// ─── Spec-only top-level frontmatter keys ────────────────────────────────────
+//
+// docs/advanced-per-agent-configuration.md: the specification reserves the top
+// level for name, description, license, compatibility, metadata and
+// allowed-tools. Vendor and runtime fields go under `metadata` or in a
+// per-agent adapter file, never at the top level of a published SKILL.md.
+
+function skillWithFrontmatter(lines) {
+  return withAllSections(['---', ...lines, '---'].join('\n'));
+}
+
+const SPEC_KEY_RE = /is not an Agent Skills spec field/;
+
+test('a vendor field at the top level is rejected and the message names the key', () => {
+  const { errors } = lintSkillContent('alpha', skillWithFrontmatter([
+    'name: alpha',
+    'description: Designs alphas. Use when building one.',
+    'model: claude-opus-5',
+  ]), KNOWN);
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /Frontmatter key 'model'/);
+  assert.match(errors[0], SPEC_KEY_RE);
+  assert.match(errors[0], /advanced-per-agent-configuration\.md/);
+});
+
+test('every unknown top-level key is reported, not just the first', () => {
+  const { errors } = lintSkillContent('alpha', skillWithFrontmatter([
+    'name: alpha',
+    'description: Designs alphas. Use when building one.',
+    'max_turns: 10',
+    'tools: [read_file]',
+    'context: fork',
+  ]), KNOWN);
+  const keyErrors = errors.filter(e => SPEC_KEY_RE.test(e));
+  assert.deepEqual(keyErrors.map(e => e.match(/key '([^']+)'/)[1]), ['max_turns', 'tools', 'context']);
+});
+
+test('all six specification keys are accepted at the top level', () => {
+  const { errors } = lintSkillContent('alpha', skillWithFrontmatter([
+    'name: alpha',
+    'description: Designs alphas. Use when building one.',
+    'license: MIT',
+    'compatibility: Requires git and a test runner',
+    'allowed-tools: Read Grep',
+    'metadata:',
+    '  author: someone',
+  ]), KNOWN);
+  assert.deepEqual(errors.filter(e => SPEC_KEY_RE.test(e)), []);
+});
+
+test('vendor fields nested under metadata are not top-level keys', () => {
+  const { errors } = lintSkillContent('alpha', skillWithFrontmatter([
+    'name: alpha',
+    'description: Designs alphas. Use when building one.',
+    'metadata:',
+    '  model: gemini-3-pro',
+    '  max_turns: 10',
+    '  tools:',
+    '    - read_file',
+  ]), KNOWN);
+  assert.deepEqual(errors.filter(e => SPEC_KEY_RE.test(e)), []);
+});
+
+test('topLevelFrontmatterKeys sees only column-zero keys, in order', () => {
+  const content = [
+    '---',
+    'name: alpha',
+    '# a comment: with a colon',
+    'metadata:',
+    '  model: x',
+    '  tools:',
+    '    - a',
+    'allowed-tools: Read',
+    '---',
+    '',
+    'body: not frontmatter',
+  ].join('\n');
+  assert.deepEqual(topLevelFrontmatterKeys(content), ['name', 'metadata', 'allowed-tools']);
+});
+
+test('topLevelFrontmatterKeys returns [] without a frontmatter block', () => {
+  assert.deepEqual(topLevelFrontmatterKeys('## Overview\nx\n'), []);
+});
+
+test('the spec-key check tolerates CRLF frontmatter', () => {
+  const content = skillWithFrontmatter([
+    'name: alpha',
+    'description: Designs alphas. Use when building one.',
+    'temperature: 0.2',
+  ]).replace(/\n/g, '\r\n');
+  const { errors } = lintSkillContent('alpha', content, KNOWN);
+  assert.equal(errors.filter(e => /key 'temperature'/.test(e)).length, 1);
 });
