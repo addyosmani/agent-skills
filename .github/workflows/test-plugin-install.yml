@@ -99,6 +99,7 @@ jobs:
           scripts/validate-reference-links-test.js
           scripts/validate-commands-test.js
           scripts/validate-artifact-paths-test.js
+          scripts/floor-guard-reference-test.js
 
       - name: Validate all skills
         run: node scripts/validate-skills.js
