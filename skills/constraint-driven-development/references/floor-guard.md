@@ -33,6 +33,13 @@ const git = (args, { diffExit = false } = {}) => {
 };
 const bail = (msg) => { console.error('floor-guard: ' + msg); process.exit(2); };
 
+// Run from the top of the work tree. `git ls-files` lists only the current directory's subtree,
+// relative to it, so a guard started in a subfolder would miss untracked files elsewhere and name
+// the rest differently from `git diff`, which always covers the whole tree.
+const top = git(['rev-parse', '--show-toplevel'])?.trim();
+if (!top) bail('not inside a git work tree');
+process.chdir(top);
+
 // Merge base; bail to exit 2 rather than pretending a shallow/rootless clone is clean.
 const mergeBase = git(['merge-base', base, 'HEAD'])?.trim();
 if (!mergeBase) bail('no merge base against ' + base);
@@ -49,19 +56,26 @@ const untracked = untrackedFiles.split('\n').filter(Boolean).map((f) => {
 }).join('\n');
 const diff = tracked + '\n' + untracked;
 
-// Walk the diff. Both headers name the file, so a deletion (`+++ /dev/null`) keeps its name.
+// Walk the diff. `---` and `+++` are file headers only between a file's `diff` line and its first
+// `@@` hunk; inside a hunk every line is content, so an added `++i` (shown as `+++i`) or a removed
+// `-- comment` is a change, not a header. Both headers name the file, so a deletion
+// (`+++ /dev/null`) keeps its name.
 const added = [], removed = [], deleted = [];
 const pathOf = (s) => s.replace(/^[ab]\//, '');
-let file = '', oldFile = '';
+let file = '', oldFile = '', inHeader = false;
 for (const line of diff.split('\n')) {
-  if (line.startsWith('--- ')) oldFile = pathOf(line.slice(4));
-  else if (line.startsWith('+++ ')) {
-    const newFile = pathOf(line.slice(4));
-    file = newFile === '/dev/null' ? oldFile : newFile;
-    if (newFile === '/dev/null') deleted.push(file);
+  if (line.startsWith('diff ')) inHeader = true;
+  else if (line.startsWith('@@')) inHeader = false;
+  else if (inHeader) {
+    if (line.startsWith('--- ')) oldFile = pathOf(line.slice(4));
+    else if (line.startsWith('+++ ')) {
+      const newFile = pathOf(line.slice(4));
+      file = newFile === '/dev/null' ? oldFile : newFile;
+      if (newFile === '/dev/null') deleted.push(file);
+    }
   }
-  else if (line.startsWith('+') && !line.startsWith('+++')) added.push({ file, text: line.slice(1) });
-  else if (line.startsWith('-') && !line.startsWith('---')) removed.push({ file, text: line.slice(1) });
+  else if (line.startsWith('+')) added.push({ file, text: line.slice(1) });
+  else if (line.startsWith('-')) removed.push({ file, text: line.slice(1) });
 }
 
 const findings = [];
