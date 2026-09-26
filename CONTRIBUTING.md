@@ -23,7 +23,7 @@ If your idea is a refinement of an existing skill, prefer a focused edit to that
 
 1. Create a directory under `skills/` with a kebab-case name
 2. Add a `SKILL.md` following the format in [docs/skill-anatomy.md](docs/skill-anatomy.md)
-3. Include YAML frontmatter with `name` and `description` fields
+3. Include YAML frontmatter with `name` and `description` fields, and no vendor or runtime keys at the top level (those go under `metadata` or in a per-agent adapter file; see [docs/advanced-per-agent-configuration.md](docs/advanced-per-agent-configuration.md))
 4. Ensure the `description` starts with what the skill does (third person), then includes one or more `Use when` trigger conditions
 
 ### Skill Quality Bar
