@@ -21,6 +21,7 @@ Task arrives
     ├── New project/feature/change? ──→ spec-driven-development
     ├── No quality bar written down? ──→ constraint-driven-development
     ├── Have a spec, need tasks? ──────→ planning-and-task-breakdown
+    ├── Resuming/updating a task list? ─→ task-ledger
     ├── Implementing code? ────────────→ incremental-implementation
     │   ├── UI work? ─────────────────→ frontend-ui-engineering
     │   ├── API work? ────────────────→ api-and-interface-design
@@ -147,6 +148,7 @@ For a complete feature, the typical skill sequence is:
 2.  idea-refine                 → Refine vague ideas
 3.  spec-driven-development     → Define what we're building
 4.  planning-and-task-breakdown → Break into verifiable chunks
+4b. task-ledger                 → Track task state across sessions (runs continuously, not a phase)
 5.  context-engineering         → Load the right context
 6.  source-driven-development   → Verify against official docs
 7.  incremental-implementation  → Build slice by slice
@@ -171,6 +173,7 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 | Define | idea-refine | Refine ideas through structured divergent and convergent thinking |
 | Define | spec-driven-development | Requirements and acceptance criteria before code |
 | Plan | planning-and-task-breakdown | Decompose into small, verifiable tasks |
+| Plan | task-ledger | Durable task state across sessions and agents |
 | Build | incremental-implementation | Thin vertical slices, test each before expanding |
 | Build | source-driven-development | Verify against official docs before implementing |
 | Build | doubt-driven-development | Adversarial fresh-context review of every non-trivial decision |
