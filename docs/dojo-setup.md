@@ -7,11 +7,11 @@ Dojo Workspace is a desktop app, not a command-line tool. Everything below is do
 1. Open the **Skills** panel and click **Add External Skills**.
 2. Enter `addyosmani/agent-skills` (or the full GitHub URL) and click **Install**.
 
-![Add External Skills in Dojo Workspace](images/dojo/dojo-add-external-skills.jpg)
+![Add External Skills in Dojo Workspace](images/dojo/dojo-step1-install.jpg)
 
 The skills appear in the panel under the `agent-skills` bucket. Tick the checkmark next to each skill you want to enable for that lane (Dojo Solo or Dojo Duo). Search `agent-skills` to list them all.
 
-![agent-skills in the Dojo Workspace Skills panel](images/dojo/dojo-skills-panel.jpg)
+![agent-skills in the Dojo Workspace Skills panel](images/dojo/dojo-step2-search.jpg)
 
 ## Use in a single project
 
