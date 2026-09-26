@@ -93,6 +93,19 @@ With tests green, improve the code without changing behavior:
 
 Run tests after every refactor step to confirm nothing broke.
 
+## Human Review Checkpoints
+
+For a human reviewing an agent's TDD run: request a pause at either point when you want to inspect the work together.
+
+| When | What to inspect | Questions and a concrete redirect |
+|---|---|---|
+| After Step 1: RED, before implementation | The test diff and the actual failure output | Does the failure demonstrate the intended missing behavior? Could a trivially wrong implementation still pass the assertions? If so: "Add an assertion for the missing behavior; returning a constant would currently pass." If the failure is only unrelated setup trouble: "Resolve the setup failure, then show the test failing on the behavior." |
+| After Step 3: REFACTOR, before committing | The implementation and test diffs, plus the latest suite output | Did the change stay within the agreed task? Were existing assertions weakened or tests skipped to reach green? Does the output cover the current code? If scope grew: "Explain why these extra files are needed before changing them further." If an assertion was weakened: "Restore the original requirement and fix the implementation." |
+
+**When to intervene:** If the same failure recurs without new evidence, ask the agent to pause edits, summarize what each attempt established, and propose the next diagnostic check. If the diff changes unrelated behavior, agree on the task boundary before continuing.
+
+These checks help you steer during the loop. Use `code-review-and-quality` for the full review before merge.
+
 ## The Prove-It Pattern (Bug Fixes)
 
 When a bug is reported, **do not start by trying to fix it.** Start by writing a test that reproduces it.
