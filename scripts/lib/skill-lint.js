@@ -75,6 +75,30 @@ const SKILL_REF_PATTERNS = [
   /→ `([a-z][a-z0-9-]+[a-z0-9])`/g,
 ];
 
+// Cross-skill references that name a skill but read as background prose rather
+// than an instruction. The agent runs a skill it is told to invoke and treats a
+// "see X" or a parenthetical "(Use X skill)" as optional, so a skill named only
+// this way never gets invoked — reported with transcripts in
+// https://github.com/addyosmani/agent-skills/issues/602.
+//
+// Only flagged inside a numbered step, because that is text the agent executes.
+// The same phrasing in prose, a bullet, or a "See Also"/"When to Use" list is a
+// deliberate pointer — `observability-and-instrumentation` naming
+// `shipping-and-launch` is drawing a scope boundary, not forgetting to invoke it
+// — and rewriting those into invocations would make skills fire when they should
+// not. These stay in SKILL_REF_PATTERNS regardless, so dead-reference checking
+// still sees them; this list only judges how strongly they read.
+const SOFT_SKILL_REF_PATTERNS = [
+  /\bsee(?: the)? `([a-z][a-z0-9-]+[a-z0-9])`/gi,
+  /\(\s*use (?:the )?`?([a-z][a-z0-9-]+[a-z0-9])`? skill\s*\)/gi,
+];
+
+// A numbered list item ("4. **Commit** …") or a numbered subheading
+// ("### 4. Security"), whose body stays a numbered step until the next heading.
+const NUMBERED_STEP_ITEM    = /^\s*\d+\.\s/;
+const NUMBERED_STEP_HEADING = /^#{3,}\s+\d+\.\s/;
+const ANY_HEADING           = /^#{1,6}\s/;
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /**
@@ -243,6 +267,40 @@ function extractSkillReferences(content) {
   return refs;
 }
 
+/**
+ * Cross-skill references phrased so the agent is not actually told to run the
+ * skill, restricted to numbered steps. Returns [phrase, skillName] pairs so the
+ * warning can quote the text.
+ *
+ * Fenced code blocks are stripped first — the weak phrasing inside a code block
+ * is documentation, not an instruction the agent would act on.
+ */
+function extractSoftSkillReferences(content) {
+  const found = [];
+  const seen = new Set();
+  let inNumberedHeadingBody = false;
+
+  for (const line of stripFencedCodeBlocks(content).split(/\r?\n/)) {
+    if (ANY_HEADING.test(line)) {
+      // A numbered subheading opens a step body; any other heading closes it.
+      inNumberedHeadingBody = NUMBERED_STEP_HEADING.test(line);
+    }
+    if (!inNumberedHeadingBody && !NUMBERED_STEP_ITEM.test(line)) continue;
+
+    for (const pattern of SOFT_SKILL_REF_PATTERNS) {
+      pattern.lastIndex = 0;
+      let m;
+      while ((m = pattern.exec(line)) !== null) {
+        const key = `${m[0]}\u0000${m[1]}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        found.push([m[0], m[1]]);
+      }
+    }
+  }
+  return found;
+}
+
 // ─── Linter ──────────────────────────────────────────────────────────────────
 
 /**
@@ -362,6 +420,18 @@ function lintSkillContent(dirName, content, knownSkills) {
     }
   }
 
+  // A reference that names a real skill but never tells the agent to run it.
+  // Only known skills are reported — an unknown one is already a dead reference,
+  // and naming it twice helps nobody.
+  for (const [phrase, ref] of extractSoftSkillReferences(content)) {
+    if (knownSkills.has(ref)) {
+      warnings.push(
+        `Soft cross-reference: "${phrase}" names \`${ref}\` but does not instruct the agent ` +
+        `to run it, so the skill is not invoked — phrase it as "Invoke the \`${ref}\` skill" (#602)`
+      );
+    }
+  }
+
   return { errors, warnings, exempt };
 }
 
@@ -396,6 +466,7 @@ module.exports = {
   parseFrontmatter,
   frontmatterYamlErrors,
   extractSkillReferences,
+  extractSoftSkillReferences,
   lintSkillContent,
   lintSkill,
 };

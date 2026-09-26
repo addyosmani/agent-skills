@@ -38,7 +38,7 @@ For each slice:
 1. **Implement** the smallest complete piece of functionality
 2. **Test** — run the test suite (or write a test if none exists)
 3. **Verify** — confirm the slice works as expected (tests pass, build succeeds, manual check)
-4. **Commit** -- save your progress with a descriptive message (see `git-workflow-and-versioning` for atomic commit guidance)
+4. **Commit** -- save your progress with a descriptive message; invoke the `git-workflow-and-versioning` skill for atomic commit guidance
 5. **Move to the next slice** — carry forward, don't restart
 
 ## Slicing Strategies

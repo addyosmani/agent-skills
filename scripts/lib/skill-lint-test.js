@@ -100,6 +100,65 @@ test('reports a description with no trigger clause', () => {
   assert.match(errors[0], /no 'when to use' trigger/);
 });
 
+// ─── Soft cross-skill references (#602) ──────────────────────────────────────
+
+/** A valid skill whose body carries `extra` appended after the sections. */
+function withBody(extra) {
+  return [withAllSections(VALID_FRONTMATTER), extra, ''].join('\n');
+}
+
+function softWarnings(extra) {
+  const { warnings } = lintSkillContent('alpha', withBody(extra), KNOWN);
+  return warnings.filter((w) => w.startsWith('Soft cross-reference:'));
+}
+
+test('warns about a soft skill reference inside a numbered step', () => {
+  const warnings = softWarnings('1. **Commit** the slice (see `beta` for guidance)');
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /names `beta`/);
+  assert.match(warnings[0], /Invoke the `beta` skill/);
+});
+
+test('warns about a parenthetical "(Use x skill)" inside a numbered step', () => {
+  const warnings = softWarnings('4. **Security** — auth checked? (Use beta skill)');
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /names `beta`/);
+});
+
+test('warns about a soft reference in the body of a numbered subheading', () => {
+  const warnings = softWarnings(['### 4. Security', '', 'For detail, see `beta`.'].join('\n'));
+  assert.equal(warnings.length, 1);
+});
+
+test('a heading that is not numbered closes the numbered-step body', () => {
+  const warnings = softWarnings(
+    ['### 4. Security', '', 'Fine.', '', '## See Also', '', '- For alerting, see `beta`'].join('\n')
+  );
+  assert.deepEqual(warnings, []);
+});
+
+test('does not warn about a soft reference in prose or a bullet', () => {
+  assert.deepEqual(softWarnings('Treat each phase as a slice — see the `beta` skill.'), []);
+  assert.deepEqual(softWarnings('- Launch checklists — see the `beta` skill'), []);
+});
+
+test('does not warn about a soft reference inside a fenced code block', () => {
+  const warnings = softWarnings(
+    ['1. **Commit** the slice', '', '```md', '4. Step (see `beta`)', '```'].join('\n')
+  );
+  assert.deepEqual(warnings, []);
+});
+
+test('does not warn twice when a soft reference names an unknown skill', () => {
+  const { warnings } = lintSkillContent('alpha', withBody('1. **Step** (see `nope-not-a-skill`)'), KNOWN);
+  assert.equal(warnings.filter((w) => w.startsWith('Soft cross-reference:')).length, 0);
+  assert.equal(warnings.filter((w) => w.startsWith('Dead cross-reference:')).length, 1);
+});
+
+test('an imperative invocation in a numbered step is not flagged', () => {
+  assert.deepEqual(softWarnings('4. **Security** — invoke the `beta` skill for detail'), []);
+});
+
 test('reports frontmatter name that disagrees with the directory', () => {
   const content = withAllSections(
     ['---', 'name: beta', 'description: Designs alphas. Use when building one.', '---'].join('\n')
