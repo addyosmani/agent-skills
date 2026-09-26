@@ -190,16 +190,7 @@ The first command registers the marketplace; the second installs the plugin. Cod
 <details>
 <summary><b>Dojo Workspace</b></summary>
 
-Install for all projects from the **Skills** panel → **Add External Skills** → enter `addyosmani/agent-skills`. Dojo clones the repo, discovers every `SKILL.md`, and installs them globally under `~/.dojo/dojo/skills/agent-skills/`. Enable the skills you want per lane (Dojo Solo / Dojo Duo) with the checkmark.
-
-For a single project, copy the skills into the cross-tool `.agents/skills/` folder — Dojo picks them up automatically, always on, for that project only:
-
-```bash
-git clone --depth 1 https://github.com/addyosmani/agent-skills /tmp/agent-skills
-mkdir -p .agents/skills && cp -R /tmp/agent-skills/skills/* .agents/skills/
-```
-
-Only each skill's name and description are listed for the model; the full `SKILL.md` loads on demand through Dojo's `skill` tool. Dojo also reads project instructions from `AGENTS.md`.
+Open the **Skills** panel → **Add External Skills** → enter `addyosmani/agent-skills` → **Install**. Dojo installs every skill globally; tick the ones you want for each lane (Dojo Solo / Dojo Duo). For a single project, place skills in the project's `.agents/skills/` folder and Dojo picks them up automatically. See [docs/dojo-setup.md](docs/dojo-setup.md).
 
 </details>
 
