@@ -1,5 +1,7 @@
 # Using agent-skills with Dojo Workspace
 
+Dojo Workspace is a desktop app, not a command-line tool. Everything below is done in the app's UI; no terminal needed.
+
 ## Install for all projects
 
 1. Open the **Skills** panel and click **Add External Skills**.

@@ -190,7 +190,7 @@ The first command registers the marketplace; the second installs the plugin. Cod
 <details>
 <summary><b>Dojo Workspace</b></summary>
 
-Open the **Skills** panel → **Add External Skills** → enter `addyosmani/agent-skills` → **Install**. Dojo installs every skill globally; tick the ones you want for each lane (Dojo Solo / Dojo Duo). For a single project, place skills in the project's `.agents/skills/` folder and Dojo picks them up automatically. See [docs/dojo-setup.md](docs/dojo-setup.md).
+Dojo Workspace is a desktop app, not a command-line tool — everything is done in the UI. Open the **Skills** panel → **Add External Skills** → enter `addyosmani/agent-skills` → **Install**. Dojo installs every skill globally; tick the ones you want for each lane (Dojo Solo / Dojo Duo). For a single project, place skills in the project's `.agents/skills/` folder and Dojo picks them up automatically. See [docs/dojo-setup.md](docs/dojo-setup.md).
 
 </details>
 
