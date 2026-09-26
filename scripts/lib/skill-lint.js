@@ -212,8 +212,37 @@ function frontmatterYamlErrors(content) {
       return;
     }
 
-    // Unquoted scalar. A colon followed by a space (or ending the line) makes
-    // YAML read a nested mapping where a plain string was meant.
+    // Unquoted scalar. A plain YAML scalar may not BEGIN with certain indicator
+    // characters. The set below was measured against a real parser rather than
+    // read off the spec, both with and without a following space, and only the
+    // characters invalid in *both* forms with no legitimate single-line use are
+    // rejected — a guard that flags valid frontmatter gets switched off.
+    //
+    // Deliberately not rejected, because each parses cleanly: `:` or `-` when NOT
+    // followed by a space (`:platform`, `-hyphenated`), a leading `,`, `]`, `}`
+    // or `#`, and `[`/`{`, which begin valid flow collections. `|` and `>` are
+    // left alone too, since they legitimately open a multi-line block scalar.
+    //
+    // The backtick is the one that bites this repo: descriptions routinely name
+    // other skills, and "`other-skill` designs things" is a natural way to start.
+    if (/^[`@%]/.test(value)) {
+      errors.push(
+        `Frontmatter line ${lineNo} starts an unquoted value with '${value[0]}' — YAML reserves ` +
+        `that character and cannot begin a plain scalar with it, so a host parsing this ` +
+        `frontmatter rejects the whole file; wrap the value in quotes`
+      );
+      return;
+    }
+    if (/^[-?&](\s|$)/.test(value)) {
+      errors.push(
+        `Frontmatter line ${lineNo} starts an unquoted value with '${value[0]} ' — YAML reads ` +
+        `that as an indicator rather than text and rejects the file; wrap the value in quotes`
+      );
+      return;
+    }
+
+    // A colon followed by a space (or ending the line) makes YAML read a nested
+    // mapping where a plain string was meant.
     if (/:(\s|$)/.test(value)) {
       errors.push(
         `Frontmatter line ${lineNo} has an unquoted value containing ': ' — YAML reads that as a ` +

@@ -318,6 +318,73 @@ test('an unterminated quote is rejected', () => {
   assert.match(yamlErrors(result)[0], /never closes/);
 });
 
+// A plain (unquoted) YAML scalar may not BEGIN with certain indicator characters.
+// The set below was not read off the spec — it was measured against js-yaml, both
+// with and without a following space, and only characters invalid in *both* forms
+// with no legitimate single-line use are rejected here. Anything ambiguous is left
+// alone on purpose, and the second test pins that so the rule cannot be widened
+// into false positives later.
+//
+// The backtick is the one that actually bites this repo: descriptions routinely
+// name other skills, and `\`alpha\` designs things` is a natural way to start one.
+for (const [label, value] of [
+  ['a backtick', '`alpha` designs things. Use when alpha.'],
+  ['an at sign', '@team owns this. Use when alpha.'],
+  ['a percent sign', '%complete coverage. Use when alpha.'],
+]) {
+  test(`an unquoted value starting with ${label} is rejected`, () => {
+    const result = lintSkillContent(
+      'alpha',
+      fmLines(`description: ${value}`),
+      KNOWN,
+    );
+    assert.equal(yamlErrors(result).length, 1);
+    assert.match(yamlErrors(result)[0], /reserved|cannot begin|indicator/i);
+  });
+}
+
+for (const [label, value] of [
+  ['a dash', '- Designs things. Use when alpha.'],
+  ['a question mark', '? Designs things. Use when alpha.'],
+  ['an ampersand', '& Designs things. Use when alpha.'],
+]) {
+  test(`an unquoted value starting with ${label} and a space is rejected`, () => {
+    const result = lintSkillContent(
+      'alpha',
+      fmLines(`description: ${value}`),
+      KNOWN,
+    );
+    assert.equal(yamlErrors(result).length, 1);
+  });
+}
+
+test('quoting the value makes every reserved start valid again', () => {
+  for (const value of ['`alpha` x', '@team x', '%x', '- x', '? x', '& x']) {
+    const result = lintSkillContent(
+      'alpha',
+      fmLines(`description: "${value}"`),
+      KNOWN,
+    );
+    assert.deepEqual(yamlErrors(result), [], `quoted ${value} must be accepted`);
+  }
+});
+
+test('starts that YAML accepts are deliberately NOT rejected', () => {
+  // Each of these parses cleanly under js-yaml, so flagging them would be a
+  // false positive on valid frontmatter. Pinned so the rule stays narrow.
+  for (const value of [
+    ':platform is fine',          // a colon not followed by a space
+    '-hyphenated is fine',        // a dash not followed by a space
+    'Designs `alpha` things',     // a backtick anywhere but the first character
+    'Designs @team things',       // an at sign anywhere but the first character
+    ',leading comma is fine',
+    '#not-a-comment-here',
+  ]) {
+    const result = lintSkillContent('alpha', fmLines(`description: ${value}`), KNOWN);
+    assert.deepEqual(yamlErrors(result), [], `${value} must be accepted`);
+  }
+});
+
 test('a duplicate key is not reported, because YAML accepts it', () => {
   // Deliberate boundary: `safe_load` accepts duplicate keys, so flagging them
   // here would fail files no host rejects. The rule tracks the parser, not taste.
