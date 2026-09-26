@@ -51,7 +51,7 @@ Store ADRs in `docs/decisions/` with sequential numbering (unless the project al
 # ADR-001: Use PostgreSQL for primary database
 
 ## Status
-Accepted | Superseded by ADR-XXX | Deprecated
+Proposed | Accepted | Superseded by ADR-XXX | Deprecated
 
 ## Date
 2025-01-15
