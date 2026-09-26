@@ -75,5 +75,5 @@ A design decides once, for the whole module, what a line of code cannot: which s
 - [ ] The design satisfies the coding, domain, data, and API rules, or says where it could not and why.
 - [ ] Every task implementing this module links to its LLD section.
 - [ ] Contracts match the HLD's named APIs and the domain glossary.
-- [ ] Both renderings are produced and the document is stored where Document mechanics says.
+- [ ] Both renderings are produced and committed where Document mechanics says, the HTML beside the Markdown.
 - [ ] The user has reviewed the LLD.
