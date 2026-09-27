@@ -1,0 +1,45 @@
+{
+  "skill_name": "herdr-fanout",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "We're inside Herdr: fan this review out to three sub-agents in separate tabs, one each for auth, billing, and the API layer, then merge their findings",
+        "top_k": 3
+      },
+      {
+        "prompt": "Spin up parallel agents in Herdr tabs to try three design approaches at once and compare them",
+        "top_k": 3
+      },
+      {
+        "prompt": "Run parallel research across sub-agents, one Herdr tab per question, and synthesize what they come back with",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Break this spec into small verifiable tasks with acceptance criteria",
+        "owner": "planning-and-task-breakdown"
+      },
+      {
+        "prompt": "Record the decision to adopt event sourcing for the orders service as an ADR",
+        "owner": "adrs"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "dialogue",
+      "prompt": "HERDR_ENV=1. The user says: \"Review the auth, payments, and notifications modules in parallel; don't change any files.\" Fan it out.",
+      "expected_output": "A roster of three read-only reviewer slices, each spawned in its own labeled tab without focus, briefed cold with paths, constraints, and a return shape, collected by pane id and synthesized with claims verified",
+      "expectations": [
+        "Checks HERDR_ENV before spawning anything",
+        "Writes the roster (label, self-contained brief, return shape) before creating any tab",
+        "Creates one tab per slice with --no-focus and a role --label, reading the pane id from the response rather than guessing it",
+        "Each brief names the paths, says not to modify files, and states the return shape; none tells the agent to exit",
+        "Prompts without --wait, then waits and reads each agent by pane id",
+        "Synthesizes and de-duplicates the findings, verifies claims before relaying them, and closes only tabs it created"
+      ]
+    }
+  ]
+}

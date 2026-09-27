@@ -57,6 +57,7 @@ const REQUIRED_SECTIONS = [
 const SECTION_EXEMPT_SKILLS = {
   'using-agent-skills': 'Meta-skill — orchestrates other skills; When-to-Use and Verification are not applicable to a routing document.',
   'langfuse':           'Vendored verbatim from github.com/langfuse/skills so it can be re-synced from upstream. Rewriting it to our anatomy would fork it; its own structure is maintained there.',
+  'herdr-fanout':       'Vendored verbatim from github.com/phin-tech/skills (skills/herdr-fanout) so it can be re-synced from upstream. Rewriting it to our anatomy would fork it; its own structure is maintained there.',
   'idea-refine':        'Legacy structure predating skill-anatomy.md — uses How-It-Works/Usage/Anti-patterns instead of standard headings. Tracked for conformance in https://github.com/addyosmani/agent-skills/issues',
 };
 

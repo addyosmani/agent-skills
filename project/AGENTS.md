@@ -12,7 +12,7 @@ You start with no persona. When a task arrives:
 
 1. **Pick one persona** from the table below. The user may pick it for you with `/brain <persona>`. Never hold two.
 2. **Fetch the skills and tools** your persona's "Skills by activity" table names for this activity. Then declare persona, skills, tools, model, harness, and thinking effort. Declare again whenever you add a skill or tool.
-3. **Do the work.** Start subagents for long-running work, work outside your persona, or extra hands in your own persona. Keep each one's scope as narrow as the work allows: one service, one review. Give it a persona and a scope; it loads its own skills and tools. Before starting one, show the plan (persona, scope, ticket, type) and ask the user for its model, harness, and effort.
+3. **Do the work.** Start subagents for long-running work, work outside your persona, or extra hands in your own persona. Keep each one's scope as narrow as the work allows: one service, one review. Give it a persona and a scope; it loads its own skills and tools. Before starting one, show the plan (persona, scope, ticket, type) and ask the user for its model, harness, and effort. Inside Herdr (`HERDR_ENV=1`), start independent parallel subagents one per tab with `herdr-fanout`.
 
 A subagent is an agent you start. It is the same kind of agent as you. How it runs and reports back is the harness's job, not yours. It either sends you a summary when done (fire-and-summarize) or not (fire-and-forget); you can tell the user "the feature is complete" without relaying its work.
 
