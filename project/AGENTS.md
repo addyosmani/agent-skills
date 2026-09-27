@@ -108,7 +108,7 @@ Global defaults, binding in every project. Each row states the rule and the only
 | ID | Rule | Override considered only when |
 |---|---|---|
 | S7 | **PostgreSQL** (`database`). | — |
-| S8 | **Docker for local development; LocalStack for AWS.** A reproducible local environment, not an infrastructure project (`development-setup`). | the service is a pure library |
+| S8 | **Docker for development, locally or on a shared, short-lived EC2 machine; LocalStack for AWS.** A reproducible environment, not an infrastructure project; machines launched by metrics, another type only with the user's permission, an idle one terminated (`development-setup`). | the service is a pure library |
 | S9 | **Terraform for AWS under `infra/`.** | a recorded decision |
 | S10 | **GitHub Actions for CI/CD**, deploy workflows per environment; what CI runs on every PR is `test-driven-development`. | a recorded decision |
 | S11 | **Prometheus (metrics), Grafana (dashboards), Loki (logs)**; what is emitted and when dashboards arrive is `observability-and-instrumentation`. | a recorded decision |
@@ -129,6 +129,7 @@ Global defaults, binding in every project. Each row states the rule and the only
 | S16 | **A linter and a static type checker on backend and frontend** (`coding-standards`). | — |
 | S17 | **Test runner, lint, and format commands: project default** (`test-driven-development`). | the service uses a different toolchain |
 | S18 | **Knowledge graph tooling: [graphify](https://github.com/Graphify-Labs/graphify).** | a recorded decision |
+| S19 | **Mobile builds on EAS Build**; AWS when the free builds or the queue run out, local only on request (`development-setup`). | the user sends a build elsewhere |
 
 ### Architecture
 
@@ -184,5 +185,5 @@ Model layering (API, domain, DB) is `coding-standards`; bounded contexts, aggreg
 - `docs/README.md` is the index of this project's documents. Read it first, then only what the task needs.
 - `docs/ARCHITECTURE.md` is the map of the code, the stack, the features, and where a change belongs; each service keeps its `HLD.md` and `LLD.md` in its own `docs/`.
 - `docs/PRD.md` says what the product must do; `docs/DOMAIN.md` is the vocabulary; `docs/DEVELOPMENT.md` is how to set up, run, test, and debug it; `docs/decisions/` holds the ADRs; `docs/LEARNINGS.md` is where you record what you learn.
-- The Linear team key and API key are `LINEAR_TEAM` and `LINEAR_API_KEY` in the local `.env`, never in the repository. The team's workflow states are created once by the user with `skills/linear/scripts/create-workflow.sh`; when a project starts, check the states exist and ask the user to run the script if any is missing (`linear`).
+- Settings and credentials are in the local `.env`, filled from `.env.example`, never in the repository: the Linear team key and API key are `LINEAR_TEAM` and `LINEAR_API_KEY`; the cloud and EAS settings are `development-setup`'s. The team's workflow states are created once by the user with `skills/linear/scripts/create-workflow.sh`; when a project starts, check the states exist and ask the user to run the script if any is missing (`linear`).
 - `/brain [persona] [request]` starts a session in a persona; `/brain-status` shows who is running what.

@@ -2,7 +2,7 @@
 name: backend-engineer
 description: "Backend development agent: plans, cuts sprints and stories, writes HLD and LLD, builds APIs, domain logic, persistence, workers, and provider adapters with tests, instruments them, raises the PR, builds, and deploys. Never reviews. Use when a ticket, bug, design question, or technical discussion is server-side."
 skills: interview-me, idea-refine, spec-driven-development, planning-and-task-breakdown, hld, lld, adrs, documentation, domain-modeling, api-and-interface-design, test-driven-development, incremental-implementation, debugging-and-error-recovery, observability-and-instrumentation, security-and-hardening, deprecation-and-migration, git-workflow-and-versioning, github, ci-cd-and-automation, shipping-and-launch, linear, coding-standards, database, continuous-delivery, development-setup
-tools: linear, github, shell, docker, localstack, postgres, grafana
+tools: linear, github, shell, docker, localstack, postgres, grafana, aws
 ---
 
 # Backend Engineer

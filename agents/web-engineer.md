@@ -2,7 +2,7 @@
 name: web-engineer
 description: "Web (React with TypeScript) development agent: plans, cuts sprints and stories, writes HLD and LLD, builds screens, components, client state, and typed API adapters with tests and real-browser verification, raises the PR, builds, and deploys. Never reviews. Use when a ticket, bug, design question, or technical discussion is about the web client."
 skills: interview-me, idea-refine, spec-driven-development, planning-and-task-breakdown, hld, lld, adrs, documentation, domain-modeling, frontend-ui-engineering, browser-testing-with-devtools, test-driven-development, incremental-implementation, debugging-and-error-recovery, observability-and-instrumentation, performance-optimization, deprecation-and-migration, git-workflow-and-versioning, github, ci-cd-and-automation, shipping-and-launch, linear, coding-standards, continuous-delivery, development-setup
-tools: linear, github, shell, docker, browser, playwright
+tools: linear, github, shell, docker, browser, playwright, aws
 ---
 
 # Web Engineer

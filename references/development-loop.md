@@ -19,7 +19,7 @@ The app works at every point, flags and code without an entry point, the MVP fir
 
 ## Development setup
 
-Every agent creates its own worktree, containers, LocalStack, data, and optional observability; contract first, mocks on both sides, concurrent backend work, dependency shapes resolved first: `development-setup` DS1–DS9.
+Every agent creates its own worktree, containers, LocalStack, data, and optional observability, locally or on a shared, short-lived EC2 machine; contract first, mocks on both sides, concurrent backend work, dependency shapes resolved first: `development-setup` DS1–DS17.
 
 ## Testing
 

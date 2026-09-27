@@ -7,7 +7,7 @@ This repository is where the brain is built: the personas in `agents/`, the skil
 ```
 AGENTS.md        this file: how to work on the repository
 CLAUDE.md        points here
-project/         files copied as they are to a project's root: AGENTS.md (the organization; the build fills in the installed skills and personas), SOUL.md
+project/         files copied as they are to a project's root: AGENTS.md (the organization; the build fills in the installed skills and personas), SOUL.md, .env.example
 agents/          personas, one file per role (docs/persona-anatomy.md)
 skills/          the flat skill dump (docs/skill-anatomy.md)
 references/      shared checklists and the way-of-working contracts

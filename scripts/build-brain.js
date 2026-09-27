@@ -45,6 +45,7 @@ if (missing) process.exit(1);
 for (const f of ['references', 'templates']) copy(path.join(ROOT, f), path.join(OUT, f));
 // project/ holds the files that go to a project's root as they are; AGENTS.md additionally gets the installed personas and skills written in, with their paths.
 copy(path.join(ROOT, 'project', 'SOUL.md'), path.join(OUT, 'SOUL.md'));
+copy(path.join(ROOT, 'project', '.env.example'), path.join(OUT, '.env.example'));
 const skillList = (manifest.skills || []).map(s => `- \`skills/${s}/SKILL.md\``).join('\n');
 const org = fs.readFileSync(path.join(ROOT, 'project', 'AGENTS.md'), 'utf8')
   .replace(/^<!-- brain:skills.*$/m, skillList);
@@ -64,7 +65,7 @@ Built from manifest.json: ${(manifest.skills || []).length} skills, ${(manifest.
 
 Install into a project:
 
-1. Copy \`AGENTS.md\` and \`SOUL.md\` to the project root (or paste \`AGENTS.md\` into \`CLAUDE.md\`).
+1. Copy \`AGENTS.md\`, \`SOUL.md\`, and \`.env.example\` to the project root (or paste \`AGENTS.md\` into \`CLAUDE.md\`); fill \`.env\` from \`.env.example\`.
 2. Copy \`skills/\` and \`agents/\` to where your tool reads them (Claude Code: \`.claude/skills/\`, \`.claude/agents/\`; Codex: \`.agents/skills/\`; OpenCode: \`.opencode/skills/\`). Pi reads that same \`.agents/skills/\`; do not copy skills into \`.pi/skills/\`.
 3. Copy the \`/brain\` commands for your tool: \`.claude/commands/brain*.md\` to \`.claude/commands/\`, \`.gemini/commands/brain*.toml\` to \`.gemini/commands/\`, \`.pi/prompts/brain*.md\` to \`.pi/prompts/\`, or \`.codex/prompts/brain*.md\` to \`~/.codex/prompts/\` (Codex reads prompts from the home directory only; invoke as \`/prompts:brain\`).
 4. Copy \`references/\` and \`templates/\` to the project root; create \`docs/\` from \`templates/\`.

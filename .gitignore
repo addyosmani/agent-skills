@@ -2,6 +2,7 @@
 node_modules/
 .env
 .env.*
+!.env.example
 *.log
 .claude/.simplify-ignore-cache/
 .claude/sdd-cache/

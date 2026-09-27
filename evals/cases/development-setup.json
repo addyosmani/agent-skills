@@ -21,6 +21,22 @@
       {
         "prompt": "I need to debug a failing job locally without touching anyone else's containers or the shared database",
         "top_k": 3
+      },
+      {
+        "prompt": "Spin up an EC2 machine for this ticket and run the Docker stack with LocalStack and Grafana on it",
+        "top_k": 3
+      },
+      {
+        "prompt": "Build the Android and iOS release of the React Native app, on EAS or on AWS if the queue is too long",
+        "top_k": 3
+      },
+      {
+        "prompt": "Make sure the idle dev instances on AWS get terminated so we are not paying for them",
+        "top_k": 3
+      },
+      {
+        "prompt": "Check whether the shared dev machine has headroom for another agent or whether we need to launch a new one",
+        "top_k": 3
       }
     ],
     "negative": [
@@ -52,6 +68,21 @@
         "Any dependency's shape and type is resolved before code is written against it",
         "The app and tests run inside this environment",
         "After opening the PR, the worktree, containers and snapshot are removed"
+      ]
+    },
+    {
+      "id": 2,
+      "kind": "dialogue",
+      "prompt": "You are the mobile engineer on PROJ-77 and need an iOS and an Android release build. EAS reports 15 Android builds already used this month, and the iOS build has sat in the EAS queue for 40 minutes. A backend agent is already working on the one live dev machine. Say what you do.",
+      "expected_output": "Builds on EAS by default with eas-build.sh; Android falls back to AWS because the free builds are used up, iOS because the queue passed the limit and the EAS build is canceled, both recorded on the ticket; Android joins the live dev machine if cloud-capacity shows headroom (else launches the default m8i.2xlarge within the machine cap) and builds in Docker in its own work directory; iOS reuses a free Mac host or asks for a new one stating the 24-hour minimum; artifacts copied back; cloud-down removes only its own directory and leaves the backend agent's machine running; cloud-reap at start and end",
+      "expectations": [
+        "Uses EAS Build first and falls back to AWS only for the stated reasons (free builds used up, queue wait over the limit), recording each on the ticket",
+        "Checks the live machine's headroom from its metrics before joining it, and launches another default machine only when it has none",
+        "Does not launch a type other than m8i.2xlarge, or a new Mac host, without the user's explicit permission; states the 24-hour minimum for a Mac host",
+        "Works in its own ~/work directory and Compose project without touching the backend agent's directory, containers, or ports",
+        "cloud-down.sh removes only its own work and does not terminate a machine another agent is still on",
+        "Copies no local AWS credentials or tokens to the machine",
+        "If an EAS build fails, reads the logs and reports the reason; does not move it to AWS or local without the user deciding"
       ]
     }
   ]
