@@ -63,7 +63,7 @@ Does the change fit the system's design?
 
 ### 4. Security
 
-For detailed security guidance, see `security-and-hardening`. Does the change introduce vulnerabilities?
+For detailed security guidance, see `security-and-hardening` and the security checklist in [references/review-checklists.md](references/review-checklists.md#4-security-review-checklist). Does the change introduce vulnerabilities?
 
 - Is user input validated and sanitized?
 - Are secrets kept out of code, logs, and version control?
@@ -76,7 +76,7 @@ For detailed security guidance, see `security-and-hardening`. Does the change in
 
 ### 5. Performance
 
-For detailed profiling and optimization, see `performance-optimization`. Does the change introduce performance problems?
+For detailed profiling and optimization, see `performance-optimization` and the performance checklist in [references/review-checklists.md](references/review-checklists.md#5-performance-review-checklist). Does the change introduce performance problems?
 
 - Any N+1 query patterns?
 - Any unbounded loops or unconstrained data fetching?
@@ -348,8 +348,9 @@ For triaging `npm audit` findings and supply-chain risk (typosquatting, compromi
 ```
 ## See Also
 
-- For detailed security review guidance, see `../../references/security-checklist.md`
-- For performance review checks, see `../../references/performance-checklist.md`
+- For detailed self-contained review checklists across all five axes, see [references/review-checklists.md](references/review-checklists.md)
+- For repository-wide security guidance (full-repo installs), see `../../references/security-checklist.md`
+- For repository-wide performance checks (full-repo installs), see `../../references/performance-checklist.md`
 
 ## Common Rationalizations
 
