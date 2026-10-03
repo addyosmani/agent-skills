@@ -214,3 +214,21 @@ test('the TOML directories are not put through the YAML rules', () => {
   assert.equal(result.status, 0, result.stdout);
   assert.doesNotMatch(result.stdout, /\.gemini.*unquoted value/);
 });
+
+
+test('fails when all command surfaces are absent instead of passing zero commands', () => {
+  const root = makeSandbox();
+  const result = run(root);
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /no commands found/);
+});
+
+test('fails when all command directories exist but are empty', () => {
+  const root = makeSandbox();
+  for (const directory of ['.claude/commands', '.gemini/commands', 'commands']) {
+    fs.mkdirSync(path.join(root, directory), { recursive: true });
+  }
+  const result = run(root);
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /no commands found/);
+});

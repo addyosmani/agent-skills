@@ -118,6 +118,10 @@ function main() {
   ]);
 
   let errors = 0;
+  if (allCanonicalStems.size === 0) {
+    console.log('  ✗  no commands found across the three command surfaces');
+    errors++;
+  }
 
   // ── Parity check ────────────────────────────────────────────────────────────
   console.log('Checking command parity...');
