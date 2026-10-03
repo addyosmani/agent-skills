@@ -621,3 +621,24 @@ test('materializes a git baseline and applies a working-tree patch', () => {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
 });
+
+
+test('fixture baseline commits ignore inherited user signing requirements', () => {
+  const root = makeSandbox();
+  const config = path.join(root, 'global.gitconfig');
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'fixture-signing-test-'));
+  try {
+    fs.writeFileSync(config, '[commit]\n\tgpgsign = true\n[gpg]\n\tprogram = definitely-missing-eval-signer\n');
+    const result = spawnSync(process.execPath, ['-e', `
+      const fs = require('node:fs');
+      const { materializeWorkspace } = require(${JSON.stringify(path.join(root, 'scripts', 'run-evals.js'))});
+      let workspace;
+      try { workspace = materializeWorkspace({ files: ['project/context.txt'] }); }
+      finally { if (workspace) fs.rmSync(workspace, { recursive: true, force: true }); }
+    `], { cwd: root, encoding: 'utf8', env: { ...process.env, GIT_CONFIG_GLOBAL: config, TMPDIR: temp, TMP: temp, TEMP: temp } });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+    fs.rmSync(temp, { recursive: true, force: true });
+  }
+});
