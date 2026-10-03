@@ -210,6 +210,8 @@ This pattern catches wrong assumptions early and gives reviewers a clear map of 
 
 ## Pre-Commit Hygiene
 
+For machine-consumed status, diff, and history output, use the stable Git formats and safety boundary in `../../references/agent-first-clis.md`.
+
 Before every commit:
 
 ```bash
