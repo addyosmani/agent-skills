@@ -621,3 +621,22 @@ test('materializes a git baseline and applies a working-tree patch', () => {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
 });
+
+
+test('removes the throwaway workspace when fixture setup fails', () => {
+  const root = makeSandbox();
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'workspace-cleanup-test-'));
+  try {
+    const result = spawnSync(process.execPath, ['-e', `
+      const { materializeWorkspace } = require(${JSON.stringify(path.join(root, 'scripts', 'run-evals.js'))});
+      try { materializeWorkspace({ files: ['project/context.txt', 'missing.txt'] }); }
+      catch (error) { console.error(error.message); }
+    `], { cwd: root, encoding: 'utf8', env: { ...process.env, TMPDIR: temp, TMP: temp, TEMP: temp } });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.match(result.stderr, /fixture listed in files\[\] not found/);
+    assert.deepEqual(fs.readdirSync(temp), [], 'partially copied fixture data must be removed');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+    fs.rmSync(temp, { recursive: true, force: true });
+  }
+});

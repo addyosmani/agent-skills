@@ -389,6 +389,15 @@ function materializeWorkspace(ev) {
   // Fresh throwaway project dir per eval; fixtures (if any) copied in so the
   // agent has real code to operate on rather than describing what it would do.
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-skills-eval-'));
+  try {
+    return initializeWorkspace(ev, workspace);
+  } catch (error) {
+    fs.rmSync(workspace, { recursive: true, force: true });
+    throw error;
+  }
+}
+
+function initializeWorkspace(ev, workspace) {
   const setupDirs = new Set();
   for (const rel of ev.files || []) {
     const src = resolveFixturePath(FIXTURES_DIR, rel);
