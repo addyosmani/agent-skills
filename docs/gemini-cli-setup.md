@@ -107,7 +107,7 @@ This is useful when you want to ensure a specific workflow is followed without w
 
 ## Slash Commands
 
-The repo ships 9 slash commands under `.gemini/commands/`: 8 lifecycle commands plus the `/webperf` specialist audit. Gemini CLI auto-discovers them when you run from the project root.
+The repo ships 10 slash commands under `.gemini/commands/`: 9 lifecycle commands plus the `/webperf` and `/a11y` specialist audits. Gemini CLI auto-discovers them when you run from the project root.
 
 | Command | What it does |
 |---------|--------------|
@@ -120,6 +120,7 @@ The repo ships 9 slash commands under `.gemini/commands/`: 8 lifecycle commands 
 | `/code-simplify` | Reduce complexity without changing behavior |
 | `/ship` | Pre-launch checklist via parallel persona fan-out |
 | `/webperf` | Audit browser-facing apps for Core Web Vitals and performance issues |
+| `/a11y` | Audit an interface for WCAG 2.2 AA conformance and triage the violations found |
 
 Each command invokes the corresponding skill automatically — no manual skill loading required.
 

@@ -45,7 +45,7 @@ agy plugin list
 
 ## Lifecycle Workflows and Command Compatibility
 
-Antigravity's [migration tooling](https://www.agy.dev/docs/cli/gcli-migration/) reports the 9 legacy definitions in `commands/*.toml` as "converted to skills." In affected `agy` 1.1.x releases, validation succeeds but the converted wrappers do not appear in the slash-command or skill catalog. A successful `agy plugin validate` therefore confirms the files are well formed, not that `/build` and the other short wrappers are available. This is tracked in [agent-skills #445](https://github.com/addyosmani/agent-skills/issues/445) and upstream in [antigravity-cli #788](https://github.com/google-antigravity/antigravity-cli/issues/788).
+Antigravity's [migration tooling](https://www.agy.dev/docs/cli/gcli-migration/) reports the 10 legacy definitions in `commands/*.toml` as "converted to skills." In affected `agy` 1.1.x releases, validation succeeds but the converted wrappers do not appear in the slash-command or skill catalog. A successful `agy plugin validate` therefore confirms the files are well formed, not that `/build` and the other short wrappers are available. This is tracked in [agent-skills #445](https://github.com/addyosmani/agent-skills/issues/445) and upstream in [antigravity-cli #788](https://github.com/google-antigravity/antigravity-cli/issues/788).
 
 Use the native plugin skills directly while that importer limitation applies:
 
@@ -60,6 +60,7 @@ Use the native plugin skills directly while that importer limitation applies:
 | `/code-simplify` | `/agent-skills:code-simplification` | Simplifies without changing behavior |
 | `/ship` | `/agent-skills:shipping-and-launch` | The wrapper's automatic persona fan-out is unavailable; invoke specialist agents separately |
 | `/webperf` | Select `web-performance-auditor` from `/agents` | This workflow is a persona, not a skill |
+| `/a11y` | `/agent-skills:accessibility-engineering` | Audits an interface for WCAG 2.2 AA and remediates the violations found |
 
 Do not add YAML frontmatter to the TOML files as a workaround. Gemini CLI reads the parallel TOML command format with a strict parser, and `---` frontmatter makes those files invalid TOML without changing Antigravity's conversion behavior.
 
