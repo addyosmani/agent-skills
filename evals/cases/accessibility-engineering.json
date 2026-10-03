@@ -1,0 +1,56 @@
+{
+  "skill_name": "accessibility-engineering",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Audit the checkout page for accessibility violations before we ship",
+        "top_k": 1
+      },
+      {
+        "prompt": "Run axe-core on the dashboard and tell me which WCAG AA rules are failing",
+        "top_k": 3
+      },
+      {
+        "prompt": "Our screen reader users are stuck on the signup form — check the a11y on it",
+        "top_k": 3
+      },
+      {
+        "prompt": "pa11y is failing on contrast in CI — triage the violations it reports",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Build a modal component that closes on Escape",
+        "owner": "frontend-ui-engineering"
+      },
+      {
+        "prompt": "Optimize the slow database indexes",
+        "owner": "performance-optimization"
+      },
+      {
+        "prompt": "Set up a CI pipeline that runs the test suite on every push",
+        "owner": "ci-cd-and-automation"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "execution",
+      "prompt": "Support has three accessibility complaints about checkout-form.html from assistive-technology users, and product wants to know whether the page passes WCAG before we ship. Audit it and write up the findings. See AUDIT-REQUEST.md.",
+      "expected_output": "A WCAG-mapped accessibility audit of checkout-form.html: each planted violation identified, mapped to a 2.2 success criterion, and paired with a specific fix, with assistive-technology claims tagged as manual rather than reported as verified",
+      "files": [
+        "accessibility-engineering/checkout-form.html",
+        "accessibility-engineering/AUDIT-REQUEST.md"
+      ],
+      "expectations": [
+        "Each finding maps to a WCAG success criterion, and no finding cites a 44x44px touch target as an AA requirement (24x24 CSS px is SC 2.5.8, AA; 44x44 is SC 2.5.5, AAA)",
+        "The icon-only clear-cart button is reported as having no accessible name, and the low-contrast hint text is reported as failing SC 1.4.3 against its background",
+        "The div-based 'Place order' control is reported as not keyboard operable, with a native <button> recommended as the fix rather than adding role and tabindex to the div",
+        "The email input is reported as having no accessible name, and associating a <label> is recommended ahead of an ARIA-only fix",
+        "Findings that depend on what a screen reader announces are tagged manual with a named browser and assistive-technology pair, rather than reported as verified"
+      ]
+    }
+  ]
+}
