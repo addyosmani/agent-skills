@@ -621,3 +621,32 @@ test('materializes a git baseline and applies a working-tree patch', () => {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
 });
+
+
+test('rejects duplicate behavioral IDs before they can overwrite a grading slot', () => {
+  const root = makeSandbox();
+  try {
+    writeSkill(root, 'alpha-skill', 'Handles alpha widgets. Use when changing alpha widgets.');
+    const evalCase = completeCase('alpha-skill', 'change alpha widget');
+    evalCase.evals.push({ ...behavioralEval(), prompt: 'A different evaluation' });
+    writeJson(path.join(root, 'evals', 'cases', 'alpha-skill.json'), evalCase);
+    const result = run(root);
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    assert.match(result.stdout, /duplicate behavioral eval id=1/);
+    const dryRun = run(root, ['--behavioral', 'alpha-skill', '--dry-run']);
+    assert.equal(dryRun.status, 1, dryRun.stdout + dryRun.stderr);
+    assert.match(dryRun.stderr, /duplicate behavioral eval id=1/);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test('accepts distinct behavioral IDs including zero', () => {
+  const root = makeSandbox();
+  try {
+    writeSkill(root, 'alpha-skill', 'Handles alpha widgets. Use when changing alpha widgets.');
+    const evalCase = completeCase('alpha-skill', 'change alpha widget');
+    evalCase.evals.push({ ...behavioralEval(), id: 0 });
+    writeJson(path.join(root, 'evals', 'cases', 'alpha-skill.json'), evalCase);
+    const result = run(root);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});

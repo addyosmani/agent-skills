@@ -193,6 +193,16 @@ function resolveFixturePath(root, rel) {
   return resolvedPath;
 }
 
+function duplicateEvalIds(evals) {
+  const seen = new Set();
+  const duplicates = new Set();
+  for (const ev of evals) {
+    if (seen.has(ev.id)) duplicates.add(ev.id);
+    seen.add(ev.id);
+  }
+  return [...duplicates];
+}
+
 // ---------- tier 2 ----------
 
 function runDeterministic(minRank1) {
@@ -233,6 +243,11 @@ function runDeterministic(minRank1) {
       console.log(`  ✗  ${c.file}: no such skill directory`);
       errors++;
       continue;
+    }
+
+    for (const id of duplicateEvalIds(d.evals || [])) {
+      console.log(`  ✗  ${c.file}: duplicate behavioral eval id=${id}`);
+      errors++;
     }
 
     // Schema: behavioral evals (skill-creator evals.json shape)
@@ -520,6 +535,11 @@ function runBehavioral(skillName, dryRun) {
   const d = JSON.parse(fs.readFileSync(caseFile, 'utf8'));
   if (!d.evals?.length) {
     console.error(`"${skillName}" has no behavioral evals`);
+    process.exit(1);
+  }
+  const duplicateIds = duplicateEvalIds(d.evals);
+  if (duplicateIds.length) {
+    console.error(`"${skillName}" has duplicate behavioral eval id=${duplicateIds.join(', ')}; each grading slot needs a unique id`);
     process.exit(1);
   }
   if (!dryRun) fs.mkdirSync(RESULTS_DIR, { recursive: true });
