@@ -9,7 +9,7 @@ const fs   = require('node:fs');
 const os   = require('node:os');
 const path = require('node:path');
 
-const { lintSkillContent, lintSkillLayout, topLevelFrontmatterKeys } = require('./skill-lint.js');
+const { lintSkillContent, lintSkillLayout, topLevelFrontmatterKeys, lintPersonaContent } = require('./skill-lint.js');
 
 const KNOWN = new Set(['alpha', 'beta']);
 
@@ -647,4 +647,70 @@ test('the spec-key check tolerates CRLF frontmatter', () => {
   ]).replace(/\n/g, '\r\n');
   const { errors } = lintSkillContent('alpha', content, KNOWN);
   assert.equal(errors.filter(e => /key 'temperature'/.test(e)).length, 1);
+});
+
+// ─── Personas (agents/<name>.md) ─────────────────────────────────────────────
+//
+// docs/agents.md: same frontmatter format as a skill, name equal to the file
+// stem, and the file ends with a Composition block. Nothing more is checked.
+
+function personaFile({ name = 'code-reviewer', description = 'Reviews changes. Use before merging.', body } = {}) {
+  const fm = ['---', name === null ? null : `name: ${name}`, description === null ? null : `description: ${description}`, '---']
+    .filter(l => l !== null).join('\n');
+  return `${fm}\n\n${body ?? '# Persona\n\n## Rules\n\nBe precise.\n\n## Composition\n\n- **Invoke via:** `/ship`.\n'}`;
+}
+
+test('a conforming persona produces no errors', () => {
+  assert.deepEqual(lintPersonaContent('code-reviewer', personaFile()).errors, []);
+});
+
+test('persona: frontmatter name must match the file stem', () => {
+  const { errors } = lintPersonaContent('code-reviewer', personaFile({ name: 'reviewer' }));
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /name 'reviewer' does not match file name 'code-reviewer'/);
+});
+
+test('persona: description is required', () => {
+  const { errors } = lintPersonaContent('code-reviewer', personaFile({ description: null }));
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /missing required field: 'description'/);
+});
+
+test('persona: a missing frontmatter block is reported and nothing else is attempted', () => {
+  const { errors } = lintPersonaContent('code-reviewer', '# Persona\n\n## Composition\n');
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /Missing or malformed YAML frontmatter/);
+});
+
+test('persona: frontmatter a host would reject as YAML is reported', () => {
+  const { errors } = lintPersonaContent('code-reviewer', personaFile({ description: 'Reviews: everything. Use before merging.' }));
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /Frontmatter line/);
+});
+
+test('persona: the Composition section is required', () => {
+  const { errors } = lintPersonaContent('code-reviewer', personaFile({ body: '# Persona\n\n## Rules\n\nBe precise.\n' }));
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /Missing "## Composition" section/);
+});
+
+test('persona: Composition must be the last section', () => {
+  const { errors } = lintPersonaContent('code-reviewer', personaFile({
+    body: '# Persona\n\n## Composition\n\n- **Invoke via:** `/ship`.\n\n## Output Format\n\nA report.\n',
+  }));
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /must be the last section, but "## Output Format" follows it/);
+});
+
+test('persona: a heading inside a fenced example after Composition is not a later section', () => {
+  const body = [
+    '# Persona', '', '## Composition', '', '- **Invoke via:** `/ship`. Report in this shape:', '',
+    '```markdown', '## Review: [title]', 'Findings…', '```', '',
+  ].join('\n');
+  assert.deepEqual(lintPersonaContent('code-reviewer', personaFile({ body })).errors, []);
+});
+
+test('persona: the Composition heading match is case-insensitive and tolerates trailing spaces', () => {
+  const body = '# Persona\n\n## composition   \n\n- **Invoke via:** `/ship`.\n';
+  assert.deepEqual(lintPersonaContent('code-reviewer', personaFile({ body })).errors, []);
 });

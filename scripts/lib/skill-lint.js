@@ -544,6 +544,59 @@ function lintSkillLayout(skillDir) {
 }
 
 /**
+ * Lint a persona file (agents/<name>.md) against the three rules docs/agents.md
+ * states for them: frontmatter in the same format as a skill, with `name`
+ * equal to the file stem (the name is the `subagent_type` commands spawn) and
+ * a `description`; and a closing `## Composition` section. Headings inside
+ * fenced blocks are ignored, so an example after Composition does not count as
+ * a later section. Pure: no filesystem access. Returns { errors }.
+ */
+function lintPersonaContent(stem, content) {
+  const errors = [];
+
+  const fm = parseFrontmatter(content);
+  if (!fm) {
+    errors.push('Missing or malformed YAML frontmatter (expected --- block at top of file)');
+    return { errors };
+  }
+  errors.push(...frontmatterYamlErrors(content));
+
+  if (!fm.name) {
+    errors.push("Frontmatter missing required field: 'name'");
+  } else if (fm.name !== stem) {
+    errors.push(`Frontmatter name '${fm.name}' does not match file name '${stem}' (the name is the subagent_type commands spawn)`);
+  }
+  if (!fm.description) {
+    errors.push("Frontmatter missing required field: 'description'");
+  }
+
+  const headings = [...stripFencedCodeBlocks(content).matchAll(/^## +(.+?)\s*$/gm)].map(m => m[1]);
+  const compositionAt = headings.findIndex(h => /^Composition$/i.test(h));
+  if (compositionAt === -1) {
+    errors.push('Missing "## Composition" section (docs/agents.md: every persona file ends with a Composition block)');
+  } else if (compositionAt !== headings.length - 1) {
+    errors.push(`"## Composition" must be the last section, but "## ${headings[headings.length - 1]}" follows it`);
+  }
+
+  return { errors };
+}
+
+/**
+ * Lint a persona by file name: reads agents/<file>, then delegates to
+ * lintPersonaContent. Returns { errors }.
+ */
+function lintPersona(fileName, agentsDir) {
+  const stem = fileName.replace(/\.md$/, '');
+  let content;
+  try {
+    content = fs.readFileSync(path.join(agentsDir, fileName), 'utf8');
+  } catch (err) {
+    return { errors: [`Unreadable persona file: ${err.message}`] };
+  }
+  return lintPersonaContent(stem, content);
+}
+
+/**
  * Lint a skill by directory name: reads its SKILL.md, then delegates to
  * lintSkillContent. This is the thin filesystem wrapper the CLI uses.
  * Returns { errors, warnings, exempt }.
@@ -581,4 +634,6 @@ module.exports = {
   lintSkillContent,
   lintSkillLayout,
   lintSkill,
+  lintPersonaContent,
+  lintPersona,
 };
