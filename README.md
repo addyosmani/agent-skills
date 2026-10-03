@@ -77,6 +77,8 @@ Prefer a native integration? Pick your tool below.
 /plugin install agent-skills@addy-agent-skills
 ```
 
+> **Seeing `Not logged in`?** `/plugin install` uses your current Claude Code session. Run `/login` first, then retry the install command.
+
 > **SSH errors?** The marketplace clones repos via SSH. If you don't have SSH keys set up on GitHub, either [add your SSH key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account) or use the full HTTPS URL to force HTTPS cloning during the marketplace-add step:
 > ```bash
 > /plugin marketplace add https://github.com/addyosmani/agent-skills.git
