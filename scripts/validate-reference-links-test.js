@@ -493,3 +493,21 @@ test('a missing file is reported once, not again for its anchor', () => {
   assert.match(result.stdout, /L1: references\/renamed\.md — resolves to skills\/hardening\/references\/renamed\.md, which does not exist/);
   assert.match(result.stdout, /1 skills checked — 1 error\(s\) — FAILED/);
 });
+
+
+test('heading slugs remain unique when a literal suffix collides with an allocated slug', () => {
+  const root = makeSandbox();
+  hardeningSkill(root, 'references/patterns.md#example-1-1');
+  // A hyphen in the literal heading makes its base slug collide with Example's suffix.
+  writeFile(root, 'skills/hardening/references/patterns.md', '## Example\n\n## Example\n\n## Example-1\n');
+  const result = run(root);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test('a duplicate skips a slug occupied by an earlier literal heading', () => {
+  const root = makeSandbox();
+  hardeningSkill(root, 'references/patterns.md#example-2');
+  writeFile(root, 'skills/hardening/references/patterns.md', '## Example\n\n## Example-1\n\n## Example\n');
+  const result = run(root);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});

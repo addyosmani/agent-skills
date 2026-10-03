@@ -77,8 +77,10 @@ function headingAnchors(file) {
     const match = line.match(/^ {0,3}#{1,6}[ \t]+(.*?)(?:[ \t]+#+)?[ \t]*$/);
     if (!match) continue;
     const slug = slugify(match[1]);
-    const count = seen.get(slug) || 0;
-    anchors.add(count === 0 ? slug : `${slug}-${count}`);
+    let count = seen.get(slug) || 0;
+    let anchor = count === 0 ? slug : `${slug}-${count}`;
+    while (anchors.has(anchor)) anchor = `${slug}-${++count}`;
+    anchors.add(anchor);
     seen.set(slug, count + 1);
   }
   return anchors;
