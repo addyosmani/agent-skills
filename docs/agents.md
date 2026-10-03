@@ -8,6 +8,7 @@ Specialist personas that play a single role with a single perspective. Each pers
 | [security-auditor](../agents/security-auditor.md) | Security Engineer | Vulnerability detection, OWASP-style audit |
 | [test-engineer](../agents/test-engineer.md) | QA Engineer | Test strategy, coverage analysis, Prove-It pattern |
 | [web-performance-auditor](../agents/web-performance-auditor.md) | Web Performance Engineer | Core Web Vitals audit, loading/rendering/network analysis |
+| [accessibility-auditor](../agents/accessibility-auditor.md) | Accessibility Engineer | WCAG 2.2 AA conformance audit, keyboard and screen reader review, contrast |
 
 ## How personas relate to skills and commands
 
@@ -30,6 +31,7 @@ Pick this when you want one perspective on the current change and the user is in
 - "Are there security issues in `auth.ts`?" → invoke `security-auditor` directly
 - "What tests are missing for the checkout flow?" → invoke `test-engineer` directly
 - "Audit Core Web Vitals on the product page" → invoke `web-performance-auditor` directly
+- "Is this page usable with a screen reader?" → invoke `accessibility-auditor` directly
 
 ### Slash command (single persona behind it)
 Pick this when there's a repeatable workflow you'd otherwise re-explain every time.
@@ -37,6 +39,7 @@ Pick this when there's a repeatable workflow you'd otherwise re-explain every ti
 - `/review` → wraps `code-reviewer` with the project's review skill
 - `/test` → wraps `test-engineer` with TDD skill
 - `/webperf` → wraps `web-performance-auditor` for performance-focused audits on web apps
+- `/a11y` → wraps `accessibility-auditor` for WCAG 2.2 AA audits
 
 ### Slash command (orchestrator — fan-out)
 Pick this only when **independent** investigations can run in parallel and produce reports that a single agent then merges.
