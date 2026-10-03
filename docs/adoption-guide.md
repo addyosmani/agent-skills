@@ -39,7 +39,7 @@ Run the lifecycle in order for the project's first real feature:
 /spec   →  SPEC.md            (spec-driven-development)
 /plan   →  tasks/plan.md      (planning-and-task-breakdown)
 /build  →  one slice at a time (incremental-implementation + test-driven-development)
-/review →  before every merge  (code-review-and-quality)
+/code-review →  before every merge  (code-review-and-quality)
 /ship   →  when going live     (shipping-and-launch)
 ```
 
@@ -95,7 +95,7 @@ Goal: every area the agent will touch gets a safety net first.
 
 Goal: two-speed adoption, legacy code stays under the Phase 1–2 regime; **new features get the greenfield treatment**.
 
-- New feature in the old codebase? `/spec → /plan → /build → /review`. The spec's boundaries section is where you declare what legacy surface the feature may and may not touch.
+- New feature in the old codebase? `/spec → /plan → /build → /code-review`. The spec's boundaries section is where you declare what legacy surface the feature may and may not touch.
 - **`api-and-interface-design` at the seams.** When new code must talk to old code, design the boundary contract-first. Hyrum's Law is not theoretical in a years-old codebase, someone depends on every observable behavior, including the bugs.
 - **`security-and-hardening` as an audit, then a gate.** Run it once across the existing attack surface (auth, input handling, dependencies, the dependency audit alone usually pays for the exercise), file what you find, then enforce it on new changes.
 
@@ -117,7 +117,7 @@ Goal: two-speed adoption, legacy code stays under the Phase 1–2 regime; **new 
 
 ## The two paths converge
 
-Both end in the same steady state: `/spec → /plan → /build → /review → /ship` for new work, always-on TDD and git discipline, review gates before merge, and skills loaded by phase rather than in bulk. Greenfield gets there in days; brownfield gets there in a quarter, and the difference is exactly the safety nets (context, characterization tests, boundaries) that the old codebase never had.
+Both end in the same steady state: `/spec → /plan → /build → /code-review → /ship` for new work, always-on TDD and git discipline, review gates before merge, and skills loaded by phase rather than in bulk. Greenfield gets there in days; brownfield gets there in a quarter, and the difference is exactly the safety nets (context, characterization tests, boundaries) that the old codebase never had.
 
 |                        | Greenfield                     | Brownfield                               |
 | ---------------------- | ------------------------------ | ---------------------------------------- |
