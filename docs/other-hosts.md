@@ -5,3 +5,4 @@ These hosts install the pack but are not in the README's install section, becaus
 Skills are plain `SKILL.md` folders, so any agent that reads the Agent Skills layout can load them. See [getting-started.md](getting-started.md).
 
 - **Oh My Pi**: `omp plugin marketplace add addyosmani/agent-skills`, then `omp plugin install agent-skills@addy-agent-skills`
+- **Dojo Workspace**: `dojo skills add addyosmani/agent-skills`
