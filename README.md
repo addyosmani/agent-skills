@@ -365,7 +365,7 @@ The portable core stays in shared directories. Host-specific paths are native di
 | Antigravity CLI adapter | `commands/` (10 commands), `plugin.json` | Legacy TOML wrappers and the root plugin manifest; see the [known wrapper limitation](docs/antigravity-setup.md#lifecycle-workflows-and-command-compatibility) |
 | Codex adapter | `.codex-plugin/`, `.agents/plugins/` | Codex plugin metadata and marketplace registration; Codex consumes `skills/` directly |
 | GitHub Copilot CLI adapter | `plugin.json` | Root plugin metadata; Copilot CLI discovers `skills/` by convention and does not register the lifecycle wrappers |
-| Contributor tooling | `scripts/` (13 scripts), `evals/` (25 case files), `.github/workflows/` | Validation, routing evals, and CI |
+| Contributor tooling | `scripts/` (13 scripts), `evals/` (26 case files), `.github/workflows/` | Validation, routing evals, and CI |
 | Documentation | `docs/` | Universal guidance and per-tool setup guides |
 
 Tools without a checked-in adapter directory install or copy the shared `skills/` core into their own native location. The [Quick Start](#quick-start) links the setup guide for each supported host.

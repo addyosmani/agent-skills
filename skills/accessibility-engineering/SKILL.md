@@ -49,6 +49,11 @@ Follow these rules when creating UI:
 <button aria-label="Delete task">
   <TrashIcon />
 </button>
+
+// Avoid: placeholder as the only label
+// It supplies a fallback accessible name (HTML-AAM), but it disappears on
+// input, so the field has no persistent label (SC 3.3.2).
+<input type="email" placeholder="Email address" />
 ```
 
 **Manage focus for dynamic content:**

@@ -48,7 +48,7 @@
         "Each finding maps to a WCAG success criterion, and no finding cites a 44x44px touch target as an AA requirement (24x24 CSS px is SC 2.5.8, AA; 44x44 is SC 2.5.5, AAA)",
         "The icon-only clear-cart button is reported as having no accessible name, and the low-contrast hint text is reported as failing SC 1.4.3 against its background",
         "The div-based 'Place order' control is reported as not keyboard operable, with a native <button> recommended as the fix rather than adding role and tabindex to the div",
-        "The email input is reported as having no accessible name, and associating a <label> is recommended ahead of an ARIA-only fix",
+        "The email input is reported as relying on its placeholder alone, with no persistent visible label (SC 3.3.2), and associating a <label> is recommended ahead of an ARIA-only fix",
         "Findings that depend on what a screen reader announces are tagged manual with a named browser and assistive-technology pair, rather than reported as verified"
       ]
     }

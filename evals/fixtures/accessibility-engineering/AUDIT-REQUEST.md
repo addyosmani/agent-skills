@@ -5,7 +5,8 @@ Fixture for the `accessibility-engineering` behavioral eval. Not a real project.
 `checkout-form.html` is the checkout page as it currently stands. Support has
 three complaints from assistive-technology users:
 
-1. A screen reader user could not tell what the email field was for.
+1. A screen reader user could not tell what the email field was for once they
+   had started typing in it.
 2. A keyboard-only user could not submit the order.
 3. The order-confirmation link "Click here" was reported as meaningless when
    navigating by link.

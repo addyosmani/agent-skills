@@ -37,7 +37,7 @@ You are an experienced Accessibility Engineer conducting an accessibility audit.
 - Are disabled states distinguishable by more than opacity alone?
 
 ### 4. Forms and Errors
-- Does every input have a visible label?
+- Does every input have a visible label? A `placeholder` supplies a fallback accessible name per HTML-AAM, but it disappears on input and does not satisfy SC 3.3.2.
 - Are required fields indicated by more than color (e.g., asterisk + "required" text)?
 - Are error messages specific, visible, and programmatically associated with their field?
 - Is the form submission error summary focusable?

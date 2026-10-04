@@ -101,7 +101,12 @@ if [ -f "$TEMP_DIR/axe-report.json" ]; then
         }
       }
     } catch (e) {
-      // axe report may be empty or malformed
+      // An empty report is covered by the guard above; a non-empty one that does
+      // not parse is a tool failure, not a clean result.
+      if (fs.statSync('$TEMP_DIR/axe-report.json').size > 0) {
+        console.error('$SCRIPT_NAME: axe-report.json is not valid JSON: ' + e.message);
+        process.exit(1);
+      }
     }
     fs.writeFileSync('$TEMP_DIR/result.json', JSON.stringify(result, null, 2));
   "
@@ -133,7 +138,11 @@ if [ -f "$TEMP_DIR/pa11y-report.json" ]; then
         });
       }
     } catch (e) {
-      // pa11y report may be empty or malformed
+      // Same as the axe block: an empty report is covered by the guard above.
+      if (fs.statSync('$TEMP_DIR/pa11y-report.json').size > 0) {
+        console.error('$SCRIPT_NAME: pa11y-report.json is not valid JSON: ' + e.message);
+        process.exit(1);
+      }
     }
     fs.writeFileSync('$TEMP_DIR/result.json', JSON.stringify(result, null, 2));
   "
