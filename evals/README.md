@@ -49,6 +49,50 @@ incomplete executions retain `.execution.raw.txt` and `.execution.error.txt`
 beside the case's result slot, produce no score, and do not stop later cases.
 These latest-attempt diagnostics are cleared when that case is rerun.
 
+### Record once, regrade a changed rubric
+
+Use `--record` to keep a generation for later grading, and `--model` to pin the
+requested executor and grader model:
+
+```bash
+node scripts/run-evals.js --behavioral documentation-and-adrs --record --model <model>
+node scripts/run-evals.js --regrade <printed-record-path> --rubric evals/cases/documentation-and-adrs.json --model <model>
+```
+
+Recording is opt-in. Each eval writes a unique `*.record.json` in `evals/results/`
+**before** calling the grader. It contains the exact stream-json trace, skill
+text, original eval, generation timestamp, requested model, observed executor
+model (when present), Claude Code version (or `null` if unavailable), and a
+SHA-256 digest of that evidence. The existing latest-run `*.grading.json` output
+is still written as usual. An execution that stops incomplete is not graded
+and saves no record. These local records contain full transcripts and
+may include fixture data; review them before sharing.
+
+Reference provenance describes files supplied by the harness, not files the
+agent actually read. Today this runner supplies only `SKILL.md` text, so records
+explicitly carry `references: { "status": "not-staged", "files": [] }` (see
+[#584](https://github.com/addyosmani/agent-skills/issues/584)). This is not an
+inventory of arbitrary filesystem or network access. Reference staging is a
+separate change; when it lands, the record writer must capture the staged files.
+
+Regrade uses the full case-file format above and selects the recorded skill and
+eval ID. Only `expectations` and `expected_output` may differ; the grader still
+scores `expectations`, as in a normal run. A changed task or modified record is
+rejected before any Claude invocation. The digest detects accidental changes,
+not authenticity: someone who edits both the evidence and digest can replace it.
+Replay uses the saved evidence without loading today's skill or fixtures, and
+labels the result **historical**, not a new test of the current skill. Holding
+the transcript fixed removes generation variance; LLM grading can still vary.
+
+Every grading attempt gets its own `*.record.json.attempt-<id>.json` beside the
+record, containing the rubric, model request, CLI version, timestamp, raw output
+and parsed grade, or an error. The grader's resolved model remains `unknown`
+because its text response does not identify it. A replay never overwrites the
+record, earlier attempts, or latest-run grading files. If grading fails, retry
+with `--regrade` without paying for generation again. `--dry-run` validates and
+prints the plan without invoking Claude or writing files. Unrecorded older runs
+cannot be reconstructed as records.
+
 ## Plugin evals (Claude Code)
 
 `claude plugin eval` (Claude Code 2.1.269 or later) loads the whole plugin, every skill at once, runs the cases under `evals/plugin/`, and scores each case with and without the plugin. It complements Tier 2 rather than replacing it: Tier 2 checks that a description carries the vocabulary users say; this checks that Claude Code's own router picks the skill on a natural prompt, and what the skill adds to the reply (the `Δ` column).
