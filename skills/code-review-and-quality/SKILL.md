@@ -63,7 +63,7 @@ Does the change fit the system's design?
 
 ### 4. Security
 
-For detailed security guidance, see `security-and-hardening`. Does the change introduce vulnerabilities?
+Invoke the `security-and-hardening` skill for detailed security guidance. Does the change introduce vulnerabilities?
 
 - Is user input validated and sanitized?
 - Are secrets kept out of code, logs, and version control?
@@ -76,7 +76,7 @@ For detailed security guidance, see `security-and-hardening`. Does the change in
 
 ### 5. Performance
 
-For detailed profiling and optimization, see `performance-optimization`. Does the change introduce performance problems?
+Invoke the `performance-optimization` skill for detailed profiling and optimization. Does the change introduce performance problems?
 
 - Any N+1 query patterns?
 - Any unbounded loops or unconstrained data fetching?
