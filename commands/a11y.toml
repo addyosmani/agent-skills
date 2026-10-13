@@ -1,0 +1,31 @@
+description = "Run an accessibility audit via the accessibility-auditor persona"
+
+prompt = """
+Invoke the accessibility-engineering skill.
+
+`/a11y` runs a dedicated accessibility audit. It checks keyboard navigation, screen reader support, color contrast, form labeling, and structural WCAG 2.2 AA compliance.
+
+## Determine the mode
+
+**Deep mode** — activate when any of these is available:
+- An axe-core or pa11y JSON report file (run with `bash skills/accessibility-engineering/scripts/audit-a11y.sh url <url> --json`)
+- A live URL — the agent can instruct the user to run the audit script above
+- Chrome DevTools MCP (for live DOM inspection, contrast checking, and rendering analysis)
+
+**Quick mode** — default when no tool output is available. Scan source code for structural anti-patterns (missing labels, div-as-button, no alt text, skipped heading levels).
+
+## Run the audit
+
+Spawn the `accessibility-auditor` subagent (the CLI exposes each custom subagent in `agents/` as a tool with the same name). Pass it explicitly:
+
+- The files, components, or diff under review
+- Any artifact paths (axe-core JSON, pa11y JSON, audit script output)
+- The target URL or component when known
+- A note on which mode you expect (Quick or Deep), so the agent surfaces missing inputs if Deep was intended
+
+The subagent returns a WCAG scorecard, a ranked list of findings by severity, positive observations, and remediation guidance with code examples.
+
+## Output
+
+Return the full audit report to the user. No synthesis or merge step is needed — this is a single-persona command.
+"""

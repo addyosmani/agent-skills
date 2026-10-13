@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Checkout</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #fff; }
+    .hint { color: #9aa0a6; font-size: 16px; }
+    .icon-btn { width: 20px; height: 20px; border: 0; background: none; }
+    .btn:focus, input:focus { outline: none; }
+    .btn { padding: 12px 20px; background: #1a73e8; color: #fff; border: 0; border-radius: 4px; }
+    .error { color: #d93025; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Checkout</h1>
+
+    <h3>Payment details</h3>
+
+    <form action="/orders" method="post">
+      <input type="email" name="email" placeholder="Email address">
+
+      <label>Card number</label>
+      <input type="text" name="card" inputmode="numeric">
+
+      <span class="error">That card number is invalid.</span>
+
+      <div class="btn" onclick="submitOrder()">Place order</div>
+
+      <button class="icon-btn" type="button" onclick="clearCart()">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor"/></svg>
+      </button>
+    </form>
+
+    <p>Questions about your order? <a href="/help">Click here</a>.</p>
+
+    <p class="hint">Free returns within 30 days.</p>
+  </main>
+
+  <script>
+    function submitOrder() { document.querySelector('form').submit(); }
+    function clearCart() { /* ... */ }
+  </script>
+</body>
+</html>
