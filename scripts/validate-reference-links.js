@@ -16,14 +16,13 @@
  * spec/plan/todo artifacts and is explicitly not a general markdown linter.
  *
  * The rule enforced here: every `references/*.md` link in a SKILL.md must
- * resolve to an existing file relative to that skill's own directory. This
- * accepts both conventions in CLAUDE.md — shared checklists reached via
- * `../../references/`, and a skill's own colocated `references/` directory.
+ * resolve to an existing file inside that skill's own directory. A per-skill
+ * install copies only `skills/<name>/`, so a shared checklist is reached
+ * through a symlink in `skills/<name>/references/` that points at the
+ * repo-root file, never through `../../references/`.
  *
  * The markdown files inside a skill's own `references/` directory get the
- * same check, with each link resolved from the file that contains it. They
- * sit one directory deeper than SKILL.md, so from there the shared checklists
- * are `../../../references/`: the same off-by-a-level mistake, one level down.
+ * same check, with each link resolved from the file that contains it.
  *
  * A `#fragment` after such a link must match a heading in the target file,
  * slugged the way GitHub renders anchors. The file existing is not enough:
@@ -37,8 +36,8 @@
  *
  * Fenced code blocks are exempt for the same reason. Text inside a fence is
  * an example, not a link an agent will follow — and this rule in particular
- * has to be documentable: the failure message below tells authors to write
- * `../../references/<file>.md` rather than `references/<file>.md`, which no
+ * has to be documentable: the failure message below names the
+ * `../../../references/<file>.md` symlink target, which no
  * skill could show as an example without failing the very check explaining it.
  *
  * Exit codes: 0 = all clear, 1 = one or more unresolvable links.
@@ -87,7 +86,7 @@ function headingAnchors(file) {
 }
 
 // A link is resolved from the directory of the file that contains it.
-function findViolations(file) {
+function findViolations(file, skillDir) {
   const violations = [];
   const baseDir = path.dirname(file);
   // Share the linter's fence rules; blanked lines preserve diagnostic positions.
@@ -99,6 +98,8 @@ function findViolations(file) {
       const target = path.resolve(baseDir, link);
       if (!fs.existsSync(target)) {
         violations.push({ line: i + 1, link, target });
+      } else if (path.relative(skillDir, target).startsWith('..')) {
+        violations.push({ line: i + 1, link, target, outside: true });
       } else if (anchor && !headingAnchors(target).has(anchor)) {
         violations.push({ line: i + 1, link, target, anchor });
       }
@@ -133,7 +134,6 @@ function main() {
 
   let checked = 0;
   let errors = 0;
-  let referenceFileErrors = 0;
   let anchorErrors = 0;
 
   const skillNames = fs.readdirSync(SKILLS_DIR).sort();
@@ -144,7 +144,7 @@ function main() {
 
     checked++;
     for (const file of [skillFile, ...skillReferenceFiles(skillDir)]) {
-      const violations = findViolations(file);
+      const violations = findViolations(file, skillDir);
 
       if (violations.length === 0) {
         console.log(`  ✓  ${toPosix(file)}`);
@@ -152,15 +152,18 @@ function main() {
       }
 
       console.log(`  ✗  ${toPosix(file)}`);
-      for (const { line, link, target, anchor } of violations) {
+      for (const { line, link, target, anchor, outside } of violations) {
         errors++;
         if (anchor) {
           console.log(`       L${line}: ${link}#${anchor} — no heading in ${toPosix(target)} produces #${anchor}`);
           anchorErrors++;
           continue;
         }
+        if (outside) {
+          console.log(`       L${line}: ${link} — resolves to ${toPosix(target)}, outside the skill, which a per-skill install leaves behind`);
+          continue;
+        }
         console.log(`       L${line}: ${link} — resolves to ${toPosix(target)}, which does not exist`);
-        if (file !== skillFile) referenceFileErrors++;
       }
     }
   }
@@ -170,13 +173,10 @@ function main() {
 
   if (errors > 0) {
     if (errors > anchorErrors) {
-      console.log('\nLinks to references/ are resolved from the directory of the file that contains them.');
-      console.log('Shared checklists live in the repo-root references/, two levels up from a SKILL.md:');
-      console.log('use `../../references/<file>.md`, not `references/<file>.md`.');
-      if (referenceFileErrors > 0) {
-        console.log('From a file inside skills/<name>/references/ they are three levels up:');
-        console.log('use `../../../references/<file>.md`.');
-      }
+      console.log('\nLinks to references/ are resolved from the directory of the file that contains them,');
+      console.log('and a per-skill install copies only skills/<name>/. Reach a shared checklist through a symlink');
+      console.log('in the skill: skills/<name>/references/<file>.md -> ../../../references/<file>.md, linked as');
+      console.log('`references/<file>.md` from SKILL.md and `../references/<file>.md` from a file in references/.');
     }
     if (anchorErrors > 0) {
       console.log("\nAnchors are matched against GitHub's heading slugs: the heading text lowercased,");
