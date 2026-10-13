@@ -1,0 +1,45 @@
+{
+  "skill_name": "partial-outcome-analysis",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "What should happen if the payment provider times out during checkout?",
+        "top_k": 3
+      },
+      {
+        "prompt": "I'm designing a service that calls two external APIs and a queue. Help me think through what can go wrong before I write it.",
+        "top_k": 3
+      },
+      {
+        "prompt": "Before I add a retry to this call, how do I know it's safe?",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "The checkout endpoint is throwing 500s right now, help me find the cause",
+        "owner": "debugging-and-error-recovery"
+      },
+      {
+        "prompt": "Add a dark mode toggle to the settings page",
+        "owner": "frontend-ui-engineering"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Using the boundaries in checkout-boundaries.md, design the failure behavior for this checkout before any code is written.",
+      "expected_output": "A per-boundary analysis with an explicit decision for the unknown outcome at each hop, a blast-radius classification, and an injection plan",
+      "files": [
+        "partial-outcome-analysis/checkout-boundaries.md"
+      ],
+      "expectations": [
+        "Each boundary is enumerated separately rather than treated as one 'external call'",
+        "Timeout is treated as an unknown outcome distinct from failure, with a written decision rather than a retry",
+        "The irreversible payment step is identified as corrupting if the order write does not follow",
+        "Every specified behavior names how that failure would be injected in a test"
+      ]
+    }
+  ]
+}
