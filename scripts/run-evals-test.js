@@ -56,8 +56,7 @@ function makeSandbox() {
   fs.mkdirSync(path.join(root, 'evals', 'cases'), { recursive: true });
   fs.mkdirSync(path.join(root, 'evals', 'fixtures', 'project'), { recursive: true });
   fs.copyFileSync(RUNNER, path.join(root, 'scripts', 'run-evals.js'));
-  fs.mkdirSync(path.join(root, 'scripts', 'lib'), { recursive: true });
-  fs.copyFileSync(path.join(__dirname, 'lib', 'skill-lint.js'), path.join(root, 'scripts', 'lib', 'skill-lint.js'));
+  fs.cpSync(path.join(__dirname, 'lib'), path.join(root, 'scripts', 'lib'), { recursive: true });
   fs.writeFileSync(path.join(root, 'evals', 'fixtures', 'project', 'context.txt'), 'fixture\n');
   return root;
 }
@@ -747,6 +746,276 @@ test('materializes a git baseline and applies a working-tree patch', () => {
   }
 });
 
+
+// The real CLI, with only the paid Claude subprocess replaced. Works without
+// a shell shim on Windows as well as Unix; git and filesystem operations stay real.
+function recordedSandbox(t, kind = 'dialogue') {
+  const root = makeSandbox();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  writeSkill(root, 'alpha-skill', 'Handles alpha widgets.');
+  fs.mkdirSync(path.join(root, 'skills/alpha-skill/references'));
+  fs.writeFileSync(path.join(root, 'skills/alpha-skill/references/guide.md'), 'reference not staged');
+  const rubric = completeCase('alpha-skill', 'change alpha widget');
+  rubric.evals = [{ ...behavioralEval(kind === 'dialogue' ? [] : ['project/context.txt']), kind }];
+  const caseFile = path.join(root, 'evals', 'cases', 'alpha-skill.json');
+  writeJson(caseFile, rubric);
+  const stub = path.join(root, 'claude-stub.cjs');
+  fs.writeFileSync(stub, `
+const fs = require('node:fs');
+const cp = require('node:child_process');
+const original = cp.execFileSync;
+cp.execFileSync = (command, args, options) => {
+  if (command !== 'claude') return original(command, args, options);
+  fs.appendFileSync(process.env.CALL_LOG, JSON.stringify({args, input: options?.input}) + '\\n');
+  if (args.includes('--version')) return '2.1.test\\n';
+  if (args.includes('stream-json')) return '{"type":"system","subtype":"init","model":"observed-model"}\\n{"type":"result","result":"original evidence"}\\n';
+  if (process.env.GRADER_THROWS) throw new Error('grader unavailable');
+  return process.env.GRADER_RAW || '{"expectations":[{"id":1,"text":"paraphrase","passed":true,"evidence":"original evidence"}],"summary":{"passed":1,"failed":0,"total":1,"pass_rate":1}}';
+};
+`);
+  const log = path.join(root, 'calls.jsonl');
+  return {
+    root, rubric, caseFile,
+    run: (args, env = {}) => spawnSync(process.execPath, ['--require', stub, path.join(root, 'scripts/run-evals.js'), ...args], {
+      cwd: root, encoding: 'utf8', env: { ...process.env, CALL_LOG: log, ...env },
+    }),
+    calls: () => fs.existsSync(log) ? fs.readFileSync(log, 'utf8').trim().split('\n').map(JSON.parse) : [],
+    records: () => fs.readdirSync(path.join(root, 'evals/results')).filter(n => n.endsWith('.record.json')).map(n => path.join(root, 'evals/results', n)),
+  };
+}
+
+for (const kind of ['dialogue', 'execution']) {
+  test(`records and regrades the same ${kind} evidence without another executor`, t => {
+    const s = recordedSandbox(t, kind);
+    const first = s.run(['--behavioral', 'alpha-skill', '--record', '--model', 'requested-model']);
+    assert.equal(first.status, 0, first.stdout + first.stderr);
+    assert.equal(s.records().length, 1);
+    const file = s.records()[0];
+    const original = fs.readFileSync(file, 'utf8');
+    const record = JSON.parse(original);
+    assert.equal(record.evidence.run.executor_model, 'observed-model');
+    assert.equal(record.evidence.run.requested_model, 'requested-model');
+    assert.equal(record.evidence.run.claude_version, '2.1.test');
+    assert.deepEqual(record.evidence.references, { status: 'not-staged', files: [] });
+    const latest = fs.readFileSync(path.join(s.root, 'evals/results/alpha-skill.eval-1.grading.json'), 'utf8');
+    s.rubric.evals[0].expectations = ['Revised expectation'];
+    writeJson(s.caseFile, s.rubric);
+    // Replay must not read today's skill or fixture tree.
+    fs.rmSync(path.join(s.root, 'skills'), { recursive: true });
+    fs.rmSync(path.join(s.root, 'evals/fixtures'), { recursive: true });
+    const replay = s.run(['--regrade', file, '--rubric', s.caseFile, '--model', 'new-grader']);
+    assert.equal(replay.status, 0, replay.stdout + replay.stderr);
+    assert.match(replay.stdout, /historical/i);
+    assert.match(replay.stdout, /not staged/i);
+    assert.equal(fs.readFileSync(file, 'utf8'), original);
+    assert.equal(fs.readFileSync(path.join(s.root, 'evals/results/alpha-skill.eval-1.grading.json'), 'utf8'), latest);
+    const calls = s.calls().filter(c => !c.args.includes('--version'));
+    assert.equal(calls.length, 3);
+    assert.equal(calls.filter(c => c.args.includes('stream-json')).length, 1);
+    assert.match(calls[2].input, /Revised expectation/);
+    assert.match(calls[2].input, /original evidence/);
+    assert.equal(calls[2].args.at(-1), 'new-grader');
+    const attempts = fs.readdirSync(path.dirname(file)).filter(n => n.includes('.attempt-'));
+    assert.equal(attempts.length, 2);
+    const grades = attempts.map(n => JSON.parse(fs.readFileSync(path.join(path.dirname(file), n), 'utf8')));
+    assert.ok(grades.some(g => g.historical === true && g.grading.expectations[0].text === 'Revised expectation'));
+  });
+}
+
+
+function recordOnce(s, env) {
+  const result = s.run(['--behavioral', 'alpha-skill', '--record'], env);
+  return { result, file: s.records()[0] };
+}
+
+for (const passed of [true, false]) {
+  for (const evidence of ['', ' \t\r\n', '\u00a0\u2003']) {
+    test(`record and regrade retain blank evidence diagnostics for ${passed ? 'passing' : 'failing'} verdict ${JSON.stringify(evidence)}`, t => {
+      const s = recordedSandbox(t);
+      const raw = JSON.stringify({
+        expectations: [{ id: 1, text: 'check the result', passed, evidence }],
+        summary: { passed: Number(passed), failed: Number(!passed), total: 1, pass_rate: Number(passed) },
+      });
+      const { result, file } = recordOnce(s, { GRADER_RAW: raw });
+      assert.equal(result.status, 1, result.stdout + result.stderr);
+      assert.match(result.stdout, /grader returned blank evidence/);
+      assert.doesNotMatch(result.stdout + result.stderr, /invalid JSON/);
+      const original = fs.readFileSync(file, 'utf8');
+      const base = path.join(s.root, 'evals/results/alpha-skill.eval-1');
+      assert.equal(fs.existsSync(`${base}.grading.json`), false);
+      assert.equal(fs.readFileSync(`${base}.grading.raw.txt`, 'utf8'), raw);
+
+      const replay = s.run(['--regrade', file, '--rubric', s.caseFile], { GRADER_RAW: raw });
+      assert.equal(replay.status, 1, replay.stdout + replay.stderr);
+      assert.match(replay.stderr, /grader returned blank evidence/);
+      assert.doesNotMatch(replay.stderr, /invalid JSON/);
+      const attempts = fs.readdirSync(path.dirname(file)).filter(n => n.includes('.attempt-'));
+      assert.equal(attempts.length, 2);
+      for (const name of attempts) {
+        const attempt = JSON.parse(fs.readFileSync(path.join(path.dirname(file), name), 'utf8'));
+        assert.equal(attempt.status, 'invalid');
+        assert.equal(attempt.gradingError, 'grader returned blank evidence');
+        assert.equal(attempt.raw, raw);
+        assert.equal(attempt.grading, null);
+      }
+
+      const retry = s.run(['--regrade', file, '--rubric', s.caseFile]);
+      assert.equal(retry.status, 0, retry.stdout + retry.stderr);
+      assert.equal(fs.readFileSync(file, 'utf8'), original);
+      assert.equal(fs.existsSync(`${base}.grading.json`), false);
+      assert.equal(fs.readFileSync(`${base}.grading.raw.txt`, 'utf8'), raw);
+      const calls = s.calls().filter(c => !c.args.includes('--version'));
+      assert.equal(calls.filter(c => c.args.includes('stream-json')).length, 1);
+      for (const call of calls.filter(c => !c.args.includes('stream-json'))) {
+        assert.match(call.input, /provide non-blank evidence/);
+      }
+    });
+  }
+}
+
+test('rejects altered evidence before any Claude invocation', t => {
+  const s = recordedSandbox(t);
+  const { file } = recordOnce(s);
+  const original = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const calls = s.calls().length;
+  for (const field of ['trace', 'skill_text', 'eval', 'references', 'run']) {
+    const changed = structuredClone(original);
+    changed.evidence[field] = 'altered';
+    writeJson(file, changed);
+    const result = s.run(['--regrade', file, '--rubric', s.caseFile]);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /integrity/);
+    assert.equal(s.calls().length, calls);
+  }
+});
+
+test('rejects a changed task, mismatched rubric, or invalid expectations before model calls', t => {
+  const s = recordedSandbox(t);
+  const { file } = recordOnce(s);
+  const calls = s.calls().length;
+  const changes = [
+    r => { r.evals[0].prompt = 'different task'; },
+    r => { r.evals[0].kind = 'execution'; },
+    r => { r.evals[0].files = ['different/input']; },
+    r => { r.skill_name = 'another-skill'; },
+    r => { r.evals[0].id = 9; },
+    r => { r.evals.push(structuredClone(r.evals[0])); },
+    r => { r.evals[0].expectations = []; },
+    r => { r.evals[0].expectations = [null]; },
+  ];
+  for (const change of changes) {
+    const rubric = structuredClone(s.rubric);
+    change(rubric);
+    writeJson(s.caseFile, rubric);
+    const result = s.run(['--regrade', file, '--rubric', s.caseFile]);
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    assert.equal(s.calls().length, calls);
+  }
+});
+
+for (const [env, status] of [[{ GRADER_RAW: 'invalid response' }, 'invalid'], [{ GRADER_THROWS: '1' }, 'error']]) {
+  test(`keeps the generation and ${status} attempt when the grader fails`, t => {
+    const s = recordedSandbox(t);
+    const { result, file } = recordOnce(s, env);
+    assert.equal(result.status, 1);
+    assert.ok(file);
+    const original = fs.readFileSync(file, 'utf8');
+    const attemptFile = fs.readdirSync(path.dirname(file)).find(n => n.includes('.attempt-'));
+    const attempt = JSON.parse(fs.readFileSync(path.join(path.dirname(file), attemptFile), 'utf8'));
+    assert.equal(attempt.status, status);
+    if (status === 'invalid') assert.equal(attempt.raw, 'invalid response');
+    else assert.match(attempt.error, /grader unavailable/);
+    const replay = s.run(['--regrade', file, '--rubric', s.caseFile]);
+    assert.equal(replay.status, 0, replay.stdout + replay.stderr);
+    assert.equal(fs.readFileSync(file, 'utf8'), original);
+    assert.equal(s.calls().filter(c => c.args.includes('stream-json')).length, 1);
+  });
+}
+
+test('record dry-run and replay dry-run make no Claude calls or output changes', t => {
+  const s = recordedSandbox(t);
+  assert.equal(s.run(['--behavioral', 'alpha-skill', '--record', '--dry-run']).status, 0);
+  assert.equal(s.calls().length, 0);
+  assert.equal(fs.existsSync(path.join(s.root, 'evals/results')), false);
+  const { file } = recordOnce(s);
+  const calls = s.calls().length;
+  const files = fs.readdirSync(path.dirname(file));
+  assert.equal(s.run(['--regrade', file, '--rubric', s.caseFile, '--dry-run']).status, 0);
+  assert.equal(s.calls().length, calls);
+  assert.deepEqual(fs.readdirSync(path.dirname(file)), files);
+});
+
+test('ordinary runs retain their output shape and do not record or query CLI version', t => {
+  const s = recordedSandbox(t);
+  assert.equal(s.run(['--behavioral', 'alpha-skill']).status, 0);
+  const files = fs.readdirSync(path.join(s.root, 'evals/results'));
+  assert.deepEqual(files, ['alpha-skill.eval-1.grading.json']);
+  assert.equal(s.calls().length, 2);
+});
+
+test('separate generations and repeated regrades preserve every record and attempt', t => {
+  const s = recordedSandbox(t);
+  const first = recordOnce(s).file;
+  const original = fs.readFileSync(first, 'utf8');
+  recordOnce(s);
+  assert.equal(s.records().length, 2);
+  for (let i = 0; i < 2; i++) assert.equal(s.run(['--regrade', first, '--rubric', s.caseFile]).status, 0);
+  assert.equal(fs.readFileSync(first, 'utf8'), original);
+  assert.equal(fs.readdirSync(path.dirname(first)).filter(n => n.includes('.attempt-')).length, 4);
+});
+
+test('rejects incomplete and incompatible record/replay CLI options', t => {
+  const s = recordedSandbox(t);
+  for (const args of [
+    ['--record'], ['--model'], ['--model', '--record'], ['--regrade'],
+    ['--regrade', 'missing'], ['--rubric', 'missing'],
+    ['--regrade', 'missing', '--rubric', 'missing', '--behavioral', 'alpha-skill'],
+    ['--regrade', 'missing', '--rubric', 'missing', '--record'],
+    ['--regrade', 'missing', '--rubric', 'missing', '--min-rank1', '95'],
+  ]) {
+    assert.equal(s.run(args).status, 1, args.join(' '));
+    assert.equal(s.calls().length, 0);
+  }
+});
+
+
+test('a failing historical grade stays a failure and retains its attempt', t => {
+  const s = recordedSandbox(t);
+  const { file } = recordOnce(s);
+  const raw = JSON.stringify({ expectations: [{ id: 1, text: 'x', passed: false, evidence: 'not observed' }],
+    summary: { passed: 0, failed: 1, total: 1, pass_rate: 0 } });
+  const result = s.run(['--regrade', file, '--rubric', s.caseFile], { GRADER_RAW: raw });
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /0\/1 expectations passed/);
+  const attempts = fs.readdirSync(path.dirname(file)).filter(n => n.includes('.attempt-'));
+  assert.equal(attempts.length, 2);
+});
+
+test('rejects unknown record versions and malformed JSON without calling Claude', t => {
+  const s = recordedSandbox(t);
+  const { file } = recordOnce(s);
+  const calls = s.calls().length;
+  const record = JSON.parse(fs.readFileSync(file, 'utf8'));
+  record.version = 99;
+  writeJson(file, record);
+  assert.equal(s.run(['--regrade', file, '--rubric', s.caseFile]).status, 1);
+  fs.writeFileSync(file, '{broken json');
+  assert.equal(s.run(['--regrade', file, '--rubric', s.caseFile]).status, 1);
+  assert.equal(s.calls().length, calls);
+});
+
+test('record mode rejects duplicate behavioral IDs before any Claude invocation or output changes', t => {
+  const s = recordedSandbox(t);
+  s.rubric.evals.push({ ...s.rubric.evals[0], prompt: 'A different evaluation' });
+  writeJson(s.caseFile, s.rubric);
+  for (const flags of [[], ['--dry-run']]) {
+    const result = s.run(['--behavioral', 'alpha-skill', '--record', ...flags]);
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    assert.match(result.stderr, /duplicate behavioral eval id=1/);
+    assert.equal(s.calls().length, 0);
+    assert.equal(fs.existsSync(path.join(s.root, 'evals/results')), false);
+  }
+});
 
 test('fixture baseline commits ignore inherited user signing requirements', () => {
   const root = makeSandbox();
