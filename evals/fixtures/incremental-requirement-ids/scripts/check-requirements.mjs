@@ -2,9 +2,9 @@
 // Requirement coverage check: every live, non-waived requirement ID in the spec has a tagged test that is not commented out or skipped.
 // Copy this file into the project (scripts/check-requirements.mjs) so it runs without the skill installed. Node 20+, no packages.
 // Usage: node scripts/check-requirements.mjs <spec.md | -> [ID...]   ("-" reads the spec from stdin; IDs narrow UNTESTED to one task's Covers: line)
-// Exit 0: every ID is tested. Exit 1: some ID is untested.
-import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+// Exit 0: every ID is tested. Exit 1: some ID is untested. Exit 2: bad input (no spec, a missing spec file, an ID the spec does not define) or not inside a git repository.
+import { spawnSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
 
 const TEST_FILE = /(^|\/)(tests?|__tests__)\/|\.(test|spec)\.|(^|\/)test_|_test\./;
 const PAREN_FILE = /\.([cm]?[jt]sx?|go)$/;
@@ -25,6 +25,12 @@ const lineAbove = (lines, i) => lines.slice(0, i).findLast((l) => l.trim()) ?? "
 const nextLine = (lines, i) => lines.slice(i + 1).find((l) => l.trim()) ?? "";
 const hasTag = (text) => new RegExp(TAG.source).test(text);
 
+/** Print a one-line error and exit 2, so a usage problem never reads as a coverage result. */
+function fail(message) {
+  console.error(message);
+  process.exit(2);
+}
+
 /** The spec's live IDs (dropped ones excluded) and the IDs its seam table waives. */
 function readSpec(text) {
   const defined = [...text.matchAll(/^\s*\d+\.\s+(([A-Z]{2,5}-\d+):.*)$/gm)]
@@ -35,10 +41,11 @@ function readSpec(text) {
   return { defined: new Set(defined), waived };
 }
 
-/** Test files git knows about, tracked or not, minus ignored ones. */
+/** Test files git knows about, tracked or not, minus ignored ones and ones deleted from the working tree. */
 function testFiles() {
-  return execFileSync("git", ["ls-files", "--cached", "--others", "--exclude-standard"], { encoding: "utf8" })
-    .split("\n").filter((f) => TEST_FILE.test(f) && !f.endsWith(".md"));
+  const git = spawnSync("git", ["ls-files", "--cached", "--others", "--exclude-standard"], { encoding: "utf8" });
+  if (git.status !== 0) fail("check-requirements: run this inside a git repository; it finds test files with git ls-files.");
+  return git.stdout.split("\n").filter((f) => TEST_FILE.test(f) && !f.endsWith(".md") && existsSync(f));
 }
 
 /** Python: the nearest `def` at or above line i. */
@@ -101,9 +108,13 @@ function untagged(files) {
 }
 
 const [spec, ...ids] = process.argv.slice(2);
+if (!spec) fail("Usage: node scripts/check-requirements.mjs <spec.md | -> [ID...]");
+if (spec !== "-" && !existsSync(spec)) fail(`check-requirements: spec not found: ${spec}`);
 const { defined, waived } = readSpec(readFileSync(spec === "-" ? 0 : spec, "utf8"));
 const keys = new Set([...defined].map(keyOf));
 const expected = ids.length ? ids.map((i) => i.replace(/:$/, "")) : [...defined];
+const unknown = expected.filter((id) => !defined.has(id));
+if (unknown.length) fail(`check-requirements: ${unknown.join(", ")} not defined in the spec (a typo, or dropped); fix the Covers: line.`);
 const files = testFiles();
 const tagged = taggedIds(files);
 const keyTag = new RegExp(`["'\`](${[...keys].join("|")})-\\d+:`);

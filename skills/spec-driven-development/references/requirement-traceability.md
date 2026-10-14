@@ -94,7 +94,7 @@ Re-run until all three are empty. **On several**: keep it on the last of those t
 
 ## Coverage Check
 
-`node scripts/check-requirements.mjs SPEC.md [ID...]` from the repo root (`-` reads the spec from stdin). It exits 1 when any ID is untested and prints three classes:
+`node scripts/check-requirements.mjs SPEC.md [ID...]` from the repo root (`-` reads the spec from stdin). It exits 1 when any ID is untested, and 2 on bad input (no spec, a missing spec file, an ID the spec does not define or has dropped) or outside a git repository. Otherwise it prints three classes:
 
 - **Untested**: a defined, non-waived ID with no live tagged test. This fails the check.
 - **Undefined ID**: a test tagged with the spec's KEY whose ID the spec does not define (or has dropped). Warn: a typo or a stale test. Other specs' KEYs are ignored.
