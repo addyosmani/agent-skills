@@ -167,6 +167,8 @@ REFRAMED SUCCESS CRITERIA:
 
 This lets you loop, retry, and problem-solve toward a clear goal rather than guessing what "faster" means.
 
+**Requirement IDs (opt-in).** Only when the user asks for traceability or the spec already carries IDs like `CPN-3:`, follow [references/requirement-traceability.md](references/requirement-traceability.md): it numbers the Success Criteria and writes the coverage check into the spec's Commands and each task's Verify line. Otherwise leave the spec as written.
+
 **Stop after writing the spec (CRITICAL).** Once the spec is saved:
 
 1. Summarize it and list any Open Questions.
