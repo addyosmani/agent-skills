@@ -139,7 +139,9 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Install Claude Code
-        run: npm install -g @anthropic-ai/claude-code
+        run: |
+          npm install -g @anthropic-ai/claude-code
+          claude --version
 
       - name: Validate marketplace and plugin manifests
         run: claude plugin validate .
@@ -152,7 +154,9 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Install Claude Code
-        run: npm install -g @anthropic-ai/claude-code
+        run: |
+          npm install -g @anthropic-ai/claude-code
+          claude --version
 
       - name: Configure git to use HTTPS
         run: git config --global url."https://github.com/".insteadOf "git@github.com:"
