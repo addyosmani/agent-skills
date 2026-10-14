@@ -70,7 +70,16 @@ const STOP = new Set([
 function stem(t) {
   // Light suffix stripping so "conflicts"/"conflict", "branching"/"branch",
   // "architectural"/"architecture" cluster together. Not a real stemmer.
-  for (const suf of ['ally', 'ing', 'ed', 'es', 'al']) {
+  // "ations"/"ation" fold Latinate nominalizations ("documentation"/"document",
+  // "configuration"/"configure") the same way. Both forms are listed so a
+  // plural doesn't survive the rule as a longer stem than its singular
+  // ("migration" -> "migr" but "migrations" -> "migration").
+  // "-ification" nouns are built on "-ify" verbs, so they fold to the verb's
+  // "-ifi" stem ("specification"/"specify", "verification"/"verify") rather
+  // than losing "-ication" and colliding with an unrelated word
+  // ("specification"/"specific"). Checked first so it wins over "-ation".
+  if (t.length > 10 && /ifications?$/.test(t)) t = t.replace(/ications?$/, 'i');
+  for (const suf of ['ally', 'ing', 'ations', 'ation', 'ed', 'es', 'al']) {
     if (t.length > suf.length + 3 && t.endsWith(suf)) {
       t = t.slice(0, -suf.length);
       break;
@@ -87,13 +96,34 @@ function stem(t) {
   return t;
 }
 
+// Clipped forms users type that never share a stem with the long form used
+// in descriptions ("docs" vs "documentation", "auth" vs "authentication").
+// Applied before stemming; each value is the canonical long form, so both
+// registers stem identically. Explicit and easy to extend (see #660) —
+// prefer adding an entry here over padding descriptions with clipped forms,
+// which would only teach skills to game the lexical proxy.
+const TOKEN_ALIASES = new Map(
+  Object.entries({
+    doc: 'document',
+    docs: 'document',
+    config: 'configuration',
+    configs: 'configuration',
+    auth: 'authenticate',
+    authentication: 'authenticate',
+    repo: 'repository',
+    repos: 'repository',
+    dep: 'dependency',
+    deps: 'dependency',
+  }),
+);
+
 function tokenize(text) {
   return text
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, ' ')
     .split(/[\s-]+/)
     .filter((t) => t.length > 2 && !STOP.has(t))
-    .map(stem);
+    .map((t) => stem(TOKEN_ALIASES.get(t) || t));
 }
 
 function termFreq(tokens) {
