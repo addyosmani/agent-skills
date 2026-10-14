@@ -98,6 +98,7 @@ Skills are user-invocable by default, so once they're discovered the whole lifec
 | Build | `/incremental-implementation` | Pair with `/test-driven-development`; one slice at a time |
 | Verify | `/test-driven-development` | Red-green-refactor, Prove-It for bugs |
 | Review | `/code-review-and-quality` | Five-axis review |
+| Audit accessibility | `/accessibility-engineering` | WCAG 2.2 AA audit; the repository's short command wrapper is `/a11y` |
 | Ship | `/shipping-and-launch` | Launch readiness |
 
 Type `/` to browse what's actually loaded in this workspace.

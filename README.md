@@ -32,7 +32,7 @@ Skills encode the workflows, quality gates, and best practices that senior engin
 | Set the quality bar | `/constraints` | Decide it once, enforce it everywhere |
 | Review before merge | `/review` | Improve code health |
 | Audit web performance | `/webperf` | Measure before you optimize |
-| Audit accessibility | `/a11y` | Automated tools catch ~30%; manual testing catches the rest |
+| Audit accessibility | `/a11y` | Automation is a smoke test; manual verification completes the audit |
 | Simplify the code | `/code-simplify` | Clarity over cleverness |
 | Ship to production | `/ship` | Faster is safer |
 

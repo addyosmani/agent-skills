@@ -7,112 +7,40 @@ description: Audits existing interfaces for WCAG 2.2 AA conformance and remediat
 
 ## Overview
 
-Accessibility is not a polish step — it's a legal requirement in many jurisdictions, an engineering quality standard, and a prerequisite for shipping. This skill covers the full workflow: building accessible components, auditing existing interfaces, and fixing common violations. The goal is WCAG 2.2 AA compliance verified by automated tools and manual testing.
+Accessibility is not a polish step — it's a legal requirement in many jurisdictions, an engineering quality standard, and a prerequisite for shipping. This skill audits existing interfaces, triages the findings, and remediates verified violations. The goal is WCAG 2.2 AA compliance supported by automated tools and manual testing.
 
 ## When to Use
 
-- Building new UI components or pages
-- Before shipping any user-facing change that touches UI
+- Before shipping a user-facing change that needs an accessibility audit
 - When a11y issues are reported (e.g., "screen reader can't read this", "keyboard navigation broken")
 - When auditing an existing interface for compliance
-- When working with forms, modals, navigation, or interactive widgets
+- When triaging axe-core or pa11y findings
+- When remediating verified accessibility violations
 
-**Do NOT use** for backend-only changes, CLIs, or library code with no UI output.
+**Do NOT use** for building new UI components from scratch; use `frontend-ui-engineering` for construction guidance. Do not use for backend-only changes, CLIs, or library code with no UI output.
 
 ## Workflow
 
-### Phase 1: Build Accessible Components
+### Phase 1: Route New UI Work
 
-Follow these rules when creating UI:
-
-**Semantic HTML first. ARIA second.**
-
-```tsx
-// Good: native elements have built-in accessibility
-<button onClick={handleClick}>Save</button>
-<nav aria-label="Main">
-  <a href="/tasks">Tasks</a>
-</nav>
-
-// Avoid: re-creating native behavior with ARIA
-<div role="button" tabIndex={0} onClick={handleClick}>Save</div>
-```
-
-**Label every interactive element:**
-
-```tsx
-// Visible label
-<label htmlFor="email">Email</label>
-<input id="email" type="email" />
-
-// Icon-only button
-<button aria-label="Delete task">
-  <TrashIcon />
-</button>
-
-// Avoid: placeholder as the only label
-// It supplies a fallback accessible name (HTML-AAM), but it disappears on
-// input, so the field has no persistent label (SC 3.3.2).
-<input type="email" placeholder="Email address" />
-```
-
-**Manage focus for dynamic content:**
-
-```tsx
-function Dialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  // showModal() makes the rest of the page inert and closes on Escape
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (isOpen && !dialog?.open) dialog?.showModal();
-    if (!isOpen && dialog?.open) dialog.close();
-  }, [isOpen]);
-
-  return (
-    <dialog ref={dialogRef} onClose={onClose} aria-labelledby="dialog-title">
-      <h2 id="dialog-title">Confirm</h2>
-      <button onClick={onClose}>Close</button>
-    </dialog>
-  );
-}
-```
-
-**Announce dynamic updates:**
-
-```tsx
-// Status updates
-<div role="status" aria-live="polite">
-  {isSaved ? 'Task saved' : 'Saving...'}
-</div>
-
-// Error messages
-<div role="alert">
-  Title is required
-</div>
-```
-
-**Support keyboard navigation:**
-
-- All interactive elements reachable via Tab
-- Focus order matches visual order
-- No keyboard traps (always Tab-away-able)
-- Custom widgets handle Enter, Escape, Arrow keys
-- Visible focus indicator (never `outline: none` without a replacement)
+For component construction, interaction patterns, and focus-management guidance, use `../frontend-ui-engineering/SKILL.md`. Do not restate that skill here. Return to this workflow once an interface exists and needs auditing or remediation.
 
 ### Phase 2: Run Automated Audit
 
 Execute accessibility checks in this order:
 
 ```bash
-# axe-core rules through @axe-core/cli (the axe-core package ships no CLI)
-npx @axe-core/cli http://localhost:3000 --exit
+# axe-core rules through pinned @axe-core/cli (the axe-core package ships no CLI)
+npx --yes @axe-core/cli@4.13.0 http://localhost:3000 --exit
 
 # Keep the JSON for the accessibility-auditor
-npx @axe-core/cli http://localhost:3000 --dir ./a11y-reports --save axe.json
+npx --yes @axe-core/cli@4.13.0 http://localhost:3000 --dir ./a11y-reports --save axe.json
 
-# pa11y for HTML validation (WCAG2AA rules via HTML_CodeSniffer)
-npx pa11y http://localhost:3000
+# Pinned pa11y for HTML validation (WCAG2AA rules via HTML_CodeSniffer)
+npx --yes pa11y@9.1.1 http://localhost:3000
 ```
+
+For a combined report, run `bash skills/accessibility-engineering/scripts/audit-a11y.sh url <url> --json`. It runs both pinned tools, records their status and versions, and fails rather than reporting a clean result when either tool does not produce a valid report.
 
 Review the violations grouped by severity:
 - **Critical** — Blocks screen reader access entirely (missing alt text on info images, empty buttons)
@@ -124,7 +52,7 @@ For each violation, verify it's a real issue (not a false positive) by inspectin
 
 ### Phase 3: Manual Testing
 
-Automated tools catch ~30% of a11y issues. Manual testing catches the rest.
+Automated checks are a smoke test, not proof of conformance. Complete the audit manually.
 
 **Keyboard audit:**
 1. Tab through every interactive element — can you see where you are?
@@ -161,9 +89,9 @@ Apply the accessibility checklist (`../../references/accessibility-checklist.md`
 
 | Rationalization | Reality |
 |---|---|
-| "We'll fix a11y later" | Retrofitting accessibility costs 3-5x more than building it in. In many jurisdictions, shipping inaccessible software is a legal liability. |
-| "Automated tools caught everything" | Automated tools detect ~30% of WCAG failures. Keyboard and screen reader testing are mandatory. |
-| "Screen reader users are a tiny minority" | 15% of the global population has some disability. Accessibility improvements benefit everyone (keyboard nav helps power users, captions help noisy environments). |
+| "We'll fix a11y later" | Delayed remediation compounds across components and can create legal liability. Audit before shipping. |
+| "Automated tools caught everything" | Automated checks cannot prove keyboard or screen reader behavior. Manual testing is mandatory. |
+| "Screen reader users are a tiny minority" | Accessibility is a requirement, not a usage-share calculation. Keyboard navigation, captions, and clear structure also help users across contexts. |
 | "This is an internal tool, it doesn't need a11y" | Internal tools are subject to the same regulations. Disabled employees and contractors need access. |
 | "I'll just use aria-label everywhere" | ARIA is a bridge, not a foundation. Semantic HTML first. Overusing ARIA creates maintenance burden and can make things worse. |
 | "The design system handles accessibility" | Design systems provide accessible primitives. How you compose them determines whether the result is accessible. |
@@ -179,14 +107,14 @@ Apply the accessibility checklist (`../../references/accessibility-checklist.md`
 - Empty or unlabeled buttons and links
 - Modals that don't trap focus or restore focus on close
 - No `alt` text on meaningful images (or `alt=""` missing on decorative ones)
-- Touch targets smaller than 24x24 CSS px (SC 2.5.8, AA; 44x44 is the AAA target, SC 2.5.5)
+- Touch targets that fail SC 2.5.8's 24x24 CSS px size-or-spacing requirement and do not qualify for an exception (AA; 44x44 is the AAA target, SC 2.5.5)
 - Autoplaying video or audio without controls
 - Low contrast text (especially on hover, disabled states, placeholders)
 
 ## See Also
 
-- `../../references/accessibility-checklist.md` — Quick reference for WCAG 2.1 AA
-- `skills/frontend-ui-engineering/SKILL.md` — Building accessible components from the start
+- `../../references/accessibility-checklist.md` — Quick reference for WCAG 2.2 AA
+- `../frontend-ui-engineering/SKILL.md` — Building accessible components from the start
 - `agents/accessibility-auditor.md` — Dedicated a11y audit persona for deep reviews
 
 ## Verification
@@ -202,4 +130,4 @@ After completing the accessibility workflow:
 - [ ] All images have appropriate `alt` text
 - [ ] Dynamic content changes are announced (aria-live)
 - [ ] Page is usable at 200% zoom with no content loss
-- [ ] Touch targets are at least 24x24 CSS px (SC 2.5.8, AA); 44x44 is the AAA target (SC 2.5.5)
+- [ ] Touch targets satisfy SC 2.5.8's 24x24 CSS px size-or-spacing requirement or a normative exception (AA); 44x44 is the enhanced AAA target (SC 2.5.5)

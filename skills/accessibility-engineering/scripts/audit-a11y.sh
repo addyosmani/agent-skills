@@ -9,9 +9,11 @@ set -e
 #   bash audit-a11y.sh url <url> [--json]
 #   bash audit-a11y.sh file <path> [--json]
 #
-# Requires: npx (@axe-core/cli and pa11y are fetched on demand)
+# Requires: npx (@axe-core/cli and pa11y are fetched at the pinned versions below)
 
 SCRIPT_NAME="audit-a11y"
+AXE_VERSION="4.13.0"
+PA11Y_VERSION="9.1.1"
 TEMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TEMP_DIR"' EXIT
 
@@ -28,14 +30,27 @@ fi
 case "$MODE" in
   url)
     echo "Running axe-core audit on $TARGET..." >&2
-    npx @axe-core/cli "$TARGET" --dir "$TEMP_DIR" --save axe-report.json >&2 || true
+    if npx --yes "@axe-core/cli@$AXE_VERSION" "$TARGET" --dir "$TEMP_DIR" --save axe-report.json >&2; then
+      AXE_EXIT=0
+    else
+      AXE_EXIT=$?
+    fi
 
     echo "Running pa11y audit on $TARGET..." >&2
-    npx pa11y "$TARGET" --reporter json 2>/dev/null > "$TEMP_DIR/pa11y-report.json" || true
+    if npx --yes "pa11y@$PA11Y_VERSION" "$TARGET" --reporter json 2>/dev/null > "$TEMP_DIR/pa11y-report.json"; then
+      PA11Y_EXIT=0
+    else
+      PA11Y_EXIT=$?
+    fi
     ;;
   file)
+    AXE_EXIT=-1
     echo "Running pa11y on file $TARGET..." >&2
-    npx pa11y "$TARGET" --reporter json > "$TEMP_DIR/pa11y-report.json" 2>/dev/null || true
+    if npx --yes "pa11y@$PA11Y_VERSION" "$TARGET" --reporter json > "$TEMP_DIR/pa11y-report.json" 2>/dev/null; then
+      PA11Y_EXIT=0
+    else
+      PA11Y_EXIT=$?
+    fi
     echo "File-based axe analysis limited; prefer URL mode for full coverage." >&2
     ;;
   *)
@@ -44,20 +59,62 @@ case "$MODE" in
     ;;
 esac
 
-# Both tool invocations above are masked with `|| true` so one failure does not
-# abort the run. Without this guard a missing npx, an offline run, or a bad
-# option would fall through to an empty report and print a clean zero.
-if [ ! -s "$TEMP_DIR/axe-report.json" ] && [ ! -s "$TEMP_DIR/pa11y-report.json" ]; then
-  echo "$SCRIPT_NAME: no tool produced a report; not printing a zero-violation result" >&2
+report_status() {
+  local tool="$1"
+  local report="$2"
+  local exit_code="$3"
+  if [ ! -s "$report" ]; then
+    printf 'failed'
+    return
+  fi
+
+  # axe runs without --exit, so any non-zero status is an execution failure.
+  # pa11y uses exit 2 when a valid report contains violations; other non-zero
+  # statuses mean the audit itself failed.
+  if { [ "$tool" = "axe" ] && [ "$exit_code" -ne 0 ]; } || \
+     { [ "$tool" = "pa11y" ] && [ "$exit_code" -ne 0 ] && [ "$exit_code" -ne 2 ]; }; then
+    printf 'failed'
+  elif node -e "
+    const fs = require('fs');
+    const tool = process.argv[1];
+    const report = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+    const valid = tool === 'axe'
+      ? Array.isArray(report) && report.length > 0 && report.every(run => run && Array.isArray(run.violations))
+      : Array.isArray(report);
+    if (!valid) process.exit(1);
+  " "$tool" "$report" >/dev/null 2>&1; then
+    printf 'completed'
+  else
+    printf 'invalid-report'
+  fi
+}
+
+if [ "$MODE" = "url" ]; then
+  AXE_STATUS=$(report_status axe "$TEMP_DIR/axe-report.json" "$AXE_EXIT")
+else
+  AXE_STATUS="not-run"
+fi
+PA11Y_STATUS=$(report_status pa11y "$TEMP_DIR/pa11y-report.json" "$PA11Y_EXIT")
+
+# A URL audit promises both engines. A valid report is the success signal because
+# pa11y may return non-zero when it found violations. Never turn a partial run
+# into a clean result just because the remaining engine returned an empty list.
+if [ "$PA11Y_STATUS" != "completed" ] || { [ "$MODE" = "url" ] && [ "$AXE_STATUS" != "completed" ]; }; then
+  echo "$SCRIPT_NAME: incomplete audit; refusing to report a violation total" >&2
+  echo "$SCRIPT_NAME: tool status: @axe-core/cli@$AXE_VERSION=$AXE_STATUS (exit $AXE_EXIT), pa11y@$PA11Y_VERSION=$PA11Y_STATUS (exit $PA11Y_EXIT)" >&2
   exit 1
 fi
 
 # Merge results into structured JSON output
 RESULT_FILE="$TEMP_DIR/result.json"
 
-cat > "$RESULT_FILE" << 'RESULT_EOF'
+cat > "$RESULT_FILE" << RESULT_EOF
 {
   "tool": "audit-a11y",
+  "tools": [
+    {"name": "@axe-core/cli", "version": "$AXE_VERSION", "status": "$AXE_STATUS", "exitCode": $AXE_EXIT},
+    {"name": "pa11y", "version": "$PA11Y_VERSION", "status": "$PA11Y_STATUS", "exitCode": $PA11Y_EXIT}
+  ],
   "summary": {
     "violations": 0,
     "critical": 0,
@@ -155,6 +212,11 @@ else
     const r = JSON.parse(require('fs').readFileSync('$RESULT_FILE', 'utf8'));
     console.log('Accessibility Audit Results');
     console.log('===========================');
+    console.log('Tools:');
+    for (const tool of r.tools) {
+      console.log('  ' + tool.name + '@' + tool.version + ': ' + tool.status + ' (exit ' + tool.exitCode + ')');
+    }
+    console.log('');
     console.log('Total violations: ' + r.summary.violations);
     console.log('  Critical: ' + r.summary.critical);
     console.log('  Serious:  ' + r.summary.serious);
