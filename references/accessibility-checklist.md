@@ -1,6 +1,6 @@
 # Accessibility Checklist
 
-Quick reference for WCAG 2.1 AA compliance. Use alongside the `frontend-ui-engineering` skill.
+Quick reference for WCAG 2.2 AA conformance. Use `frontend-ui-engineering` while building interfaces and `accessibility-engineering` when auditing and remediating them.
 
 ## Table of Contents
 
@@ -31,7 +31,7 @@ Quick reference for WCAG 2.1 AA compliance. Use alongside the `frontend-ui-engin
 - [ ] Tables have `<th>` headers with scope
 
 ### Visual
-- [ ] Text contrast ≥ 4.5:1 (normal text) or ≥ 3:1 (large text, 18px+)
+- [ ] Text contrast ≥ 4.5:1 (normal text) or ≥ 3:1 (large text, at least 24px or 18.66px bold)
 - [ ] UI components contrast ≥ 3:1 against background
 - [ ] Color is not the only way to convey information
 - [ ] Text resizable to 200% without breaking layout
@@ -49,7 +49,7 @@ Quick reference for WCAG 2.1 AA compliance. Use alongside the `frontend-ui-engin
 - [ ] Language declared (`<html lang="en">`)
 - [ ] Page has a descriptive `<title>`
 - [ ] Links distinguish from surrounding text (not by color alone)
-- [ ] Touch targets ≥ 44x44px on mobile
+- [ ] Touch targets meet 24x24 CSS px (SC 2.5.8, AA), including its spacing and exception rules; 44x44 CSS px is the enhanced AAA target (SC 2.5.5)
 - [ ] Meaningful empty states (not blank screens)
 
 ## Common HTML Patterns
@@ -123,9 +123,9 @@ Quick reference for WCAG 2.1 AA compliance. Use alongside the `frontend-ui-engin
 ## Testing Tools
 
 ```bash
-# Automated audit
-npx axe-core          # Programmatic accessibility testing
-npx pa11y             # CLI accessibility checker
+# Automated audit (versions pinned for repeatable browser-driver behavior)
+npx --yes @axe-core/cli@4.13.0 http://localhost:3000 --exit
+npx --yes pa11y@9.1.1 http://localhost:3000
 
 # In browser
 # Chrome DevTools → Lighthouse → Accessibility
