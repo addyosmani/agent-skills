@@ -56,6 +56,8 @@ function makeSandbox() {
   fs.mkdirSync(path.join(root, 'evals', 'cases'), { recursive: true });
   fs.mkdirSync(path.join(root, 'evals', 'fixtures', 'project'), { recursive: true });
   fs.copyFileSync(RUNNER, path.join(root, 'scripts', 'run-evals.js'));
+  fs.mkdirSync(path.join(root, 'scripts', 'lib'), { recursive: true });
+  fs.copyFileSync(path.join(__dirname, 'lib', 'skill-lint.js'), path.join(root, 'scripts', 'lib', 'skill-lint.js'));
   fs.writeFileSync(path.join(root, 'evals', 'fixtures', 'project', 'context.txt'), 'fixture\n');
   return root;
 }
@@ -67,6 +69,91 @@ function run(root, args = []) {
   });
 }
 
+function runBehavioralWithGrading(root, raw) {
+  writeSkill(root, 'alpha-skill', 'Handles alpha widgets.');
+  const evalCase = completeCase('alpha-skill', 'change alpha widget');
+  evalCase.evals = [{ ...behavioralEval([]), kind: 'dialogue' }];
+  writeJson(path.join(root, 'evals', 'cases', 'alpha-skill.json'), evalCase);
+  const stub = path.join(root, 'stub-claude.cjs');
+  fs.writeFileSync(stub, `
+    const assert = require('node:assert/strict');
+    require('child_process').execFileSync = (command, args) => {
+      assert.equal(command, 'claude');
+      return args.includes('--output-format')
+        ? '{"type":"result","result":"done"}\\n'
+        : ${JSON.stringify(raw)};
+    };
+  `);
+  return spawnSync(process.execPath, [
+    '--require', stub, path.join(root, 'scripts', 'run-evals.js'),
+    '--behavioral', 'alpha-skill',
+  ], { cwd: root, encoding: 'utf8' });
+}
+
+for (const passed of [true, false]) {
+  for (const evidence of ['', ' \t\r\n', '\u00a0\u2003']) {
+    test(`behavioral CLI diagnoses blank evidence for ${passed ? 'passing' : 'failing'} verdict ${JSON.stringify(evidence)}`, () => {
+      const root = makeSandbox();
+      try {
+        const raw = JSON.stringify({
+          expectations: [{ id: 1, text: 'check the result', passed, evidence }],
+          summary: { passed: Number(passed), failed: Number(!passed), total: 1, pass_rate: Number(passed) },
+        });
+        const base = path.join(root, 'evals', 'results', 'alpha-skill.eval-1');
+        writeJson(`${base}.grading.json`, { stale: true });
+
+        const result = runBehavioralWithGrading(root, raw);
+
+        assert.equal(result.status, 1, result.stdout + result.stderr);
+        assert.match(result.stdout, /grader returned blank evidence/);
+        assert.doesNotMatch(result.stdout, /invalid JSON/);
+        assert.match(result.stdout, /raw saved to .*alpha-skill\.eval-1\.grading\.raw\.txt/);
+        assert.equal(fs.readFileSync(`${base}.grading.raw.txt`, 'utf8'), raw);
+        assert.equal(fs.existsSync(`${base}.grading.json`), false);
+      } finally {
+        fs.rmSync(root, { recursive: true, force: true });
+      }
+    });
+  }
+}
+
+for (const raw of ['not JSON', '{"expectations":', '{"expectations":[]}']) {
+  test(`behavioral CLI retains the generic diagnostic for invalid grading ${raw}`, () => {
+    const root = makeSandbox();
+    try {
+      const result = runBehavioralWithGrading(root, raw);
+      assert.equal(result.status, 1, result.stdout + result.stderr);
+      assert.match(result.stdout, /grader returned invalid JSON/);
+      assert.doesNotMatch(result.stdout, /blank evidence/);
+      const base = path.join(root, 'evals', 'results', 'alpha-skill.eval-1');
+      assert.equal(fs.readFileSync(`${base}.grading.raw.txt`, 'utf8'), raw);
+      assert.equal(fs.existsSync(`${base}.grading.json`), false);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+}
+
+test('behavioral CLI still publishes valid grading without a rejection diagnostic', () => {
+  const root = makeSandbox();
+  try {
+    const evidence = '  observed in the trace  ';
+    const raw = JSON.stringify({
+      expectations: [{ id: 1, text: 'check the result', passed: true, evidence }],
+      summary: { passed: 1, failed: 0, total: 1, pass_rate: 1 },
+    });
+    const result = runBehavioralWithGrading(root, raw);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.doesNotMatch(result.stdout, /grader returned/);
+    const base = path.join(root, 'evals', 'results', 'alpha-skill.eval-1');
+    const grading = JSON.parse(fs.readFileSync(`${base}.grading.json`, 'utf8'));
+    assert.equal(grading.expectations[0].evidence, evidence);
+    assert.equal(fs.existsSync(`${base}.grading.raw.txt`), false);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('accepts a complete and consistent grader result', () => {
   const raw = JSON.stringify({
     expectations: [
@@ -77,6 +164,44 @@ test('accepts a complete and consistent grader result', () => {
   });
 
   assert.deepEqual(parseGrading(raw, ['first expectation', 'second expectation']), JSON.parse(raw));
+});
+
+for (const passed of [true, false]) {
+  for (const evidence of ['', ' \t\r\n', '\u00a0\u2003']) {
+    test(`rejects ${passed ? 'passing' : 'failing'} grading with blank evidence ${JSON.stringify(evidence)}`, () => {
+      const raw = JSON.stringify({
+        expectations: [{ id: 1, text: 'check the result', passed, evidence }],
+        summary: { passed: Number(passed), failed: Number(!passed), total: 1, pass_rate: Number(passed) },
+      });
+      assert.equal(parseGrading(raw, ['check the result']), null);
+    });
+  }
+}
+
+test('preserves nonblank evidence including surrounding whitespace', () => {
+  const evidence = '  No matching tool call was found.\n';
+  const raw = JSON.stringify({
+    expectations: [{ id: 1, text: 'check the result', passed: false, evidence }],
+    summary: { passed: 0, failed: 1, total: 1, pass_rate: 0 },
+  });
+  assert.equal(parseGrading(raw, ['check the result']).expectations[0].evidence, evidence);
+});
+
+test('blank evidence retains raw grading without publishing a scored artifact', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'grading-blank-evidence-'));
+  try {
+    const base = path.join(dir, 'my-skill.eval-1');
+    const raw = JSON.stringify({
+      expectations: [{ id: 1, text: 'check the result', passed: true, evidence: '' }],
+      summary: { passed: 1, failed: 0, total: 1, pass_rate: 1 },
+    });
+    clearGradingSlot(base);
+    assert.equal(persistGradingOutcome(base, parseGrading(raw, ['check the result']), raw), false);
+    assert.equal(fs.existsSync(`${base}.grading.json`), false);
+    assert.equal(fs.readFileSync(`${base}.grading.raw.txt`, 'utf8'), raw);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('rejects grader results that omit expectations', () => {
@@ -687,4 +812,19 @@ test('removes the throwaway workspace when fixture setup fails', () => {
     fs.rmSync(root, { recursive: true, force: true });
     fs.rmSync(temp, { recursive: true, force: true });
   }
+});
+
+
+test('loads quoted YAML skill identities using their decoded values', () => {
+  const root = makeSandbox();
+  try {
+    writeSkill(root, 'alpha', 'code unit tests');
+    const skill = path.join(root, 'skills', 'alpha', 'SKILL.md');
+    fs.writeFileSync(skill, fs.readFileSync(skill, 'utf8').replace('name: alpha', "name: 'alpha'")
+      .replace('description: code unit tests', 'description: "code unit tests"'));
+    writeJson(path.join(root, 'evals', 'cases', 'alpha.json'), completeCase('alpha', 'code unit tests'));
+    const result = run(root);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.match(result.stdout, /PASSED/);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });

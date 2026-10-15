@@ -201,14 +201,16 @@ npx vite-bundle-visualizer
 
 # Check bundle size
 npx bundlesize
+```
 
-# Web Vitals in code
+```javascript
+// Web Vitals in code
 import { onLCP, onINP, onCLS } from 'web-vitals';
 onLCP(console.log);
 onINP(console.log);
 onCLS(console.log);
 
-# INP with interaction-level detail (attribution build)
+// INP with interaction-level detail (attribution build)
 import { onINP } from 'web-vitals/attribution';
 onINP(({ value, attribution }) => {
   const { interactionTarget, inputDelay, processingDuration, presentationDelay } = attribution;

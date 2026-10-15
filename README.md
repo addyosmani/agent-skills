@@ -35,6 +35,8 @@ Skills encode the workflows, quality gates, and best practices that senior engin
 | Simplify the code | `/code-simplify` | Clarity over cleverness |
 | Ship to production | `/ship` | Faster is safer |
 
+In Claude Code these install as plugin commands. Where a built-in command has the same name, as `/review` does, use the namespaced form: `/agent-skills:review`.
+
 Want fewer manual steps once the spec exists? **`/build auto`** generates the plan and implements every task in a single approved pass — you approve the plan once, then it runs autonomously. It removes the human stepping *between* tasks, not the verification: every task is still test-driven and committed individually, and it pauses on failures or risky steps.
 
 Skills also activate automatically based on what you're doing — designing an API triggers `api-and-interface-design`, building UI triggers `frontend-ui-engineering`, and so on.
