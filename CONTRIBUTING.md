@@ -119,9 +119,9 @@ The hook's `command -v jq` check fails under the stripped `PATH`, the jq-missing
 
 ## Adding or Changing a Validator
 
-The scripts under `scripts/` are the repository's own quality bar, so they are held to the one they enforce. A new validator ships as a set: the script, a `scripts/<name>-test.js` unit-test file that exercises each rule it adds (including the case it must not flag), and a step in `.github/workflows/test-plugin-install.yml` that runs both. A change to an existing validator updates its test file in the same PR. A validator with no test or no CI step is incomplete, however correct the script.
+The scripts under `scripts/` are the repository's own quality bar, so they are held to the one they enforce. A new validator ships as a set: the script, a `scripts/<name>-test.js` unit-test file that exercises each rule it adds (including the case it must not flag), and its wiring in `.github/workflows/test-plugin-install.yml`. That wiring is two places, not one. The Linux job that fits the validator (`validate-skills` for skill content, `validate-commands` for command surfaces) gets a step that runs the script and a step that runs its tests. The `validate-platforms` job, which runs on macOS and Windows, lists every test file by hand in its `node --test` step and runs each script in a step of its own, so add the new file to that list and the script to those steps as well. A validator missing from the cross-platform job is only tested on Linux, which is where the path-separator and line-ending bugs do not show up. A change to an existing validator updates its test file in the same PR. A validator with no test or no CI step is incomplete, however correct the script.
 
-Before proposing one, check that an existing script does not already cover the rule; a second check for the same property, with its own tokenizer or threshold, is a maintenance cost, not a safeguard.
+A new rule guards against a failure that has actually happened in this repo. Link the PR or issue where it did; a rule proposed from a hypothetical is a round trip in review. Before proposing one, check that an existing script does not already cover the rule; a second check for the same property, with its own tokenizer or threshold, is a maintenance cost, not a safeguard.
 
 ## Reporting Issues
 
