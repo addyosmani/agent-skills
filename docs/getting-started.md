@@ -81,6 +81,7 @@ Starting a project:  spec-driven-development → planning-and-task-breakdown
 During development:  incremental-implementation + test-driven-development
 Before merge:        code-review-and-quality + security-and-hardening
 Before deploy:       shipping-and-launch
+Agent harness:       agent-sandbox-and-permissions (whenever the agent has shell, filesystem, or network access)
 ```
 
 ### Context-Aware Loading
@@ -90,6 +91,7 @@ Don't load all skills at once — it wastes context. Load skills relevant to the
 - Working on UI? Load `frontend-ui-engineering`
 - Debugging? Load `debugging-and-error-recovery`
 - Setting up CI? Load `ci-cd-and-automation`
+- Giving the agent shell, filesystem, or network access? Load `agent-sandbox-and-permissions`
 
 ## Skill Anatomy
 
