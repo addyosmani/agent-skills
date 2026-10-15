@@ -508,6 +508,8 @@ function isEffectivelyEmpty(dir) {
  *   - Naming Conventions: "Supporting files: lowercase-hyphen-separated.md".
  *     Scoped to .md, which is what that line covers; `scripts/` helpers carry
  *     their own conventions under Script Requirements.
+ *     `HUMAN.md` at the skill root is the human-facing sidecar and is
+ *     uppercase like `SKILL.md`; the same name below the root is not exempt.
  */
 function lintSkillLayout(skillDir) {
   const errors = [];
@@ -529,7 +531,7 @@ function lintSkillLayout(skillDir) {
         continue;
       }
 
-      if (rel === 'SKILL.md' || !entry.name.endsWith('.md')) continue;
+      if (rel === 'SKILL.md' || rel === 'HUMAN.md' || !entry.name.endsWith('.md')) continue;
       if (!KEBAB_CASE.test(entry.name.slice(0, -'.md'.length))) {
         errors.push(
           `Supporting file \`${rel}\` is not lowercase-hyphen-separated ` +
