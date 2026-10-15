@@ -190,6 +190,12 @@ Client metrics:
 ```typescript
 // Set up error boundary with reporting
 class ErrorBoundary extends React.Component {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     // Report to error tracking service
     reportError(error, {
@@ -268,7 +274,7 @@ Every deployment needs a rollback plan before it happens:
 3. Communicate: notify team of rollback
 
 ### Database Considerations
-- Migration [X] has a rollback: `npx prisma migrate rollback`
+- Migration [X] has a rollback: <verified command or runbook link>
 - Data inserted by new feature: [preserved / cleaned up]
 
 ### Time to Rollback

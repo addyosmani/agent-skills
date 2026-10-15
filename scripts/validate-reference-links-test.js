@@ -103,6 +103,93 @@ test('passes when a skill colocates its own references directory', () => {
   assert.match(result.stdout, /1 skills checked — 0 error\(s\) — PASSED/);
 });
 
+test('passes when a skill reference file reaches the shared checklist three levels up', () => {
+  // A file under skills/<name>/references/ sits one directory deeper than
+  // SKILL.md, so the shared checklists are three levels up from it, not two.
+  const root = makeSandbox();
+  writeFile(root, 'references/security-checklist.md', '# Security\n');
+  writeFile(root, 'skills/hardening/SKILL.md', 'See [patterns](references/patterns.md).\n');
+  writeFile(
+    root,
+    'skills/hardening/references/patterns.md',
+    'Shared checklists live in `../../../references/security-checklist.md`.\n'
+  );
+
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /✓ {2}skills\/hardening\/references\/patterns\.md/);
+  assert.match(result.stdout, /1 skills checked — 0 error\(s\) — PASSED/);
+});
+
+test('fails when a skill reference file links the shared checklist with the SKILL.md prefix', () => {
+  // The same off-by-a-level mistake this validator exists to catch, made from
+  // inside the skill's references/ directory: the link is resolved from the
+  // file that contains it, so `../../` stops at skills/.
+  const root = makeSandbox();
+  writeFile(root, 'references/security-checklist.md', '# Security\n');
+  writeFile(root, 'skills/hardening/SKILL.md', 'See [patterns](references/patterns.md).\n');
+  writeFile(
+    root,
+    'skills/hardening/references/patterns.md',
+    ['# Patterns', '', 'See `../../references/security-checklist.md`.', ''].join('\n')
+  );
+
+  const result = run(root);
+
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /✓ {2}skills\/hardening\/SKILL\.md/);
+  assert.match(result.stdout, /✗ {2}skills\/hardening\/references\/patterns\.md/);
+  assert.match(
+    result.stdout,
+    /L3: \.\.\/\.\.\/references\/security-checklist\.md — resolves to skills\/references\/security-checklist\.md/
+  );
+  assert.match(result.stdout, /1 skills checked — 1 error\(s\) — FAILED/);
+  assert.match(result.stdout, /use `\.\.\/\.\.\/\.\.\/references\/<file>\.md`/);
+});
+
+test('keeps the same narrow rule inside a skill reference file', () => {
+  // Same exemptions as SKILL.md: fenced examples, sibling files named without
+  // a references/ prefix, and artifacts that do not exist yet.
+  const root = makeSandbox();
+  writeFile(root, 'references/security-checklist.md', '# Security\n');
+  writeFile(root, 'skills/hardening/SKILL.md', 'See [patterns](references/patterns.md).\n');
+  writeFile(
+    root,
+    'skills/hardening/references/patterns.md',
+    [
+      'Record findings in `SECURITY.md` or `docs/threat-model.md`. See also `other-patterns.md`.',
+      '',
+      '```markdown',
+      '[wrong on purpose](../../references/security-checklist.md)',
+      '```',
+      '',
+    ].join('\n')
+  );
+
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /1 skills checked — 0 error\(s\) — PASSED/);
+});
+
+test('counts errors from SKILL.md and its reference files together', () => {
+  const root = makeSandbox();
+  writeFile(root, 'references/security-checklist.md', '# Security\n');
+  writeFile(root, 'skills/hardening/SKILL.md', 'See `references/security-checklist.md`.\n');
+  writeFile(root, 'skills/hardening/references/a.md', 'See `../../references/security-checklist.md`.\n');
+  writeFile(root, 'skills/hardening/references/b.md', 'See `../../../references/security-checklist.md`.\n');
+  writeFile(root, 'skills/hardening/references/notes.txt', 'See ../../references/security-checklist.md\n');
+
+  const result = run(root);
+
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /✗ {2}skills\/hardening\/references\/a\.md/);
+  assert.match(result.stdout, /✓ {2}skills\/hardening\/references\/b\.md/);
+  assert.doesNotMatch(result.stdout, /notes\.txt/);
+  assert.match(result.stdout, /1 skills checked — 2 error\(s\) — FAILED/);
+});
+
 test('fails when a link points at a checklist that no longer exists', () => {
   const root = makeSandbox();
   writeFile(root, 'references/definition-of-done.md', '# Definition of Done\n');
@@ -278,4 +365,149 @@ test('tilde fence info strings may contain backticks', () => {
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
   assert.match(result.stdout, /1 skills checked — 0 error\(s\) — PASSED/);
+});
+
+// Anchors. A `#fragment` after a references/ link must match a heading in the
+// target file, slugged the way GitHub does it. Without this, renaming a heading
+// silently breaks every link to it while the file itself still exists.
+
+function hardeningSkill(root, link) {
+  writeFile(root, 'skills/hardening/SKILL.md', `See [patterns](${link}).\n`);
+}
+
+test('passes when an anchor matches a heading in the target file', () => {
+  const root = makeSandbox();
+  hardeningSkill(root, 'references/patterns.md#cross-site-scripting-xss');
+  writeFile(root, 'skills/hardening/references/patterns.md', '# Patterns\n\n## Cross-Site Scripting (XSS)\n');
+
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /1 skills checked — 0 error\(s\) — PASSED/);
+});
+
+test('fails when an anchor matches no heading in the target file', () => {
+  // The file exists, so the existing check is satisfied; only the fragment is stale.
+  const root = makeSandbox();
+  hardeningSkill(root, 'references/patterns.md#injection');
+  writeFile(root, 'skills/hardening/references/patterns.md', '# Patterns\n\n## Injection attacks\n');
+
+  const result = run(root);
+
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(
+    result.stdout,
+    /L1: references\/patterns\.md#injection — no heading in skills\/hardening\/references\/patterns\.md produces #injection/
+  );
+  assert.match(result.stdout, /1 skills checked — 1 error\(s\) — FAILED/);
+  assert.match(result.stdout, /GitHub's heading slugs/);
+  // The path was right, so the path hint would only mislead.
+  assert.doesNotMatch(result.stdout, /use `\.\.\/\.\.\/references/);
+});
+
+test('a repeated heading gets a -1 suffix, as on GitHub', () => {
+  const root = makeSandbox();
+  writeFile(root, 'skills/hardening/SKILL.md', [
+    'See [first](references/patterns.md#example).',
+    'See [second](references/patterns.md#example-1).',
+    'See [third](references/patterns.md#example-2).',
+    '',
+  ].join('\n'));
+  writeFile(root, 'skills/hardening/references/patterns.md', '## Example\n\n## Example\n');
+
+  const result = run(root);
+
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /L3: references\/patterns\.md#example-2 — no heading/);
+  assert.doesNotMatch(result.stdout, /L[12]:/);
+  assert.match(result.stdout, /1 skills checked — 1 error\(s\) — FAILED/);
+});
+
+test('slugs come from the rendered heading text, not its markdown', () => {
+  // Real headings in the pack carry emphasis, code spans and links.
+  const root = makeSandbox();
+  writeFile(root, 'skills/hardening/SKILL.md', [
+    'See [a](references/patterns.md#why-this-is-not-a-ship-job).',
+    'See [b](references/patterns.md#owasp-top-10).',
+    'See [c](references/patterns.md#snake_case-names-stay).',
+    'See [d](references/patterns.md#closing-hashes).',
+    '',
+  ].join('\n'));
+  writeFile(root, 'skills/hardening/references/patterns.md', [
+    '### Why this is *not* a `/ship` job',
+    '## [OWASP](https://owasp.org/Top10/) Top 10',
+    '## snake_case names stay',
+    '## Closing hashes ##',
+    '',
+  ].join('\n'));
+
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test('a heading-like line inside a fenced block is not an anchor', () => {
+  // Bash comments in a fenced example look like H1s.
+  const root = makeSandbox();
+  hardeningSkill(root, 'references/patterns.md#chrome-devtools');
+  writeFile(root, 'skills/hardening/references/patterns.md', [
+    '# Patterns',
+    '',
+    '```bash',
+    '# Chrome DevTools',
+    '```',
+    '',
+  ].join('\n'));
+
+  const result = run(root);
+
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /#chrome-devtools — no heading/);
+});
+
+test('anchors resolve from a reference file to a shared checklist', () => {
+  const root = makeSandbox();
+  writeFile(root, 'references/security-checklist.md', '# Security\n\n## OWASP Top 10 Quick Reference\n');
+  hardeningSkill(root, 'references/patterns.md');
+  writeFile(root, 'skills/hardening/references/patterns.md', [
+    'See `../../../references/security-checklist.md#owasp-top-10-quick-reference`.',
+    'See `../../../references/security-checklist.md#destructive-path-operations`.',
+    '',
+  ].join('\n'));
+
+  const result = run(root);
+
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /✗ {2}skills\/hardening\/references\/patterns\.md/);
+  assert.match(result.stdout, /L2: \.\.\/\.\.\/\.\.\/references\/security-checklist\.md#destructive-path-operations — no heading in references\/security-checklist\.md/);
+  assert.doesNotMatch(result.stdout, /L1:/);
+});
+
+test('a missing file is reported once, not again for its anchor', () => {
+  const root = makeSandbox();
+  hardeningSkill(root, 'references/renamed.md#injection');
+
+  const result = run(root);
+
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /L1: references\/renamed\.md — resolves to skills\/hardening\/references\/renamed\.md, which does not exist/);
+  assert.match(result.stdout, /1 skills checked — 1 error\(s\) — FAILED/);
+});
+
+
+test('heading slugs remain unique when a literal suffix collides with an allocated slug', () => {
+  const root = makeSandbox();
+  hardeningSkill(root, 'references/patterns.md#example-1-1');
+  // A hyphen in the literal heading makes its base slug collide with Example's suffix.
+  writeFile(root, 'skills/hardening/references/patterns.md', '## Example\n\n## Example\n\n## Example-1\n');
+  const result = run(root);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test('a duplicate skips a slug occupied by an earlier literal heading', () => {
+  const root = makeSandbox();
+  hardeningSkill(root, 'references/patterns.md#example-2');
+  writeFile(root, 'skills/hardening/references/patterns.md', '## Example\n\n## Example-1\n\n## Example\n');
+  const result = run(root);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
 });

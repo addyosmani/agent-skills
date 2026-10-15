@@ -184,7 +184,7 @@ try {
   await db.insert({ key, state: 'in_progress', requestHash });
 } catch (e) {
   if (isUniqueViolation(e)) return replayOrReject(key);
-  throw;
+  throw e;
 }
 const result = await chargeCard(amount);
 await db.update({ key, state: 'succeeded', response: result });

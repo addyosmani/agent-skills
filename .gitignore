@@ -6,4 +6,5 @@ node_modules/
 .claude/.simplify-ignore-cache/
 .claude/sdd-cache/
 evals/results/
+evals/plugin/results/
 __pycache__/

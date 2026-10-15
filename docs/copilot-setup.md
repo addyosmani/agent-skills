@@ -4,6 +4,8 @@ This guide covers Copilot in VS Code. For the standalone `copilot` command-line 
 
 **What an install actually gives you:** the skills. Each installed skill becomes a slash command named after its frontmatter `name` — `/spec-driven-development`, `/test-driven-development`, and so on. `npx skills add addyosmani/agent-skills` and the manual copy below both install skills only. Neither of those two routes copies this repo's short lifecycle wrappers (`/spec`, `/plan`, `/build`, `/test`, `/review`, `/ship`) — those are Claude Code commands living in `.claude/commands/`. Use the full skill names, or add your own aliases — see [Lifecycle workflows](#lifecycle-workflows).
 
+> **`/spec`, `/plan`, `/build`, `/test`, `/review`, `/code-simplify`, `/webperf` and `/ship` never appear in Copilot.** They are Claude Code commands, and Copilot does not read `.claude/commands/`. Not seeing them after an install is expected, not a missing step. Invoke the skill by its own name instead — `/spec-driven-development` for `/spec`, `/planning-and-task-breakdown` for `/plan`, and so on; the full mapping is in [Lifecycle Workflows](#lifecycle-workflows). On VS Code you can add [short aliases](#optional-short-spec-style-aliases) yourself if you want the short forms.
+
 ## Setup
 
 ### Copilot Instructions
@@ -144,6 +146,8 @@ For the rest, run the same `mkdir`/`cat` block with the filename swapped (the fi
 Write the body yourself, or take it from this table, rather than copying `.claude/commands/*.md` verbatim: those files reference skills as `agent-skills:<name>`, a Claude Code plugin namespace that means nothing to Copilot.
 
 ### If the skill slash commands don't appear
+
+First rule out the expected case: if the only commands you miss are the short lifecycle wrappers (`/spec`, `/plan`, `/build`, `/test`, `/review`, `/ship`), nothing is wrong — those are Claude Code commands and never surface in Copilot (see the note at the top). The steps below are for when the skills' own names, such as `/spec-driven-development`, are missing too.
 
 Work through these in order — `/spec-driven-development` missing and `/spec` missing have different causes:
 

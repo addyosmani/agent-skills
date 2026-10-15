@@ -2,6 +2,8 @@
 
 How to wire [agent-skills](../README.md) into **Cursor** using current, supported project context — not legacy monolith files or Kaizen-specific layouts.
 
+Every `.cursor/` path in this guide lives in **your** project (or under `~/.cursor/` for user scope). This repository does not ship a `.cursor/` directory: you create it and sync the skills into it, which is what [step 1](#1-install-skills-into-cursorskills) does.
+
 ---
 
 ## What Cursor supports today
@@ -205,6 +207,7 @@ Files under `agent-skills/agents/` (e.g. code reviewer persona) are **not** load
 | Stale workflow | Re-`rsync` from `agent-skills/skills/` |
 | Duplicate instructions | Remove skill content from rules; keep one source |
 | Wrong skill picked | Narrow `description` in custom skills; nudge in chat |
+| "An unexpected error occurred on our servers" right after attaching a skill with `/`, and every later message in that chat fails too | Known Cursor-side issue, tracked in [#494](https://github.com/addyosmani/agent-skills/issues/494): Cursor pulls the attached `SKILL.md` into the request and the failure happens on its side, not in the skill. Start a new chat and reference the skill by name in plain text ("Use the test-driven-development skill to …") instead of attaching it. |
 
 ---
 

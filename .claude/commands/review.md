@@ -12,5 +12,5 @@ Review the current changes (staged or recent commits) across all five axes:
 4. **Security** — Input validated? Secrets safe? Auth checked? (Use security-and-hardening skill)
 5. **Performance** — No N+1 queries? No unbounded ops? (Use performance-optimization skill)
 
-Categorize findings as Critical, Important, or Suggestion.
+Categorize findings as Critical, Required, Optional, or Nit.
 Output a structured review with specific file:line references and fix recommendations.

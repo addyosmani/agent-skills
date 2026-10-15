@@ -37,7 +37,25 @@
       "expectations": [
         "The ADR states context, decision, alternatives, and consequences distinctly",
         "Trade-offs and rejected options are recorded, not just the winning choice",
-        "The document is written in timeless language describing current state"
+        "The ADR records a status from the skill's lifecycle (Proposed, Accepted, Superseded or Deprecated) and a date"
+      ]
+    },
+    {
+      "id": 4,
+      "kind": "execution",
+      "prompt": "Review README.md for operators onboarding to this batch queue. Make the prose clearer, check it against queue.js, and keep the operational details and caveats accurate. Do not change the implementation.",
+      "expected_output": "A concise operational README grounded in the inspected implementation, with unsupported assurances removed or flagged, limits and caveats preserved, and the unverified command identified",
+      "files": [
+        "documentation-and-adrs/prose-review"
+      ],
+      "expectations": [
+        "The final README identifies queuectl submit jobs.json --max-batch-size 50 as an unverified documented example because the fixture contains neither the CLI nor jobs.json; it does not invent, silently certify, or replace that interface",
+        "The final README preserves the 50-job batch limit, 72-hour retention period, and at most three retries, distinguishing those units correctly",
+        "The final README preserves the operational caveat that failed jobs require operator review and queue state is not durable across a process restart",
+        "The unsupported claims of guaranteed zero job loss and no need for monitoring are removed or explicitly marked as unsubstantiated rather than restated as facts",
+        "The promotional opening is replaced with a concrete description of the queue without invented users, benchmarks, certifications, or capabilities",
+        "The execution trace shows the agent inspecting queue.js and comparing the README with its batch, retention, retry, and in-memory-state implementation before editing",
+        "queue.js remains unchanged, and the agent does not install a tool or send the fixture to a hosted service"
       ]
     }
   ]
