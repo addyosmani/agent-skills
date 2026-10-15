@@ -234,7 +234,7 @@ function Dialog({ isOpen, onClose }: DialogProps) {
 
 ```tsx
 // Don't show blank screens
-function TaskList({ tasks }: { tasks: Task[] }) {
+function TaskList({ tasks, onCreateTask }: { tasks: Task[]; onCreateTask: () => void }) {
   if (tasks.length === 0) {
     return (
       <div role="status" className="text-center py-12">
