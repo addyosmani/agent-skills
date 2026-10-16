@@ -9,7 +9,7 @@ Invoke the agent-skills:incremental-implementation skill alongside agent-skills:
 - **`/build`** — implement the *next* pending task, then stop (careful, one slice at a time).
 - **`/build auto`** — generate the plan if needed, get a single approval, then implement *every* task without stopping between them.
 
-`$ARGUMENTS` selects the mode. Treat `auto` (canonical) or `all` as autonomous mode; anything else (or empty) is the default single-task mode. Note: autonomous mode is not faster *per task* — it runs the same test-driven loop — it only removes the human stepping *between* tasks.
+Only the first argument (`$0`) selects the mode: `auto` (canonical) or `all` selects autonomous mode; any other first argument (or no argument) selects default single-task mode. Do not interpret later arguments as mode selectors. Note: autonomous mode is not faster *per task* — it runs the same test-driven loop — it only removes the human stepping *between* tasks.
 
 ## Default: one task
 
@@ -42,3 +42,9 @@ Use this once a spec exists and you want to collapse plan + build into one run. 
 7. **Summarize at the end:** tasks completed, tests added, commits made, and anything skipped, flagged, or left for the user.
 
 If any step fails, follow the agent-skills:debugging-and-error-recovery skill.
+
+## Additional instructions
+
+From the full arguments below, treat everything after the first argument (`$0`) as the user's additional instructions for the selected mode. Preserve their order; do not include the first argument. If there are no remaining arguments, there are no additional instructions.
+
+`$ARGUMENTS`
