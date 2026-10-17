@@ -210,9 +210,10 @@ onLCP(console.log);
 onINP(console.log);
 onCLS(console.log);
 
-// INP with interaction-level detail (attribution build)
-import { onINP } from 'web-vitals/attribution';
-onINP(({ value, attribution }) => {
+// INP with interaction-level detail (attribution build). The attribution build
+// exports the same names, so alias it when both builds share a module.
+import { onINP as onINPWithAttribution } from 'web-vitals/attribution';
+onINPWithAttribution(({ value, attribution }) => {
   const { interactionTarget, inputDelay, processingDuration, presentationDelay } = attribution;
   console.log({ value, interactionTarget, inputDelay, processingDuration, presentationDelay });
 });
