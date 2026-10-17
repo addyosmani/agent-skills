@@ -244,3 +244,31 @@ test('a nested description does not supply a missing command description', () =>
   assert.equal(result.status, 1, result.stdout + result.stderr);
   assert.match(result.stdout, /missing or malformed description/);
 });
+
+for (const [label, encoded, description] of [
+  ['backslashes', String.raw`Review C:\\work`, String.raw`Review C:\work`],
+  ['Unicode escapes', String.raw`Review \u00E9 changes`, 'Review é changes'],
+  ['supplementary Unicode escapes', String.raw`Review \U0001F680 changes`, 'Review 🚀 changes'],
+  ['literal escape-like text', String.raw`Review \\u00E9 changes`, String.raw`Review \u00E9 changes`],
+]) {
+  test(`compares decoded TOML ${label} with the displayed command description`, () => {
+    const root = makeSandbox();
+    writeClaudeCommand(root, 'review', `description: ${description}`);
+    for (const directory of ['.gemini/commands', 'commands']) {
+      writeTomlCommand(root, directory, 'review', `description = "${encoded}"`);
+    }
+    const result = run(root);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+  });
+}
+
+test('keeps backslashes literal in single-quoted TOML descriptions', () => {
+  const root = makeSandbox();
+  const description = String.raw`Review \u00E9 changes`;
+  writeClaudeCommand(root, 'review', `description: ${description}`);
+  for (const directory of ['.gemini/commands', 'commands']) {
+    writeTomlCommand(root, directory, 'review', `description = '${description}'`);
+  }
+  const result = run(root);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
