@@ -60,7 +60,15 @@ function descriptionFromMd(filePath) {
 function descriptionFromToml(filePath) {
   const content     = fs.readFileSync(filePath, 'utf8');
   const doubleMatch = content.match(/^description\s*=\s*"((?:[^"\\]|\\.)*)"/m);
-  if (doubleMatch) return doubleMatch[1].replace(/\\"/g, '"');
+  if (doubleMatch) {
+    // Compare the value a TOML consumer displays, not its escaped source.
+    // One pass keeps a literal \\uXXXX from being decoded a second time.
+    const escapes = { b: '\b', t: '\t', n: '\n', f: '\f', r: '\r', '"': '"', '\\': '\\' };
+    return doubleMatch[1].replace(/\\(u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8}|[btnfr"\\])/g,
+      (_, escape) => escape[0] === 'u' || escape[0] === 'U'
+        ? String.fromCodePoint(parseInt(escape.slice(1), 16))
+        : escapes[escape]);
+  }
   const singleMatch = content.match(/^description\s*=\s*'([^']*)'/m);
   return singleMatch ? singleMatch[1] : null;
 }
