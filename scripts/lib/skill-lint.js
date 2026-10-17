@@ -19,7 +19,8 @@
  *   - supporting .md filenames are lowercase-hyphen-separated
  *
  * Checks (warnings, do not block CI):
- *   - cross-skill references point to known skills
+ *   - cross-skill references in prose point to known skills (references inside
+ *     fenced examples are not collected; lifecycle-diagram arrows are)
  *   - SKILL.md stays under the 500-line context budget
  */
 
@@ -88,20 +89,45 @@ const SECTION_EXEMPT_SKILLS = {
   'using-agent-skills': 'Meta-skill — orchestrates other skills; When-to-Use and Verification are not applicable to a routing document.',
 };
 
-// Regex patterns that indicate an explicit cross-skill reference.
-// Only these patterns trigger the dead-reference warning — generic
-// backtick strings in code blocks are intentionally excluded.
-const SKILL_REF_PATTERNS = [
-  /\buse the `([a-z][a-z0-9-]+[a-z0-9])` skill/g,
-  /\bfollow the `([a-z][a-z0-9-]+[a-z0-9])` skill/g,
-  /\binvoke the `([a-z][a-z0-9-]+[a-z0-9])` skill/g,
-  /\bcontinue with `([a-z][a-z0-9-]+[a-z0-9])`/g,
-  /\buse `([a-z][a-z0-9-]+[a-z0-9])` skill/g,
-  /`([a-z][a-z0-9-]+[a-z0-9])` skill\b/g,
+// Regex patterns that indicate an explicit cross-skill reference. Only these
+// patterns feed the dead-reference warning; a generic backticked string is not
+// a reference.
+//
+// PROSE patterns run against fence-stripped content, so a reference inside an
+// example or a template (`see \`made-up-skill\`` in a fenced block that shows
+// what a skill should say) never produces a warning (#387). DIAGRAM patterns
+// run against the full content, because the ASCII lifecycle diagrams they
+// target live inside fenced blocks: using-agent-skills names sixteen skills
+// that way and nowhere else.
+//
+// The looser prose shapes (bare See/Follow, a path, the plural) capture only
+// hyphenated names. Every skill in the catalog is multi-word, and the hyphen
+// keeps a single backticked word such as `main` from matching.
+const PROSE_REF_PATTERNS = [
+  /\b[Uu]se the `([a-z][a-z0-9-]+[a-z0-9])` skill/g,
+  /\b[Ff]ollow the `([a-z][a-z0-9-]+[a-z0-9])` skill/g,
+  /\b[Ii]nvoke the `([a-z][a-z0-9-]+[a-z0-9])` skill/g,
+  /\b[Cc]ontinue with `([a-z][a-z0-9-]+[a-z0-9])`/g,
+  /\b[Uu]se `([a-z][a-z0-9-]+[a-z0-9])` skill/g,
+  /`([a-z][a-z0-9-]+[a-z0-9])` skills?\b/g,
   /`([a-z][a-z0-9-]+[a-z0-9])` persona\b/g,
-  /\bsee `([a-z][a-z0-9-]+[a-z0-9])`/g,
+  /\b[Ss]ee `([a-z0-9]+(?:-[a-z0-9]+)+)`/g,
+  /\b[Ff]ollow `([a-z0-9]+(?:-[a-z0-9]+)+)`/g,
+  /\bskills\/([a-z0-9]+(?:-[a-z0-9]+)+)\/SKILL\.md/g,
+];
+const DIAGRAM_REF_PATTERNS = [
   /──→ ([a-z][a-z0-9-]+[a-z0-9])\b/g,          // ASCII diagram arrows
   /→ `([a-z][a-z0-9-]+[a-z0-9])`/g,
+];
+// A relationship bullet, `- **\`skill-name\`**: how it relates`, is how two
+// skills list their neighbours today, but the same shape is ordinary prose
+// for a glossary of hyphenated terms (`- **\`at-least-once\`**: a delivery
+// guarantee`). So a name captured here is a SOFT reference: it warns only when
+// it is close to a known skill, meaning it shares a word of four or more
+// letters with one, which catches a misspelt neighbour and stays quiet on
+// vocabulary that is not a skill name at all.
+const SOFT_REF_PATTERNS = [
+  /^\s*[-*] \*\*`([a-z0-9]+(?:-[a-z0-9]+)+)`/gm,
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -322,21 +348,45 @@ function frontmatterYamlErrors(content) {
 }
 
 /**
- * Collect all explicit skill cross-references from content.
- * Only matches against the SKILL_REF_PATTERNS list to avoid
- * false-positives from inline code snippets.
+ * Collect explicit skill cross-references from content. Prose patterns run
+ * against fence-stripped content so a reference inside an example is not
+ * collected; diagram patterns run against the full content because the
+ * lifecycle diagrams live inside fences. Returns { refs, softRefs }: a soft
+ * reference comes from a shape that is also ordinary prose and is only
+ * reported when it looks like a misspelt skill name (see SOFT_REF_PATTERNS).
  */
 function extractSkillReferences(content) {
-  const refs = new Set();
-  for (const pattern of SKILL_REF_PATTERNS) {
-    // Reset lastIndex for global regexes
-    pattern.lastIndex = 0;
-    let m;
-    while ((m = pattern.exec(content)) !== null) {
-      refs.add(m[1]);
+  const scan = (patterns, text, into) => {
+    for (const pattern of patterns) {
+      // Reset lastIndex for global regexes
+      pattern.lastIndex = 0;
+      let m;
+      while ((m = pattern.exec(text)) !== null) {
+        into.add(m[1]);
+      }
     }
+    return into;
+  };
+  const prose = stripFencedCodeBlocks(content);
+  const refs = scan(PROSE_REF_PATTERNS, prose, new Set());
+  scan(DIAGRAM_REF_PATTERNS, content, refs);
+  const softRefs = scan(SOFT_REF_PATTERNS, prose, new Set());
+  for (const ref of refs) softRefs.delete(ref);
+  return { refs, softRefs };
+}
+
+/**
+ * True when `name` shares a word of four or more letters with a known skill
+ * name, so `test-driven-developmnt` is close to test-driven-development while
+ * `at-least-once` is close to nothing.
+ */
+function isCloseToKnownSkill(name, knownSkills) {
+  const words = name.split('-').filter(w => w.length >= 4);
+  for (const skill of knownSkills) {
+    const skillWords = new Set(skill.split('-'));
+    if (words.some(w => skillWords.has(w))) return true;
   }
-  return refs;
+  return false;
 }
 
 // ─── Linter ──────────────────────────────────────────────────────────────────
@@ -474,9 +524,14 @@ function lintSkillContent(dirName, content, knownSkills) {
   }
 
   // ── Cross-skill references ───────────────────────────────────────────────
-  const refs = extractSkillReferences(content);
+  const { refs, softRefs } = extractSkillReferences(content);
   for (const ref of refs) {
     if (!knownSkills.has(ref)) {
+      warnings.push(`Dead cross-reference: \`${ref}\` is not a known skill`);
+    }
+  }
+  for (const ref of softRefs) {
+    if (!knownSkills.has(ref) && isCloseToKnownSkill(ref, knownSkills)) {
       warnings.push(`Dead cross-reference: \`${ref}\` is not a known skill`);
     }
   }
@@ -622,7 +677,7 @@ function lintSkill(dirName, skillsDir, knownSkills) {
 }
 
 // Export only functions. The policy collections (REQUIRED_SECTIONS,
-// SECTION_EXEMPT_SKILLS, SKILL_REF_PATTERNS, and the regexes) stay private so a
+// SECTION_EXEMPT_SKILLS, the reference patterns, and the regexes) stay private so a
 // test or future consumer cannot mutate shared state and change lint results for
 // the rest of the process. Exercise the rules through these functions.
 module.exports = {
