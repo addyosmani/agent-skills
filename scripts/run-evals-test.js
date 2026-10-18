@@ -828,3 +828,39 @@ test('loads quoted YAML skill identities using their decoded values', () => {
     assert.match(result.stdout, /PASSED/);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
+
+// A hand-edited case file with the wrong shape must be reported by name, not
+// crash the runner with a stack trace from the ranker.
+for (const [label, mutate, expected] of [
+  ['a trigger entry without a prompt', (c) => { c.trigger.positive[0] = { top_k: 1 }; }, /trigger\.positive\[0\] needs a string prompt/],
+  ['a negative trigger with a non-string prompt', (c) => { c.trigger.negative[1] = { prompt: 7 }; }, /trigger\.negative\[1\] needs a string prompt/],
+  ['trigger.positive that is not an array', (c) => { c.trigger.positive = { prompt: 'x' }; }, /trigger\.positive must be an array/],
+  ['a trigger that is not an object', (c) => { c.trigger = 'nope'; }, /trigger must be an object/],
+  ['a null behavioral eval', (c) => { c.evals.push(null); }, /evals\[1\] must be an object/],
+]) {
+  test(`reports ${label} instead of crashing`, () => {
+    const root = makeSandbox();
+    try {
+      writeSkill(root, 'alpha', 'code unit tests');
+      const evalCase = completeCase('alpha', 'code unit tests');
+      mutate(evalCase);
+      writeJson(path.join(root, 'evals', 'cases', 'alpha.json'), evalCase);
+      const result = run(root);
+      assert.equal(result.status, 1, result.stdout + result.stderr);
+      assert.match(result.stdout, expected);
+      assert.doesNotMatch(result.stderr, /TypeError|at Object/);
+    } finally { fs.rmSync(root, { recursive: true, force: true }); }
+  });
+}
+
+test('reports a case file that is not a JSON object instead of crashing', () => {
+  const root = makeSandbox();
+  try {
+    writeSkill(root, 'alpha', 'code unit tests');
+    fs.writeFileSync(path.join(root, 'evals', 'cases', 'alpha.json'), 'null\n');
+    const result = run(root);
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    assert.match(result.stdout, /alpha\.json: case file must contain a JSON object/);
+    assert.doesNotMatch(result.stderr, /TypeError|at Object/);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});

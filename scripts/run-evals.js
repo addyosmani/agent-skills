@@ -203,6 +203,12 @@ function duplicateEvalIds(evals) {
   return [...duplicates];
 }
 
+// A case file is hand-edited JSON, so a wrong shape has to produce a message
+// that names the file rather than a stack trace from deep inside the ranker.
+function isPlainObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
 // ---------- tier 2 ----------
 
 function runDeterministic(minRank1) {
@@ -235,6 +241,11 @@ function runDeterministic(minRank1) {
     }
     const d = c.data;
     const expected = c.file.replace(/\.json$/, '');
+    if (!isPlainObject(d)) {
+      console.log(`  ✗  ${c.file}: case file must contain a JSON object`);
+      errors++;
+      continue;
+    }
     if (d.skill_name !== expected) {
       console.log(`  ✗  ${c.file}: skill_name "${d.skill_name}" does not match filename`);
       errors++;
@@ -245,13 +256,39 @@ function runDeterministic(minRank1) {
       continue;
     }
 
-    for (const id of duplicateEvalIds(d.evals || [])) {
+    // Lists the loops below iterate. A wrong type or a malformed entry is
+    // reported once here and dropped, so it cannot crash the run.
+    const listOf = (value, label, valid, what) => {
+      if (value === undefined) return [];
+      if (!Array.isArray(value)) {
+        console.log(`  ✗  ${c.file}: ${label} must be an array`);
+        errors++;
+        return [];
+      }
+      return value.filter((item, i) => {
+        if (valid(item)) return true;
+        console.log(`  ✗  ${c.file}: ${label}[${i}] ${what}`);
+        errors++;
+        return false;
+      });
+    };
+    if (d.trigger !== undefined && !isPlainObject(d.trigger)) {
+      console.log(`  ✗  ${c.file}: trigger must be an object with positive and negative arrays`);
+      errors++;
+      d.trigger = undefined;
+    }
+    const hasPrompt = (t) => isPlainObject(t) && typeof t.prompt === 'string';
+    const positivePrompts = listOf(d.trigger?.positive, 'trigger.positive', hasPrompt, 'needs a string prompt');
+    const negativePrompts = listOf(d.trigger?.negative, 'trigger.negative', hasPrompt, 'needs a string prompt');
+    const behavioralEvals = listOf(d.evals, 'evals', isPlainObject, 'must be an object');
+
+    for (const id of duplicateEvalIds(behavioralEvals)) {
       console.log(`  ✗  ${c.file}: duplicate behavioral eval id=${id}`);
       errors++;
     }
 
     // Schema: behavioral evals (skill-creator evals.json shape)
-    for (const ev of d.evals || []) {
+    for (const ev of behavioralEvals) {
       const kind = ev.kind || 'execution';
       const fixtureRequired = kind !== 'dialogue';
       const hasFiles =
@@ -305,7 +342,7 @@ function runDeterministic(minRank1) {
     }
 
     // Trigger: positive
-    for (const t of d.trigger?.positive || []) {
+    for (const t of positivePrompts) {
       positives++;
       const topK = t.top_k || 3;
       const ranking = rankSkills(t.prompt, corpus);
@@ -331,7 +368,7 @@ function runDeterministic(minRank1) {
     // With an "owner", the negative becomes a pairwise routing test: the
     // declared owner skill must outrank this one for the prompt, which
     // prevents vacuous passes where the prompt matches nothing at all.
-    for (const t of d.trigger?.negative || []) {
+    for (const t of negativePrompts) {
       const ranking = rankSkills(t.prompt, corpus);
       let ok = true;
       if (ranking[0].name === expected && ranking[0].score > 0) {
@@ -360,9 +397,9 @@ function runDeterministic(minRank1) {
     }
 
     // Required minimums
-    const pc = (d.trigger?.positive || []).length;
-    const nc = (d.trigger?.negative || []).length;
-    const ec = (d.evals || []).length;
+    const pc = positivePrompts.length;
+    const nc = negativePrompts.length;
+    const ec = behavioralEvals.length;
     if (pc < MIN_POSITIVE || nc < MIN_NEGATIVE || ec < MIN_EVALS) {
       console.log(`  ✗  ${expected}: below required minimums (${pc} positive/${nc} negative/${ec} behavioral; need ${MIN_POSITIVE}/${MIN_NEGATIVE}/${MIN_EVALS})`);
       errors++;
