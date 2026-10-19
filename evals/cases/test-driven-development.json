@@ -13,6 +13,14 @@
       {
         "prompt": "What tests should cover this new parsing logic before I write it?",
         "top_k": 3
+      },
+      {
+        "prompt": "Add unit tests for this function. There are none yet.",
+        "top_k": 3
+      },
+      {
+        "prompt": "Fix this bug: splitCents(100, 3) returns [33, 33, 33] and a cent goes missing. Here is the function.",
+        "top_k": 3
       }
     ],
     "negative": [

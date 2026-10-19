@@ -214,3 +214,33 @@ test('the TOML directories are not put through the YAML rules', () => {
   assert.equal(result.status, 0, result.stdout);
   assert.doesNotMatch(result.stdout, /\.gemini.*unquoted value/);
 });
+
+
+test('nested metadata descriptions cannot hide command description drift', () => {
+  const root = makeSandbox();
+  writeClaudeCommand(root, 'review', 'metadata:\n  description: Review a change\ndescription: Inspect a change');
+  writeTomlCommand(root, path.join('.gemini', 'commands'), 'review', 'description = "Review a change"');
+  writeTomlCommand(root, 'commands', 'review', 'description = "Review a change"');
+  const result = run(root);
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /Inspect a change/);
+});
+
+test('matching top-level descriptions pass despite different nested metadata', () => {
+  const root = makeSandbox();
+  writeClaudeCommand(root, 'review', 'metadata:\n  description: Internal metadata\ndescription: Review a change');
+  writeTomlCommand(root, path.join('.gemini', 'commands'), 'review', 'description = "Review a change"');
+  writeTomlCommand(root, 'commands', 'review', 'description = "Review a change"');
+  const result = run(root);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test('a nested description does not supply a missing command description', () => {
+  const root = makeSandbox();
+  writeClaudeCommand(root, 'review', 'metadata:\n  description: Review a change');
+  writeTomlCommand(root, path.join('.gemini', 'commands'), 'review', 'description = "Review a change"');
+  writeTomlCommand(root, 'commands', 'review', 'description = "Review a change"');
+  const result = run(root);
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /missing or malformed description/);
+});

@@ -221,7 +221,6 @@ expand_file() {
   return 0
 }
 
-# ── has_placeholders: is a cached BLOCK_<hash> for $2 still present in file $1? ─
 # -- missing_placeholders: which cached BLOCK_<hash> of $2 are gone from $1? --
 # Prints the missing placeholders, one per line, and returns 0 if any is gone.
 # A placeholder stands for code the model never saw, so it cannot have removed
@@ -243,6 +242,7 @@ missing_placeholders() {
   printf '%s' "$out"
 }
 
+# ── has_placeholders: is a cached BLOCK_<hash> for $2 still present in file $1? ─
 has_placeholders() {
   local f="$1" fid="$2" bf h
   for bf in "$CACHE/${fid}".block.*; do
@@ -251,6 +251,36 @@ has_placeholders() {
     grep -qF "BLOCK_${h}" "$f" 2>/dev/null && return 0
   done
   return 1
+}
+
+# -- file_is_whole: was the real file put back on disk while it was filtered? --
+# True when no placeholder of $2 is in file $1 and every cached block is there
+# verbatim (blocks are content-hashed, so filtering a probe copy compares them
+# exactly). A git checkout, restore, stash or reset, or an editor undo, does
+# this; the model cannot, because it never saw the block text.
+file_is_whole() {
+  local f="$1" fid="$2" probe bf whole=0
+  probe="${fid}.probe.$$"
+  has_placeholders "$f" "$fid" && return 1
+  grep -q 'simplify-ignore-start' -- "$f" 2>/dev/null || return 1
+  if filter_file "$f" "$CACHE/${probe}.tmp" "$probe" 2>/dev/null; then
+    whole=1
+    for bf in "$CACHE/${fid}".block.*; do
+      [ -f "$bf" ] && [ -f "$CACHE/${probe}.block.${bf##*.}" ] || { whole=0; break; }
+    done
+  fi
+  rm -f "$CACHE/${probe}".*
+  [ "$whole" -eq 1 ]
+}
+
+# -- set_aside_backup: the file on disk supersedes the backup; keep a copy ----
+set_aside_backup() {
+  local f="$1" fid="$2" kept
+  cmp -s "$CACHE/${fid}.bak" "$f" && return 0
+  kept="$CACHE/${fid}.superseded.$$"
+  cp "$CACHE/${fid}.bak" "$kept"
+  printf 'simplify-ignore: %s was put back whole while filtered (git checkout, stash, undo); keeping it. The previous session state is kept at %s\n' \
+    "$f" "$kept" >&2
 }
 
 # ── Stop: expand each cached file in place, backup only as fallback ──────────
@@ -266,7 +296,12 @@ if [ -z "$TOOL_NAME" ]; then
       # A change can reach the file through a route that fires no Edit or Write
       # event (a Bash command, a formatter, an external editor), and the backup
       # is stale for all of them. Expand what is on disk rather than overwrite it.
-      if has_placeholders "$orig" "$fid" && ! missing_placeholders "$orig" "$fid" >/dev/null; then
+      if file_is_whole "$orig" "$fid"; then
+        # The real file is back (the change was reverted with git or undone).
+        # It is newer than the backup, which would bring the reverted change
+        # back, so keep the file and move the backup aside.
+        set_aside_backup "$orig" "$fid"
+      elif has_placeholders "$orig" "$fid" && ! missing_placeholders "$orig" "$fid" >/dev/null; then
         EXPANDED="$CACHE/${fid}.$$.expanded"
         expand_file "$orig" "$EXPANDED" "$fid"
         cat "$EXPANDED" > "$orig"
@@ -317,12 +352,21 @@ if [ "$TOOL_NAME" = "Read" ]; then
   ID=$(file_id "$FILE_PATH")
 
   # If backup exists, file is already filtered — skip
-  [ -f "$CACHE/${ID}.bak" ] && exit 0
-
-  grep -q 'simplify-ignore-start' -- "$FILE_PATH" || exit 0
+  # unless the real file was put back meanwhile (git checkout, stash, undo):
+  # skipping then would show the model every protected block, so take that
+  # file as the new original and filter it again.
+  if [ -f "$CACHE/${ID}.bak" ]; then
+    file_is_whole "$FILE_PATH" "$ID" || exit 0
+    set_aside_backup "$FILE_PATH" "$ID"
+    REFILTER=1
+  else
+    grep -q 'simplify-ignore-start' -- "$FILE_PATH" || exit 0
+    REFILTER=0
+  fi
 
   # Atomic lock: mkdir fails if another session races us
-  if ! mkdir "$CACHE/${ID}.lock" 2>/dev/null; then
+  # (a refilter already holds the lock from the first Read)
+  if [ "$REFILTER" -eq 0 ] && ! mkdir "$CACHE/${ID}.lock" 2>/dev/null; then
     # Lock exists — reclaim only if stale (>60s old, no backup = crash leftover)
     if [ ! -f "$CACHE/${ID}.bak" ] && \
        [ -n "$(find "$CACHE/${ID}.lock" -maxdepth 0 -mmin +1 2>/dev/null)" ]; then

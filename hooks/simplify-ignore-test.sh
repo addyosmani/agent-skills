@@ -516,8 +516,50 @@ cat "$PROJ/t" > "$RT"
 rt_hook_event "$PROJ" "" "" 2>/dev/null || true
 assert_eq "no-event removal: Stop puts the protected block back" "1" "$(grep -c 'const keepOne = 42' "$RT" || true)"
 
+# ── Test 18: a change reverted with git stays reverted and the block hidden ──
+printf '\nTest 18: Reverting a change with git during the session\n'
+if command -v git >/dev/null 2>&1; then
+  for variant in read-then-stop stop; do
+    PROJ="$TMPDIR/rt18-$variant"; mkdir -p "$PROJ"
+    RT="$PROJ/reverted.js"
+    cat > "$RT" <<'EOF'
+const a = 1;
+// simplify-ignore-start
+const secret = 42;
+// simplify-ignore-end
+const b = 2;
+EOF
+    cp "$RT" "$PROJ/reverted.orig"
+    git -C "$PROJ" init -q
+    git -C "$PROJ" config core.autocrlf false
+    git -C "$PROJ" add reverted.js
+    git -C "$PROJ" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -qm base
+
+    rt_hook_event "$PROJ" "Read" "$RT"
+    printf '%s\n' "const broken = true;" >> "$RT"
+    rt_hook_event "$PROJ" "Edit" "$RT"
+    git -C "$PROJ" checkout -q -- reverted.js
+    if [ "$variant" = read-then-stop ]; then
+      rt_hook_event "$PROJ" "Read" "$RT" 2>/dev/null
+      assert_eq "$variant: Read after the revert hides the block" "0" "$(grep -c 'secret' "$RT")"
+      assert_eq "$variant: Read after the revert shows a placeholder" "1" "$(grep -c 'BLOCK_' "$RT")"
+    fi
+    rt_hook_event "$PROJ" "" "" 2>/dev/null
+    if cmp -s "$RT" "$PROJ/reverted.orig"; then
+      assert_eq "$variant: Stop keeps the reverted file" "identical" "identical"
+    else
+      assert_eq "$variant: Stop keeps the reverted file" "identical" "differs"
+    fi
+    KEPT=$(ls "$PROJ/.claude/.simplify-ignore-cache"/*.superseded.* 2>/dev/null | head -1 || true)
+    assert_eq "$variant: the reverted session state is kept in the cache" "1" \
+      "$(grep -c 'const broken' "${KEPT:-/dev/null}")"
+  done
 else
-  printf '\nTests 14-17 skipped: jq not available (hook no-ops without it)\n'
+  printf '  skipped: git not available\n'
+fi
+
+else
+  printf '\nTests 14-18 skipped: jq not available (hook no-ops without it)\n'
 fi
 
 # ── Summary ──────────────────────────────────────────────────────────────
