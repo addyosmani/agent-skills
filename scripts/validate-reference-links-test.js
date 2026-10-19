@@ -31,7 +31,7 @@ function writeFile(root, relativePath, content) {
 
 // What sync-shared-references.js leaves in the skill: a copy of the root file.
 function copyShared(root, skill, name) {
-  const copy = path.join(root, 'skills', skill, 'references', name);
+  const copy = path.join(root, 'skills', skill, 'references', 'shared', name);
   fs.mkdirSync(path.dirname(copy), { recursive: true });
   fs.copyFileSync(path.join(root, 'references', name), copy);
 }
@@ -53,7 +53,7 @@ test('passes when a skill reaches the shared checklist through a skill-local cop
   const root = makeSandbox();
   writeFile(root, 'references/definition-of-done.md', '# Definition of Done\n');
   copyShared(root, 'using-agent-skills', 'definition-of-done.md');
-  writeFile(root, 'skills/using-agent-skills/SKILL.md', 'See `references/definition-of-done.md`.\n');
+  writeFile(root, 'skills/using-agent-skills/SKILL.md', 'See `references/shared/definition-of-done.md`.\n');
 
   const result = run(root);
 
@@ -128,7 +128,7 @@ test('passes when a skill colocates its own references directory', () => {
 });
 
 test('passes when a skill reference file links the shared checklist next to it', () => {
-  // A file under skills/<name>/references/ reaches the skill-local copy as ../references/.
+  // A file under skills/<name>/references/ reaches the skill-local copy as ../references/shared/.
   const root = makeSandbox();
   writeFile(root, 'references/security-checklist.md', '# Security\n');
   copyShared(root, 'hardening', 'security-checklist.md');
@@ -136,7 +136,7 @@ test('passes when a skill reference file links the shared checklist next to it',
   writeFile(
     root,
     'skills/hardening/references/patterns.md',
-    'Shared checklists live in `../references/security-checklist.md`.\n'
+    'Shared checklists live in `../references/shared/security-checklist.md`.\n'
   );
 
   const result = run(root);
@@ -186,7 +186,7 @@ test('fails when a skill reference file links the shared checklist with the SKIL
     /L3: \.\.\/\.\.\/references\/security-checklist\.md — resolves to skills\/references\/security-checklist\.md/
   );
   assert.match(result.stdout, /1 skills checked — 1 error\(s\) — FAILED/);
-  assert.match(result.stdout, /`\.\.\/references\/<file>\.md` from a file in references\//);
+  assert.match(result.stdout, /`\.\.\/references\/shared\/<file>\.md` from a file in references\//);
 });
 
 test('keeps the same narrow rule inside a skill reference file', () => {
@@ -255,7 +255,7 @@ test('ignores paths that are not references/ links', () => {
       'Save the task list to `tasks/todo.md` and the plan to `tasks/plan.md`.',
       'Record findings in `PERF.md` or `docs/ideas/[idea-name].md`.',
       'Related: `skills/incremental-implementation/SKILL.md`.',
-      'See `references/definition-of-done.md`.',
+      'See `references/shared/definition-of-done.md`.',
       '',
     ].join('\n')
   );
@@ -293,7 +293,7 @@ test('a link inside a fenced block is an example, not a link to resolve', () => 
     [
       'Shared checklists come through the skill-local copy:',
       '',
-      'See `references/definition-of-done.md`.',
+      'See `references/shared/definition-of-done.md`.',
       '',
       'Do not write it this way:',
       '',
@@ -514,8 +514,8 @@ test('anchors resolve from a reference file to a shared checklist', () => {
   copyShared(root, 'hardening', 'security-checklist.md');
   hardeningSkill(root, 'references/patterns.md');
   writeFile(root, 'skills/hardening/references/patterns.md', [
-    'See `../references/security-checklist.md#owasp-top-10-quick-reference`.',
-    'See `../references/security-checklist.md#destructive-path-operations`.',
+    'See `../references/shared/security-checklist.md#owasp-top-10-quick-reference`.',
+    'See `../references/shared/security-checklist.md#destructive-path-operations`.',
     '',
   ].join('\n'));
 
@@ -523,7 +523,7 @@ test('anchors resolve from a reference file to a shared checklist', () => {
 
   assert.equal(result.status, 1, result.stdout + result.stderr);
   assert.match(result.stdout, /✗ {2}skills\/hardening\/references\/patterns\.md/);
-  assert.match(result.stdout, /L2: \.\.\/references\/security-checklist\.md#destructive-path-operations — no heading in skills\/hardening\/references\/security-checklist\.md/);
+  assert.match(result.stdout, /L2: \.\.\/references\/shared\/security-checklist\.md#destructive-path-operations — no heading in skills\/hardening\/references\/shared\/security-checklist\.md/);
   assert.doesNotMatch(result.stdout, /L1:/);
 });
 

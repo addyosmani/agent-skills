@@ -19,7 +19,7 @@
  * resolve to an existing file inside that skill's own directory. A per-skill
  * install copies only `skills/<name>/`, so a shared checklist is reached
  * through the copy that sync-shared-references.js writes into
- * `skills/<name>/references/`, never through `../../references/`.
+ * `skills/<name>/references/shared/`, never through `../../references/`.
  *
  * The markdown files inside a skill's own `references/` directory get the
  * same check, with each link resolved from the file that contains it.
@@ -52,10 +52,11 @@ const ROOT = path.resolve(__dirname, '..');
 const SKILLS_DIR = path.join(ROOT, 'skills');
 
 // Matches a link to a references/ markdown file, with any number of leading
-// `../` segments: `references/x.md`, `../../references/x.md`. Anchored on a
+// `../` segments and an optional `shared/`: `references/x.md`,
+// `references/shared/x.md`, `../../references/x.md`. Anchored on a
 // non-path character so `myreferences/x.md` does not match. An optional
 // `#fragment` is captured separately.
-const REFERENCE_LINK_RE = /(?<![A-Za-z0-9._/-])((?:\.\.\/)*references\/[A-Za-z0-9._-]+\.md)(?:#([\p{L}\p{N}_-]+))?/gu;
+const REFERENCE_LINK_RE = /(?<![A-Za-z0-9._/-])((?:\.\.\/)*references\/(?:shared\/)?[A-Za-z0-9._-]+\.md)(?:#([\p{L}\p{N}_-]+))?/gu;
 
 // GitHub's heading anchor: the rendered text, lowercased, with everything but
 // letters, numbers, `_`, `-` and spaces dropped, then spaces turned to hyphens.
@@ -174,7 +175,7 @@ function main() {
     if (errors > anchorErrors) {
       console.log('\nLinks to references/ are resolved from the directory of the file that contains them,');
       console.log('and a per-skill install copies only skills/<name>/. Link a shared checklist as');
-      console.log('`references/<file>.md` from SKILL.md and `../references/<file>.md` from a file in references/,');
+      console.log('`references/shared/<file>.md` from SKILL.md and `../references/shared/<file>.md` from a file in references/,');
       console.log('then run `node scripts/sync-shared-references.js` to copy it into the skill.');
     }
     if (anchorErrors > 0) {

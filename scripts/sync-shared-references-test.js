@@ -55,29 +55,29 @@ afterEach(() => {
 test('copies a shared checklist into each skill that links it', () => {
   const root = makeSandbox();
   writeFile(root, 'references/definition-of-done.md', '# Definition of Done\n\n- [ ] Tests pass\n');
-  writeFile(root, 'skills/planning/SKILL.md', 'Finish with [the DoD](references/definition-of-done.md).\n');
-  writeFile(root, 'skills/shipping/SKILL.md', 'See `references/definition-of-done.md`.\n');
+  writeFile(root, 'skills/planning/SKILL.md', 'Finish with [the DoD](references/shared/definition-of-done.md).\n');
+  writeFile(root, 'skills/shipping/SKILL.md', 'See `references/shared/definition-of-done.md`.\n');
 
   const result = run(root);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
   const expected = HEADER + '# Definition of Done\n\n- [ ] Tests pass\n';
-  assert.equal(readFile(root, 'skills/planning/references/definition-of-done.md'), expected);
-  assert.equal(readFile(root, 'skills/shipping/references/definition-of-done.md'), expected);
+  assert.equal(readFile(root, 'skills/planning/references/shared/definition-of-done.md'), expected);
+  assert.equal(readFile(root, 'skills/shipping/references/shared/definition-of-done.md'), expected);
   assert.match(result.stdout, /2 shared-reference copies in sync/);
 });
 
-test('copies a checklist that a skill reference file links as ../references/', () => {
+test('copies a checklist that a skill reference file links as ../references/shared/', () => {
   const root = makeSandbox();
   writeFile(root, 'references/security-checklist.md', '# Security\n');
   writeFile(root, 'skills/hardening/SKILL.md', 'See [patterns](references/patterns.md).\n');
-  writeFile(root, 'skills/hardening/references/patterns.md', 'Check [the list](../references/security-checklist.md).\n');
+  writeFile(root, 'skills/hardening/references/patterns.md', 'Check [the list](../references/shared/security-checklist.md).\n');
 
   const result = run(root);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.equal(readFile(root, 'skills/hardening/references/security-checklist.md'), HEADER + '# Security\n');
-  assert.equal(readFile(root, 'skills/hardening/references/patterns.md'), 'Check [the list](../references/security-checklist.md).\n');
+  assert.equal(readFile(root, 'skills/hardening/references/shared/security-checklist.md'), HEADER + '# Security\n');
+  assert.equal(readFile(root, 'skills/hardening/references/patterns.md'), 'Check [the list](../references/shared/security-checklist.md).\n');
 });
 
 test('makes no copy for a link inside a fence or a file only the skill has', () => {
@@ -86,14 +86,14 @@ test('makes no copy for a link inside a fence or a file only the skill has', () 
   writeFile(
     root,
     'skills/planning/SKILL.md',
-    ['```markdown', '[DoD](references/definition-of-done.md)', '```', '', 'See [notes](references/notes.md).', ''].join('\n')
+    ['```markdown', '[DoD](references/shared/definition-of-done.md)', '```', '', 'See [notes](references/notes.md).', ''].join('\n')
   );
   writeFile(root, 'skills/planning/references/notes.md', '# Notes\n');
 
   const result = run(root);
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.equal(exists(root, 'skills/planning/references/definition-of-done.md'), false);
+  assert.equal(exists(root, 'skills/planning/references/shared/definition-of-done.md'), false);
   assert.equal(readFile(root, 'skills/planning/references/notes.md'), '# Notes\n');
   assert.match(result.stdout, /0 shared-reference copies in sync/);
 });
@@ -101,21 +101,21 @@ test('makes no copy for a link inside a fence or a file only the skill has', () 
 test('--check fails on a copy older than its root file and leaves it as it is', () => {
   const root = makeSandbox();
   writeFile(root, 'references/definition-of-done.md', '# DoD\n\n- [ ] Tests pass\n');
-  writeFile(root, 'skills/planning/SKILL.md', 'See `references/definition-of-done.md`.\n');
+  writeFile(root, 'skills/planning/SKILL.md', 'See `references/shared/definition-of-done.md`.\n');
   run(root);
   writeFile(root, 'references/definition-of-done.md', '# DoD\n\n- [ ] Tests pass\n- [ ] Docs updated\n');
 
   const check = run(root, '--check');
 
   assert.equal(check.status, 1, check.stdout + check.stderr);
-  assert.match(check.stdout, /stale {4}skills\/planning\/references\/definition-of-done\.md/);
+  assert.match(check.stdout, /stale {4}skills\/planning\/references\/shared\/definition-of-done\.md/);
   assert.match(check.stdout, /Run: node scripts\/sync-shared-references\.js/);
-  assert.equal(readFile(root, 'skills/planning/references/definition-of-done.md'), HEADER + '# DoD\n\n- [ ] Tests pass\n');
+  assert.equal(readFile(root, 'skills/planning/references/shared/definition-of-done.md'), HEADER + '# DoD\n\n- [ ] Tests pass\n');
 
   assert.equal(run(root).status, 0);
   assert.equal(run(root, '--check').status, 0);
   assert.equal(
-    readFile(root, 'skills/planning/references/definition-of-done.md'),
+    readFile(root, 'skills/planning/references/shared/definition-of-done.md'),
     HEADER + '# DoD\n\n- [ ] Tests pass\n- [ ] Docs updated\n'
   );
 });
@@ -123,40 +123,52 @@ test('--check fails on a copy older than its root file and leaves it as it is', 
 test('--check fails on a missing copy', () => {
   const root = makeSandbox();
   writeFile(root, 'references/definition-of-done.md', '# DoD\n');
-  writeFile(root, 'skills/planning/SKILL.md', 'See `references/definition-of-done.md`.\n');
+  writeFile(root, 'skills/planning/SKILL.md', 'See `references/shared/definition-of-done.md`.\n');
 
   const check = run(root, '--check');
 
   assert.equal(check.status, 1, check.stdout + check.stderr);
-  assert.match(check.stdout, /missing {2}skills\/planning\/references\/definition-of-done\.md/);
-  assert.equal(exists(root, 'skills/planning/references/definition-of-done.md'), false);
+  assert.match(check.stdout, /missing {2}skills\/planning\/references\/shared\/definition-of-done\.md/);
+  assert.equal(exists(root, 'skills/planning/references/shared/definition-of-done.md'), false);
 });
 
 test('a copy the skill no longer links fails --check and is removed by a sync', () => {
   const root = makeSandbox();
   writeFile(root, 'references/definition-of-done.md', '# DoD\n');
-  writeFile(root, 'skills/planning/SKILL.md', 'See `references/definition-of-done.md`.\n');
+  writeFile(root, 'skills/planning/SKILL.md', 'See `references/shared/definition-of-done.md`.\n');
   run(root);
   writeFile(root, 'skills/planning/SKILL.md', 'No checklist here.\n');
 
   const check = run(root, '--check');
 
   assert.equal(check.status, 1, check.stdout + check.stderr);
-  assert.match(check.stdout, /unused {3}skills\/planning\/references\/definition-of-done\.md/);
-  assert.equal(exists(root, 'skills/planning/references/definition-of-done.md'), true);
+  assert.match(check.stdout, /unused {3}skills\/planning\/references\/shared\/definition-of-done\.md/);
+  assert.equal(exists(root, 'skills/planning/references/shared/definition-of-done.md'), true);
   assert.equal(run(root).status, 0);
-  assert.equal(exists(root, 'skills/planning/references/definition-of-done.md'), false);
+  assert.equal(exists(root, 'skills/planning/references/shared/definition-of-done.md'), false);
 });
 
-test("refuses to overwrite the skill's own file that shares a checklist's name", () => {
+test('refuses to overwrite a hand-written file in shared/', () => {
   const root = makeSandbox();
   writeFile(root, 'references/testing-patterns.md', '# Shared testing patterns\n');
-  writeFile(root, 'skills/tdd/SKILL.md', 'See `references/testing-patterns.md`.\n');
-  writeFile(root, 'skills/tdd/references/testing-patterns.md', '# TDD-only patterns\n');
+  writeFile(root, 'skills/tdd/SKILL.md', 'See `references/shared/testing-patterns.md`.\n');
+  writeFile(root, 'skills/tdd/references/shared/testing-patterns.md', '# TDD-only patterns\n');
 
   const result = run(root);
 
   assert.equal(result.status, 1, result.stdout + result.stderr);
-  assert.match(result.stdout, /skills\/tdd\/references\/testing-patterns\.md is the skill's own file/);
-  assert.equal(readFile(root, 'skills/tdd/references/testing-patterns.md'), '# TDD-only patterns\n');
+  assert.match(result.stdout, /skills\/tdd\/references\/shared\/testing-patterns\.md has no generated header/);
+  assert.equal(readFile(root, 'skills/tdd/references/shared/testing-patterns.md'), '# TDD-only patterns\n');
+});
+
+test('refuses to delete a hand-written file in shared/ that no skill links', () => {
+  const root = makeSandbox();
+  writeFile(root, 'skills/tdd/SKILL.md', 'No shared checklist here.\n');
+  writeFile(root, 'skills/tdd/references/shared/notes.md', '# TDD notes\n');
+
+  const result = run(root);
+
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /skills\/tdd\/references\/shared\/notes\.md has no generated header/);
+  assert.equal(readFile(root, 'skills/tdd/references/shared/notes.md'), '# TDD notes\n');
 });

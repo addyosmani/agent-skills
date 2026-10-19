@@ -3,28 +3,29 @@
  * sync-shared-references.js
  *
  * Copies the shared checklists in the repo-root `references/` into each skill
- * that links them, as `skills/<name>/references/<file>.md`.
+ * that links them, as `skills/<name>/references/shared/<file>.md`.
  *
  * A per-skill install (`npx skills add ... --skill <name>`) copies only
  * `skills/<name>/`, so a link to `../../references/<file>.md` breaks after
  * install. A copy inside the skill travels with it. Symlinks would avoid the
  * copies, but Git for Windows checks them out as text files by default.
  *
- * The root file stays the one to edit. Each copy starts with GENERATED_HEADER,
- * and `--check` fails when a copy is missing, differs from its root file, or
- * is no longer linked, so CI keeps the copies from drifting.
+ * The root file stays the one to edit. `shared/` holds only generated copies
+ * (`.gitattributes` marks it `linguist-generated`), each starting with
+ * GENERATED_HEADER. `--check` fails when a copy is missing, differs from its
+ * root file, or is no longer linked, so CI keeps the copies from drifting.
  *
- * A skill needs a copy when its SKILL.md links `references/<file>.md`, or a
- * file in its `references/` links `../references/<file>.md`, and the repo-root
- * `references/<file>.md` exists. Links inside fenced code blocks are examples
- * and need no copy.
+ * A skill needs a copy when its SKILL.md links `references/shared/<file>.md`,
+ * or a file in its `references/` links `../references/shared/<file>.md`, and
+ * the repo-root `references/<file>.md` exists. Links inside fenced code blocks
+ * are examples and need no copy.
  *
  * Usage:
  *   node scripts/sync-shared-references.js           write and prune the copies
  *   node scripts/sync-shared-references.js --check   report drift, change nothing
  *
  * Exit codes: 0 = copies match, 1 = drift (with --check) or a hand-written
- * file in the way of a copy.
+ * file in `shared/`.
  */
 
 'use strict';
@@ -43,10 +44,8 @@ const GENERATED_HEADER =
   `${GENERATED_MARKER} from the repo-root file of the same name. ` +
   'Edit that file and rerun the script; do not edit this copy. -->\n\n';
 
-// From SKILL.md a skill-local file is `references/x.md`; from a file already
-// in references/ it is `../references/x.md`.
-const SKILL_LINK_RE = /(?<![A-Za-z0-9._/-])references\/([A-Za-z0-9._-]+\.md)/g;
-const REFERENCE_FILE_LINK_RE = /(?<![A-Za-z0-9._/-])\.\.\/references\/([A-Za-z0-9._-]+\.md)/g;
+const SKILL_LINK_RE = /(?<![A-Za-z0-9._/-])references\/shared\/([A-Za-z0-9._-]+\.md)/g;
+const REFERENCE_FILE_LINK_RE = /(?<![A-Za-z0-9._/-])\.\.\/references\/shared\/([A-Za-z0-9._-]+\.md)/g;
 
 function isGenerated(file) {
   return fs.readFileSync(file, 'utf8').startsWith(GENERATED_MARKER);
@@ -68,7 +67,7 @@ function expectedCopies() {
     if (!fs.statSync(skillDir).isDirectory() || !fs.existsSync(skillFile)) continue;
 
     const names = linkedNames(skillFile, SKILL_LINK_RE);
-    for (const file of ownReferenceFiles(skillDir)) {
+    for (const file of markdownFiles(path.join(skillDir, 'references'))) {
       names.push(...linkedNames(file, REFERENCE_FILE_LINK_RE));
     }
 
@@ -76,7 +75,7 @@ function expectedCopies() {
       const source = path.join(SHARED_DIR, shared);
       if (!fs.existsSync(source)) continue;
       copies.set(
-        path.join(skillDir, 'references', shared),
+        path.join(skillDir, 'references', 'shared', shared),
         GENERATED_HEADER + fs.readFileSync(source, 'utf8'),
       );
     }
@@ -84,22 +83,21 @@ function expectedCopies() {
   return copies;
 }
 
-function referenceFiles(skillDir) {
-  const dir = path.join(skillDir, 'references');
+function markdownFiles(dir) {
   if (!fs.existsSync(dir)) return [];
   return fs.readdirSync(dir)
     .filter((name) => name.endsWith('.md'))
     .map((name) => path.join(dir, name));
 }
 
-// A generated copy's links come from the root file, so only a skill's own
-// reference files can ask for more copies.
-function ownReferenceFiles(skillDir) {
-  return referenceFiles(skillDir).filter((file) => !isGenerated(file));
-}
-
 function toPosix(file) {
   return path.relative(ROOT, file).split(path.sep).join('/');
+}
+
+function refuseHandWritten(file) {
+  console.log(`  ✗  ${toPosix(file)} has no generated header; shared/ holds only copies the script writes.`);
+  console.log("     Move the skill's own file out of shared/.");
+  process.exit(1);
 }
 
 function main() {
@@ -115,9 +113,7 @@ function main() {
         fs.writeFileSync(file, content);
       }
     } else if (!isGenerated(file)) {
-      console.log(`  ✗  ${toPosix(file)} is the skill's own file, but the skill links a shared checklist of the same name.`);
-      console.log('     Rename one of them.');
-      process.exit(1);
+      refuseHandWritten(file);
     } else if (fs.readFileSync(file, 'utf8') !== content) {
       problems.push(`stale    ${toPosix(file)}`);
       if (!check) fs.writeFileSync(file, content);
@@ -126,8 +122,9 @@ function main() {
 
   if (fs.existsSync(SKILLS_DIR)) {
     for (const name of fs.readdirSync(SKILLS_DIR).sort()) {
-      for (const file of referenceFiles(path.join(SKILLS_DIR, name))) {
-        if (copies.has(file) || !isGenerated(file)) continue;
+      for (const file of markdownFiles(path.join(SKILLS_DIR, name, 'references', 'shared'))) {
+        if (copies.has(file)) continue;
+        if (!isGenerated(file)) refuseHandWritten(file);
         problems.push(`unused   ${toPosix(file)}`);
         if (!check) fs.rmSync(file);
       }
