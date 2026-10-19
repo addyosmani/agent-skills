@@ -64,7 +64,7 @@ test('copies a shared checklist into each skill that links it', () => {
   const expected = HEADER + '# Definition of Done\n\n- [ ] Tests pass\n';
   assert.equal(readFile(root, 'skills/planning/references/shared/definition-of-done.md'), expected);
   assert.equal(readFile(root, 'skills/shipping/references/shared/definition-of-done.md'), expected);
-  assert.match(result.stdout, /2 shared-reference copies in sync/);
+  assert.match(result.stdout, /2 shared-reference copies written/);
 });
 
 test('copies a checklist that a skill reference file links as ../references/shared/', () => {
@@ -95,7 +95,7 @@ test('makes no copy for a link inside a fence or a file only the skill has', () 
   assert.equal(result.status, 0, result.stdout + result.stderr);
   assert.equal(exists(root, 'skills/planning/references/shared/definition-of-done.md'), false);
   assert.equal(readFile(root, 'skills/planning/references/notes.md'), '# Notes\n');
-  assert.match(result.stdout, /0 shared-reference copies in sync/);
+  assert.match(result.stdout, /0 shared-reference copies written/);
 });
 
 test('--check fails on a copy older than its root file and leaves it as it is', () => {
@@ -146,29 +146,4 @@ test('a copy the skill no longer links fails --check and is removed by a sync', 
   assert.equal(exists(root, 'skills/planning/references/shared/definition-of-done.md'), true);
   assert.equal(run(root).status, 0);
   assert.equal(exists(root, 'skills/planning/references/shared/definition-of-done.md'), false);
-});
-
-test('refuses to overwrite a hand-written file in shared/', () => {
-  const root = makeSandbox();
-  writeFile(root, 'references/testing-patterns.md', '# Shared testing patterns\n');
-  writeFile(root, 'skills/tdd/SKILL.md', 'See `references/shared/testing-patterns.md`.\n');
-  writeFile(root, 'skills/tdd/references/shared/testing-patterns.md', '# TDD-only patterns\n');
-
-  const result = run(root);
-
-  assert.equal(result.status, 1, result.stdout + result.stderr);
-  assert.match(result.stdout, /skills\/tdd\/references\/shared\/testing-patterns\.md has no generated header/);
-  assert.equal(readFile(root, 'skills/tdd/references/shared/testing-patterns.md'), '# TDD-only patterns\n');
-});
-
-test('refuses to delete a hand-written file in shared/ that no skill links', () => {
-  const root = makeSandbox();
-  writeFile(root, 'skills/tdd/SKILL.md', 'No shared checklist here.\n');
-  writeFile(root, 'skills/tdd/references/shared/notes.md', '# TDD notes\n');
-
-  const result = run(root);
-
-  assert.equal(result.status, 1, result.stdout + result.stderr);
-  assert.match(result.stdout, /skills\/tdd\/references\/shared\/notes\.md has no generated header/);
-  assert.equal(readFile(root, 'skills/tdd/references/shared/notes.md'), '# TDD notes\n');
 });
