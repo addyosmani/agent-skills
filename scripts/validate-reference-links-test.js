@@ -29,10 +29,11 @@ function writeFile(root, relativePath, content) {
   fs.writeFileSync(file, content);
 }
 
-function linkShared(root, skill, name) {
-  const link = path.join(root, 'skills', skill, 'references', name);
-  fs.mkdirSync(path.dirname(link), { recursive: true });
-  fs.symlinkSync(path.join('..', '..', '..', 'references', name), link);
+// What sync-shared-references.js leaves in the skill: a copy of the root file.
+function copyShared(root, skill, name) {
+  const copy = path.join(root, 'skills', skill, 'references', name);
+  fs.mkdirSync(path.dirname(copy), { recursive: true });
+  fs.copyFileSync(path.join(root, 'references', name), copy);
 }
 
 function run(root) {
@@ -48,10 +49,10 @@ afterEach(() => {
   }
 });
 
-test('passes when a skill reaches the shared checklist through a skill-local symlink', () => {
+test('passes when a skill reaches the shared checklist through a skill-local copy', () => {
   const root = makeSandbox();
   writeFile(root, 'references/definition-of-done.md', '# Definition of Done\n');
-  linkShared(root, 'using-agent-skills', 'definition-of-done.md');
+  copyShared(root, 'using-agent-skills', 'definition-of-done.md');
   writeFile(root, 'skills/using-agent-skills/SKILL.md', 'See `references/definition-of-done.md`.\n');
 
   const result = run(root);
@@ -77,7 +78,7 @@ test('fails when a skill links the shared checklist outside its own directory', 
     result.stdout,
     /L1: \.\.\/\.\.\/references\/definition-of-done\.md — resolves to references\/definition-of-done\.md, outside the skill/
   );
-  assert.match(result.stdout, /references\/<file>\.md -> \.\.\/\.\.\/\.\.\/references\/<file>\.md/);
+  assert.match(result.stdout, /run `node scripts\/sync-shared-references\.js` to copy it into the skill/);
 });
 
 test('fails when a skill links the shared checklist as if it were colocated', () => {
@@ -99,7 +100,7 @@ test('fails when a skill links the shared checklist as if it were colocated', ()
     result.stdout,
     /L1: references\/definition-of-done\.md — resolves to skills\/using-agent-skills\/references\/definition-of-done\.md/
   );
-  assert.match(result.stdout, /references\/<file>\.md -> \.\.\/\.\.\/\.\.\/references\/<file>\.md/);
+  assert.match(result.stdout, /run `node scripts\/sync-shared-references\.js` to copy it into the skill/);
 });
 
 test('checks markdown link syntax, not just backtick mentions', () => {
@@ -127,10 +128,10 @@ test('passes when a skill colocates its own references directory', () => {
 });
 
 test('passes when a skill reference file links the shared checklist next to it', () => {
-  // A file under skills/<name>/references/ reaches the skill-local symlink as ../references/.
+  // A file under skills/<name>/references/ reaches the skill-local copy as ../references/.
   const root = makeSandbox();
   writeFile(root, 'references/security-checklist.md', '# Security\n');
-  linkShared(root, 'hardening', 'security-checklist.md');
+  copyShared(root, 'hardening', 'security-checklist.md');
   writeFile(root, 'skills/hardening/SKILL.md', 'See [patterns](references/patterns.md).\n');
   writeFile(
     root,
@@ -258,7 +259,7 @@ test('ignores paths that are not references/ links', () => {
       '',
     ].join('\n')
   );
-  linkShared(root, 'planning-and-task-breakdown', 'definition-of-done.md');
+  copyShared(root, 'planning-and-task-breakdown', 'definition-of-done.md');
 
   const result = run(root);
 
@@ -285,12 +286,12 @@ test('reports every unresolvable link, not just the first per skill', () => {
 test('a link inside a fenced block is an example, not a link to resolve', () => {
   const root = makeSandbox();
   writeFile(root, 'references/definition-of-done.md', '# DoD\n');
-  linkShared(root, 'using-agent-skills', 'definition-of-done.md');
+  copyShared(root, 'using-agent-skills', 'definition-of-done.md');
   writeFile(
     root,
     'skills/using-agent-skills/SKILL.md',
     [
-      'Shared checklists come through the skill-local symlink:',
+      'Shared checklists come through the skill-local copy:',
       '',
       'See `references/definition-of-done.md`.',
       '',
@@ -510,7 +511,7 @@ test('a heading-like line inside a fenced block is not an anchor', () => {
 test('anchors resolve from a reference file to a shared checklist', () => {
   const root = makeSandbox();
   writeFile(root, 'references/security-checklist.md', '# Security\n\n## OWASP Top 10 Quick Reference\n');
-  linkShared(root, 'hardening', 'security-checklist.md');
+  copyShared(root, 'hardening', 'security-checklist.md');
   hardeningSkill(root, 'references/patterns.md');
   writeFile(root, 'skills/hardening/references/patterns.md', [
     'See `../references/security-checklist.md#owasp-top-10-quick-reference`.',

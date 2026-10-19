@@ -43,6 +43,12 @@ jobs:
       - name: Test reference-link validator
         run: node --test scripts/validate-reference-links-test.js
 
+      - name: Check shared-reference copies in skills
+        run: node scripts/sync-shared-references.js --check
+
+      - name: Test shared-reference sync
+        run: node --test scripts/sync-shared-references-test.js
+
       - name: Test floor-guard reference
         run: node --test scripts/floor-guard-reference-test.js
 
@@ -97,6 +103,7 @@ jobs:
           scripts/validate-versions-test.js
           scripts/run-evals-test.js
           scripts/validate-reference-links-test.js
+          scripts/sync-shared-references-test.js
           scripts/validate-commands-test.js
           scripts/validate-artifact-paths-test.js
           scripts/floor-guard-reference-test.js
@@ -109,6 +116,9 @@ jobs:
 
       - name: Validate references/ links in skills
         run: node scripts/validate-reference-links.js
+
+      - name: Check shared-reference copies in skills
+        run: node scripts/sync-shared-references.js --check
 
       - name: Validate commands across all tool directories
         run: node scripts/validate-commands.js

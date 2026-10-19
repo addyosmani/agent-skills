@@ -121,9 +121,9 @@ Checklists used by more than one skill — testing, security, performance, acces
 
 This is a pack-level design choice. The Agent Skills spec describes a skill as a self-contained directory, but several skills here point at the same checklists. Colocating those would force one of two options: copy the checklist into every skill that uses it, or pick one skill to "own" it and have the others reach into that directory. Both drift over time. A single repo-root copy stays the source of truth.
 
-A per-skill install copies only `skills/<name>/`, so a skill reaches a shared checklist through a relative symlink in its own `references/` directory, such as `skills/code-review-and-quality/references/security-checklist.md -> ../../../references/security-checklist.md`, and links it as `references/security-checklist.md`. `npx skills` dereferences symlinks when it copies a skill, so the installed skill gets the checklist as a regular file while the repo keeps one copy.
+A per-skill install copies only `skills/<name>/`, so each skill carries its own copy of the shared checklists it uses, in its own `references/` directory, and links it as `references/security-checklist.md`. `node scripts/sync-shared-references.js` writes those copies from the root files: run it after editing a root checklist or adding a link to one. The copies start with a "generated" comment and are never edited by hand; CI runs the script with `--check` and fails when a copy is missing, out of date, or no longer linked. Symlinks would avoid the copies, but Git for Windows checks them out as plain text files by default.
 
-Current convention: material used by exactly one skill is a supporting file inside that skill's directory; material shared across skills goes in `references/`, and each skill that uses it links it through a symlink in `skills/<name>/references/`.
+Current convention: material used by exactly one skill is a supporting file inside that skill's directory; material shared across skills goes in `references/`, and each skill that uses it links the generated copy in `skills/<name>/references/`.
 
 ## Context Efficiency
 

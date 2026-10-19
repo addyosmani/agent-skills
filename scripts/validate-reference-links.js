@@ -18,8 +18,8 @@
  * The rule enforced here: every `references/*.md` link in a SKILL.md must
  * resolve to an existing file inside that skill's own directory. A per-skill
  * install copies only `skills/<name>/`, so a shared checklist is reached
- * through a symlink in `skills/<name>/references/` that points at the
- * repo-root file, never through `../../references/`.
+ * through the copy that sync-shared-references.js writes into
+ * `skills/<name>/references/`, never through `../../references/`.
  *
  * The markdown files inside a skill's own `references/` directory get the
  * same check, with each link resolved from the file that contains it.
@@ -36,9 +36,8 @@
  *
  * Fenced code blocks are exempt for the same reason. Text inside a fence is
  * an example, not a link an agent will follow — and this rule in particular
- * has to be documentable: the failure message below names the
- * `../../../references/<file>.md` symlink target, which no
- * skill could show as an example without failing the very check explaining it.
+ * has to be documentable: a skill explaining this rule has to show the
+ * `../../references/<file>.md` form it forbids without failing the check.
  *
  * Exit codes: 0 = all clear, 1 = one or more unresolvable links.
  */
@@ -174,9 +173,9 @@ function main() {
   if (errors > 0) {
     if (errors > anchorErrors) {
       console.log('\nLinks to references/ are resolved from the directory of the file that contains them,');
-      console.log('and a per-skill install copies only skills/<name>/. Reach a shared checklist through a symlink');
-      console.log('in the skill: skills/<name>/references/<file>.md -> ../../../references/<file>.md, linked as');
-      console.log('`references/<file>.md` from SKILL.md and `../references/<file>.md` from a file in references/.');
+      console.log('and a per-skill install copies only skills/<name>/. Link a shared checklist as');
+      console.log('`references/<file>.md` from SKILL.md and `../references/<file>.md` from a file in references/,');
+      console.log('then run `node scripts/sync-shared-references.js` to copy it into the skill.');
     }
     if (anchorErrors > 0) {
       console.log("\nAnchors are matched against GitHub's heading slugs: the heading text lowercased,");
