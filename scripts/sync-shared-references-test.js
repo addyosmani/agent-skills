@@ -143,6 +143,7 @@ test('a copy the skill no longer links fails --check and is removed by a sync', 
 
   assert.equal(check.status, 1, check.stdout + check.stderr);
   assert.match(check.stdout, /unused {3}skills\/planning\/references\/definition-of-done\.md/);
+  assert.equal(exists(root, 'skills/planning/references/definition-of-done.md'), true);
   assert.equal(run(root).status, 0);
   assert.equal(exists(root, 'skills/planning/references/definition-of-done.md'), false);
 });
