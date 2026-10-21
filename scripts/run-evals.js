@@ -67,9 +67,80 @@ const STOP = new Set([
   'we', 'when', 'with', 'you', 'your', 'help', 'me', 'i',
 ]);
 
+// Clipped forms users actually type, expanded to the full form a
+// description would use, so "auth" and "authentication", "docs" and
+// "documentation" reach the same stem instead of reading as unrelated
+// tokens. Lookup happens after plural normalization so "docs"/"deps"
+// resolve through the same entry.
+const CLIPPED = new Map(Object.entries({
+  admin: 'administration',
+  arg: 'argument',
+  auth: 'authentication',
+  authn: 'authentication',
+  authz: 'authorization',
+  cmd: 'command',
+  conf: 'configuration',
+  config: 'configuration',
+  cred: 'credentials',
+  dep: 'dependencies',
+  diff: 'difference',
+  dir: 'directory',
+  doc: 'documentation',
+  env: 'environment',
+  err: 'error',
+  func: 'function',
+  gen: 'generate',
+  impl: 'implementation',
+  info: 'information',
+  init: 'initialize',
+  lib: 'library',
+  msg: 'message',
+  num: 'number',
+  obj: 'object',
+  param: 'parameter',
+  perf: 'performance',
+  perm: 'permission',
+  pkg: 'package',
+  prop: 'property',
+  repo: 'repository',
+  sec: 'security',
+  spec: 'specification',
+  src: 'source',
+  str: 'string',
+  util: 'utility',
+  var: 'variable',
+}));
+
+// Derivational suffixes, reduced before the light suffix loop:
+// -ification/-ization map back to -ify/-ize, and -ation(al|ally)/-ate(d|ing)
+// reduce to the root when enough of one remains, so "documentation"/"document",
+// "authentication"/"authenticate", "specification"/"specify",
+// "optimization"/"optimize", and "migration"/"migrate" share a stem.
+// Short roots keep the word ("nation", "relation", "create"), and
+// -eated/-eating words keep their -ed/-ing stems ("repeated", "treating").
+const DERIVATIONS = [
+  ['ification', 'ify', 2],
+  ['ization', 'ize', 3],
+  ['ationally', '', 3],
+  ['ational', '', 3],
+  ['ating', '', 3, 'eating'],
+  ['ation', '', 3],
+  ['ated', '', 3, 'eated'],
+  ['ate', '', 3],
+];
+
 function stem(t) {
   // Light suffix stripping so "conflicts"/"conflict", "branching"/"branch",
   // "architectural"/"architecture" cluster together. Not a real stemmer.
+  if (t.length > 3 && t.endsWith('s') && !t.endsWith('ss')) t = t.slice(0, -1);
+  t = CLIPPED.get(t) || t;
+  for (const [suf, rep, minRoot, skip] of DERIVATIONS) {
+    if (skip && t.endsWith(skip)) continue;
+    if (t.length - suf.length > minRoot && t.endsWith(suf)) {
+      t = t.slice(0, -suf.length) + rep;
+      break;
+    }
+  }
   for (const suf of ['ally', 'ing', 'ed', 'es', 'al']) {
     if (t.length > suf.length + 3 && t.endsWith(suf)) {
       t = t.slice(0, -suf.length);

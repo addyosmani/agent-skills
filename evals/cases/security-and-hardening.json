@@ -21,6 +21,14 @@
       {
         "prompt": "Is this new package safe to install? Check for typosquatting and supply chain risk",
         "top_k": 3
+      },
+      {
+        "prompt": "Authenticate the request before processing it",
+        "top_k": 3
+      },
+      {
+        "prompt": "Bump the deps in this repo",
+        "top_k": 3
       }
     ],
     "negative": [
