@@ -7,12 +7,12 @@ description: Run a web performance audit via the web-performance-auditor persona
 ## Determine the mode
 
 **Deep mode** — activate when any of these is available:
-- A Lighthouse JSON report file (e.g. `npx lighthouse <url> --output json --output-path ./report.json`, or `npx -p chrome-devtools-mcp chrome-devtools lighthouse_audit --output-format=json` from the Chrome DevTools MCP CLI)
+- A Lighthouse JSON report file (e.g. `npx lighthouse <url> --output json --output-path ./report.json`, or `npx -p chrome-devtools-mcp chrome-devtools lighthouse_audit 1 --output-format=json` from the Chrome DevTools MCP CLI)
 - A PageSpeed Insights JSON response (includes Lighthouse + CrUX)
 - A CrUX API response (requires `CRUX_API_KEY` or `GOOGLE_API_KEY`)
 - A DevTools performance trace
 - A live URL plus the `chrome-devtools` MCP server configured in the harness (the agent can capture metrics directly via `lighthouse_audit` and `performance_*` tools)
-- The Chrome DevTools MCP CLI invoked locally (via `npx -p chrome-devtools-mcp chrome-devtools <tool>` or after `npm i -g chrome-devtools-mcp`) — the user runs commands like `chrome-devtools lighthouse_audit --output-format=json` and passes the JSON output to the agent
+- The Chrome DevTools MCP CLI invoked locally (via `npx -p chrome-devtools-mcp chrome-devtools <tool>` or after `npm i -g chrome-devtools-mcp`) — the user runs commands like `chrome-devtools lighthouse_audit 1 --output-format=json` and passes the JSON output to the agent
 
 **Quick mode** — default when none of the above are available. The agent scans source code for structural anti-patterns and labels every finding as `potential impact`.
 
