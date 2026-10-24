@@ -214,7 +214,14 @@ class ErrorBoundary extends React.Component {
 }
 
 // Server-side error reporting
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((err: Error & { status?: number }, req: Request, res: Response, next: NextFunction) => {
+  // Client errors from middleware (malformed JSON, oversized body) keep their 4xx and aren't reported
+  if (err.status && err.status < 500) {
+    return res.status(err.status).json({
+      error: { code: 'BAD_REQUEST', message: err.message },
+    });
+  }
+
   reportError(err, {
     method: req.method,
     url: req.url,
