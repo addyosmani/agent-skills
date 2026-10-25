@@ -828,3 +828,24 @@ test('loads quoted YAML skill identities using their decoded values', () => {
     assert.match(result.stdout, /PASSED/);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
+
+
+test('stemmer merges clipped developer shorthand with long forms (issue #660)', () => {
+  const { stem } = require('./run-evals');
+  for (const [clipped, long] of [
+    ['auth', 'authentication'],
+    ['auth', 'authentications'],
+    ['docs', 'documentation'],
+    ['doc', 'document'],
+    ['config', 'configuration'],
+    ['configs', 'configurations'],
+    ['deps', 'dependencies'],
+    ['spec', 'specification'],
+    ['impl', 'implementation'],
+  ]) {
+    assert.equal(stem(clipped), stem(long), `${clipped} should share a stem with ${long}`);
+  }
+  // -ation pairs outside the alias map keep clustering too.
+  assert.equal(stem('optimization'), stem('optimize'));
+  assert.equal(stem('information'), stem('info'));
+});

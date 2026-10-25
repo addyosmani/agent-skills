@@ -67,16 +67,36 @@ const STOP = new Set([
   'we', 'when', 'with', 'you', 'your', 'help', 'me', 'i',
 ]);
 
+// Clipped developer shorthand ("auth", "docs", "config") expands to the long form
+// before stripping, so a prompt in either register shares a term with descriptions.
+const CLIPPED = new Map([
+  ['auth', 'authentication'],
+  ['config', 'configuration'],
+  ['doc', 'documentation'],
+  ['docs', 'documentation'],
+  ['dep', 'dependencies'],
+  ['deps', 'dependencies'],
+  ['spec', 'specification'],
+  ['impl', 'implementation'],
+  ['info', 'information'],
+  ['repo', 'repository'],
+  ['env', 'environment'],
+]);
+
 function stem(t) {
   // Light suffix stripping so "conflicts"/"conflict", "branching"/"branch",
   // "architectural"/"architecture" cluster together. Not a real stemmer.
-  for (const suf of ['ally', 'ing', 'ed', 'es', 'al']) {
+  const singular = t.length > 3 && t.endsWith('s') && !t.endsWith('ss') ? t.slice(0, -1) : t;
+  t = CLIPPED.get(t) || CLIPPED.get(singular) || t;
+  for (const suf of ['ally', 'ing', 'ed', 'es', 'al', 'ation']) {
     if (t.length > suf.length + 3 && t.endsWith(suf)) {
       t = t.slice(0, -suf.length);
       break;
     }
   }
   if (t.length > 3 && t.endsWith('s') && !t.endsWith('ss')) t = t.slice(0, -1);
+  // Plural long forms only reach -ation after the -s strip above ("operations").
+  if (t.length > 8 && t.endsWith('ation')) t = t.slice(0, -5);
   if (t.length > 4 && t.endsWith('e')) t = t.slice(0, -1);
   // Collapse doubled trailing consonant left by -ing/-ed ("committ" -> "commit").
   if (t.length > 4 && t[t.length - 1] === t[t.length - 2] && !'aeiou'.includes(t[t.length - 1])) {
@@ -672,4 +692,4 @@ function main(args = process.argv.slice(2)) {
 
 if (require.main === module) main();
 
-module.exports = { materializeWorkspace, parseGrading, clearGradingSlot, persistGradingOutcome, extractExecutorModel };
+module.exports = { materializeWorkspace, parseGrading, clearGradingSlot, persistGradingOutcome, extractExecutorModel, stem };
