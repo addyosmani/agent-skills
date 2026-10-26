@@ -405,6 +405,34 @@ test('fails when an anchor matches no heading in the target file', () => {
   assert.doesNotMatch(result.stdout, /use `\.\.\/\.\.\/references/);
 });
 
+for (const anchor of ['%70atterns', 'patt%65rns', 'caf%C3%A9']) {
+  test(`passes when an encoded anchor matches a heading: #${anchor}`, () => {
+    const root = makeSandbox();
+    hardeningSkill(root, `references/patterns.md#${anchor}`);
+    writeFile(root, 'skills/hardening/references/patterns.md', '# Patterns\n\n## Café\n');
+
+    const result = run(root);
+
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.match(result.stdout, /1 skills checked — 0 error\(s\) — PASSED/);
+  });
+}
+
+for (const anchor of ['%6Dissing', 'patterns%2Dmissing', '%2570atterns', '%', '%GG', 'patterns%E0%A4']) {
+  test(`reports an invalid encoded anchor without crashing: #${anchor}`, () => {
+    const root = makeSandbox();
+    hardeningSkill(root, `references/patterns.md#${anchor}`);
+    writeFile(root, 'skills/hardening/references/patterns.md', '# Patterns\n');
+
+    const result = run(root);
+
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    assert.ok(result.stdout.includes(`L1: references/patterns.md#${anchor} — no heading`), result.stdout);
+    assert.match(result.stdout, /1 skills checked — 1 error\(s\) — FAILED/);
+    assert.equal(result.stderr, '');
+  });
+}
+
 test('a repeated heading gets a -1 suffix, as on GitHub', () => {
   const root = makeSandbox();
   writeFile(root, 'skills/hardening/SKILL.md', [
