@@ -56,8 +56,8 @@ const SKILLS_DIR = path.join(ROOT, 'skills');
 // Matches a link to a references/ markdown file, with any number of leading
 // `../` segments: `references/x.md`, `../../references/x.md`. Anchored on a
 // non-path character so `myreferences/x.md` does not match. An optional
-// `#fragment` is captured separately.
-const REFERENCE_LINK_RE = /(?<![A-Za-z0-9._/-])((?:\.\.\/)*references\/[A-Za-z0-9._-]+\.md)(?:#([\p{L}\p{N}_-]+))?/gu;
+// `#fragment` is captured separately, including percent-encoded characters.
+const REFERENCE_LINK_RE = /(?<![A-Za-z0-9._/-])((?:\.\.\/)*references\/[A-Za-z0-9._-]+\.md)(?:#([\p{L}\p{N}_%\-]+))?/gu;
 
 // GitHub's heading anchor: the rendered text, lowercased, with everything but
 // letters, numbers, `_`, `-` and spaces dropped, then spaces turned to hyphens.
@@ -99,8 +99,18 @@ function findViolations(file) {
       const target = path.resolve(baseDir, link);
       if (!fs.existsSync(target)) {
         violations.push({ line: i + 1, link, target });
-      } else if (anchor && !headingAnchors(target).has(anchor)) {
-        violations.push({ line: i + 1, link, target, anchor });
+      } else if (anchor) {
+        let decodedAnchor;
+        try {
+          decodedAnchor = decodeURIComponent(anchor);
+        } catch {
+          // Malformed escapes cannot match a heading; report and keep checking.
+          violations.push({ line: i + 1, link, target, anchor });
+          continue;
+        }
+        if (!headingAnchors(target).has(decodedAnchor)) {
+          violations.push({ line: i + 1, link, target, anchor });
+        }
       }
     }
   });
