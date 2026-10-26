@@ -107,7 +107,9 @@ You can invoke these personas directly within your session or when delegating ta
 ## Configuration & Customization
 
 ### Project-Specific Enforcements (`AGENTS.md`)
-To enforce strict skill compliance (e.g. requiring a spec or plan before writing code), copy or link `AGENTS.md` into the root of your workspace. Antigravity CLI reads this file to align the agent's behavior and planning phase with your team's conventions.
+To enforce strict skill compliance (e.g. requiring a spec or plan before writing code), create a project-specific `AGENTS.md` in the root of your workspace. Describe your project's conventions, test commands, and required skill workflows there.
+
+This repository's root `AGENTS.md` and `CLAUDE.md` configure agents contributing to Agent Skills itself. Do not copy or link them into your project or global agent configuration; the reusable assets are the skills in `skills/`. See [Repo-scoped files](../CONTRIBUTING.md#repo-scoped-files).
 
 ### Sandbox Mode
 If you want to run skills or scripts with limited terminal permissions (for safety when running third-party validation tests), launch the CLI with:
