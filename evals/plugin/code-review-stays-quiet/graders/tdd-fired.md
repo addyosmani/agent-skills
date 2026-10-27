@@ -1,6 +1,6 @@
 ---
 type: tool_used
 tool: Skill
-input_match: '"skill"\s*:\s*"(?:[\w-]+:)?test-driven-development"'
+input_match: '"skill"\s*:\s*"(?:[\w-]+:)?(test-driven-development|test)"'
 arm: with-only
 ---

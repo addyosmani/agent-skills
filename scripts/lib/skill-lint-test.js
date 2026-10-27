@@ -9,7 +9,7 @@ const fs   = require('node:fs');
 const os   = require('node:os');
 const path = require('node:path');
 
-const { lintSkillContent, lintSkillLayout } = require('./skill-lint.js');
+const { lintSkillContent, lintSkillLayout, topLevelFrontmatterKeys, parseFrontmatter, frontmatterYamlErrors, lintPersonaContent } = require('./skill-lint.js');
 
 const KNOWN = new Set(['alpha', 'beta']);
 
@@ -97,8 +97,10 @@ test('a skill claiming its own exemption without being allowlisted fails loud', 
     ['---', 'name: alpha', 'description: Designs alphas. Use when building one.', 'exempt: sections', '---'].join('\n')
   );
   const { errors } = lintSkillContent('alpha', content, KNOWN);
-  assert.equal(errors.length, 1);
-  assert.match(errors[0], /not in the validator's SECTION_EXEMPT_SKILLS allowlist/);
+  // Two errors: 'exempt' is not a spec key, and the exemption itself is refused.
+  assert.equal(errors.length, 2);
+  assert.equal(errors.filter(e => /not in the validator's SECTION_EXEMPT_SKILLS allowlist/.test(e)).length, 1);
+  assert.equal(errors.filter(e => /Frontmatter key 'exempt' is not an Agent Skills spec field/.test(e)).length, 1);
 });
 
 // ─── Guardrails on the rules this change sits beside ─────────────────────────
@@ -351,6 +353,109 @@ test('an unterminated quote is rejected', () => {
   assert.match(yamlErrors(result)[0], /never closes/);
 });
 
+// A plain (unquoted) YAML scalar may not BEGIN with certain indicator characters.
+// The set below was not read off the spec — it was measured against js-yaml, both
+// with and without a following space, and only characters invalid in *both* forms
+// with no legitimate single-line use are rejected here. Anything ambiguous is left
+// alone on purpose, and the second test pins that so the rule cannot be widened
+// into false positives later.
+//
+// The backtick is the one that actually bites this repo: descriptions routinely
+// name other skills, and `\`alpha\` designs things` is a natural way to start one.
+for (const [label, value] of [
+  ['a backtick', '`alpha` designs things. Use when alpha.'],
+  ['an at sign', '@team owns this. Use when alpha.'],
+  ['a percent sign', '%complete coverage. Use when alpha.'],
+]) {
+  test(`an unquoted value starting with ${label} is rejected`, () => {
+    const result = lintSkillContent(
+      'alpha',
+      fmLines(`description: ${value}`),
+      KNOWN,
+    );
+    assert.equal(yamlErrors(result).length, 1);
+    assert.match(yamlErrors(result)[0], /reserved|cannot begin|indicator/i);
+  });
+}
+
+for (const [label, value] of [
+  ['a dash', '- Designs things. Use when alpha.'],
+  ['a question mark', '? Designs things. Use when alpha.'],
+  ['an ampersand', '& Designs things. Use when alpha.'],
+]) {
+  test(`an unquoted value starting with ${label} and a space is rejected`, () => {
+    const result = lintSkillContent(
+      'alpha',
+      fmLines(`description: ${value}`),
+      KNOWN,
+    );
+    assert.equal(yamlErrors(result).length, 1);
+  });
+}
+
+test('quoting the value makes every reserved start valid again', () => {
+  for (const value of ['`alpha` x', '@team x', '%x', '- x', '? x', '& x']) {
+    const result = lintSkillContent(
+      'alpha',
+      fmLines(`description: "${value}"`),
+      KNOWN,
+    );
+    assert.deepEqual(yamlErrors(result), [], `quoted ${value} must be accepted`);
+  }
+});
+
+test('starts that YAML accepts are deliberately NOT rejected', () => {
+  // Each parses cleanly under PyYAML and psych, so flagging them would be a
+  // false positive on valid frontmatter. Pinned so the rule stays narrow.
+  //
+  // `,leading comma is fine` used to be in this list. It is not fine — both
+  // parsers reject it, and this test was pinning a claim I had asserted without
+  // measuring. It now appears in the rejected set below instead.
+  for (const value of [
+    ':platform is fine',          // a colon not followed by a space
+    '-hyphenated is fine',        // a dash not followed by a space
+    'Designs `alpha` things',     // a backtick anywhere but the first character
+    'Designs @team things',       // an at sign anywhere but the first character
+    '#not-a-comment-here',
+    '&anchor-like but valid',     // `&foo` parses; only `& ` is an indicator
+    '[a, b]',                     // a flow sequence is valid, so `[` stays allowed
+    // `{a: b}` is valid YAML too, and `{` is likewise not flagged here — but it
+    // trips the pre-existing colon-space rule, so it is not asserted as accepted.
+    // That false positive predates this change and is left alone.
+  ]) {
+    const result = lintSkillContent('alpha', fmLines(`description: ${value}`), KNOWN);
+    assert.deepEqual(yamlErrors(result), [], `${value} must be accepted`);
+  }
+});
+
+test('indicator characters both parsers reject are flagged', () => {
+  // Measured, not read off the spec: each of these is rejected by PyYAML and by
+  // psych, and none has a legitimate use at the start of a plain scalar.
+  for (const value of [
+    ',leading comma',
+    '*alias-like',
+    '`skill` does X',
+    '@team owns this',
+    '%directive-like',
+  ]) {
+    const result = lintSkillContent('alpha', fmLines(`description: ${value}`), KNOWN);
+    assert.equal(yamlErrors(result).length, 1, `${value} must be rejected`);
+  }
+});
+
+test('a one-line block scalar header is flagged but a real block scalar is not', () => {
+  // `|` with content on the same line is not a block scalar — it is a plain
+  // scalar opening with an indicator, and both parsers reject it. `|` alone,
+  // with indented lines under it, is valid and must stay allowed.
+  for (const value of ['|folded text', '>folded text']) {
+    const result = lintSkillContent('alpha', fmLines(`description: ${value}`), KNOWN);
+    assert.equal(yamlErrors(result).length, 1, `${value} must be rejected`);
+  }
+
+  const genuine = lintSkillContent('alpha', fmLines('description: |'), KNOWN);
+  assert.deepEqual(yamlErrors(genuine), [], 'a bare block-scalar header must be accepted');
+});
+
 test('a duplicate key is not reported, because YAML accepts it', () => {
   // Deliberate boundary: `safe_load` accepts duplicate keys, so flagging them
   // here would fail files no host rejects. The rule tracks the parser, not taste.
@@ -448,4 +553,210 @@ test('non-markdown files are left to the Script Requirements conventions', () =>
   const dir = makeSkillDir({ files: { 'scripts/Idea_Refine.sh': '#!/bin/bash\nset -e\n' } });
 
   assert.deepEqual(lintSkillLayout(dir), []);
+});
+
+// ─── Spec-only top-level frontmatter keys ────────────────────────────────────
+//
+// docs/advanced-per-agent-configuration.md: the specification reserves the top
+// level for name, description, license, compatibility, metadata and
+// allowed-tools. Vendor and runtime fields go under `metadata` or in a
+// per-agent adapter file, never at the top level of a published SKILL.md.
+
+function skillWithFrontmatter(lines) {
+  return withAllSections(['---', ...lines, '---'].join('\n'));
+}
+
+const SPEC_KEY_RE = /is not an Agent Skills spec field/;
+
+test('a vendor field at the top level is rejected and the message names the key', () => {
+  const { errors } = lintSkillContent('alpha', skillWithFrontmatter([
+    'name: alpha',
+    'description: Designs alphas. Use when building one.',
+    'model: claude-opus-5',
+  ]), KNOWN);
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /Frontmatter key 'model'/);
+  assert.match(errors[0], SPEC_KEY_RE);
+  assert.match(errors[0], /advanced-per-agent-configuration\.md/);
+});
+
+test('every unknown top-level key is reported, not just the first', () => {
+  const { errors } = lintSkillContent('alpha', skillWithFrontmatter([
+    'name: alpha',
+    'description: Designs alphas. Use when building one.',
+    'max_turns: 10',
+    'tools: [read_file]',
+    'context: fork',
+  ]), KNOWN);
+  const keyErrors = errors.filter(e => SPEC_KEY_RE.test(e));
+  assert.deepEqual(keyErrors.map(e => e.match(/key '([^']+)'/)[1]), ['max_turns', 'tools', 'context']);
+});
+
+test('all six specification keys are accepted at the top level', () => {
+  const { errors } = lintSkillContent('alpha', skillWithFrontmatter([
+    'name: alpha',
+    'description: Designs alphas. Use when building one.',
+    'license: MIT',
+    'compatibility: Requires git and a test runner',
+    'allowed-tools: Read Grep',
+    'metadata:',
+    '  author: someone',
+  ]), KNOWN);
+  assert.deepEqual(errors.filter(e => SPEC_KEY_RE.test(e)), []);
+});
+
+test('vendor fields nested under metadata are not top-level keys', () => {
+  const { errors } = lintSkillContent('alpha', skillWithFrontmatter([
+    'name: alpha',
+    'description: Designs alphas. Use when building one.',
+    'metadata:',
+    '  model: gemini-3-pro',
+    '  max_turns: 10',
+    '  tools:',
+    '    - read_file',
+  ]), KNOWN);
+  assert.deepEqual(errors.filter(e => SPEC_KEY_RE.test(e)), []);
+});
+
+test('topLevelFrontmatterKeys sees only column-zero keys, in order', () => {
+  const content = [
+    '---',
+    'name: alpha',
+    '# a comment: with a colon',
+    'metadata:',
+    '  model: x',
+    '  tools:',
+    '    - a',
+    'allowed-tools: Read',
+    '---',
+    '',
+    'body: not frontmatter',
+  ].join('\n');
+  assert.deepEqual(topLevelFrontmatterKeys(content), ['name', 'metadata', 'allowed-tools']);
+});
+
+test('topLevelFrontmatterKeys returns [] without a frontmatter block', () => {
+  assert.deepEqual(topLevelFrontmatterKeys('## Overview\nx\n'), []);
+});
+
+test('the spec-key check tolerates CRLF frontmatter', () => {
+  const content = skillWithFrontmatter([
+    'name: alpha',
+    'description: Designs alphas. Use when building one.',
+    'temperature: 0.2',
+  ]).replace(/\n/g, '\r\n');
+  const { errors } = lintSkillContent('alpha', content, KNOWN);
+  assert.equal(errors.filter(e => /key 'temperature'/.test(e)).length, 1);
+});
+
+test('parseFrontmatter ignores comments and nested metadata keys', () => {
+  const content = [
+    '---',
+    'name: alpha',
+    '# note: this is a comment',
+    'description: Designs alphas. Use when building one.',
+    'metadata:',
+    '  name: beta',
+    '  description: Nested details without trigger',
+    '---',
+    '',
+  ].join('\n');
+  assert.deepEqual(parseFrontmatter(content), {
+    name: 'alpha',
+    description: 'Designs alphas. Use when building one.',
+    metadata: '',
+  });
+});
+
+test('frontmatterYamlErrors ignores comment lines containing colons or quotes', () => {
+  const content = [
+    '---',
+    'name: alpha',
+    '# note: a comment: with a colon and "unclosed quote',
+    'description: "Designs alphas. Use when building one."',
+    '---',
+    '',
+  ].join('\n');
+  assert.deepEqual(frontmatterYamlErrors(content), []);
+});
+
+test('a skill with frontmatter comments and nested metadata passes validation', () => {
+  const content = withAllSections([
+    '---',
+    'name: alpha',
+    '# Note: keep description up to date: check docs',
+    'description: Designs alphas. Use when building one.',
+    'metadata:',
+    '  name: beta',
+    '  description: Internal notes',
+    '---',
+  ].join('\n'));
+  const { errors } = lintSkillContent('alpha', content, KNOWN);
+  assert.deepEqual(errors, []);
+});
+
+// ─── Personas (agents/<name>.md) ─────────────────────────────────────────────
+//
+// docs/agents.md: same frontmatter format as a skill, name equal to the file
+// stem, and the file ends with a Composition block. Nothing more is checked.
+
+function personaFile({ name = 'code-reviewer', description = 'Reviews changes. Use before merging.', body } = {}) {
+  const fm = ['---', name === null ? null : `name: ${name}`, description === null ? null : `description: ${description}`, '---']
+    .filter(l => l !== null).join('\n');
+  return `${fm}\n\n${body ?? '# Persona\n\n## Rules\n\nBe precise.\n\n## Composition\n\n- **Invoke via:** `/ship`.\n'}`;
+}
+
+test('a conforming persona produces no errors', () => {
+  assert.deepEqual(lintPersonaContent('code-reviewer', personaFile()).errors, []);
+});
+
+test('persona: frontmatter name must match the file stem', () => {
+  const { errors } = lintPersonaContent('code-reviewer', personaFile({ name: 'reviewer' }));
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /name 'reviewer' does not match file name 'code-reviewer'/);
+});
+
+test('persona: description is required', () => {
+  const { errors } = lintPersonaContent('code-reviewer', personaFile({ description: null }));
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /missing required field: 'description'/);
+});
+
+test('persona: a missing frontmatter block is reported and nothing else is attempted', () => {
+  const { errors } = lintPersonaContent('code-reviewer', '# Persona\n\n## Composition\n');
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /Missing or malformed YAML frontmatter/);
+});
+
+test('persona: frontmatter a host would reject as YAML is reported', () => {
+  const { errors } = lintPersonaContent('code-reviewer', personaFile({ description: 'Reviews: everything. Use before merging.' }));
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /Frontmatter line/);
+});
+
+test('persona: the Composition section is required', () => {
+  const { errors } = lintPersonaContent('code-reviewer', personaFile({ body: '# Persona\n\n## Rules\n\nBe precise.\n' }));
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /Missing "## Composition" section/);
+});
+
+test('persona: Composition must be the last section', () => {
+  const { errors } = lintPersonaContent('code-reviewer', personaFile({
+    body: '# Persona\n\n## Composition\n\n- **Invoke via:** `/ship`.\n\n## Output Format\n\nA report.\n',
+  }));
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /must be the last section, but "## Output Format" follows it/);
+});
+
+test('persona: a heading inside a fenced example after Composition is not a later section', () => {
+  const body = [
+    '# Persona', '', '## Composition', '', '- **Invoke via:** `/ship`. Report in this shape:', '',
+    '```markdown', '## Review: [title]', 'Findings…', '```', '',
+  ].join('\n');
+  assert.deepEqual(lintPersonaContent('code-reviewer', personaFile({ body })).errors, []);
+});
+
+test('persona: the Composition heading match is case-insensitive and tolerates trailing spaces', () => {
+  const body = '# Persona\n\n## composition   \n\n- **Invoke via:** `/ship`.\n';
+  assert.deepEqual(lintPersonaContent('code-reviewer', personaFile({ body })).errors, []);
 });

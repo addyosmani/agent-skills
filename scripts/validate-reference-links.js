@@ -25,6 +25,10 @@
  * sit one directory deeper than SKILL.md, so from there the shared checklists
  * are `../../../references/`: the same off-by-a-level mistake, one level down.
  *
+ * A `#fragment` after such a link must match a heading in the target file,
+ * slugged the way GitHub renders anchors. The file existing is not enough:
+ * renaming a heading breaks every link to it while the path still resolves.
+ *
  * Scope is deliberately narrow: only `references/*.md` links, only SKILL.md
  * and `skills/<name>/references/*.md` files. It is not a general markdown
  * path linter — skills legitimately mention paths that do not exist yet
@@ -51,8 +55,36 @@ const SKILLS_DIR = path.join(ROOT, 'skills');
 
 // Matches a link to a references/ markdown file, with any number of leading
 // `../` segments: `references/x.md`, `../../references/x.md`. Anchored on a
-// non-path character so `myreferences/x.md` does not match.
-const REFERENCE_LINK_RE = /(?<![A-Za-z0-9._/-])((?:\.\.\/)*references\/[A-Za-z0-9._-]+\.md)/g;
+// non-path character so `myreferences/x.md` does not match. An optional
+// `#fragment` is captured separately.
+const REFERENCE_LINK_RE = /(?<![A-Za-z0-9._/-])((?:\.\.\/)*references\/[A-Za-z0-9._-]+\.md)(?:#([\p{L}\p{N}_-]+))?/gu;
+
+// GitHub's heading anchor: the rendered text, lowercased, with everything but
+// letters, numbers, `_`, `-` and spaces dropped, then spaces turned to hyphens.
+function slugify(heading) {
+  const text = heading
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1') // links and images keep their text
+    .replace(/<[^>]+>/g, '');                  // inline HTML renders no text
+  return text.toLowerCase().replace(/[^\p{L}\p{M}\p{N}_\- ]/gu, '').replace(/ /g, '-');
+}
+
+// The anchors a file's ATX headings produce, outside fenced blocks. A repeated
+// slug gets `-1`, `-2`, ... as on GitHub.
+function headingAnchors(file) {
+  const anchors = new Set();
+  const seen = new Map();
+  for (const line of stripFencedCodeBlocks(fs.readFileSync(file, 'utf8')).split('\n')) {
+    const match = line.match(/^ {0,3}#{1,6}[ \t]+(.*?)(?:[ \t]+#+)?[ \t]*$/);
+    if (!match) continue;
+    const slug = slugify(match[1]);
+    let count = seen.get(slug) || 0;
+    let anchor = count === 0 ? slug : `${slug}-${count}`;
+    while (anchors.has(anchor)) anchor = `${slug}-${++count}`;
+    anchors.add(anchor);
+    seen.set(slug, count + 1);
+  }
+  return anchors;
+}
 
 // A link is resolved from the directory of the file that contains it.
 function findViolations(file) {
@@ -63,10 +95,12 @@ function findViolations(file) {
 
   lines.forEach((line, i) => {
     for (const match of line.matchAll(REFERENCE_LINK_RE)) {
-      const link = match[1];
+      const [, link, anchor] = match;
       const target = path.resolve(baseDir, link);
       if (!fs.existsSync(target)) {
         violations.push({ line: i + 1, link, target });
+      } else if (anchor && !headingAnchors(target).has(anchor)) {
+        violations.push({ line: i + 1, link, target, anchor });
       }
     }
   });
@@ -100,6 +134,7 @@ function main() {
   let checked = 0;
   let errors = 0;
   let referenceFileErrors = 0;
+  let anchorErrors = 0;
 
   const skillNames = fs.readdirSync(SKILLS_DIR).sort();
   for (const name of skillNames) {
@@ -117,9 +152,14 @@ function main() {
       }
 
       console.log(`  ✗  ${toPosix(file)}`);
-      for (const { line, link, target } of violations) {
-        console.log(`       L${line}: ${link} — resolves to ${toPosix(target)}, which does not exist`);
+      for (const { line, link, target, anchor } of violations) {
         errors++;
+        if (anchor) {
+          console.log(`       L${line}: ${link}#${anchor} — no heading in ${toPosix(target)} produces #${anchor}`);
+          anchorErrors++;
+          continue;
+        }
+        console.log(`       L${line}: ${link} — resolves to ${toPosix(target)}, which does not exist`);
         if (file !== skillFile) referenceFileErrors++;
       }
     }
@@ -129,12 +169,18 @@ function main() {
   console.log(`\n${checked} skills checked — ${errors} error(s) — ${status}`);
 
   if (errors > 0) {
-    console.log('\nLinks to references/ are resolved from the directory of the file that contains them.');
-    console.log('Shared checklists live in the repo-root references/, two levels up from a SKILL.md:');
-    console.log('use `../../references/<file>.md`, not `references/<file>.md`.');
-    if (referenceFileErrors > 0) {
-      console.log('From a file inside skills/<name>/references/ they are three levels up:');
-      console.log('use `../../../references/<file>.md`.');
+    if (errors > anchorErrors) {
+      console.log('\nLinks to references/ are resolved from the directory of the file that contains them.');
+      console.log('Shared checklists live in the repo-root references/, two levels up from a SKILL.md:');
+      console.log('use `../../references/<file>.md`, not `references/<file>.md`.');
+      if (referenceFileErrors > 0) {
+        console.log('From a file inside skills/<name>/references/ they are three levels up:');
+        console.log('use `../../../references/<file>.md`.');
+      }
+    }
+    if (anchorErrors > 0) {
+      console.log("\nAnchors are matched against GitHub's heading slugs: the heading text lowercased,");
+      console.log('punctuation dropped, spaces turned to hyphens, and -1, -2, ... for repeated headings.');
     }
     process.exit(1);
   }

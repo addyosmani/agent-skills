@@ -23,7 +23,7 @@ If your idea is a refinement of an existing skill, prefer a focused edit to that
 
 1. Create a directory under `skills/` with a kebab-case name
 2. Add a `SKILL.md` following the format in [docs/skill-anatomy.md](docs/skill-anatomy.md)
-3. Include YAML frontmatter with `name` and `description` fields
+3. Include YAML frontmatter with `name` and `description` fields, and no vendor or runtime keys at the top level (those go under `metadata` or in a per-agent adapter file; see [docs/advanced-per-agent-configuration.md](docs/advanced-per-agent-configuration.md))
 4. Ensure the `description` starts with what the skill does (third person), then includes one or more `Use when` trigger conditions
 
 ### Skill Quality Bar
@@ -71,6 +71,14 @@ Before proposing a change, search the [skill-change rejection ledger](evals/skil
 - Test that YAML frontmatter remains valid after edits
 
 If a skill or description change is rejected based on eval results, add one row to the ledger with the date, affected skill, concise attempted change, before-to-after rank-1 score, and rejected PR link and outcome. Land that ledger-only update separately on the default branch; do not leave it only on the rejected proposal branch, where closing or force-pushing the proposal could discard the record.
+
+## Adding a Host Guide
+
+The README install section lists only hosts a maintainer has installed and run the current release on. Every other host gets one line in [docs/other-hosts.md](docs/other-hosts.md): the host name and its install command. No dedicated setup page, vendor links, logos, emoji, or screenshots.
+
+- If you work for the company behind the host, say so in the PR.
+- A host moves into the README once a maintainer has run it and is willing to keep its entry current.
+- Host guides are reviewed in the order they were opened.
 
 ## Repo-scoped files
 

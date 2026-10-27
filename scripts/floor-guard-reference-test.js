@@ -3,8 +3,8 @@
 'use strict';
 
 // Contract test for skills/constraint-driven-development/references/floor-guard.md.
-// The fenced `js` block is extracted unchanged and run, with real git, against fourteen
-// small fixtures: each is a fresh repository with one source file, one test file and a
+// The fenced `js` block is extracted unchanged and run, with real git, against small
+// fixtures: each is a fresh repository with one source file, one test file and a
 // CONSTRAINTS.md carrying a floor bullet, a coverage minimum, a bundle maximum and an
 // Exceptions table. Loosening moves must exit 1, tightening and no-op moves must exit 0.
 
@@ -97,8 +97,14 @@ function editConstraints(root, from, to) {
   fs.writeFileSync(file, text.replace(from, to));
 }
 
-function runGuard(root) {
-  return spawnSync(process.execPath, [guard, '--base', 'HEAD'], { cwd: root, encoding: 'utf8' });
+function commitFile(root, name, text) {
+  fs.writeFileSync(path.join(root, name), text);
+  git(root, 'add', name);
+  git(root, 'commit', '-qm', `add ${name}`);
+}
+
+function runGuard(root, cwd = root) {
+  return spawnSync(process.execPath, [guard, '--base', 'HEAD'], { cwd, encoding: 'utf8' });
 }
 
 const cases = [
@@ -207,4 +213,79 @@ test('floor guard: a threshold that loses its direction words is reported as rem
   assert.equal(result.status, 1, result.stderr);
   assert.match(result.stderr, /\[threshold-removed\]/);
   assert.match(result.stderr, /direction words/);
+});
+
+// Inside a hunk every line is content. An added line that starts with `++` shows in the diff
+// as `+++...`, and a removed line that starts with `--` as `---...`: neither is a file header.
+test('floor guard: an added line that starts with ++ is still checked', () => {
+  const root = makeRepo();
+  fs.writeFileSync(
+    path.join(root, 'app.js'),
+    'let n = 0;\n++n; // eslint-disable-line no-plusplus\nmodule.exports = n;\n',
+  );
+  const result = runGuard(root);
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /\[silenced-checker\] app\.js:/);
+});
+
+test('floor guard: an added line that starts with "++ " does not rename the file for later hunks', () => {
+  const root = makeRepo();
+  commitFile(root, 'counter.test.js', [
+    "const assert = require('assert');",
+    'let n = 0;',
+    'n += 1;',
+    'const m = 2;',
+    'assert.equal(n, 1);',
+    'assert.equal(m, 2);',
+    '',
+  ].join('\n'));
+  const file = path.join(root, 'counter.test.js');
+  const text = fs.readFileSync(file, 'utf8');
+  fs.writeFileSync(file, text.replace('n += 1;', '++ n;').replace('assert.equal(m, 2);\n', ''));
+  const result = runGuard(root);
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /\[assertion-removed\] counter\.test\.js:/);
+});
+
+test('floor guard: a removed line that starts with -- is still checked', () => {
+  const root = makeRepo();
+  commitFile(root, 'countdown.test.js', [
+    "const assert = require('assert');",
+    'let n = 1;',
+    '--n; assert.equal(n, 0);',
+    '',
+  ].join('\n'));
+  const file = path.join(root, 'countdown.test.js');
+  fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace('--n; assert.equal(n, 0);\n', ''));
+  const result = runGuard(root);
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /\[assertion-removed\] countdown\.test\.js:/);
+});
+
+// `git ls-files` lists only the current directory's subtree, relative to it, while `git diff`
+// covers the whole tree with paths from the top. Run from a subfolder, the guard has to see the
+// same files, under the same names, as it does from the top.
+test('floor guard: run from a subfolder, an untracked file outside it is still checked', () => {
+  const root = makeRepo();
+  fs.mkdirSync(path.join(root, 'sub'));
+  fs.writeFileSync(path.join(root, 'new.js'), '// @ts-ignore\nmodule.exports = 1;\n');
+  const result = runGuard(root, path.join(root, 'sub'));
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /\[silenced-checker\] new\.js:/);
+});
+
+test('floor guard: run from a subfolder, an untracked file inside it is named from the top', () => {
+  const root = makeRepo();
+  fs.mkdirSync(path.join(root, 'sub'));
+  fs.writeFileSync(path.join(root, 'sub', 'new.js'), '// @ts-ignore\nmodule.exports = 1;\n');
+  const result = runGuard(root, path.join(root, 'sub'));
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /\[silenced-checker\] sub\/new\.js:/);
+});
+
+test('floor guard: outside a git work tree exits 2, never 0', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-skills-floor-guard-no-repo-'));
+  sandboxes.push(dir);
+  const result = runGuard(dir);
+  assert.equal(result.status, 2, result.stderr);
 });

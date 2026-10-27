@@ -31,6 +31,7 @@ description: Guides agents through [task/workflow]. Use when [specific trigger c
 **Rules:**
 - `name`: Lowercase, hyphen-separated. Must match the directory name.
 - `description`: Start with what the skill does in third person, then include one or more clear "Use when" trigger conditions. Include both *what* and *when*. Maximum 1024 characters.
+- Top-level keys are limited to the [Agent Skills specification](https://agentskills.io) fields: `name`, `description`, `license`, `compatibility`, `metadata`, and `allowed-tools`. Vendor or runtime controls such as `model`, `tools`, `max_turns`, or `context` go under `metadata` or in a per-agent adapter file; see [docs/advanced-per-agent-configuration.md](advanced-per-agent-configuration.md). The validator rejects any other top-level key.
 
 Published names are compatibility identifiers. In particular,
 `browser-testing-with-devtools` is the stable upstream name because other
