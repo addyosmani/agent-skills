@@ -1,5 +1,6 @@
 ---
 description: Define and enforce this project's quality bar — interview, sane defaults, CONSTRAINTS.md
+disable-model-invocation: true
 ---
 
 Invoke the agent-skills:constraint-driven-development skill.
@@ -8,7 +9,7 @@ $ARGUMENTS
 
 Default behaviour with no arguments: set up constraints for this repository.
 
-1. **Detect first.** Read package.json / pyproject.toml / go.mod, the test runner, existing lint configs, current coverage output, CI workflows, and the agent harness in use. Report what you found in two lines. Never ask for anything you can read.
+1. **Detect first.** Read package.json / pyproject.toml / go.mod, the test runner, existing lint configs, current coverage output, CI workflows, and the agent harness in use. Report what you found, then choose the smallest set of durable enforcement rules that fit the repo.
 
 2. **Interview, at most four questions.** One at a time, each with your best guess and a usable default so "I don't know" still produces a working config:
    - Which dimensions beyond the floor (coverage, security, performance, accessibility, architecture)
@@ -16,11 +17,11 @@ Default behaviour with no arguments: set up constraints for this repository.
    - Target numbers, or measure today's values and hold them
    - Slowest check tolerated before handing work back
 
-3. **Write CONSTRAINTS.md** at the repo root with a Floor section, enforced numbers, measured-only metrics with today's values, and an exceptions table with owners and expiry dates. Every number needs a stated reason.
+3. **Write CONSTRAINTS.md** at the repo root with a Floor section, enforced numbers, measured-only metrics with today's values, and an exceptions table with owners and expiry dates. Every number must be justified by the repo's current measured baseline or a clear product requirement.
 
-4. **Install what each picked dimension needs.** A dimension with a number and no tool behind it is an aspiration. Use the de facto tool so existing config keeps working: Semgrep for code scanning, gitleaks (always `--redact`) for secrets, osv-scanner for dependencies, axe-core for accessibility, Lighthouse for web vitals, size-limit for bundles, dependency-cruiser for boundaries, Stryker for assertion quality. Record the exact command next to each rule in CONSTRAINTS.md. Accessibility and performance need a running URL; if the project has none, say so and drop the dimension rather than inventing a check. Add the commands to package.json as check:fast / check:task / check:full.
+4. **Install what each picked dimension needs.** A dimension with a number and no tool behind it is an aspiration. Use the de facto tool so existing config keeps working: Semgrep for code scanning, ESLint/Prettier/ruff/black for format/lint, pytest/vitest/jest for unit tests, and whatever the repo already uses for coverage.
 
-5. **Place each check by cost.** Types, lint and secrets in the edit loop (seconds). Related tests and changed-line coverage at task end (under 90s). Everything else at review or in CI. Scope checks to the diff, not the whole repo.
+5. **Place each check by cost.** Types, lint and secrets in the edit loop (seconds). Related tests and changed-line coverage at task end (under 90s). Everything else at review or in CI. Scope checks around the changed files whenever possible.
 
 6. **Point the agent at it.** Add a line to CLAUDE.md telling agents to read CONSTRAINTS.md and never weaken it to make a change pass.
 
