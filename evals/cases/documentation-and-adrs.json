@@ -13,6 +13,10 @@
       {
         "prompt": "Update the documentation for the new setup flow and record why it changed",
         "top_k": 3
+      },
+      {
+        "prompt": "Our docs are out of date with the code",
+        "top_k": 3
       }
     ],
     "negative": [

@@ -17,7 +17,7 @@ Cursor combines **rules** (short policies) and **skills** (full workflows):
 | **User rules** | Cursor Settings → Rules | Account-wide policies |
 | **User skills** (optional) | `~/.cursor/skills/` | Global skills available in every workspace |
 
-Docs: [Rules](https://docs.cursor.com/context/rules) · [Skills](https://docs.cursor.com/context/skills) (URLs may redirect as Cursor updates docs).
+Docs: [Rules](https://cursor.com/docs/rules) · [Skills](https://cursor.com/docs/skills).
 
 ### Rules vs skills
 

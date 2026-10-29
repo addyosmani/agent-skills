@@ -289,3 +289,35 @@ test('floor guard: outside a git work tree exits 2, never 0', () => {
   const result = runGuard(dir);
   assert.equal(result.status, 2, result.stderr);
 });
+
+// The skill's CONSTRAINTS.md template keeps a ratchet's direction in its own column:
+// `| Project coverage | 62.4% | must not fall |`. The direction words sit after a `|`.
+const MEASURED = [
+  '',
+  '## Measured, not yet enforced',
+  '',
+  '| Metric | Today | Direction |',
+  '|--------|-------|-----------|',
+  '| Project coverage | 62.4% | must not fall |',
+  '| Bundle size (main) | 184 kB | must not grow |',
+  '',
+].join('\n');
+
+for (const [name, expectedExit, from, to] of [
+  ['raising a must-not-fall ratchet in its own column is silent', 0, '| 62.4% |', '| 65.0% |'],
+  ['lowering a must-not-fall ratchet in its own column is a violation', 1, '| 62.4% |', '| 55.0% |'],
+  ['lowering a must-not-grow ratchet in its own column is silent', 0, '| 184 kB |', '| 170 kB |'],
+  ['raising a must-not-grow ratchet in its own column is a violation', 1, '| 184 kB |', '| 250 kB |'],
+]) {
+  test(`floor guard: ${name}`, () => {
+    const root = makeRepo();
+    commitFile(root, 'CONSTRAINTS.md', CONSTRAINTS + MEASURED);
+    editConstraints(root, from, to);
+    const result = runGuard(root);
+    assert.equal(
+      result.status, expectedExit,
+      `expected exit ${expectedExit}, got ${result.status}\nstdout: ${result.stdout}\nstderr: ${result.stderr}`,
+    );
+    if (expectedExit === 1) assert.match(result.stderr, /\[threshold-loosened\]/);
+  });
+}

@@ -71,8 +71,10 @@ const GUARDED_FILES = [
 // Matches a path-like token ending in a spec/plan/todo artifact filename,
 // including an optional directory prefix with bracket placeholders like
 // docs/features/[feature-name]/spec.md. Case-insensitive so SPEC.md and a
-// drifted spec.md are both caught, then compared against the allowlist.
-const ARTIFACT_RE = /(?:[A-Za-z0-9._[\]-]+\/)*(?:spec|plan|todo)\.md/gi;
+// drifted spec.md are both caught, then compared against the allowlist. The
+// lookbehind keeps the match from starting mid-word, so `test-plan.md` or
+// `release_todo.md` are not mistaken for a drifted `plan.md` / `todo.md`.
+const ARTIFACT_RE = /(?<![A-Za-z0-9._[\]-])(?:[A-Za-z0-9._[\]-]+\/)*(?:spec|plan|todo)\.md/gi;
 
 function findViolations(relPath) {
   const abs = path.join(ROOT, relPath);

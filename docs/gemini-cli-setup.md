@@ -87,7 +87,7 @@ Many skills in this pack leverage [Model Context Protocol (MCP)](https://modelco
 - `browser-testing-with-devtools` uses the `chrome-devtools` MCP extension.
 - `performance-optimization` can benefit from performance-related MCP tools.
 
-To enable these, ensure you have the relevant MCP extensions installed in your Gemini CLI configuration (`~/.gemini/config.json`).
+To enable these, configure the relevant MCP servers under `mcpServers` in your Gemini CLI settings (`~/.gemini/settings.json`, or `.gemini/settings.json` in a project).
 
 ### Session Hooks
 

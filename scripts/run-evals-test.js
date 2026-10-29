@@ -56,8 +56,7 @@ function makeSandbox() {
   fs.mkdirSync(path.join(root, 'evals', 'cases'), { recursive: true });
   fs.mkdirSync(path.join(root, 'evals', 'fixtures', 'project'), { recursive: true });
   fs.copyFileSync(RUNNER, path.join(root, 'scripts', 'run-evals.js'));
-  fs.mkdirSync(path.join(root, 'scripts', 'lib'), { recursive: true });
-  fs.copyFileSync(path.join(__dirname, 'lib', 'skill-lint.js'), path.join(root, 'scripts', 'lib', 'skill-lint.js'));
+  fs.cpSync(path.join(__dirname, 'lib'), path.join(root, 'scripts', 'lib'), { recursive: true });
   fs.writeFileSync(path.join(root, 'evals', 'fixtures', 'project', 'context.txt'), 'fixture\n');
   return root;
 }
@@ -69,25 +68,100 @@ function run(root, args = []) {
   });
 }
 
-function runBehavioralWithGrading(root, raw) {
+function runBehavioralWithGrading(root, raw, options = {}) {
   writeSkill(root, 'alpha-skill', 'Handles alpha widgets.');
   const evalCase = completeCase('alpha-skill', 'change alpha widget');
-  evalCase.evals = [{ ...behavioralEval([]), kind: 'dialogue' }];
+  evalCase.evals = (options.ids || [1]).map((id) => ({ ...behavioralEval([]), id, kind: 'dialogue' }));
   writeJson(path.join(root, 'evals', 'cases', 'alpha-skill.json'), evalCase);
   const stub = path.join(root, 'stub-claude.cjs');
   fs.writeFileSync(stub, `
     const assert = require('node:assert/strict');
     require('child_process').execFileSync = (command, args) => {
       assert.equal(command, 'claude');
-      return args.includes('--output-format')
-        ? '{"type":"result","result":"done"}\\n'
-        : ${JSON.stringify(raw)};
+      const executor = args.includes('--output-format');
+      require('node:fs').appendFileSync(${JSON.stringify(path.join(root, 'claude-calls.txt'))}, executor ? 'executor\\n' : 'grader\\n');
+      if (executor && ${JSON.stringify(Boolean(options.error))}) throw Object.assign(new Error('executor failed'), ${JSON.stringify(options.error || {})});
+      return executor ? ${JSON.stringify(options.trace ?? '{"type":"result","subtype":"success","is_error":false,"result":"done"}\n')} : ${JSON.stringify(raw)};
     };
   `);
   return spawnSync(process.execPath, [
     '--require', stub, path.join(root, 'scripts', 'run-evals.js'),
     '--behavioral', 'alpha-skill',
   ], { cwd: root, encoding: 'utf8' });
+}
+
+const passingGrading = JSON.stringify({
+  expectations: [{ id: 1, text: 'check', passed: true, evidence: 'observed' }],
+  summary: { passed: 1, failed: 0, total: 1, pass_rate: 1 },
+});
+const terminal = { type: 'result', subtype: 'success', is_error: false };
+const call = { type: 'assistant', message: { content: [{ type: 'tool_use', name: 'Bash', id: 'test', input: {} }] } };
+const returned = (id, is_error = false) => ({ type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: id, is_error }] } });
+const traceOf = (...events) => events.map((event) => JSON.stringify(event)).join('\n') + '\n';
+
+for (const [name, trace] of Object.entries({
+  'terminal error': traceOf({ type: 'result', subtype: 'error_max_turns', is_error: true }),
+  'missing terminal': traceOf(call),
+  'implicit success': traceOf({ type: 'result', subtype: 'success' }),
+  'stale terminal': traceOf(terminal, call),
+  'permission denial': traceOf({ ...terminal, permission_denials: [{ tool_name: 'Read' }] }),
+  'pending tool': traceOf(call, terminal),
+  'unmatched return': traceOf(returned('unknown'), terminal),
+  'malformed event': 'null\n',
+  'invalid JSON': 'not JSON\n',
+  'null assistant message': traceOf({ type: 'assistant', message: null }, terminal),
+  'array assistant message': traceOf({ type: 'assistant', message: [] }, terminal),
+  'null assistant content': traceOf({ type: 'assistant', message: { content: null } }, terminal),
+  'object assistant content': traceOf({ type: 'assistant', message: { content: { type: 'tool_use', id: 'hidden' } } }, terminal),
+  'null user message': traceOf({ type: 'user', message: null }, terminal),
+  'null content block': traceOf({ type: 'assistant', message: { content: [null] } }, terminal),
+})) {
+  test(`does not grade an incomplete execution: ${name}`, () => {
+    const root = makeSandbox();
+    try {
+      const result = runBehavioralWithGrading(root, passingGrading, { trace });
+      assert.equal(result.status, 1, result.stdout + result.stderr);
+      assert.match(result.stdout, /execution incomplete/);
+      const base = path.join(root, 'evals/results/alpha-skill.eval-1');
+      assert.equal(fs.existsSync(`${base}.grading.json`), false);
+      assert.equal(fs.readFileSync(`${base}.execution.raw.txt`, 'utf8'), trace);
+      assert.equal(fs.readFileSync(path.join(root, 'claude-calls.txt'), 'utf8'), 'executor\n');
+    } finally { fs.rmSync(root, { recursive: true, force: true }); }
+  });
+}
+
+test('a returned failed probe can recover before successful completion', () => {
+  const root = makeSandbox();
+  try {
+    const next = { ...call, message: { content: [{ ...call.message.content[0], id: 'green' }] } };
+    const trace = traceOf(call, returned('test', true),
+      { type: 'user', message: { content: 'Continue the repair.' } }, next, returned('green'), terminal,
+      { type: 'system', subtype: 'status', status: 'idle' });
+    const result = runBehavioralWithGrading(root, passingGrading, { trace });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.equal(fs.existsSync(path.join(root, 'evals/results/alpha-skill.eval-1.grading.json')), true);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+for (const code of ['ETIMEDOUT', 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER']) {
+  test(`retains partial execution evidence and continues after ${code}`, () => {
+    const root = makeSandbox();
+    try {
+      const trace = traceOf(call);
+      const result = runBehavioralWithGrading(root, passingGrading,
+        { error: { code, stdout: trace, stderr: 'captured diagnostic' }, ids: [1, 2] });
+      assert.equal(result.status, 1, result.stdout + result.stderr);
+      assert.match(result.stdout, /eval 2: executing/);
+      for (const id of [1, 2]) {
+        const base = path.join(root, `evals/results/alpha-skill.eval-${id}`);
+        assert.equal(fs.existsSync(`${base}.grading.json`), false);
+        assert.equal(fs.readFileSync(`${base}.execution.raw.txt`, 'utf8'), trace);
+        assert.match(fs.readFileSync(`${base}.execution.error.txt`, 'utf8'), new RegExp(code));
+        assert.match(fs.readFileSync(`${base}.execution.error.txt`, 'utf8'), /captured diagnostic/);
+      }
+      assert.equal(fs.readFileSync(path.join(root, 'claude-calls.txt'), 'utf8'), 'executor\nexecutor\n');
+    } finally { fs.rmSync(root, { recursive: true, force: true }); }
+  });
 }
 
 for (const passed of [true, false]) {
@@ -424,6 +498,78 @@ test('rejects an invalid rank-1 floor', () => {
   assert.match(result.stderr, /--min-rank1 must be a number from 0 to 100/);
 });
 
+test('routes clipped prompt forms to their long-form skill (see #660)', () => {
+  const root = makeSandbox();
+  // Note: the skill name must not contain the clipped form itself — name
+  // tokens are weighted 2x, which would route the prompt even without the
+  // alias map. The prompt shares no vocabulary with the description except
+  // the clipped/long pair (auth/authentication): without the alias map the
+  // skill scores zero and the positive prompt fails.
+  writeSkill(
+    root,
+    'credential-skill',
+    'Protects credential verification. Use when configuring authentication ceremonies.',
+  );
+  writeSkill(root, 'paint-skill', 'Paints sheds. Use when choosing exterior paint colors.');
+  writeJson(
+    path.join(root, 'evals', 'cases', 'credential-skill.json'),
+    completeCase('credential-skill', 'fix broken auth checks', 1),
+  );
+  writeJson(
+    path.join(root, 'evals', 'cases', 'paint-skill.json'),
+    completeCase('paint-skill', 'choose exterior paint colors', 1),
+  );
+
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test('folds -ifications to their -ify verb, not to the unrelated "specific" (see #660)', () => {
+  const root = makeSandbox();
+  // "specification" is a nominalization of "specify", so it must reach the
+  // spec skill. Stripping a bare "-ation" instead yields "specific", which
+  // silently cross-merges the two words and starves the spec skill. Each
+  // prompt shares vocabulary with its own skill only.
+  writeSkill(root, 'spec-skill', 'Agree on requirements up front. Use when you specify behaviour.');
+  writeSkill(root, 'specific-skill', 'Narrow a choice down. Use when one target matters.');
+  writeJson(
+    path.join(root, 'evals', 'cases', 'spec-skill.json'),
+    completeCase('spec-skill', 'document a specification for the billing rollout', 1),
+  );
+  writeJson(
+    path.join(root, 'evals', 'cases', 'specific-skill.json'),
+    completeCase('specific-skill', 'narrow the choice down to one target', 1),
+  );
+
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test('strips -ations as well as -ation so plurals do not out-stem singulars (see #660)', () => {
+  const root = makeSandbox();
+  // "migration" and "migrations" are the same word, so both forms have to
+  // reach the migration skill. With only "-ation" in the suffix list the
+  // plural keeps its "-s" ("migration" -> "migr" vs "migrations" ->
+  // "migration"), which splits the pair and halves the score. Neither
+  // prompt shares vocabulary with the other skill.
+  writeSkill(root, 'migration-skill', 'Move old data stores off production without downtime.');
+  writeSkill(root, 'recipe-skill', 'Plan tonight dinner from what is already in the cupboard.');
+  writeJson(
+    path.join(root, 'evals', 'cases', 'migration-skill.json'),
+    completeCase('migration-skill', 'plan the database migrations', 1),
+  );
+  writeJson(
+    path.join(root, 'evals', 'cases', 'recipe-skill.json'),
+    completeCase('recipe-skill', 'plan tonight dinner from the cupboard', 1),
+  );
+
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
 // ---------- parseGrading expectation-binding tests ----------
 
 test('accepts reordered-but-complete grader results', () => {
@@ -616,6 +762,8 @@ test('a grader that throws leaves no result file behind', () => {
     // Stale files from a prior run
     fs.writeFileSync(`${base}.grading.json`, '{"previous":"run"}\n');
     fs.writeFileSync(`${base}.grading.raw.txt`, 'previous raw output');
+    fs.writeFileSync(`${base}.execution.raw.txt`, 'previous partial trace');
+    fs.writeFileSync(`${base}.execution.error.txt`, 'previous execution failure');
 
     clearGradingSlot(base);
 
@@ -623,6 +771,8 @@ test('a grader that throws leaves no result file behind', () => {
 
     assert.equal(fs.existsSync(`${base}.grading.json`), false, 'stale grading.json must not survive a crash');
     assert.equal(fs.existsSync(`${base}.grading.raw.txt`), false, 'stale grading.raw.txt must not survive a crash');
+    assert.equal(fs.existsSync(`${base}.execution.raw.txt`), false, 'old partial trace must not survive a new attempt');
+    assert.equal(fs.existsSync(`${base}.execution.error.txt`), false, 'old execution failure must not survive a new attempt');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }

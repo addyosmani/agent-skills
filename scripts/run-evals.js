@@ -32,6 +32,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { parseFrontmatter } = require('./lib/skill-lint');
+const { executionFailure } = require('./lib/execution-status');
 const { execFileSync } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
@@ -70,7 +71,16 @@ const STOP = new Set([
 function stem(t) {
   // Light suffix stripping so "conflicts"/"conflict", "branching"/"branch",
   // "architectural"/"architecture" cluster together. Not a real stemmer.
-  for (const suf of ['ally', 'ing', 'ed', 'es', 'al']) {
+  // "ations"/"ation" fold Latinate nominalizations ("documentation"/"document",
+  // "configuration"/"configure") the same way. Both forms are listed so a
+  // plural doesn't survive the rule as a longer stem than its singular
+  // ("migration" -> "migr" but "migrations" -> "migration").
+  // "-ification" nouns are built on "-ify" verbs, so they fold to the verb's
+  // "-ifi" stem ("specification"/"specify", "verification"/"verify") rather
+  // than losing "-ication" and colliding with an unrelated word
+  // ("specification"/"specific"). Checked first so it wins over "-ation".
+  if (t.length > 10 && /ifications?$/.test(t)) t = t.replace(/ications?$/, 'i');
+  for (const suf of ['ally', 'ing', 'ations', 'ation', 'ed', 'es', 'al']) {
     if (t.length > suf.length + 3 && t.endsWith(suf)) {
       t = t.slice(0, -suf.length);
       break;
@@ -87,13 +97,34 @@ function stem(t) {
   return t;
 }
 
+// Clipped forms users type that never share a stem with the long form used
+// in descriptions ("docs" vs "documentation", "auth" vs "authentication").
+// Applied before stemming; each value is the canonical long form, so both
+// registers stem identically. Explicit and easy to extend (see #660) —
+// prefer adding an entry here over padding descriptions with clipped forms,
+// which would only teach skills to game the lexical proxy.
+const TOKEN_ALIASES = new Map(
+  Object.entries({
+    doc: 'document',
+    docs: 'document',
+    config: 'configuration',
+    configs: 'configuration',
+    auth: 'authenticate',
+    authentication: 'authenticate',
+    repo: 'repository',
+    repos: 'repository',
+    dep: 'dependency',
+    deps: 'dependency',
+  }),
+);
+
 function tokenize(text) {
   return text
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, ' ')
     .split(/[\s-]+/)
     .filter((t) => t.length > 2 && !STOP.has(t))
-    .map(stem);
+    .map((t) => stem(TOKEN_ALIASES.get(t) || t));
 }
 
 function termFreq(tokens) {
@@ -517,8 +548,9 @@ function extractExecutorModel(trace) {
 }
 
 function clearGradingSlot(base) {
-  fs.rmSync(`${base}.grading.json`, { force: true });
-  fs.rmSync(`${base}.grading.raw.txt`, { force: true });
+  for (const suffix of ['grading.json', 'grading.raw.txt', 'execution.raw.txt', 'execution.error.txt']) {
+    fs.rmSync(`${base}.${suffix}`, { force: true });
+  }
 }
 
 function persistGradingOutcome(base, grading, raw, runMeta) {
@@ -594,14 +626,29 @@ function runBehavioral(skillName, dryRun) {
     // headless denials would force the exact narrate-instead-of-perform
     // failure mode that trace grading exists to catch.
     try {
-    const trace = execFileSync(
-      'claude',
-      ['-p', '--verbose', '--output-format', 'stream-json',
-        '--permission-mode', 'acceptEdits',
-        '--allowedTools', EXECUTOR_TOOLS,
-        '--append-system-prompt', `Follow this skill exactly:\n\n${fs.readFileSync(skillFile, 'utf8')}`],
-      { input: ev.prompt, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, cwd: workspace, timeout: EXECUTOR_TIMEOUT_MS },
-    );
+    let trace;
+    let executorError;
+    try {
+      trace = execFileSync(
+        'claude',
+        ['-p', '--verbose', '--output-format', 'stream-json',
+          '--permission-mode', 'acceptEdits',
+          '--allowedTools', EXECUTOR_TOOLS,
+          '--append-system-prompt', `Follow this skill exactly:\n\n${fs.readFileSync(skillFile, 'utf8')}`],
+        { input: ev.prompt, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, cwd: workspace, timeout: EXECUTOR_TIMEOUT_MS },
+      );
+    } catch (error) {
+      trace = String(error.stdout || '');
+      executorError = error;
+    }
+    const failure = executorError ? `${executorError.code || 'process failed'}: ${executorError.message}` : executionFailure(trace);
+    if (failure) {
+      fs.writeFileSync(`${base}.execution.raw.txt`, trace);
+      fs.writeFileSync(`${base}.execution.error.txt`, `${failure}\n${executorError?.stderr || ''}`);
+      console.log(`  ✗  eval ${ev.id}: execution incomplete: ${failure}; raw execution retained`);
+      failures++;
+      continue;
+    }
     const gradingInstructions = kind === 'dialogue'
       ? [
         'You are grading an agent dialogue transcript against explicit expectations.',

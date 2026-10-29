@@ -111,8 +111,9 @@ Comment the *why*, not the *what*:
 counter += 1;
 
 // GOOD: Explains non-obvious intent
-// Rate limit uses a sliding window — reset counter at window boundary,
-// not on a fixed schedule, to prevent burst attacks at window edges
+// Rate limit uses a fixed window that opens on the first request after the
+// previous one expires, not on a clock schedule. Known gap: a client can spend
+// the full limit just before a reset and again just after (2x in a moment)
 if (now - windowStart > WINDOW_SIZE_MS) {
   counter = 0;
   windowStart = now;

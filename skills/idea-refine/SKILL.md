@@ -28,8 +28,10 @@ Refines raw ideas into sharp, actionable concepts worth building through structu
 This skill is primarily an interactive dialogue. Invoke it with an idea, and the agent will guide you through the process.
 
 ```bash
-# Optional: Initialize the ideas directory
-bash skills/idea-refine/scripts/idea-refine.sh
+# Optional. Run from the project root so this creates ./docs/ideas.
+# <skill-dir> is the directory that contains this SKILL.md
+# (for example .agents/skills/idea-refine or .cursor/skills/idea-refine).
+bash <skill-dir>/scripts/idea-refine.sh
 ```
 
 ## Output

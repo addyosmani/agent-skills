@@ -158,8 +158,9 @@ form submission state. React 19 replaced the manual
 isPending/setIsPending pattern with this hook.
 
 Source: https://react.dev/blog/2024/12/05/react-19#actions
-"useTransition now supports async functions [...] to handle
-pending states automatically"
+"In React 19, we're adding support for using async functions in
+transitions to handle pending states, errors, forms, and optimistic
+updates automatically."
 ```
 
 **Citation rules:**
