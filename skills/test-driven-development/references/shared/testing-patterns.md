@@ -212,7 +212,8 @@ test('user can create and complete a task', async ({ page }) => {
   await page.getByRole('button', { name: /create/i }).click();
 
   // Verify task appears
-  const task = page.getByRole('listitem', { name: /buy groceries/i });
+  // listitem has no accessible name from its content, so filter by text
+  const task = page.getByRole('listitem').filter({ hasText: /buy groceries/i });
   await expect(task).toBeVisible();
 
   // Complete the task
