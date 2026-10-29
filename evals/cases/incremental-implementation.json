@@ -52,6 +52,21 @@
         "The work is decomposed into independently useful vertical slices",
         "Verification is required before each slice is committed"
       ]
+    },
+    {
+      "id": 3,
+      "prompt": "Finish Task 1 in tasks/todo.md.",
+      "expected_output": "The task's Verify lines are run, including the requirement coverage check from the spec; tests named 'DSC-1: ...' and 'DSC-2: ...' are added; the check and the suite both pass",
+      "files": [
+        "incremental-requirement-ids"
+      ],
+      "expectations": [
+        "The requirement coverage check from the spec's Commands or the task's Verify line is run, and reports DSC-1 and DSC-2 untested before any test is added",
+        "A test is added for each of DSC-1 and DSC-2 whose name starts with the ID and a colon, as the spec's Testing Strategy says",
+        "The DSC-1 test asserts the percentage reduction and cent rounding, and the DSC-2 test asserts the total never goes below zero (the ALL code takes 150 percent)",
+        "No requirement is waived or dropped to make the check pass",
+        "The coverage check and the test command both pass at the end"
+      ]
     }
   ]
 }

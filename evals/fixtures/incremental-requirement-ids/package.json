@@ -1,0 +1,9 @@
+{
+  "name": "discount-codes",
+  "version": "1.0.0",
+  "description": "Applies percentage discount codes to a cart total in integer cents.",
+  "private": true,
+  "scripts": {
+    "test": "node --test"
+  }
+}

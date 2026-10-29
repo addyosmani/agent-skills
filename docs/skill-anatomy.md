@@ -137,14 +137,15 @@ Skills load on demand: only the skill name and description sit in context at sta
 
 ## Script Requirements
 
-When a skill ships runnable helpers under `scripts/`, each script follows these conventions:
+When a skill ships runnable helpers under `scripts/`, each script is bash, or a dependency-free Node script when the logic outgrows shell (parsing, cross-platform behavior). Each follows these conventions:
 
-- Use a `#!/bin/bash` shebang.
-- Use `set -e` for fail-fast behavior.
-- Write status messages to stderr: `echo "Message" >&2`.
-- Write machine-readable output (JSON) to stdout.
-- Include a cleanup trap for temporary files.
-- Reference the script path as `skills/<skill-name>/scripts/<script>.sh` (repo-relative).
+- Bash: use a `#!/bin/bash` shebang and `set -e` for fail-fast behavior.
+- Node: use a `#!/usr/bin/env node` shebang and an `.mjs` file that imports only Node built-ins, so it runs without a package install.
+- Write status messages to stderr and the result to stdout: JSON, or plain text with one item per line, grouped under headings when there are several kinds of item.
+- On bad input or a missing precondition, print a one-line message, not a stack trace, and exit with a code distinct from the script's result codes.
+- Clean up temporary files (in bash, with a cleanup trap).
+- Reference the script path as `skills/<skill-name>/scripts/<script>` (repo-relative).
+- Cover a Node script with a `node --test` file in the root `scripts/` directory that CI runs.
 
 ## Writing Principles
 
