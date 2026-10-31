@@ -167,8 +167,16 @@ git worktree remove ../project-feature-a
 Benefits:
 - Multiple agents can work on different features simultaneously
 - No branch switching needed (each directory has its own branch)
-- If one experiment fails, delete the worktree — nothing is lost
+- If one experiment fails, delete the worktree — committed work is safe; uncommitted or untracked files in it are destroyed
 - Changes are isolated until explicitly merged
+
+**Setting up a new worktree**
+- A worktree has tracked files only: no `node_modules`, `.env`, or build output.
+- Before installing: `ls -ld node_modules */node_modules`. Any symlink into another checkout → `unlink` it (never `rm -rf dir/`, which deletes the target), then install. In npm workspaces a root `npm ci` writes through workspace symlinks and guts the other checkout.
+- Bring the env file in deliberately; never commit it.
+
+**Removing a worktree**
+- If `git worktree remove` refuses (modified/untracked files), never add `--force` on your own. Run `git -C <path> status --porcelain -uall`, show the list, ask: commit to the branch / move into the main checkout / delete (unrecoverable).
 
 ## The Save Point Pattern
 
@@ -186,7 +194,7 @@ Agent starts work
     └── Feature complete → All commits form a clean history
 ```
 
-This pattern means you never lose more than one increment of work. If an agent goes off the rails, `git reset --hard HEAD` takes you back to the last successful state.
+This pattern means you never lose more than one increment of work. If an agent goes off the rails, `git reset --hard HEAD` takes you back to the last successful state — only after `git status --porcelain` shows nothing you didn't create this session; otherwise `git stash -u` first.
 
 ## Change Summaries
 
