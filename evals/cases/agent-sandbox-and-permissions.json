@@ -1,0 +1,52 @@
+{
+  "skill_name": "agent-sandbox-and-permissions",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Our coding agent runs shell commands on my laptop — lock down what it can read and write",
+        "top_k": 3
+      },
+      {
+        "prompt": "Set up a sandbox for the agent so it can't read my SSH keys or reach the internet",
+        "top_k": 3
+      },
+      {
+        "prompt": "How do I check that the agent's sandbox really blocks writes outside the repo?",
+        "top_k": 3
+      },
+      {
+        "prompt": "The agent has our cloud credentials in its environment — what should we give it instead?",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Harden this endpoint against SQL injection",
+        "owner": "security-and-hardening"
+      },
+      {
+        "prompt": "Add structured logging to the checkout service",
+        "owner": "observability-and-instrumentation"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "execution",
+      "prompt": "The triage agent in README.md runs unattended on a shared dev box and its configuration is in harness.config.json. Harden it so that a hostile issue in the tracker cannot exfiltrate credentials or push code, then prove the boundary holds.",
+      "expected_output": "A capability contract for the run, a tightened harness.config.json (deny-by-default egress, no host network, no credential mounts, no blanket auto-approve), repo-controlled execution paths neutralized, and a negative probe whose recorded output shows at least one escape attempt failing",
+      "files": [
+        "agent-sandbox-and-permissions"
+      ],
+      "expectations": [
+        "The capability boundary is stated explicitly — what the run may read, write, execute, and reach — and every mount, environment variable, and allowlist entry in the updated config traces to it",
+        "Egress is deny-by-default with a named host allowlist instead of network: host, and the cloud metadata address is not reachable from the run",
+        "Long-lived credentials are removed from the run: no operator token or AWS profile in the sandbox environment, and $HOME / ~/.aws are no longer mounted into the workspace",
+        "The blanket autoApprove list is replaced by an explicit approval set limited to outward-facing or irreversible actions such as push, PR/comment creation, and publish",
+        "Repository-controlled execution paths are neutralized rather than trusted: package-manager install scripts and git hooks are disabled or explicitly reviewed, and the piped-to-shell Makefile target is not run implicitly",
+        "A negative probe is added or executed and its real output recorded, showing at least one of the following failing inside the boundary: reading a file outside the worktree, writing outside the worktree, reaching an unlisted host, or reaching 169.254.169.254"
+      ]
+    }
+  ]
+}
