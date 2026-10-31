@@ -89,6 +89,8 @@ Load the relevant spec section when starting a feature. Don't load the entire sp
 
 Before editing a file, read it. Before implementing a pattern, find an existing example in the codebase.
 
+For search commands used to collect context, follow `../../references/agent-first-clis.md`: bound the search, preserve empty-result exit semantics, and choose structured output only when another command will parse it.
+
 **Pre-task context loading:**
 1. Read the file(s) you'll modify
 2. Read related test files
