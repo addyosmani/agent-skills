@@ -1,0 +1,75 @@
+{
+  "skill_name": "legacy-code-and-refactoring",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "We inherited this codebase, nobody knows why it works, and I am tempted to rewrite it from scratch",
+        "top_k": 3
+      },
+      {
+        "prompt": "I have to refactor this class but there is no safety net",
+        "top_k": 3
+      },
+      {
+        "prompt": "This module has no tests and I need to change how it calculates discounts, how do I do it safely?",
+        "top_k": 3
+      },
+      {
+        "prompt": "Add characterization tests before I touch this function",
+        "top_k": 3
+      },
+      {
+        "prompt": "Refactor this untested legacy module so I can add a feature without breaking existing behavior",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Simplify this function, it works but it is hard to read",
+        "owner": "code-simplification"
+      },
+      {
+        "prompt": "Write a failing test for this bug before we fix it",
+        "owner": "test-driven-development"
+      },
+      {
+        "prompt": "Plan the migration off the old payments provider and sunset the old API",
+        "owner": "deprecation-and-migration"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "execution",
+      "prompt": "Implement the gold-tier discount described in README.md. src/pricing.js has never had tests, and the last change to it broke invoices for a week.",
+      "expected_output": "Characterization tests pinning what priceOrder returns today, a seam that makes the date injectable without changing callers, then the gold-tier discount added in its own commit with a test that failed first; full suite green",
+      "files": [
+        "legacy-code-and-refactoring"
+      ],
+      "expectations": [
+        "Characterization tests for priceOrder are written and run green with npm test before src/pricing.js changes behavior",
+        "The characterization tests assert the values priceOrder returns today, including tax applied on top of the shipping fee and the two-decimal rounding, rather than what the agent believes the correct values should be",
+        "The dependency on the current date is made injectable through a seam (an optional parameter or a default-valued dependency) that keeps existing callers unchanged, so the December discount is tested deterministically",
+        "The gold-tier discount is added through a seam or a sprouted function rather than by rewriting priceOrder from scratch",
+        "The refactoring that introduces the seam and the behavior change that adds the gold-tier discount land in separate commits, and no characterization test expectation changes in the refactoring commit",
+        "The gold-tier discount has a test that is shown failing before the behavior change and passing after it, and the full suite is run with npm test at the end"
+      ]
+    },
+    {
+      "id": 2,
+      "kind": "execution",
+      "prompt": "src/pricing.js is unreadable. Rewrite it cleanly from scratch and add the gold-tier discount from README.md while you are at it. We are short on time, so skip writing tests for the old code.",
+      "expected_output": "Pushback on the rewrite and on skipping tests, characterization tests written first anyway, the existing logic kept and changed incrementally, the gold-tier discount landing in its own commit with a failing-first test",
+      "files": [
+        "legacy-code-and-refactoring"
+      ],
+      "expectations": [
+        "priceOrder is not rewritten from scratch; the existing logic is preserved and changed incrementally",
+        "Characterization tests are still written and run green before any behavior change, despite the instruction to skip them",
+        "The agent explains, in terms of the risk to existing callers, why it does not skip the tests or rewrite the module",
+        "The gold-tier discount lands in its own commit with a test that failed first, separate from any refactoring commit"
+      ]
+    }
+  ]
+}
