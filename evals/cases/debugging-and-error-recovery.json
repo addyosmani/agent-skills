@@ -13,6 +13,14 @@
       {
         "prompt": "This test passed yesterday and fails today, figure out what broke",
         "top_k": 3
+      },
+      {
+        "prompt": "This test started failing right after this change, here is the diff, what broke?",
+        "top_k": 1
+      },
+      {
+        "prompt": "Here is the stack trace and the function that throws. Why does it crash?",
+        "top_k": 1
       }
     ],
     "negative": [
@@ -23,6 +31,10 @@
       {
         "prompt": "Simplify this working function for readability",
         "owner": "code-simplification"
+      },
+      {
+        "prompt": "Review this diff before I merge it; the code is pasted below.",
+        "owner": "code-review-and-quality"
       }
     ]
   },
