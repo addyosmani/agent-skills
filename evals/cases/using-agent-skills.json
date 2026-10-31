@@ -21,7 +21,8 @@
         "owner": "debugging-and-error-recovery"
       },
       {
-        "prompt": "Make the modal accessible for keyboard users"
+        "prompt": "Make the modal accessible for keyboard users",
+        "owner": "frontend-ui-engineering"
       }
     ]
   },
@@ -30,12 +31,14 @@
       "id": 1,
       "prompt": "A user asks: 'the login page is broken after yesterday's deploy'. Decide which skill applies and why.",
       "expected_output": "Correct routing through the decision tree with the chosen skill and rationale",
+      "files": [
+        "using-agent-skills"
+      ],
       "expectations": [
         "The chosen skill matches the decision tree in the meta-skill",
         "The rationale references the routing logic rather than guessing",
         "Core operating behaviors (assumptions surfaced) are respected"
-      ],
-      "trust_level": "provisional"
+      ]
     }
   ]
 }

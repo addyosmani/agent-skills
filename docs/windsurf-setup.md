@@ -9,9 +9,9 @@ Windsurf uses `.windsurfrules` for project-specific agent instructions:
 ```bash
 # Create a combined rules file from your most important skills
 cat /path/to/agent-skills/skills/test-driven-development/SKILL.md > .windsurfrules
-echo "\n---\n" >> .windsurfrules
+printf '\n---\n\n' >> .windsurfrules
 cat /path/to/agent-skills/skills/incremental-implementation/SKILL.md >> .windsurfrules
-echo "\n---\n" >> .windsurfrules
+printf '\n---\n\n' >> .windsurfrules
 cat /path/to/agent-skills/skills/code-review-and-quality/SKILL.md >> .windsurfrules
 ```
 

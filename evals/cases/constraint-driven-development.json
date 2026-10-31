@@ -1,0 +1,79 @@
+{
+  "skill_name": "constraint-driven-development",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Set up quality constraints for this project — I want to define our bar before the agent writes more code",
+        "top_k": 3
+      },
+      {
+        "prompt": "We have no written standards. Ask me what I care about and write it down with sane defaults",
+        "top_k": 3
+      },
+      {
+        "prompt": "The agent keeps adding @ts-ignore and skipping tests to get green. How do I stop that?",
+        "top_k": 3
+      },
+      {
+        "prompt": "What coverage threshold should we enforce, and where should it run so it doesn't slow us down?",
+        "top_k": 3
+      },
+      {
+        "prompt": "I care about accessibility and web performance — set those up as enforced constraints",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Review this pull request across correctness and security",
+        "owner": "code-review-and-quality"
+      },
+      {
+        "prompt": "Add a deploy stage to our pipeline with a manual approval gate",
+        "owner": "ci-cd-and-automation"
+      },
+      {
+        "prompt": "Write a failing test for this bug before we fix it",
+        "owner": "test-driven-development"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "dialogue",
+      "prompt": "Set up constraints for this repo. I don't really know what numbers to pick.",
+      "expected_output": "A short interview with defaults offered, followed by a CONSTRAINTS.md the user can explain",
+      "expectations": [
+        "The agent inspects the repo for stack, test runner, and existing linters before asking anything",
+        "No more than four questions are asked, and each one carries a usable default",
+        "When the user has no target number, the agent proposes recording today's value and holding it rather than inventing a threshold",
+        "The resulting constraints say where each check runs, keeping fast checks in the edit loop and slow checks later",
+        "Every number written down is accompanied by a reason"
+      ]
+    },
+    {
+      "id": 2,
+      "kind": "dialogue",
+      "prompt": "Our coverage is 62% and I want to enforce 85% starting today.",
+      "expected_output": "Pushback on setting an unmeetable budget, with the ratchet alternative offered",
+      "expectations": [
+        "The agent points out that a threshold the codebase fails today produces a permanently red build",
+        "It offers to record 62% and require that it not fall, as an adoptable alternative",
+        "It does not silently accept 85% without noting the consequence"
+      ]
+    },
+    {
+      "id": 3,
+      "kind": "dialogue",
+      "prompt": "Accessibility matters to us. Add it as a constraint.",
+      "expected_output": "A working accessibility check, not just a threshold written down",
+      "expectations": [
+        "The agent names axe-core and gives the install and run commands rather than only stating a violation threshold",
+        "It notes that axe needs a running URL and asks for one, or drops the dimension if the project has no URL to hit",
+        "The command that produces the verdict is recorded alongside the rule in CONSTRAINTS.md",
+        "The check is placed at the preview-deploy stage rather than in the per-edit loop"
+      ]
+    }
+  ]
+}

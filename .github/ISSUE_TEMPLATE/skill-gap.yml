@@ -1,0 +1,80 @@
+name: Skill gap
+description: Report when a skill's guidance was wrong, outdated, or did not apply in your project.
+title: "[skill-gap]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form when a skill gave incorrect, outdated, or ecosystem-mismatched guidance.
+        Keep answers short — enough context for maintainers to triage, not a full write-up.
+
+  - type: dropdown
+    id: skill
+    attributes:
+      label: Affected skill
+      description: Which skill did not work as expected?
+      options:
+        - api-and-interface-design
+        - browser-testing-with-devtools
+        - ci-cd-and-automation
+        - code-review-and-quality
+        - code-simplification
+        - context-engineering
+        - debugging-and-error-recovery
+        - deprecation-and-migration
+        - documentation-and-adrs
+        - doubt-driven-development
+        - frontend-ui-engineering
+        - git-workflow-and-versioning
+        - idea-refine
+        - incremental-implementation
+        - interview-me
+        - observability-and-instrumentation
+        - performance-optimization
+        - planning-and-task-breakdown
+        - security-and-hardening
+        - shipping-and-launch
+        - source-driven-development
+        - spec-driven-development
+        - test-driven-development
+        - using-agent-skills
+        - other / not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: excerpt
+    attributes:
+      label: Relevant instruction or excerpt
+      description: Paste the line or short passage from SKILL.md (or a linked reference) that misled the agent or did not apply.
+      placeholder: e.g. the verification checklist said to run `npm test`
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Project context
+      description: Language, build tool, test runner, or other conventions that matter here.
+      placeholder: e.g. Java 21, Maven, JUnit 5
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-failed
+    attributes:
+      label: What did not work or did not apply
+      description: What happened when the agent followed the skill? What was wrong or irrelevant?
+      placeholder: e.g. agent insisted on npm scripts in a Maven repo; no package.json exists
+    validations:
+      required: true
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: What you did instead
+      description: How did you (or the agent) get unblocked? Optional but very helpful.
+      placeholder: e.g. pointed the agent at `./mvnw test` and ignored the npm checklist
+    validations:
+      required: false

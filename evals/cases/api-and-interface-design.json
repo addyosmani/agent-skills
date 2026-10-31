@@ -31,13 +31,15 @@
       "id": 1,
       "prompt": "Design the public API for a URL-shortening service: create, resolve, stats. Produce the endpoint contracts.",
       "expected_output": "Endpoint contracts with methods, paths, request/response shapes, and explicit error semantics",
+      "files": [
+        "api-and-interface-design"
+      ],
       "expectations": [
         "Error responses are specified with status codes and a consistent error shape, not just happy paths",
         "Input validation at the boundary is addressed for user-supplied URLs",
         "Versioning or compatibility strategy is stated",
         "The response does not silently invent unstated requirements"
-      ],
-      "trust_level": "provisional"
+      ]
     }
   ]
 }

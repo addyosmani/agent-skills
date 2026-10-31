@@ -87,13 +87,13 @@ Many skills in this pack leverage [Model Context Protocol (MCP)](https://modelco
 - `browser-testing-with-devtools` uses the `chrome-devtools` MCP extension.
 - `performance-optimization` can benefit from performance-related MCP tools.
 
-To enable these, ensure you have the relevant MCP extensions installed in your Gemini CLI configuration (`~/.gemini/config.json`).
+To enable these, configure the relevant MCP servers under `mcpServers` in your Gemini CLI settings (`~/.gemini/settings.json`, or `.gemini/settings.json` in a project).
 
 ### Session Hooks
 
 Gemini CLI supports session lifecycle hooks. You can use these to automatically inject context or run validation scripts at the start of a session.
 
-To replicate the `agent-skills` experience from other tools, you can configure a `SessionStart` hook that reminds you of the available skills or loads a meta-skill.
+To replicate the `agent-skills` experience from other tools, you can configure a `SessionStart` hook that reminds you of the available skills or loads a meta-skill. `hooks/session-start.sh` in this repo is a ready-made script for that: it prints the `using-agent-skills` meta-skill as a standard `SessionStart` JSON envelope on stdout.
 
 ### Explicit Context Loading
 
@@ -107,11 +107,12 @@ This is useful when you want to ensure a specific workflow is followed without w
 
 ## Slash Commands
 
-The repo ships 8 slash commands under `.gemini/commands/`: 7 lifecycle commands plus the `/webperf` specialist audit. Gemini CLI auto-discovers them when you run from the project root.
+The repo ships 9 slash commands under `.gemini/commands/`: 8 lifecycle commands plus the `/webperf` specialist audit. Gemini CLI auto-discovers them when you run from the project root.
 
 | Command | What it does |
 |---------|--------------|
 | `/spec` | Write a structured spec before writing code |
+| `/constraints` | Define and enforce the project's quality bar |
 | `/planning` | Break work into small, verifiable tasks |
 | `/build` | Implement the next task incrementally |
 | `/test` | Run TDD workflow — red, green, refactor |

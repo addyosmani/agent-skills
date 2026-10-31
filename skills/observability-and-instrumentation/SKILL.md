@@ -88,6 +88,21 @@ app.use((req, res, next) => {
 });
 ```
 
+**When several entry points write to one log, name the entry point.** A correlation ID identifies a run; it does not say which code path started it. The same job reached by a scheduler, by a replay endpoint, and by a manual CLI run produces interchangeable lines in one sink, so attributing a line falls back to elimination — cross-reading the scheduler's history, the process table, a deploy log — and that argument holds only as long as those external records happen to still exist. Stamp the entry point where the run starts, next to the correlation ID, and propagate both the same way:
+
+```typescript
+// One helper for every entry point: the run's own logger carries both fields.
+// `entryPoint`, not `source` — ECS reserves `source.*` for network fields.
+export const runLog = (entryPoint: 'scheduler' | 'replay_endpoint' | 'cli', runId: string) =>
+  logger.child({ entryPoint, requestId: runId });
+
+// scheduler tick        -> runLog('scheduler', crypto.randomUUID())
+// POST /jobs/:id/replay -> runLog('replay_endpoint', req.id)
+// CLI invocation        -> runLog('cli', process.env.RUN_ID ?? crypto.randomUUID())
+```
+
+Both fields have to cross the same boundaries as the correlation ID — queue metadata, HTTP headers — or a worker re-derives the entry point and guesses. A field that merely correlates with an entry point is a hint, not an attribution: anything that can invoke the job can reproduce it.
+
 **Never log secrets, tokens, passwords, or full PII.** This is a hard rule from the `security-and-hardening` skill — telemetry pipelines are a classic data-leak path. Allowlist fields; don't log whole request bodies.
 
 ### 4. Metrics
@@ -154,6 +169,24 @@ Rules for every alert you create:
 3. **It has a threshold and duration** justified by the SLO or by historical data, not by a guess.
 4. Use two severities only: **page** (user-facing, act now) and **ticket** (degradation, act this week). A third tier becomes noise that trains people to ignore everything.
 
+#### Writing Runbooks
+
+Rule 2 above requires every alert to link to a runbook. A runbook's job is to answer three questions without requiring the reader to think: what is happening, what to check first, and who to call if that doesn't resolve it. Store in `docs/runbooks/` named after the alert.
+
+**Minimum viable runbook (three lines):**
+
+```markdown
+# Runbook: High Error Rate on /api/tasks
+**Means:** DB connection pool likely exhausted, or a bad deploy.
+**First check:** `SELECT count(*) FROM pg_stat_activity WHERE backend_type = 'client backend';`
+  — if count > pool limit, see Step 2. (Swap in the equivalent for your database.)
+**Escalate to:** #db-oncall or engineering on-call rotation.
+```
+
+**When to expand beyond three lines:** add steps only when the first check alone isn't enough to decide. A five-step runbook that covers the three most common causes is better than a twenty-step document that covers every edge case and gets skimmed.
+
+**Keep runbooks current.** Update the runbook as part of closing every incident it was used in — a stale runbook builds false confidence. If a step was wrong or missing, fix it before marking the incident resolved.
+
 ### 7. Verify the telemetry itself
 
 Instrumentation is code; it can be wrong. Before calling the work done, trigger the paths and look at the actual output:
@@ -180,6 +213,7 @@ Instrumentation is code; it can be wrong. Before calling the work done, trigger 
 - A feature PR with retries, queues, or external calls and zero new telemetry
 - Log lines built by string interpolation instead of structured fields
 - No correlation/request ID — each log line is an orphan
+- One log stream fed by a scheduler, a webhook, and manual runs, with no field naming which one produced the line
 - Metrics labeled with user IDs, raw URLs, or error message text (cardinality bomb)
 - Latency tracked as an average with no percentiles
 - Alerts that fire daily and get acknowledged without action
@@ -193,6 +227,7 @@ After instrumenting a feature, confirm:
 
 - [ ] The on-call questions for this feature are written down, and each signal maps to one
 - [ ] All log output is structured (JSON), with stable event names and a correlation ID on every line
+- [ ] Every log sink written by more than one entry point carries an entry-point field, set where the run starts and propagated with the correlation ID rather than inferred downstream
 - [ ] No secrets, tokens, or unredacted PII in any log line (spot-check actual output)
 - [ ] RED metrics exist for every new endpoint and every external dependency, with bounded label sets
 - [ ] Latency is a histogram; p95/p99 are queryable
@@ -200,4 +235,4 @@ After instrumenting a feature, confirm:
 - [ ] Every new alert is symptom-based, has a runbook link, and was test-fired once
 - [ ] An induced failure in staging was located via telemetry alone, without reading the source
 
-For the at-a-glance version of this list, including the pre-launch instrumentation gate, see `references/observability-checklist.md`.
+For the at-a-glance version of this list, including the pre-launch instrumentation gate, see `../../references/observability-checklist.md`.

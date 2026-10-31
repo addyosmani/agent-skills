@@ -1,6 +1,6 @@
 ---
 name: spec-driven-development
-description: Creates specs before coding. Use when starting a new project, feature, or significant change and no specification exists yet. Use when requirements are unclear, ambiguous, or only exist as a vague idea. Use when evolving a shipped spec — scoping a V1, deferring ideas to a V2 backlog, or writing a follow-up spec for a change to an existing feature.
+description: Creates specs before coding. Use when starting a new project, feature, or significant change and no specification exists yet. Use when drafting a PRD or requirements document with objectives and scope, or when requirements are unclear, ambiguous, or only exist as a vague idea. Use when a single requirement spans several independently testable capabilities and needs decomposing into a capability map of modules before specifying. Use when evolving a shipped spec — scoping a V1, deferring ideas to a V2 backlog, or writing a follow-up spec for a change to an existing feature.
 ---
 
 # Spec-Driven Development
@@ -21,7 +21,7 @@ Write a structured specification before writing any code. The spec is the shared
 
 ## The Gated Workflow
 
-Spec-driven development has four phases. Do not advance to the next phase until the current one is validated.
+Spec-driven development has four phases, preceded by a scope check (Phase 0) that activates only when one request bundles several independently testable capabilities. Do not advance to the next phase until the current one is validated.
 
 ```
 SPECIFY ──→ PLAN ──→ TASKS ──→ IMPLEMENT
@@ -30,6 +30,39 @@ SPECIFY ──→ PLAN ──→ TASKS ──→ IMPLEMENT
  Human      Human    Human      Human
  reviews    reviews  reviews    reviews
 ```
+
+### Phase 0: Scope Check
+
+Most requests describe one capability. If this one does, skip this phase and go straight to Specify — Phase 0 exists for the exception, not the rule, and it puts no hierarchy on single-capability features.
+
+**Detection.** Decompose before specifying when a single requirement bundles several independently testable capabilities:
+
+- The requirement names distinct capabilities with their own consumers or data (e.g. identity, billing, notifications, reporting)
+- Acceptance criteria cluster into groups that could ship and be verified separately
+- One capability could be cut or replaced without rewriting the others' requirements
+
+**Propose a capability map before writing any spec.** Small and reviewable — a module table plus a build order, not a project plan:
+
+```markdown
+# Capability Map: [Initiative Name]
+
+| Module id | Responsibility | Depends on |
+|---|---|---|
+| identity | Accounts, sessions, SSO | — |
+| billing | Plans, invoices, payments | identity |
+| notifications | Email and webhook fan-out | identity |
+| reporting | Usage dashboards | billing, notifications |
+
+Build order: identity → billing, notifications → reporting
+```
+
+- **Stable module ids.** Kebab-case, chosen once, never renamed mid-initiative. Specs, plans, and downstream commands select work by these ids instead of guessing which spec is active.
+- **Dependency direction, no cycles.** Arrows point one way. If two modules each need the other, they are one module.
+- **Interfaces live at the boundary.** The map records that `billing` depends on `identity`; the contract between them belongs in the provider module's spec (see `api-and-interface-design` for designing it).
+
+**The map is gated like every phase.** The human reviews module boundaries, dependency direction, and build order before any module spec is written. Getting the map wrong is expensive; reviewing ten lines is not.
+
+**Then recurse per module.** Run Specify → Plan → Tasks → Implement for each module in dependency order. Each module gets its own spec, scoped to that module's objective, boundaries, and success criteria. Save the approved map at the project root and each module's spec alongside it, named by module id (`SPEC-identity.md`, `SPEC-billing.md`) — the map, not filename guessing, is the index of what exists.
 
 ### Phase 1: Specify
 
@@ -56,7 +89,7 @@ Don't silently fill in ambiguous requirements. The spec's entire purpose is to s
    ```
    Build: npm run build
    Test: npm test -- --coverage
-   Lint: npm run lint --fix
+   Lint: npm run lint -- --fix
    Dev: npm run dev
    ```
 
@@ -117,6 +150,12 @@ Don't silently fill in ambiguous requirements. The spec's entire purpose is to s
 [Anything unresolved that needs human input]
 ```
 
+**External spec tools:** This workflow is format-agnostic. If the project
+already uses OpenSpec or another specification system, keep that system's
+artifact format and storage conventions instead of creating a duplicate
+`SPEC.md`. This skill owns the clarification, content, and approval gates; the
+external tool owns how the approved spec is represented.
+
 **Reframe instructions as success criteria.** When receiving vague requirements, translate them into concrete conditions:
 
 ```
@@ -131,6 +170,12 @@ REFRAMED SUCCESS CRITERIA:
 
 This lets you loop, retry, and problem-solve toward a clear goal rather than guessing what "faster" means.
 
+**Stop after writing the spec (CRITICAL).** Once the spec is saved:
+
+1. Summarize it and list any Open Questions.
+2. Ask the human to approve it or request changes.
+3. **STOP YOUR TURN IMMEDIATELY.** Do NOT start Phase 2, invoke `planning-and-task-breakdown`, or write code in this turn. Planning starts only after the human approves the spec in a later turn.
+
 ### Phase 2: Plan
 
 With the validated spec, generate a technical implementation plan:
@@ -143,7 +188,7 @@ With the validated spec, generate a technical implementation plan:
 
 > Follow `planning-and-task-breakdown` for the dependency-graph mapping and vertical-slicing mechanics behind these steps; it is the canonical source. The bullets above are a lightweight summary; if they ever diverge, `planning-and-task-breakdown` takes precedence.
 >
-> **Output convention:** Save the plan to `tasks/plan.md` and the task list to `tasks/todo.md`, per the `/plan` command convention. Create `tasks/` if it does not exist. Downstream commands (`/build`, etc.) expect these paths.
+> **Output convention:** Save the plan to `tasks/plan.md` and record the task list in the task list target defined by `planning-and-task-breakdown` (default `tasks/todo.md`; projects may designate an external tracker instead). Create `tasks/` if it does not exist. Downstream commands (`/build`, etc.) expect these defaults.
 
 The plan should be reviewable: the human should be able to read it and say "yes, that's the right approach" or "no, change X."
 
@@ -228,6 +273,8 @@ After the change ships, fold the outcome into the original spec (per Keeping the
 | "The user knows what they want" | Even clear requests have implicit assumptions. The spec surfaces those assumptions. |
 | "This idea is good, I'll fold it into the current spec" | Mid-build scope growth is how V1 slips. Park it under Out of Scope (Deferred) — captured without expanding the current cycle. |
 | "The feature already has a spec, I'll just edit it for the change" | A shipped spec describes what exists. A delta spec keeps the change reviewable on its own; the original gets updated after the change ships, not before. |
+| "It's one big feature; splitting it is overhead" | If acceptance criteria cluster into independently testable groups, a monolithic spec forces every downstream task to reason over the whole contract. A ten-line capability map is the cheap alternative. |
+| "I'll decompose during planning" | Planning slices tasks within a spec. By then the oversized artifact already exists — module boundaries and dependency direction must be decided before the spec is written, not after. |
 
 ## Red Flags
 
@@ -238,6 +285,9 @@ After the change ships, fold the outcome into the original spec (per Keeping the
 - Skipping the spec because "it's obvious what to build"
 - V1 requirements growing mid-implementation as new ideas get written straight into the spec
 - Changing a shipped feature with no spec for the change because "the feature already has one"
+- Writing the spec and starting the plan or code in the same turn
+- One spec whose requirements span several independently testable capabilities
+- Module boundaries or build order decided implicitly during implementation because no capability map was approved up front
 
 ## Verification
 
@@ -245,8 +295,11 @@ Before proceeding to implementation, confirm:
 
 - [ ] The spec covers all six core areas (a full spec; a delta spec covers only the areas the change affects — at minimum objective, success criteria, and boundary deltas — and inherits the rest from the original)
 - [ ] The human has reviewed and approved the spec
+- [ ] The turn ended after saving the spec; approval came in a later turn
 - [ ] Success criteria are specific and testable
 - [ ] Boundaries (Always/Ask First/Never) are defined
 - [ ] The spec is saved to a file in the repository
 - [ ] Ideas cut from this version are captured under Out of Scope (Deferred), not silently dropped or silently included
 - [ ] If this is a change to a shipped spec, it is a delta spec referencing the original, not a rewrite of it
+- [ ] If the request bundles several independently testable capabilities, a capability map (module ids, dependency direction, build order) was approved before any module spec was written
+- [ ] Every module spec traces to a module id in the approved map

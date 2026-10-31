@@ -30,13 +30,15 @@
       "id": 1,
       "prompt": "Instrument a new payment-retry feature so on-call can operate it.",
       "expected_output": "On-call questions defined first, then structured logs, RED metrics, and symptom-based alerts that answer them",
+      "files": [
+        "observability-and-instrumentation"
+      ],
       "expectations": [
         "On-call questions are written before instrumentation is added",
         "Logs are structured events with a correlation id, not prose strings",
         "Metrics avoid unbounded label cardinality",
         "Alerts are symptom-based and actionable"
-      ],
-      "trust_level": "provisional"
+      ]
     }
   ]
 }

@@ -20,7 +20,8 @@
         "prompt": "Format this file with prettier"
       },
       {
-        "prompt": "Write the changelog entry for the release"
+        "prompt": "Write the changelog entry for the release",
+        "owner": "git-workflow-and-versioning"
       }
     ]
   },
@@ -29,12 +30,14 @@
       "id": 1,
       "prompt": "Before running an irreversible data migration, subject the migration plan to adversarial review.",
       "expected_output": "Claims extracted, doubts raised against each, reconciliation, and a go or stop verdict",
+      "files": [
+        "doubt-driven-development"
+      ],
       "expectations": [
         "Non-trivial claims in the plan are extracted and challenged individually",
         "At least one assumption is tested rather than accepted",
         "The verdict distinguishes verified claims from surviving doubts"
-      ],
-      "trust_level": "provisional"
+      ]
     }
   ]
 }

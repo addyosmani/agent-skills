@@ -31,13 +31,15 @@
       "id": 1,
       "prompt": "Create a CI pipeline for a Node project: install, lint, test on every PR, and block merge on failure.",
       "expected_output": "A working workflow definition with correct triggers, steps, and failure behavior",
+      "files": [
+        "ci-cd-and-automation"
+      ],
       "expectations": [
         "The workflow triggers on pull requests",
         "Failure of any quality gate fails the pipeline run",
         "Steps are ordered logically and cache or setup steps are sane",
         "No secrets are hardcoded in the workflow"
-      ],
-      "trust_level": "provisional"
+      ]
     }
   ]
 }

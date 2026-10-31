@@ -1,0 +1,9 @@
+{
+  "name": "split-payment",
+  "version": "1.2.0",
+  "description": "Splits an amount in integer cents into fair shares.",
+  "private": true,
+  "scripts": {
+    "test": "node --test"
+  }
+}

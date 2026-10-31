@@ -13,11 +13,20 @@
       {
         "prompt": "Clean up this working code, it has grown hard to follow",
         "top_k": 3
+      },
+      {
+        "prompt": "Simplify this function, it works but it is hard to read.",
+        "top_k": 3
+      },
+      {
+        "prompt": "Clean this up, it works but it has grown hard to follow. Here is the function.",
+        "top_k": 3
       }
     ],
     "negative": [
       {
-        "prompt": "Add a feature flag system to the app"
+        "prompt": "Add a feature flag system to the app",
+        "owner": "incremental-implementation"
       },
       {
         "prompt": "Diagnose why the build broke overnight",
@@ -30,13 +39,15 @@
       "id": 1,
       "prompt": "Simplify the provided 80-line function that parses config files, preserving exact behavior.",
       "expected_output": "A simpler implementation with identical behavior and a summary of what was removed and why",
+      "files": [
+        "code-simplification"
+      ],
       "expectations": [
         "Behavior is preserved (tests unchanged and passing, or equivalence argued concretely)",
         "Complexity is reduced rather than relocated",
         "The response explains what was removed and why it was safe",
         "No new features are added during the simplification"
-      ],
-      "trust_level": "provisional"
+      ]
     }
   ]
 }

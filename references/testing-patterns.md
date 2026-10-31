@@ -1,6 +1,6 @@
-# Testing Patterns Reference
+# Testing Patterns Reference (JavaScript/TypeScript)
 
-Quick reference for common testing patterns across the stack. Use alongside the `test-driven-development` skill.
+Quick reference of JavaScript/TypeScript testing patterns — Jest, React Testing Library, Supertest, and Playwright — illustrating the universal principles from the `test-driven-development` skill. The principles (Arrange-Act-Assert, naming, mock discipline, anti-patterns) apply in any ecosystem; the syntax and tooling shown here are JS/TS-specific. In another stack, follow the same principles with the repository's own test framework and commands.
 
 ## Table of Contents
 
@@ -212,7 +212,8 @@ test('user can create and complete a task', async ({ page }) => {
   await page.getByRole('button', { name: /create/i }).click();
 
   // Verify task appears
-  const task = page.getByRole('listitem', { name: /buy groceries/i });
+  // listitem has no accessible name from its content, so filter by text
+  const task = page.getByRole('listitem').filter({ hasText: /buy groceries/i });
   await expect(task).toBeVisible();
 
   // Complete the task

@@ -1,5 +1,6 @@
 ---
 description: Start spec-driven development — write a structured specification before writing code
+disable-model-invocation: true
 ---
 
 Invoke the agent-skills:spec-driven-development skill.
@@ -12,6 +13,10 @@ First check whether SPEC.md already exists in the project root — that decides 
 3. Tech stack preferences and constraints
 4. Known boundaries (what to always do, ask first about, and never do)
 
-Then generate a structured spec covering all six core areas: objective, commands, project structure, code style, testing strategy, and boundaries. Save it as SPEC.md in the project root and confirm with the user before proceeding.
+Then generate a structured spec covering all six core areas: objective, commands, project structure, code style, testing strategy, and boundaries.
+
+If the request bundles several independently testable capabilities, first propose a capability map (module ids, dependency direction, build order) per the skill's Phase 0 and get it approved, then spec each module in dependency order.
+
+Save the spec as SPEC.md in the project root and confirm with the user before proceeding.
 
 **Delta spec** (SPEC.md exists and this request is a change to what it describes): do not overwrite it — write a delta spec (e.g. SPEC-<change-slug>.md) covering only the change, per the skill's Spec Evolution section, and confirm with the user before proceeding.

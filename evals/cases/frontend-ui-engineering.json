@@ -29,7 +29,8 @@
         "owner": "performance-optimization"
       },
       {
-        "prompt": "Tag and publish the release"
+        "prompt": "Tag and publish the release",
+        "owner": "git-workflow-and-versioning"
       }
     ]
   },
@@ -38,12 +39,14 @@
       "id": 1,
       "prompt": "Build a dropdown menu component for the design system.",
       "expected_output": "An accessible, keyboard-navigable component following project conventions",
+      "files": [
+        "frontend-ui-engineering"
+      ],
       "expectations": [
         "Keyboard interaction and focus management are implemented, not just mouse clicks",
         "ARIA roles or semantic elements are used correctly",
         "Component state is managed deliberately rather than ad hoc"
-      ],
-      "trust_level": "provisional"
+      ]
     }
   ]
 }

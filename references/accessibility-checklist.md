@@ -71,7 +71,7 @@ Quick reference for WCAG 2.1 AA compliance. Use alongside the `frontend-ui-engin
 
 ```html
 <!-- Explicit label association -->
-<label htmlFor="email">Email address</label>
+<label for="email">Email address</label>
 <input id="email" type="email" required />
 
 <!-- Implicit wrapping -->
@@ -104,7 +104,7 @@ Quick reference for WCAG 2.1 AA compliance. Use alongside the `frontend-ui-engin
 </dialog>
 
 <!-- Loading states -->
-<div aria-busy="true" aria-label="Loading tasks">
+<div role="status" aria-busy="true" aria-label="Loading tasks">
   <Spinner />
 </div>
 ```
@@ -115,7 +115,7 @@ Quick reference for WCAG 2.1 AA compliance. Use alongside the `frontend-ui-engin
 <ul role="list" aria-label="Tasks">
   <li>
     <input type="checkbox" id="task-1" aria-label="Complete: Buy groceries" />
-    <label htmlFor="task-1">Buy groceries</label>
+    <label for="task-1">Buy groceries</label>
   </li>
 </ul>
 ```
@@ -124,7 +124,7 @@ Quick reference for WCAG 2.1 AA compliance. Use alongside the `frontend-ui-engin
 
 ```bash
 # Automated audit
-npx axe-core          # Programmatic accessibility testing
+npx --package=@axe-core/cli axe http://localhost:3000
 npx pa11y             # CLI accessibility checker
 
 # In browser

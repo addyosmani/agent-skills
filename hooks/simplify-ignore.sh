@@ -4,14 +4,25 @@
 # PreToolUse Read   → backs up file, replaces blocks with BLOCK_<hash> in-place
 # PostToolUse Edit  → expands placeholders, re-filters so file stays hidden
 # PostToolUse Write → expands placeholders, re-filters so file stays hidden
-# Stop              → restores real file content from backup
+# Stop              → expands the placeholders still in the file on disk, so a
+#                     change made by any route survives; the backup is used
+#                     only when no placeholder is left to expand
 #
 # The file on disk ALWAYS has placeholders while the session is active.
-# The real content (with model's changes applied) lives in the backup.
+# The real content is that file with its placeholders expanded; the backup
+# holds the last state the hook itself saw.
 #
 # Dependencies: jq, shasum or sha1sum (auto-detected)
 
 set -euo pipefail
+
+# Bash 5.2+ turns on patsub_replacement by default, which makes `&` and
+# backslash special on the replacement side of ${var//pattern/replacement}:
+# `&` expands to the matched text and `\\` collapses. expand_file substitutes
+# raw block content there, and code routinely contains `&&` and backslashes,
+# so the option must be off or protected blocks come back corrupted on Linux.
+# Older bashes do not know the option; ignore the error there.
+shopt -u patsub_replacement 2>/dev/null || true
 
 if ! command -v jq >/dev/null 2>&1; then
   printf '%s\n' "error: missing jq" >&2; exit 1
@@ -141,7 +152,138 @@ ${line}"
   [ $count -gt 0 ] && return 0 || return 1
 }
 
-# ── Stop: restore all files from backup ───────────────────────────────────────
+# ── expand_file: replace BLOCK_<hash> placeholders with the real block code ───
+# Reads $1 (source), writes the expanded version to $2 (dest), using the blocks
+# cached under $3 (file id). Warns on placeholders that were altered or deleted.
+expand_file() {
+  local src="$1" dest="$2" fid="$3"
+  local line bf h bp bs br placeholder block_content esc_placeholder esc_fuzzy bh first_line
+  rm -f "$dest"
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in *BLOCK_*)
+      # Expand all placeholders on this line (supports multiple per line)
+      for bf in "$CACHE/${fid}".block.*; do
+        [ -f "$bf" ] || continue
+        h="${bf##*.}"
+        case "$line" in *"BLOCK_${h}"*)
+          # Reconstruct the exact placeholder pattern
+          bp=""; bs=""; br=""
+          [ -f "$CACHE/${fid}.prefix.${h}" ] && bp=$(cat "$CACHE/${fid}.prefix.${h}")
+          [ -f "$CACHE/${fid}.suffix.${h}" ] && bs=$(cat "$CACHE/${fid}.suffix.${h}")
+          [ -f "$CACHE/${fid}.reason.${h}" ] && br=$(cat "$CACHE/${fid}.reason.${h}")
+          if [ -n "$br" ]; then
+            placeholder="${bp}BLOCK_${h}: ${br}${bs}"
+          else
+            placeholder="${bp}BLOCK_${h}${bs}"
+          fi
+          block_content=$(cat "$bf"; printf x); block_content="${block_content%x}"
+          # Escape glob metacharacters (* ? [ \) in the pattern
+          esc_placeholder=$(escape_glob "$placeholder")
+          # Bash native substitution (// = global replace): replace placeholder, keep surrounding code
+          line="${line//$esc_placeholder/$block_content}"
+          # Fallback: if model altered the reason text, try without reason
+          # (only trigger if BLOCK_hash is still present AND wasn't in the original block content)
+          case "$block_content" in *"BLOCK_${h}"*) ;; *)
+            case "$line" in *"BLOCK_${h}"*)
+              printf 'Warning: placeholder BLOCK_%s was modified by model, using fuzzy match\n' "$h" >&2
+              esc_fuzzy=$(escape_glob "${bp}BLOCK_${h}${bs}")
+              line="${line//$esc_fuzzy/$block_content}"
+              # Last resort: match just the hash token
+              case "$line" in *"BLOCK_${h}"*)
+                line="${line//BLOCK_${h}/$block_content}"
+              ;; esac
+            ;; esac
+          ;; esac
+        ;; esac
+      done
+    ;; esac
+    printf '%s\n' "$line" >> "$dest"
+  done < "$src"
+  # Preserve trailing newline status
+  if [ -s "$dest" ] && [ -s "$src" ] && [ -n "$(tail -c 1 "$src")" ]; then
+    perl -pe 'chomp if eof' "$dest" > "${dest}.nnl" && \
+      cat "${dest}.nnl" > "$dest" && rm -f "${dest}.nnl"
+  fi
+  # Warn if model deleted a protected block entirely
+  for bf in "$CACHE/${fid}".block.*; do
+    [ -f "$bf" ] || continue
+    bh="${bf##*.}"
+    # After expansion, blocks appear as original code (simplify-ignore-start).
+    # If neither the expanded code nor the placeholder is in EXPANDED, it was deleted.
+    if ! grep -qF "BLOCK_${bh}" "$dest" 2>/dev/null; then
+      # Get first line of block to check if it was expanded back
+      first_line=$(head -1 "$bf")
+      if ! grep -qF "$first_line" "$dest" 2>/dev/null; then
+        printf 'Warning: protected block BLOCK_%s was deleted by model\n' "$bh" >&2
+      fi
+    fi
+  done
+  return 0
+}
+
+# -- missing_placeholders: which cached BLOCK_<hash> of $2 are gone from $1? --
+# Prints the missing placeholders, one per line, and returns 0 if any is gone.
+# A placeholder stands for code the model never saw, so it cannot have removed
+# it on purpose; whichever route removed it, the block must not be lost with it.
+missing_placeholders() {
+  local f="$1" fid="$2" bf h bp bs br out=""
+  for bf in "$CACHE/${fid}".block.*; do
+    [ -f "$bf" ] || continue
+    h="${bf##*.}"
+    grep -qF "BLOCK_${h}" "$f" 2>/dev/null && continue
+    bp=""; bs=""; br=""
+    [ -f "$CACHE/${fid}.prefix.${h}" ] && bp=$(cat "$CACHE/${fid}.prefix.${h}")
+    [ -f "$CACHE/${fid}.suffix.${h}" ] && bs=$(cat "$CACHE/${fid}.suffix.${h}")
+    [ -f "$CACHE/${fid}.reason.${h}" ] && br=": $(cat "$CACHE/${fid}.reason.${h}")"
+    out="${out}  ${bp}BLOCK_${h}${br}${bs}
+"
+  done
+  [ -n "$out" ] || return 1
+  printf '%s' "$out"
+}
+
+# ── has_placeholders: is a cached BLOCK_<hash> for $2 still present in file $1? ─
+has_placeholders() {
+  local f="$1" fid="$2" bf h
+  for bf in "$CACHE/${fid}".block.*; do
+    [ -f "$bf" ] || continue
+    h="${bf##*.}"
+    grep -qF "BLOCK_${h}" "$f" 2>/dev/null && return 0
+  done
+  return 1
+}
+
+# -- file_is_whole: was the real file put back on disk while it was filtered? --
+# True when no placeholder of $2 is in file $1 and every cached block is there
+# verbatim (blocks are content-hashed, so filtering a probe copy compares them
+# exactly). A git checkout, restore, stash or reset, or an editor undo, does
+# this; the model cannot, because it never saw the block text.
+file_is_whole() {
+  local f="$1" fid="$2" probe bf whole=0
+  probe="${fid}.probe.$$"
+  has_placeholders "$f" "$fid" && return 1
+  grep -q 'simplify-ignore-start' -- "$f" 2>/dev/null || return 1
+  if filter_file "$f" "$CACHE/${probe}.tmp" "$probe" 2>/dev/null; then
+    whole=1
+    for bf in "$CACHE/${fid}".block.*; do
+      [ -f "$bf" ] && [ -f "$CACHE/${probe}.block.${bf##*.}" ] || { whole=0; break; }
+    done
+  fi
+  rm -f "$CACHE/${probe}".*
+  [ "$whole" -eq 1 ]
+}
+
+# -- set_aside_backup: the file on disk supersedes the backup; keep a copy ----
+set_aside_backup() {
+  local f="$1" fid="$2" kept
+  cmp -s "$CACHE/${fid}.bak" "$f" && return 0
+  kept="$CACHE/${fid}.superseded.$$"
+  cp "$CACHE/${fid}.bak" "$kept"
+  printf 'simplify-ignore: %s was put back whole while filtered (git checkout, stash, undo); keeping it. The previous session state is kept at %s\n' \
+    "$f" "$kept" >&2
+}
+
+# ── Stop: expand each cached file in place, backup only as fallback ──────────
 if [ -z "$TOOL_NAME" ]; then
   [ -d "$CACHE" ] || exit 0
   for bak in "$CACHE"/*.bak; do
@@ -151,7 +293,35 @@ if [ -z "$TOOL_NAME" ]; then
     [ -f "$pathfile" ] || { rm -f "$bak"; continue; }
     orig=$(cat "$pathfile")
     if [ -f "$orig" ]; then
-      cat "$bak" > "$orig"
+      # A change can reach the file through a route that fires no Edit or Write
+      # event (a Bash command, a formatter, an external editor), and the backup
+      # is stale for all of them. Expand what is on disk rather than overwrite it.
+      if file_is_whole "$orig" "$fid"; then
+        # The real file is back (the change was reverted with git or undone).
+        # It is newer than the backup, which would bring the reverted change
+        # back, so keep the file and move the backup aside.
+        set_aside_backup "$orig" "$fid"
+      elif has_placeholders "$orig" "$fid" && ! missing_placeholders "$orig" "$fid" >/dev/null; then
+        EXPANDED="$CACHE/${fid}.$$.expanded"
+        expand_file "$orig" "$EXPANDED" "$fid"
+        cat "$EXPANDED" > "$orig"
+        rm -f "$EXPANDED"
+      else
+        # A placeholder is gone — the file was rewritten wholesale, or one
+        # block's line was deleted — so the backup is the only remaining copy
+        # of that protected block. Keep the rewrite in the cache (with any
+        # surviving placeholders expanded) before the backup overwrites it, so
+        # the work is recoverable rather than lost.
+        rewritten="$CACHE/${fid}.recovered"
+        if has_placeholders "$orig" "$fid"; then
+          expand_file "$orig" "$rewritten" "$fid" 2>/dev/null
+        else
+          cat "$orig" > "$rewritten"
+        fi
+        cat "$bak" > "$orig"
+        printf 'Warning: a BLOCK_ placeholder is missing from %s, restored from backup. Rewrite kept at %s\n' \
+          "$orig" "$rewritten" >&2
+      fi
       rm -f "$bak" "$pathfile" "$CACHE/${fid}".block.* "$CACHE/${fid}".reason.* "$CACHE/${fid}".prefix.* "$CACHE/${fid}".suffix.*
       rmdir "$CACHE/${fid}.lock" 2>/dev/null
     else
@@ -182,12 +352,21 @@ if [ "$TOOL_NAME" = "Read" ]; then
   ID=$(file_id "$FILE_PATH")
 
   # If backup exists, file is already filtered — skip
-  [ -f "$CACHE/${ID}.bak" ] && exit 0
-
-  grep -q 'simplify-ignore-start' -- "$FILE_PATH" || exit 0
+  # unless the real file was put back meanwhile (git checkout, stash, undo):
+  # skipping then would show the model every protected block, so take that
+  # file as the new original and filter it again.
+  if [ -f "$CACHE/${ID}.bak" ]; then
+    file_is_whole "$FILE_PATH" "$ID" || exit 0
+    set_aside_backup "$FILE_PATH" "$ID"
+    REFILTER=1
+  else
+    grep -q 'simplify-ignore-start' -- "$FILE_PATH" || exit 0
+    REFILTER=0
+  fi
 
   # Atomic lock: mkdir fails if another session races us
-  if ! mkdir "$CACHE/${ID}.lock" 2>/dev/null; then
+  # (a refilter already holds the lock from the first Read)
+  if [ "$REFILTER" -eq 0 ] && ! mkdir "$CACHE/${ID}.lock" 2>/dev/null; then
     # Lock exists — reclaim only if stale (>60s old, no backup = crash leftover)
     if [ ! -f "$CACHE/${ID}.bak" ] && \
        [ -n "$(find "$CACHE/${ID}.lock" -maxdepth 0 -mmin +1 2>/dev/null)" ]; then
@@ -221,68 +400,22 @@ if [ "$TOOL_NAME" = "Edit" ] || [ "$TOOL_NAME" = "Write" ]; then
   [ -f "$CACHE/${ID}.bak" ] || exit 0
   ls "$CACHE/${ID}".block.* >/dev/null 2>&1 || exit 0
 
+  # The edit removed a placeholder. Expanding now would save a backup without
+  # that block, and Stop would then restore the loss. Keep the last good
+  # backup, leave the file as edited, and tell the model (exit 2 sends stderr
+  # back to it) so it can put the placeholder back; if it does not, Stop
+  # restores the backup and keeps this version as <id>.recovered.
+  if dropped=$(missing_placeholders "$FILE_PATH" "$ID"); then
+    printf '%s\n%s\n%s\n' \
+      "simplify-ignore: this $TOOL_NAME removed placeholder line(s) from $FILE_PATH. Each stands for protected code you cannot see:" \
+      "$dropped" \
+      "Put each one back exactly as shown. Until then the backup is not updated, and at session end the file is restored from it (this version is kept in the cache as .recovered)." >&2
+    exit 2
+  fi
+
   # Expand placeholders, preserving any inline code the model added around them
   EXPANDED="$CACHE/${ID}.$$.expanded"
-  rm -f "$EXPANDED"
-  while IFS= read -r line || [ -n "$line" ]; do
-    case "$line" in *BLOCK_*)
-      # Expand all placeholders on this line (supports multiple per line)
-      for bf in "$CACHE/${ID}".block.*; do
-        [ -f "$bf" ] || continue
-        h="${bf##*.}"
-        case "$line" in *"BLOCK_${h}"*)
-          # Reconstruct the exact placeholder pattern
-          bp=""; bs=""; br=""
-          [ -f "$CACHE/${ID}.prefix.${h}" ] && bp=$(cat "$CACHE/${ID}.prefix.${h}")
-          [ -f "$CACHE/${ID}.suffix.${h}" ] && bs=$(cat "$CACHE/${ID}.suffix.${h}")
-          [ -f "$CACHE/${ID}.reason.${h}" ] && br=$(cat "$CACHE/${ID}.reason.${h}")
-          if [ -n "$br" ]; then
-            placeholder="${bp}BLOCK_${h}: ${br}${bs}"
-          else
-            placeholder="${bp}BLOCK_${h}${bs}"
-          fi
-          block_content=$(cat "$bf"; printf x); block_content="${block_content%x}"
-          # Escape glob metacharacters (* ? [ \) in the pattern
-          esc_placeholder=$(escape_glob "$placeholder")
-          # Bash native substitution (// = global replace): replace placeholder, keep surrounding code
-          line="${line//$esc_placeholder/$block_content}"
-          # Fallback: if model altered the reason text, try without reason
-          # (only trigger if BLOCK_hash is still present AND wasn't in the original block content)
-          case "$block_content" in *"BLOCK_${h}"*) ;; *)
-            case "$line" in *"BLOCK_${h}"*)
-              printf 'Warning: placeholder BLOCK_%s was modified by model, using fuzzy match\n' "$h" >&2
-              esc_fuzzy=$(escape_glob "${bp}BLOCK_${h}${bs}")
-              line="${line//$esc_fuzzy/$block_content}"
-              # Last resort: match just the hash token
-              case "$line" in *"BLOCK_${h}"*)
-                line="${line//BLOCK_${h}/$block_content}"
-              ;; esac
-            ;; esac
-          ;; esac
-        ;; esac
-      done
-    ;; esac
-    printf '%s\n' "$line" >> "$EXPANDED"
-  done < "$FILE_PATH"
-  # Preserve trailing newline status
-  if [ -s "$EXPANDED" ] && [ -s "$FILE_PATH" ] && [ -n "$(tail -c 1 "$FILE_PATH")" ]; then
-    perl -pe 'chomp if eof' "$EXPANDED" > "${EXPANDED}.nnl" && \
-      cat "${EXPANDED}.nnl" > "$EXPANDED" && rm -f "${EXPANDED}.nnl"
-  fi
-  # Warn if model deleted a protected block entirely
-  for bf in "$CACHE/${ID}".block.*; do
-    [ -f "$bf" ] || continue
-    bh="${bf##*.}"
-    # After expansion, blocks appear as original code (simplify-ignore-start).
-    # If neither the expanded code nor the placeholder is in EXPANDED, it was deleted.
-    if ! grep -qF "BLOCK_${bh}" "$EXPANDED" 2>/dev/null; then
-      # Get first line of block to check if it was expanded back
-      first_line=$(head -1 "$bf")
-      if ! grep -qF "$first_line" "$EXPANDED" 2>/dev/null; then
-        printf 'Warning: protected block BLOCK_%s was deleted by model\n' "$bh" >&2
-      fi
-    fi
-  done
+  expand_file "$FILE_PATH" "$EXPANDED" "$ID"
   # Preserve inode and permissions
   cat "$EXPANDED" > "$FILE_PATH"
   rm -f "$EXPANDED"

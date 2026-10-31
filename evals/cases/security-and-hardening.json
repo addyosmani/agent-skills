@@ -13,6 +13,18 @@
       {
         "prompt": "Harden the webhook endpoint that fetches user-supplied URLs",
         "top_k": 3
+      },
+      {
+        "prompt": "Run a dependency audit and triage the findings",
+        "top_k": 3
+      },
+      {
+        "prompt": "Is this new package safe to install? Check for typosquatting and supply chain risk",
+        "top_k": 3
+      },
+      {
+        "prompt": "Add auth and rotate the session cookie",
+        "top_k": 3
       }
     ],
     "negative": [
@@ -31,13 +43,15 @@
       "id": 1,
       "prompt": "Harden an endpoint that accepts a user-supplied webhook URL and fetches it server-side.",
       "expected_output": "Threat-modeled hardening: allowlisting, private-IP blocking, and validated input with tests",
+      "files": [
+        "security-and-hardening"
+      ],
       "expectations": [
         "Trust boundaries are identified before controls are proposed",
         "SSRF protections cover private and reserved addresses, not just scheme checks",
         "Input validation is enforced at the boundary",
         "No secrets are logged or exposed in errors"
-      ],
-      "trust_level": "provisional"
+      ]
     }
   ]
 }

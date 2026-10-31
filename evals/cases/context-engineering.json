@@ -31,12 +31,14 @@
       "id": 1,
       "prompt": "An agent session has degraded: responses are generic and it keeps forgetting project conventions. Fix the context setup.",
       "expected_output": "A diagnosis of the context problem and a concrete loading strategy (rules files, packing, task-scoped context)",
+      "files": [
+        "context-engineering"
+      ],
       "expectations": [
         "The response diagnoses probable context causes rather than blaming the model generally",
         "A specific context-loading plan is produced (what to load, when, and why)",
         "Context is scoped to the task instead of loading everything"
-      ],
-      "trust_level": "provisional"
+      ]
     }
   ]
 }

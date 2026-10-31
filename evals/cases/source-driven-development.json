@@ -31,12 +31,14 @@
       "id": 1,
       "prompt": "Implement session handling with the framework's recommended approach, citing sources.",
       "expected_output": "An implementation grounded in official documentation with citations, flagging anything unverified",
+      "files": [
+        "source-driven-development"
+      ],
       "expectations": [
         "Claims about framework behavior cite official documentation",
         "Unverified assumptions are flagged rather than presented as fact",
         "Deprecated patterns are avoided in favor of documented current ones"
-      ],
-      "trust_level": "provisional"
+      ]
     }
   ]
 }

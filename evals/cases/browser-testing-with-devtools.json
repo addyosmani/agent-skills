@@ -31,12 +31,14 @@
       "id": 1,
       "prompt": "The signup form renders but submitting it appears to do nothing. Verify the real behavior in the browser and report findings.",
       "expected_output": "Runtime evidence from the browser: console errors, network activity, DOM state, and a diagnosis",
+      "files": [
+        "browser-testing-with-devtools"
+      ],
       "expectations": [
         "Findings are grounded in observed runtime data (console, network, DOM), not static code reading alone",
         "The report distinguishes what was observed from what is inferred",
         "A concrete next step or fix hypothesis is provided"
-      ],
-      "trust_level": "provisional"
+      ]
     }
   ]
 }
