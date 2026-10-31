@@ -33,6 +33,7 @@ const os = require('os');
 const path = require('path');
 const { parseFrontmatter } = require('./lib/skill-lint');
 const { executionFailure } = require('./lib/execution-status');
+const { stageSkillResources } = require('./lib/skill-resources');
 const { execFileSync } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
@@ -578,7 +579,6 @@ function runBehavioral(skillName, dryRun) {
     console.error(`No eval case file for "${skillName}"`);
     process.exit(1);
   }
-  const skillFile = path.join(SKILLS_DIR, skillName, 'SKILL.md');
   const d = JSON.parse(fs.readFileSync(caseFile, 'utf8'));
   if (!d.evals?.length) {
     console.error(`"${skillName}" has no behavioral evals`);
@@ -610,7 +610,7 @@ function runBehavioral(skillName, dryRun) {
       const artifact = kind === 'dialogue'
         ? 'dialogue transcript; no fixture required'
         : `execution trace in workspace + ${fixtures} fixture(s)`;
-      console.log(`[dry-run] eval ${ev.id}: ${artifact}; claude -p --verbose --output-format stream-json --permission-mode acceptEdits --allowedTools ${EXECUTOR_TOOLS} --append-system-prompt <${skillName}/SKILL.md> < prompt-on-stdin`);
+      console.log(`[dry-run] eval ${ev.id}: ${artifact}; claude -p --verbose --output-format stream-json --permission-mode acceptEdits --allowedTools ${EXECUTOR_TOOLS} --add-dir <staged skill resources> --append-system-prompt <${skillName}/SKILL.md> < prompt-on-stdin`);
       continue;
     }
     const base = path.join(RESULTS_DIR, `${skillName}.eval-${ev.id}`);
@@ -625,7 +625,15 @@ function runBehavioral(skillName, dryRun) {
     // edit files and run commands in the throwaway workspace; without it,
     // headless denials would force the exact narrate-instead-of-perform
     // failure mode that trace grading exists to catch.
+    let resources;
     try {
+    resources = stageSkillResources(ROOT, skillName);
+    const skillPrompt = [
+      `Base directory for this skill: ${resources.skillDir}`,
+      `Shared references directory: ${path.join(resources.root, 'references')}`,
+      'Resolve skill-local resources from the base directory and repo-root references from the shared directory.',
+      `Follow this skill exactly:\n\n${fs.readFileSync(path.join(resources.skillDir, 'SKILL.md'), 'utf8')}`,
+    ].join('\n\n');
     let trace;
     let executorError;
     try {
@@ -634,7 +642,8 @@ function runBehavioral(skillName, dryRun) {
         ['-p', '--verbose', '--output-format', 'stream-json',
           '--permission-mode', 'acceptEdits',
           '--allowedTools', EXECUTOR_TOOLS,
-          '--append-system-prompt', `Follow this skill exactly:\n\n${fs.readFileSync(skillFile, 'utf8')}`],
+          '--add-dir', resources.root,
+          '--append-system-prompt', skillPrompt],
         { input: ev.prompt, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, cwd: workspace, timeout: EXECUTOR_TIMEOUT_MS },
       );
     } catch (error) {
@@ -686,7 +695,10 @@ function runBehavioral(skillName, dryRun) {
     } finally {
       // Clean up throwaway workspace to prevent leaking fixture data
       // into world-readable temp directories.
-      try { fs.rmSync(workspace, { recursive: true, force: true }); } catch { /* best-effort */ }
+      for (const directory of [workspace, resources?.root]) {
+        if (!directory) continue;
+        try { fs.rmSync(directory, { recursive: true, force: true }); } catch { /* best-effort */ }
+      }
     }
   }
   process.exit(failures ? 1 : 0);

@@ -9,6 +9,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
 const { materializeWorkspace, parseGrading, clearGradingSlot, persistGradingOutcome, extractExecutorModel } = require('./run-evals');
+const { stageSkillResources } = require('./lib/skill-resources');
 
 const RUNNER = path.join(__dirname, 'run-evals.js');
 
@@ -71,15 +72,31 @@ function run(root, args = []) {
 function runBehavioralWithGrading(root, raw, options = {}) {
   writeSkill(root, 'alpha-skill', 'Handles alpha widgets.');
   const evalCase = completeCase('alpha-skill', 'change alpha widget');
-  evalCase.evals = (options.ids || [1]).map((id) => ({ ...behavioralEval([]), id, kind: 'dialogue' }));
+  evalCase.evals = (options.ids || [1]).map((id) => (options.execution
+    ? { ...behavioralEval(), id }
+    : { ...behavioralEval([]), id, kind: 'dialogue' }));
   writeJson(path.join(root, 'evals', 'cases', 'alpha-skill.json'), evalCase);
+  for (const [rel, content] of Object.entries(options.resources || {})) {
+    fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
+    fs.writeFileSync(path.join(root, rel), content);
+  }
   const stub = path.join(root, 'stub-claude.cjs');
   fs.writeFileSync(stub, `
     const assert = require('node:assert/strict');
-    require('child_process').execFileSync = (command, args) => {
-      assert.equal(command, 'claude');
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const execute = require('child_process').execFileSync;
+    const temporary = fs.mkdtempSync;
+    fs.mkdtempSync = (prefix, ...args) => {
+      const dir = temporary(prefix, ...args);
+      if (prefix.includes('skill-resources-')) fs.writeFileSync(${JSON.stringify(path.join(root, 'staged-path.txt'))}, dir);
+      return dir;
+    };
+    require('child_process').execFileSync = (command, args, settings) => {
+      if (command !== 'claude') return execute(command, args, settings);
       const executor = args.includes('--output-format');
-      require('node:fs').appendFileSync(${JSON.stringify(path.join(root, 'claude-calls.txt'))}, executor ? 'executor\\n' : 'grader\\n');
+      fs.appendFileSync(${JSON.stringify(path.join(root, 'claude-calls.txt'))}, executor ? 'executor\\n' : 'grader\\n');
+      if (executor) { ${options.onExecute || ''} }
       if (executor && ${JSON.stringify(Boolean(options.error))}) throw Object.assign(new Error('executor failed'), ${JSON.stringify(options.error || {})});
       return executor ? ${JSON.stringify(options.trace ?? '{"type":"result","subtype":"success","is_error":false,"result":"done"}\n')} : ${JSON.stringify(raw)};
     };
@@ -130,6 +147,53 @@ for (const [name, trace] of Object.entries({
   });
 }
 
+for (const fail of [false, true]) {
+  test(`stages local and shared resources outside the fixture tree and cleans up on ${fail ? 'failure' : 'success'}`, () => {
+    const root = makeSandbox();
+    try {
+      const raw = JSON.stringify({
+        expectations: [{ id: 1, text: 'check', passed: true, evidence: 'observed' }],
+        summary: { passed: 1, failed: 0, total: 1, pass_rate: 1 },
+      });
+      const result = runBehavioralWithGrading(root, raw, {
+        execution: true,
+        resources: {
+          'skills/alpha-skill/SKILL.md': '---\nname: alpha-skill\ndescription: Handles alpha widgets.\n---\n\n# Alpha\nRead references/shared.md and the local references/local.md.',
+          'skills/alpha-skill/references/local.md': 'See ../../../references/shared.md',
+          'skills/alpha-skill/scripts/helper.js': 'local helper',
+          'references/shared.md': 'See nested/next.md',
+          'references/nested/next.md': 'transitive shared material',
+        },
+        onExecute: `
+          const index = args.indexOf('--add-dir');
+          assert.notEqual(index, -1, 'resource access must be granted');
+          const staged = args[index + 1];
+          const skill = path.join(staged, 'skills', 'alpha-skill');
+          const prompt = args[args.indexOf('--append-system-prompt') + 1];
+          assert.ok(prompt.includes('Base directory for this skill: ' + skill));
+          assert.ok(prompt.includes('Shared references directory: ' + path.join(staged, 'references')));
+          assert.ok(prompt.includes('Read references/shared.md'));
+          assert.equal(fs.readFileSync(path.join(staged, 'references/shared.md'), 'utf8'), 'See nested/next.md');
+          assert.equal(fs.readFileSync(path.join(skill, 'references/local.md'), 'utf8'), 'See ../../../references/shared.md');
+          assert.equal(fs.readFileSync(path.resolve(skill, '../../references/nested/next.md'), 'utf8'), 'transitive shared material');
+          assert.equal(fs.readFileSync(path.join(skill, 'scripts/helper.js'), 'utf8'), 'local helper');
+          assert.ok(path.relative(settings.cwd, staged).startsWith('..'), 'resources must stay outside the fixture tree');
+          assert.equal(execute('git', ['status', '--porcelain'], {cwd: settings.cwd, encoding: 'utf8'}), '');
+          assert.equal(execute('git', ['ls-files'], {cwd: settings.cwd, encoding: 'utf8'}).trim(), 'project/context.txt');
+          fs.writeFileSync(${JSON.stringify(path.join(root, 'workspace-path.txt'))}, settings.cwd);
+          if (${fail}) throw new Error('synthetic executor failure');
+        `,
+      });
+      assert.equal(result.status, fail ? 1 : 0, result.stdout + result.stderr);
+      const staged = fs.readFileSync(path.join(root, 'staged-path.txt'), 'utf8');
+      const workspace = fs.readFileSync(path.join(root, 'workspace-path.txt'), 'utf8');
+      assert.equal(fs.existsSync(staged), false, 'resource directory must be removed');
+      assert.equal(fs.existsSync(workspace), false, 'fixture workspace must be removed');
+      assert.equal(fs.readFileSync(path.join(root, 'references/nested/next.md'), 'utf8'), 'transitive shared material');
+    } finally { fs.rmSync(root, { recursive: true, force: true }); }
+  });
+}
+
 test('a returned failed probe can recover before successful completion', () => {
   const root = makeSandbox();
   try {
@@ -163,6 +227,54 @@ for (const code of ['ETIMEDOUT', 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER']) {
     } finally { fs.rmSync(root, { recursive: true, force: true }); }
   });
 }
+
+test('rejects symlinked resources before execution and removes partial staging', () => {
+  const root = makeSandbox();
+  try {
+    fs.mkdirSync(path.join(root, 'skills/alpha-skill'), { recursive: true });
+    fs.mkdirSync(path.join(root, 'private'));
+    fs.symlinkSync(path.join(root, 'private'), path.join(root, 'skills/alpha-skill/escape'), 'junction');
+    const result = runBehavioralWithGrading(root, '{}');
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    assert.match(result.stderr, /symbolic link in skill resources/);
+    assert.equal(fs.existsSync(path.join(root, 'claude-calls.txt')), false);
+    assert.equal(fs.existsSync(fs.readFileSync(path.join(root, 'staged-path.txt'), 'utf8')), false);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+for (const entry of ['skills', 'references']) {
+  test(`rejects a ${entry === 'skills' ? 'linked skill ancestor' : 'dangling shared-reference link'}`, () => {
+    const root = makeSandbox();
+    const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'outside-skill-resources-'));
+    let staged;
+    try {
+      writeSkill(entry === 'skills' ? outside : root, 'alpha-skill', 'Handles alpha.');
+      const target = entry === 'skills' ? path.join(outside, 'skills') : path.join(outside, 'missing');
+      fs.symlinkSync(target, path.join(root, entry), 'junction');
+      assert.throws(() => { staged = stageSkillResources(root, 'alpha-skill'); }, /symbolic link in skill resources/);
+    } finally {
+      if (staged) fs.rmSync(staged.root, { recursive: true, force: true });
+      fs.rmSync(root, { recursive: true, force: true });
+      fs.rmSync(outside, { recursive: true, force: true });
+    }
+  });
+}
+
+test('a whole-checkout alias can stage ordinary skill resources', () => {
+  const root = makeSandbox();
+  let staged;
+  try {
+    writeSkill(root, 'alpha-skill', 'Handles alpha.');
+    const alias = path.join(root, 'checkout-alias');
+    fs.symlinkSync(root, alias, 'junction');
+    staged = stageSkillResources(alias, 'alpha-skill');
+    assert.equal(fs.readFileSync(path.join(staged.skillDir, 'SKILL.md'), 'utf8'),
+      fs.readFileSync(path.join(root, 'skills/alpha-skill/SKILL.md'), 'utf8'));
+  } finally {
+    if (staged) fs.rmSync(staged.root, { recursive: true, force: true });
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
 
 for (const passed of [true, false]) {
   for (const evidence of ['', ' \t\r\n', '\u00a0\u2003']) {
@@ -462,6 +574,7 @@ test('dry-runs a fixtureless dialogue eval', () => {
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
   assert.match(result.stdout, /dialogue transcript/);
+  assert.match(result.stdout, /--add-dir <staged skill resources>/);
 });
 
 test('enforces the configured rank-1 floor', () => {

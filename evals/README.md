@@ -35,6 +35,12 @@ node scripts/run-evals.js --behavioral test-driven-development --dry-run  # prin
 
 Tier 3 supports two behavioral artifact kinds. `execution` is the default: each eval runs in a throwaway git repository, real project inputs from `files[]` are materialized out of `evals/fixtures/` and committed as the baseline, and the grader judges the full `--output-format stream-json --verbose` execution trace, including tool calls. `dialogue` is reserved for skills whose deliverable is the conversation itself; it needs no fixture, and the grader judges the assistant's conversational turns without requiring file edits or commands. Claiming `dialogue` is a human-reviewed exemption, not a general escape hatch for execution skills.
 
+The executor can read a separate temporary copy of the skill directory and the
+shared root `references/`, with their repository-relative layout preserved.
+Its supplied skill text names that base directory. These resources stay outside
+the fixture's Git baseline and are removed after the run. Availability alone does
+not prove use: add a trace expectation when opening a reference matters.
+
 The executor runs with an explicit permission mode (`--permission-mode acceptEdits` plus a pre-approved tool list) so execution evals can genuinely edit files, run commands, inspect diffs, and make commits rather than being denied and narrating instead. Traces are fenced as untrusted data in the grader prompt and piped to the grader over stdin (they can be megabytes; argv would hit the OS argument-size limit), executor and grader calls carry timeouts, and grader output is validated as JSON before being written to `evals/results/` (gitignored) in skill-creator's `grading.json` shape. Discipline skills also include pressure cases for time pressure, sunk cost, and authority pressure; these verify that the workflow still holds when the prompt argues for skipping it.
 
 Only completed executor streams reach the grader: require an explicit successful
