@@ -121,9 +121,9 @@ Checklists used by more than one skill — testing, security, performance, acces
 
 This is a pack-level design choice. The Agent Skills spec describes a skill as a self-contained directory, but several skills here point at the same checklists. Colocating those would force one of two options: copy the checklist into every skill that uses it, or pick one skill to "own" it and have the others reach into that directory. Both drift over time. A single repo-root copy stays the source of truth.
 
-The tradeoff is portability: a whole-repo install (such as the Claude Code marketplace plugin) carries `references/` along, but a per-skill install that copies only `skills/<name>/` leaves the repo-root sibling behind, and those links resolve to nothing. That gap is tracked in [#361](https://github.com/addyosmani/agent-skills/issues/361).
+A per-skill install copies only `skills/<name>/`, so each skill carries its own copy of the shared checklists it uses, in `skills/<name>/references/shared/`, and links it as `references/shared/security-checklist.md`. `node scripts/sync-shared-references.js` writes those copies from the root files: run it after editing a root checklist or adding a link to one. `shared/` belongs to the script, which rewrites it on every run, so never edit or add a file there by hand. Each copy is byte for byte the root file, so git stores it once; `.gitattributes` marks the copies `linguist-generated` so GitHub collapses them in diffs; CI runs the script with `--check` and fails when a copy is missing, out of date, or no longer linked. Symlinks would avoid the copies, but Git for Windows checks them out as plain text files by default.
 
-Current convention: material used by exactly one skill is a supporting file inside that skill's directory; material shared across skills goes in `references/`.
+Current convention: material used by exactly one skill is a supporting file inside that skill's directory; material shared across skills goes in `references/`, and each skill that uses it links the generated copy in `skills/<name>/references/shared/`.
 
 ## Context Efficiency
 
