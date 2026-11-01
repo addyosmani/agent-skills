@@ -1,0 +1,59 @@
+{
+  "skill_name": "task-ledger",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "We're back on this repo after a week - what's in progress and what should I pick up next?",
+        "top_k": 3
+      },
+      {
+        "prompt": "Mark the settings migration done in the task list and record what actually shipped",
+        "top_k": 3
+      },
+      {
+        "prompt": "Task 4 is blocked on the API key decision - note that and tell me what can still proceed",
+        "top_k": 3
+      },
+      {
+        "prompt": "Keep our task board in the repo so the next agent session picks up where this one stops",
+        "top_k": 3
+      },
+      {
+        "prompt": "Two agents are working in here - how do we stop them from grabbing the same task?",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "Break this spec into small verifiable tasks with acceptance criteria",
+        "owner": "planning-and-task-breakdown"
+      },
+      {
+        "prompt": "I'm implementing the payment flow - should I build it all at once or in slices?",
+        "owner": "incremental-implementation"
+      },
+      {
+        "prompt": "Instrument the checkout service so we can see what's happening in production",
+        "owner": "observability-and-instrumentation"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "execution",
+      "prompt": "Fresh session on this repo. Read TASK_LEDGER.md, pick the next task that is actually ready - respect claims and dependencies - implement it with a test, run the test suite, and update the ledger to reflect what happened.",
+      "expected_output": "T-003 (trim option) implemented with a test and the suite green; TASK_LEDGER.md marks T-003 done with an evidence receipt; T-002 stays blocked, T-004 stays todo, and T-005's claim is left alone",
+      "files": [
+        "task-ledger"
+      ],
+      "expectations": [
+        "The agent selects T-003 as the next ready task and says why: T-002 is blocked and T-004 depends on unmet T-003, and neither is started",
+        "capitalize() gains a trim option: capitalize('  hello world ', { trim: true }) returns 'Hello world' while the default path leaves surrounding whitespace intact",
+        "A test covering the trim option is added and the repository's own test command is run and passes",
+        "TASK_LEDGER.md sets T-003 to done with a receipt quoting the evidence (commit and/or passing test), and preserves the record format of every other task",
+        "T-005's in-progress claim is not overwritten, completed, or reassigned by this session"
+      ]
+    }
+  ]
+}
