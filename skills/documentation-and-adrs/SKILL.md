@@ -267,114 +267,20 @@ After checking the technical content, review the prose for the people who will u
 
 ## Documentation Drift
 
-Missing documentation is visible. Drifted documentation is not: it was true when
-written, the code moved, and the file still reads as authoritative. An agent that
-finds a confident, wrong document trusts it — and a reader has no way to tell a
-current document from a stale one by looking at it.
+A document that was true when written still reads as authoritative after the code moves on. When a doc may be stale, decide from version control, not from how confident the doc sounds:
 
-Agents make this worse in both directions. They generate documentation readily,
-so there is more of it, and they have no mechanism to notice when what they wrote
-has stopped being true.
-
-Writing docs is a one-time act. Keeping them true is a recurring one, and it needs
-a mechanism rather than an intention.
-
-### Three mechanisms
-
-**1. Stamp each document with a freshness date.**
-
-```markdown
-# Rate Limiter
-
-Last verified: 2025-01-20
+```bash
+code=$(git log -1 --format=%H -- src/rate-limiter.js)
+doc=$(git log -1 --format=%H -- docs/rate-limiter.md)
+if [ "$code" = "$doc" ]; then echo "current: changed together"
+elif git merge-base --is-ancestor "$doc" "$code"; then echo "stale: code changed after the doc"
+elif git merge-base --is-ancestor "$code" "$doc"; then echo "current: doc changed after the code"
+else echo "can't tell"; fi
 ```
 
-A reader can now tell a document checked last week from one abandoned last year.
-The stamp is a claim a human makes, so treat it as a hint, not proof — the check
-in mechanism 3 is what actually enforces.
+Unordered history (divergent branches, a rebase, a shallow clone) means "can't tell". Say that; never report it as current.
 
-**2. Keep the change log append-only.**
-
-```markdown
-## Change Log (newest first)
-
-- [2025-01-20] PERF-412 — switched to token bucket · fixed windows allowed 2x
-  burst at the boundary.
-- [2024-11-03] Initial limiter documented.
-```
-
-Append; never rewrite. Git already holds the old text, so a rewritten log destroys
-the only record of *why* something changed while preserving nothing. One line per
-change: date, reference, what changed, and the reason after a separator.
-
-**3. Route each code path to the document that must change with it.**
-
-This is the mechanism that makes the other two enforceable. Without it,
-"keep the docs current" has nothing to check against.
-
-```json
-{
-  "map": {
-    "src/rate-limiter.js": "docs/rate-limiter.md",
-    "src/queue.js": "docs/queue.md"
-  },
-  "exempt": ["src/index.js"]
-}
-```
-
-Explicit entries beat glob patterns: they are greppable, reviewable in a diff, and
-a new file that nobody mapped is itself a finding rather than a silent gap. Make
-exemption deliberate and written down.
-
-### The workflow
-
-1. **Map the code paths that have documentation.** Generate the map from the
-   repository rather than hand-writing it, then review it.
-2. **Check the map.** For each entry, ask four questions:
-
-   | Condition | Meaning |
-   |---|---|
-   | The mapped document does not exist | Documentation was never written |
-   | The code's last commit is newer than the document's | The document has drifted |
-   | A source file is neither mapped nor exempt | New code escaped the check |
-   | The document exists but its code is gone | Documentation outlived its subject |
-
-3. **Decide staleness from version control, not from the stamp.** A hand-written
-   date is forged by forgetting. Compare the last commit that touched the code
-   against the last commit that touched its document:
-
-   ```bash
-   git log -1 --format=%H -- src/rate-limiter.js
-   git log -1 --format=%H -- docs/rate-limiter.md
-   git merge-base --is-ancestor "$DOC_SHA" "$CODE_SHA" && echo "doc is stale"
-   ```
-
-   Identical commits mean they were changed together — not stale.
-
-4. **Report what you could not determine.** If the two commits are unordered —
-   divergent branches, a rebase, a cherry-pick, a shallow clone — the honest answer
-   is *"cannot tell"*. Reporting that as "current" is the failure this whole section
-   exists to prevent: a check that passes because it saw nothing.
-
-5. **Run the check where it changes behaviour.** In CI, and in a pre-commit hook
-   scoped to staged files only: if a mapped code file is staged without its
-   document, stop the commit.
-
-### Gate strictness is a real trade-off
-
-| | Blocks the commit | Warns only |
-|---|---|---|
-| **Cost** | Friction; gets bypassed under deadline | Gets scrolled past and ignored |
-| **Escape** | `--no-verify`, deliberate and visible | None needed — that is the problem |
-
-There is no free option. Choose blocking when the documentation is load-bearing,
-and print the escape hatch in the failure message so it stays deliberate rather
-than becoming a workaround someone discovers under pressure.
-
-**Keep the commit gate scoped to staged files.** A gate that fails on pre-existing
-repository-wide drift blocks work unrelated to the change in hand, and a gate that
-blocks unrelated work is disabled within a week. Repository-wide checking belongs
-in CI, run against the whole tree.
+When you correct a doc that has a change log, append a dated entry that says why it changed. Never rewrite or collapse earlier entries: git keeps the old text, but the log is the only record of the reasons.
 
 ## Common Rationalizations
 
@@ -385,9 +291,7 @@ in CI, run against the whole tree.
 | "Nobody reads docs" | Agents do. Future engineers do. Your 3-months-later self does. |
 | "ADRs are overhead" | A 10-minute ADR prevents a 2-hour debate about the same decision six months later. |
 | "Comments get outdated" | Comments on *why* are stable. Comments on *what* get outdated — that's why you only write the former. |
-| "The docs were right when I wrote them" | They were. Nobody reads a document with a timestamp of when it was *written* — they need to know when it was last *checked*. |
 | "I'll tidy the change log while I'm in here" | Git holds the old text; the log holds the reasons. Rewriting it destroys the only copy of the reasoning and preserves nothing. |
-| "A warning is enough, blocking is annoying" | A warning that can be scrolled past is not enforcement. Choose deliberately, and print the escape hatch. |
 
 ## Red Flags
 
@@ -398,10 +302,8 @@ in CI, run against the whole tree.
 - TODO comments that have been there for weeks
 - No ADRs in a project with significant architectural choices
 - Documentation that restates the code instead of explaining intent
-- Documentation with no indication of when it was last checked against the code
 - A change log that has been rewritten rather than appended to
-- Source files with no documented owner and no recorded exemption
-- A doc-freshness check that reports "clean" without saying what it could not determine
+- A doc called current when the commit order of the doc and its code could not be determined
 
 ## Verification
 
@@ -414,7 +316,5 @@ After documenting:
 - [ ] No commented-out code remains
 - [ ] Rules files (CLAUDE.md etc.) are current and accurate
 - [ ] Prose edits preserve source details, decision trade-offs, and qualifiers without adding unsupported guarantees
-- [ ] Each documented code path is routed to its document, and unmapped files are either mapped or explicitly exempt
-- [ ] Documents carry a freshness stamp, and change logs were appended to rather than rewritten
-- [ ] The drift check runs somewhere it changes behaviour (CI, or a staged-file commit hook)
-- [ ] Anything the check could not determine is reported as undetermined, not as passing
+- [ ] Change logs were appended to rather than rewritten
+- [ ] A doc whose staleness could not be determined is reported as "can't tell", not as current

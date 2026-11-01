@@ -74,7 +74,7 @@
       "id": 2,
       "kind": "execution",
       "prompt": "rate-limiter.md is supposed to describe rate-limiter.js. Someone changed the limiter a while back. Sort this out.",
-      "expected_output": "The specific false claims in rate-limiter.md identified against rate-limiter.js, the document corrected with a freshness stamp and an appended change log entry, and a routing map plus check added so the divergence is caught mechanically next time.",
+      "expected_output": "The specific false claims in rate-limiter.md identified against rate-limiter.js, and the document corrected to describe the code, with a new change log entry appended that records why the limiter changed.",
       "files": [
         "documentation-and-adrs"
       ],
@@ -82,9 +82,7 @@
         "Names the specific claims in rate-limiter.md that are false against rate-limiter.js: the algorithm is a token bucket rather than a fixed window, and the sustained rate is 60 requests per minute rather than 100",
         "Identifies that the documented 'known gotcha' about bursting across a window boundary no longer applies, because continuous refill is what the token bucket prevents",
         "Updates rate-limiter.md to describe the code as it actually is, rather than deleting the document or editing the code to match the document",
-        "Refreshes the 'Last verified' stamp to the current date as part of the same change",
-        "APPENDS a new entry to the existing change log rather than rewriting or replacing any of the three existing entries, and the entry records why the limiter changed, not only that it changed",
-        "Establishes a mechanical link between the code path and its document - a routing map, a check, or a hook - rather than relying on someone remembering to re-read the file"
+        "APPENDS a new entry to the existing change log rather than rewriting or replacing any of the three existing entries, and the entry records why the limiter changed, not only that it changed"
       ]
     },
     {
