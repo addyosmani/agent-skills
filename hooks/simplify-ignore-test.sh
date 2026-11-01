@@ -558,8 +558,92 @@ else
   printf '  skipped: git not available\n'
 fi
 
+# -- Test 19: Re-indented placeholder and modified reason expand cleanly --
+printf '\nTest 19: Re-indented placeholder and modified reason expand without syntax corruption\n'
+PROJ="$TMPDIR/rt19"; mkdir -p "$PROJ"
+RT="$PROJ/reindented.js"
+cat > "$RT" <<'EOF'
+function process(x) {
+  if (x) {
+    /* simplify-ignore-start: perf-critical */
+    const secret = 42;
+    /* simplify-ignore-end */
+    return secret;
+  }
+}
+EOF
+rt_hook_event "$PROJ" "Read" "$RT"
+# Simulate guard-clause simplification unindenting the placeholder from 4 spaces to 2 spaces
+sed 's/^    \/\* BLOCK_/  \/* BLOCK_/' "$RT" > "$PROJ/t" && cat "$PROJ/t" > "$RT"
+rt_hook_event "$PROJ" "Edit" "$RT" 2>/dev/null
+rt_hook_event "$PROJ" "" "" 2>/dev/null
+assert_eq "unindented block restores secret" "1" "$(grep -c 'const secret = 42;' "$RT" || true)"
+assert_eq "no duplicated comment prefix after unindent" "0" "$(grep -c '/\*.*\/\* simplify-ignore-start' "$RT" || true)"
+assert_eq "no stray reason suffix after simplify-ignore-end" "0" "$(grep -c 'simplify-ignore-end \*/:' "$RT" || true)"
+
+PROJ2="$TMPDIR/rt19b"; mkdir -p "$PROJ2"
+RT2="$PROJ2/modreason.js"
+cat > "$RT2" <<'EOF'
+/* simplify-ignore-start: perf-critical */
+const fast = 1;
+/* simplify-ignore-end */
+// simplify-ignore-start: keep-loop
+const loop = 2;
+// simplify-ignore-end
+EOF
+cp "$RT2" "$PROJ2/modreason.orig"
+rt_hook_event "$PROJ2" "Read" "$RT2"
+sed 's/perf-critical/updated-reason/; s/keep-loop/changed-reason/' "$RT2" > "$PROJ2/t" && cat "$PROJ2/t" > "$RT2"
+rt_hook_event "$PROJ2" "" "" 2>/dev/null
+if cmp -s "$RT2" "$PROJ2/modreason.orig"; then
+  assert_eq "modified reason in block and line comments restores original bytes" "identical" "identical"
 else
-  printf '\nTests 14-18 skipped: jq not available (hook no-ops without it)\n'
+  assert_eq "modified reason in block and line comments restores original bytes" "identical" "differs"
+fi
+
+# Ensure modified-reason block comment on a line with a second block comment does not greedily eat trailing code
+RT3="$PROJ2/inline-second-comment.js"
+printf '/* simplify-ignore-start: r1 */ const p = 1; /* simplify-ignore-end */\n' > "$RT3"
+rt_hook_event "$PROJ2" "Read" "$RT3"
+sed 's/r1/r2/; s|$| const keepInline = 9; /* trailing comment */|' "$RT3" > "$PROJ2/t" && cat "$PROJ2/t" > "$RT3"
+rt_hook_event "$PROJ2" "" "" 2>/dev/null
+assert_eq "trailing code before second block comment preserved" "1" "$(grep -c 'const keepInline = 9; /\* trailing comment \*/' "$RT3" || true)"
+
+# -- Test 20: Missing .lock in Stop and malformed JSON during active session --
+printf '\nTest 20: Missing lock dir in Stop and malformed JSON during active session\n'
+PROJ="$TMPDIR/rt20"; mkdir -p "$PROJ"
+RTA="$PROJ/a.js"
+RTB="$PROJ/b.js"
+printf '// simplify-ignore-start\nconst a = 1;\n// simplify-ignore-end\n' > "$RTA"
+printf '// simplify-ignore-start\nconst b = 2;\n// simplify-ignore-end\n' > "$RTB"
+rt_hook_event "$PROJ" "Read" "$RTA"
+rt_hook_event "$PROJ" "Read" "$RTB"
+
+# Missing lock directories must not abort Stop under set -e before restoring b.js
+rm -rf "$PROJ/.claude/.simplify-ignore-cache"/*.lock
+stop_rc=0
+rt_hook_event "$PROJ" "" "" || stop_rc=$?
+assert_eq "Stop exits 0 when .lock dir is missing" "0" "$stop_rc"
+assert_eq "second file b.js restored by Stop" "1" "$(grep -c 'const b = 2;' "$RTB" || true)"
+
+# Malformed JSON mid-session must not trigger the Stop handler and wipe backups
+rt_hook_event "$PROJ" "Read" "$RTA"
+printf 'NOT_JSON{{{' | CLAUDE_PROJECT_DIR="$PROJ" bash hooks/simplify-ignore.sh 2>/dev/null || true
+assert_eq "active session placeholder survives malformed JSON" "1" "$(grep -c 'BLOCK_' "$RTA" || true)"
+rt_hook_event "$PROJ" "" "" || true
+
+# -- Test 21: SQL/Lua double-dash comments do not emit false deletion warning --
+printf '\nTest 21: Double-dash comments expand without false deletion warning\n'
+PROJ="$TMPDIR/rt21"; mkdir -p "$PROJ"
+RTSQL="$PROJ/query.sql"
+printf 'SELECT 1;\n-- simplify-ignore-start: index-hint\nSELECT 2;\n-- simplify-ignore-end\n' > "$RTSQL"
+rt_hook_event "$PROJ" "Read" "$RTSQL"
+sql_warn=$(rt_hook_event "$PROJ" "" "" 2>&1)
+assert_eq "no false deleted warning on -- comment block" "0" "$(printf '%s' "$sql_warn" | grep -c 'was deleted by model' || true)"
+assert_eq "SQL protected block restored" "1" "$(grep -c 'SELECT 2;' "$RTSQL" || true)"
+
+else
+  printf '\nTests 14-21 skipped: jq not available (hook no-ops without it)\n'
 fi
 
 # ── Summary ──────────────────────────────────────────────────────────────

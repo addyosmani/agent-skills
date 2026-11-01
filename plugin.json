@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "agent-skills",
-  "version": "0.6.14",
+  "version": "0.6.15",
   "description": "Production-grade engineering skills for AI coding agents covering the full software development lifecycle from spec to ship.",
   "author": { "name": "Addy Osmani", "url": "https://github.com/addyosmani" },
   "homepage": "https://skills.addy.ie",

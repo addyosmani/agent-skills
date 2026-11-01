@@ -44,6 +44,7 @@ FILE_PATH=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev
 }
 if [ -n "$parse_error" ]; then
   printf 'Warning: %s (input: %.120s)\n' "$parse_error" "$INPUT" >&2
+  exit 0
 fi
 
 hash_cmd() {
@@ -158,6 +159,7 @@ ${line}"
 expand_file() {
   local src="$1" dest="$2" fid="$3"
   local line bf h bp bs br placeholder block_content esc_placeholder esc_fuzzy bh first_line
+  local bp_marker line_indent trimmed_placeholder esc_reindented cur_bp after_hash mod_reason
   rm -f "$dest"
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in *BLOCK_*)
@@ -181,13 +183,40 @@ expand_file() {
           esc_placeholder=$(escape_glob "$placeholder")
           # Bash native substitution (// = global replace): replace placeholder, keep surrounding code
           line="${line//$esc_placeholder/$block_content}"
-          # Fallback: if model altered the reason text, try without reason
+          # Fallback: if model re-indented the placeholder or altered the reason text
           # (only trigger if BLOCK_hash is still present AND wasn't in the original block content)
           case "$block_content" in *"BLOCK_${h}"*) ;; *)
+            bp_marker="${bp#"${bp%%[![:space:]]*}"}"
+            line_indent="${line%%[![:space:]]*}"
+            if [ -n "$br" ]; then
+              trimmed_placeholder="${bp_marker}BLOCK_${h}: ${br}${bs}"
+            else
+              trimmed_placeholder="${bp_marker}BLOCK_${h}${bs}"
+            fi
+            case "$line" in "${line_indent}${trimmed_placeholder}"*)
+              esc_reindented=$(escape_glob "${line_indent}${trimmed_placeholder}")
+              line="${line/$esc_reindented/$block_content}"
+            ;; esac
             case "$line" in *"BLOCK_${h}"*)
               printf 'Warning: placeholder BLOCK_%s was modified by model, using fuzzy match\n' "$h" >&2
-              esc_fuzzy=$(escape_glob "${bp}BLOCK_${h}${bs}")
-              line="${line//$esc_fuzzy/$block_content}"
+              cur_bp="$bp"
+              case "$line" in "${line_indent}${bp_marker}"*)
+                cur_bp="${line_indent}${bp_marker}"
+              ;; esac
+              case "$line" in *"BLOCK_${h}:"*)
+                after_hash="${line#*"BLOCK_${h}:"}"
+                if [ -n "$bs" ]; then
+                  mod_reason="${after_hash%%"$bs"*}"
+                else
+                  mod_reason="$after_hash"
+                fi
+                esc_fuzzy=$(escape_glob "${cur_bp}BLOCK_${h}:${mod_reason}${bs}")
+                line="${line/$esc_fuzzy/$block_content}"
+              ;; esac
+              case "$line" in *"BLOCK_${h}"*)
+                esc_fuzzy=$(escape_glob "${cur_bp}BLOCK_${h}${bs}")
+                line="${line//$esc_fuzzy/$block_content}"
+              ;; esac
               # Last resort: match just the hash token
               case "$line" in *"BLOCK_${h}"*)
                 line="${line//BLOCK_${h}/$block_content}"
@@ -210,10 +239,10 @@ expand_file() {
     bh="${bf##*.}"
     # After expansion, blocks appear as original code (simplify-ignore-start).
     # If neither the expanded code nor the placeholder is in EXPANDED, it was deleted.
-    if ! grep -qF "BLOCK_${bh}" "$dest" 2>/dev/null; then
+    if ! grep -qF -- "BLOCK_${bh}" "$dest" 2>/dev/null; then
       # Get first line of block to check if it was expanded back
       first_line=$(head -1 "$bf")
-      if ! grep -qF "$first_line" "$dest" 2>/dev/null; then
+      if ! grep -qF -- "$first_line" "$dest" 2>/dev/null; then
         printf 'Warning: protected block BLOCK_%s was deleted by model\n' "$bh" >&2
       fi
     fi
@@ -323,20 +352,20 @@ if [ -z "$TOOL_NAME" ]; then
           "$orig" "$rewritten" >&2
       fi
       rm -f "$bak" "$pathfile" "$CACHE/${fid}".block.* "$CACHE/${fid}".reason.* "$CACHE/${fid}".prefix.* "$CACHE/${fid}".suffix.*
-      rmdir "$CACHE/${fid}.lock" 2>/dev/null
+      rmdir "$CACHE/${fid}.lock" 2>/dev/null || true
     else
       # File was moved/deleted — save backup as .recovered, don't destroy it
       mkdir -p "$(dirname "${orig}.recovered")"
       mv "$bak" "${orig}.recovered"
       rm -f "$pathfile" "$CACHE/${fid}".block.* "$CACHE/${fid}".reason.* "$CACHE/${fid}".prefix.* "$CACHE/${fid}".suffix.*
-      rmdir "$CACHE/${fid}.lock" 2>/dev/null
+      rmdir "$CACHE/${fid}.lock" 2>/dev/null || true
       printf 'Warning: %s was moved/deleted. Recovered original to %s.recovered\n' "$orig" "$orig" >&2
     fi
   done
   # Clean orphan locks (created but crash before backup)
   for lockdir in "$CACHE"/*.lock; do
     [ -d "$lockdir" ] || continue
-    rmdir "$lockdir" 2>/dev/null
+    rmdir "$lockdir" 2>/dev/null || true
   done
   exit 0
 fi
@@ -389,7 +418,7 @@ if [ "$TOOL_NAME" = "Read" ]; then
     rm -f "$FILTERED"
   else
     rm -f "$FILTERED" "$CACHE/${ID}.bak" "$CACHE/${ID}.path"
-    rmdir "$CACHE/${ID}.lock" 2>/dev/null
+    rmdir "$CACHE/${ID}.lock" 2>/dev/null || true
   fi
   exit 0
 fi

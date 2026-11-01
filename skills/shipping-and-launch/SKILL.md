@@ -189,7 +189,7 @@ Client metrics:
 
 ```typescript
 // Set up error boundary with reporting
-class ErrorBoundary extends React.Component {
+class ErrorBoundary extends React.Component<React.PropsWithChildren> {
   state = { hasError: false };
 
   static getDerivedStateFromError() {
