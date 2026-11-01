@@ -212,17 +212,29 @@ Every component must meet these standards:
 ### Focus Management
 
 ```tsx
-// Move focus when content changes
+// Use native modal behavior to keep focus inside the open dialog.
 function Dialog({ isOpen, onClose }: DialogProps) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (isOpen) closeRef.current?.focus();
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    if (isOpen) {
+      dialog.showModal();
+      closeRef.current?.focus();
+    } else {
+      dialog.close();
+    }
+    return () => dialog.close();
   }, [isOpen]);
 
-  // Trap focus inside dialog when open
   return (
-    <dialog open={isOpen}>
+    <dialog ref={dialogRef} onCancel={event => {
+      event.preventDefault();
+      onClose(); // Keep the parent's isOpen state in sync with Escape.
+    }}>
       <button ref={closeRef} onClick={onClose}>Close</button>
       {/* dialog content */}
     </dialog>
