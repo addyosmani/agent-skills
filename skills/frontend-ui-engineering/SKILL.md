@@ -17,6 +17,14 @@ Build production-quality user interfaces that are accessible, performant, and vi
 - Adding interactivity or state management
 - Fixing visual or UX issues
 
+## Workflow
+
+1. **Read the project's conventions first.** Design-system notes, existing components, and the stack (framework, styling, test runner) override the defaults in this skill. Reuse existing components such as the project's `Button` instead of re-creating them.
+2. **Name the widget and apply its contract.** If the component is a menu, dialog, tabs, disclosure, listbox, or combobox, implement the keyboard and ARIA contract in [Interactive Widget Contracts](#interactive-widget-contracts). These patterns have exact expected behavior; don't improvise them.
+3. **Model state explicitly.** Keep one source of truth for each piece of interaction state (open or closed, active index, selected value), derive everything else from it, and say which component owns it and whether it is controlled or uncontrolled.
+4. **Verify with what the project already has.** Run its own test, type-check, or lint commands. Don't install a framework, test runner, or type checker just to check your work; if the project has none, review the code against the widget contract and the [Verification](#verification) list, and say what you could not run.
+5. **Report the decisions.** End with the files you changed, the keyboard model, the roles and ARIA attributes you used, how state is managed, and what you verified. A reviewer should be able to check the component's behavior from your answer without reading every line.
+
 ## Component Architecture
 
 ### File Structure
@@ -177,6 +185,25 @@ Don't skip heading levels. Don't use heading styles for non-heading content.
 
 Every component must meet these standards:
 
+### Interactive Widget Contracts
+
+Composite widgets follow the [WAI-ARIA Authoring Practices](https://www.w3.org/WAI/ARIA/apg/patterns/). Use native elements where they exist (`<button>`, `<dialog>`, `<details>`, `<select>`); otherwise implement the full contract:
+
+| Widget | Roles and attributes | Keyboard |
+|---|---|---|
+| **Menu button** (actions dropdown) | Trigger: `<button aria-haspopup="menu" aria-expanded aria-controls>`. Popup: `role="menu"` with `role="menuitem"` children; disabled items `aria-disabled="true"` (still rendered) | Enter, Space or ArrowDown opens and focuses the first enabled item; ArrowUp opens on the last. ArrowDown/ArrowUp move between enabled items (wrapping), Home/End jump. Enter/Space activates. Escape closes and **returns focus to the trigger**; Tab closes. Disabled items are skipped and never activate |
+| **Dialog** (modal) | `<dialog>` or `role="dialog"` with `aria-modal="true"` and `aria-labelledby` (plus `aria-describedby` for a message) | Focus moves into the dialog on open (first sensible control). Tab and Shift+Tab stay inside. Escape closes. On close, **focus returns to the element that opened it**. Content behind is inert |
+| **Tabs** | `role="tablist"`; tabs `role="tab"` with `aria-selected` and `aria-controls`; panels `role="tabpanel"` with `aria-labelledby` | Only the selected tab is in the Tab order (roving `tabIndex`). ArrowLeft/ArrowRight move between tabs (wrapping), Home/End jump; selection follows focus unless panels are expensive (then Enter/Space selects) |
+| **Disclosure** (show/hide) | `<button aria-expanded aria-controls>` | Enter/Space toggles |
+| **Listbox / Combobox** | `role="listbox"` with `role="option"` and `aria-selected`; a combobox input uses `role="combobox"`, `aria-expanded`, `aria-controls`, `aria-activedescendant` | ArrowDown/ArrowUp move the active option, Enter selects, Escape closes the popup |
+
+Implementation notes that apply to all of them:
+
+- **Roving focus:** exactly one item has `tabIndex={0}`; the others have `tabIndex={-1}` and receive focus with `element.focus()` as the active index changes.
+- **Refs:** public components accept `className` and forward a ref to their root DOM element when the project's components do.
+- **IDs:** generate stable IDs (`useId()` in React) to connect `aria-controls`, `aria-labelledby`, and the elements they reference.
+- **Disabled state:** skip disabled items in keyboard movement and guard their handlers, rather than relying on styling.
+
 ### Keyboard Navigation
 
 ```tsx
@@ -328,8 +355,9 @@ For detailed accessibility requirements and testing tools, see `../../references
 
 ## Verification
 
-After building UI:
+After building UI, check what you can with the project's own tooling, and review the rest against this list. Don't add dependencies or install toolchains only to verify; say which checks you couldn't run.
 
+- [ ] The widget matches its contract in [Interactive Widget Contracts](#interactive-widget-contracts), key by key
 - [ ] Component renders without console errors
 - [ ] All interactive elements are keyboard accessible (Tab through the page)
 - [ ] Screen reader can convey the page's content and structure
