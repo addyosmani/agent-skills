@@ -169,7 +169,7 @@ When using an external tracker, note it in `tasks/plan.md` (e.g. "Tasks tracked 
 # Implementation Plan: [Feature/Project Name]
 
 ## Overview
-[One paragraph summary of what we're building]
+[One paragraph summary of what we are building]
 
 ## Architecture Decisions
 - [Key decision 1 and rationale]
