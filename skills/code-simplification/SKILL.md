@@ -82,11 +82,14 @@ const result = items.reduce((acc, item) => ({
   [item.id]: { ...acc[item.id], count: (acc[item.id]?.count ?? 0) + 1 }
 }), {});
 
-// CLEAR: Named intermediate step
+// CLEAR: Named intermediate step, then the same shape as before
 const countById = new Map<string, number>();
 for (const item of items) {
   countById.set(item.id, (countById.get(item.id) ?? 0) + 1);
 }
+const result = Object.fromEntries(
+  [...countById].map(([id, count]) => [id, { count }]),
+);
 ```
 
 ### 4. Maintain Balance
