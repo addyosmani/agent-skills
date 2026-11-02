@@ -1001,6 +1001,35 @@ test('fixture baseline commits ignore inherited user signing requirements', () =
   }
 });
 
+test('fixture repositories ignore inherited hooks for baseline and later commits', () => {
+  const root = makeSandbox();
+  try {
+    const hooks = path.join(root, 'user-hooks');
+    const config = path.join(root, 'global.gitconfig');
+    fs.mkdirSync(hooks);
+    fs.writeFileSync(path.join(hooks, 'pre-commit'), '#!/bin/sh\necho inherited-hook-ran >&2\nexit 1\n', { mode: 0o755 });
+    const configured = spawnSync('git', ['config', '--file', config, 'core.hooksPath', hooks], { encoding: 'utf8' });
+    assert.equal(configured.status, 0, configured.stderr);
+    const before = fs.readFileSync(config, 'utf8');
+    const result = spawnSync(process.execPath, ['-e', `
+      const fs = require('node:fs');
+      const { execFileSync } = require('node:child_process');
+      const { materializeWorkspace } = require(${JSON.stringify(path.join(root, 'scripts/run-evals.js'))});
+      let workspace;
+      try {
+        workspace = materializeWorkspace({ files: ['project/context.txt'] });
+        fs.appendFileSync(workspace + '/project/context.txt', 'edit');
+        execFileSync('git', ['commit', '-am', 'eval edit'], { cwd: workspace });
+        process.stdout.write(execFileSync('git', ['rev-list', '--count', 'HEAD'], { cwd: workspace }));
+      } finally { if (workspace) fs.rmSync(workspace, { recursive: true, force: true }); }
+    `], { cwd: root, encoding: 'utf8', env: { ...process.env, GIT_CONFIG_GLOBAL: config } });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.equal(result.stdout.trim(), '2');
+    assert.doesNotMatch(result.stderr, /inherited-hook-ran/);
+    assert.equal(fs.readFileSync(config, 'utf8'), before);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
 test('rejects duplicate behavioral IDs before they can overwrite a grading slot', () => {
   const root = makeSandbox();
   try {
