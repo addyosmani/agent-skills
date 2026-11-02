@@ -115,14 +115,14 @@ fi
 NOW=$(date +%s)
 
 TMP="${CACHE_FILE}.$$.tmp"
-if jq -n \
+# Response bodies can exceed argv limits; read the content from stdin.
+if printf '%s' "$CONTENT" | jq -Rs \
   --arg url           "$URL" \
   --arg prompt        "$PROMPT" \
   --arg etag          "$ETAG" \
   --arg last_modified "$LAST_MOD" \
-  --arg content       "$CONTENT" \
   --argjson fetched_at "$NOW" \
-  '{url: $url, prompt: $prompt, etag: $etag, last_modified: $last_modified, content: $content, fetched_at: $fetched_at}' \
+  '{url: $url, prompt: $prompt, etag: $etag, last_modified: $last_modified, content: ., fetched_at: $fetched_at}' \
   > "$TMP"
 then
   mv "$TMP" "$CACHE_FILE"
