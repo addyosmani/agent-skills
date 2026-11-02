@@ -557,7 +557,7 @@ function extractExecutorModel(trace) {
 }
 
 function clearGradingSlot(base) {
-  for (const suffix of ['grading.json', 'grading.raw.txt', 'execution.raw.txt', 'execution.error.txt']) {
+  for (const suffix of ['grading.json', 'grading.raw.txt', 'grading.error.txt', 'execution.raw.txt', 'execution.error.txt']) {
     fs.rmSync(`${base}.${suffix}`, { force: true });
   }
 }
@@ -682,7 +682,18 @@ function runBehavioral(skillName, dryRun, evalId = null) {
     ].join('\n\n');
     // The trace can be megabytes; pass the grader prompt via stdin, never
     // argv, or it would blow past the OS argument-size limit (E2BIG).
-    const raw = execFileSync('claude', ['-p'], { input: graderPrompt, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, timeout: GRADER_TIMEOUT_MS });
+    let raw;
+    try {
+      raw = execFileSync('claude', ['-p'], { input: graderPrompt, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, timeout: GRADER_TIMEOUT_MS });
+    } catch (error) {
+      const failure = `${error.code || `exit ${error.status ?? 'unknown'}`}: ${error.message}`;
+      fs.writeFileSync(`${base}.execution.raw.txt`, trace);
+      fs.writeFileSync(`${base}.grading.raw.txt`, String(error.stdout || ''));
+      fs.writeFileSync(`${base}.grading.error.txt`, `${failure}\n${error.stderr || ''}`);
+      console.log(`  ✗  eval ${ev.id}: grading incomplete: ${failure}; execution and grading evidence retained`);
+      failures++;
+      continue;
+    }
     let gradingError = 'grader returned invalid JSON';
     const grading = parseGrading(raw, ev.expectations, (reason) => { gradingError = reason; });
     const runMeta = {
