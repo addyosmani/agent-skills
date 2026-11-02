@@ -476,6 +476,8 @@ function initializeWorkspace(ev, workspace) {
   // throwaway workspace.
   execFileSync('git', ['init', '--quiet'], { cwd: workspace });
   execFileSync('git', ['config', 'core.autocrlf', 'false'], { cwd: workspace });
+  // User hooks must not run against temporary fixtures or agent-made commits.
+  execFileSync('git', ['config', 'core.hooksPath', '/dev/null'], { cwd: workspace });
   execFileSync('git', ['config', 'commit.gpgsign', 'false'], { cwd: workspace });
   execFileSync('git', ['config', 'user.name', 'Skill Eval'], { cwd: workspace });
   execFileSync('git', ['config', 'user.email', 'skill-eval@example.invalid'], { cwd: workspace });
