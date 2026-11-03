@@ -1,0 +1,6 @@
+# Loaded by the alert manager in production. Values here override code defaults.
+checkout-api:
+  rule: static_rule
+  params:
+    threshold: 0.03
+    consecutive: 2

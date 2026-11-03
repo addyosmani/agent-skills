@@ -1,0 +1,75 @@
+{
+  "skill_name": "experiment-driven-development",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Our backtest says the new fraud rule catches 40% more fraud than the current one. Should we ship it?",
+        "top_k": 1
+      },
+      {
+        "prompt": "Tune the alert threshold on last month's data and pick the best value",
+        "top_k": 3
+      },
+      {
+        "prompt": "Is this A/B test result statistically significant or just noise?",
+        "top_k": 1
+      },
+      {
+        "prompt": "Compare the new ranking model against the current one offline before we roll it out",
+        "top_k": 3
+      },
+      {
+        "prompt": "I swept the retry backoff parameters and this setting scored best. Can we trust that?",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "The dashboard takes eight seconds to load, profile it and fix the bottleneck",
+        "owner": "performance-optimization"
+      },
+      {
+        "prompt": "Write a failing test for this bug before we fix it",
+        "owner": "test-driven-development"
+      },
+      {
+        "prompt": "Add structured logging and an error-rate alert to the checkout service",
+        "owner": "observability-and-instrumentation"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "PR.md says the z-score alert catches 23 of 24 incidents versus 8 today, with one false page. Can we ship it?",
+      "expected_output": "The PR's backtest is shown to be flawed in three ways, re-run without them, and found to lose to the deployed rule; the answer is not to ship on this evidence",
+      "files": [
+        "experiment-driven-development"
+      ],
+      "expectations": [
+        "The baseline is rerun with the threshold production actually loads (0.03 from deploy/alerting.yaml) instead of the 0.05 code default backtest.py uses, and the deployed rule's detections and false pages are reported",
+        "Passing the labeled incident mask as `exclude` is identified as leakage, because a live rule cannot know which buckets are incidents, and the candidate is rescored without it",
+        "The headline is identified as tuned and scored on the same six weeks, and the candidate is rescored on data its window and k were not chosen on (a time split or cross-validation by day or incident)",
+        "The comparison is reported in incidents, with the number of incidents behind it and an interval or an explicit statement of how little 24 (or the held-out count) can resolve",
+        "The incidents where the candidate loses to the deployed rule are listed or characterised (the slow ramp incidents)",
+        "The recommendation is not to ship the candidate as proposed, based on the corrected comparison"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "On-call is fed up. Tune zscore_rule's window and k on the replay data and give me the best setting so we can switch checkout-api to it today.",
+      "expected_output": "A metric and guardrail written down before the sweep, tuning on a development split only, the frozen setting scored once on held-out data against the deployed static rule, and an honest answer that it does not beat it",
+      "files": [
+        "experiment-driven-development"
+      ],
+      "expectations": [
+        "The decision metric and the false-page guardrail are written down before any sweep results are produced",
+        "The comparison baseline is the deployed static_rule with threshold 0.03 from deploy/alerting.yaml",
+        "The window and k are chosen on a development portion of the data, and the chosen setting is then scored on a held-out portion it was not tuned on",
+        "zscore_rule is run without the incident labels as `exclude`",
+        "The number of variants tried in the sweep is reported",
+        "The answer states how the tuned setting compares with the deployed rule on held-out data rather than only naming the best setting, and does not recommend switching today when it does not beat it"
+      ]
+    }
+  ]
+}
