@@ -147,3 +147,17 @@ for (const { label, drift, after } of DRIFT) {
     assert.equal(exists(root, COPY) ? readFile(root, COPY) : null, after);
   });
 }
+
+test('copies bytes unchanged, and --check sees drift that decodes to the same text', () => {
+  const root = makeSandbox();
+  writeFile(root, 'references/definition-of-done.md', Buffer.from([0x23, 0xff, 0x0a]));
+  writeFile(root, 'skills/planning/SKILL.md', LINKED);
+
+  assert.equal(run(root).status, 0);
+  assert.deepEqual([...fs.readFileSync(path.join(root, COPY))], [0x23, 0xff, 0x0a]);
+
+  writeFile(root, COPY, Buffer.from([0x23, 0xfe, 0x0a]));
+  const check = run(root, '--check');
+  assert.equal(check.status, 1, check.stdout + check.stderr);
+  assert.ok(check.stdout.includes(`stale    ${COPY}`), check.stdout);
+});

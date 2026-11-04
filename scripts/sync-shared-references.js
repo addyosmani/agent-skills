@@ -59,7 +59,7 @@ function expectedCopies() {
     for (const shared of new Set(names)) {
       const source = path.join(SHARED_DIR, shared);
       if (!fs.existsSync(source)) continue;
-      copies.set(path.join(sharedDir(skillDir), shared), fs.readFileSync(source, 'utf8'));
+      copies.set(path.join(sharedDir(skillDir), shared), fs.readFileSync(source));
     }
   }
   return copies;
@@ -73,7 +73,7 @@ function check(copies) {
   const problems = [];
   for (const [file, content] of copies) {
     if (!fs.existsSync(file)) problems.push(`missing  ${toPosix(file)}`);
-    else if (fs.readFileSync(file, 'utf8') !== content) problems.push(`stale    ${toPosix(file)}`);
+    else if (!fs.readFileSync(file).equals(content)) problems.push(`stale    ${toPosix(file)}`);
   }
   for (const skillDir of skillDirs()) {
     const dir = sharedDir(skillDir);
