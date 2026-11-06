@@ -1,0 +1,32 @@
+{
+  "skill_name": "architecture-coaching",
+  "trigger": {
+    "positive": [
+      { "prompt": "Walk me through this codebase, I'm new here", "top_k": 1 },
+      { "prompt": "I never really understood how the build pipeline works, teach me from scratch", "top_k": 3 },
+      { "prompt": "We just merged the big refactor — give me a walkthrough of what the system looks like now", "top_k": 3 },
+      { "prompt": "Help me understand this architecture before I touch it", "top_k": 3 }
+    ],
+    "negative": [
+      { "prompt": "Review this diff before I merge it", "owner": "code-review-and-quality" },
+      { "prompt": "Write a failing test for this bug before fixing it", "owner": "test-driven-development" },
+      { "prompt": "What does this service do?", "owner": "code-simplification" }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "dialogue",
+      "prompt": "I just joined this project and I'm lost. What is the orchestration layer actually doing? Why are there two config systems? And what's a \"gate contract\" — everyone keeps saying it but nobody explains it. Walk me through it properly.",
+      "expected_output": "A single-reply coaching response that reduces the three questions to one stated, verifiable missing-prerequisite hypothesis (or explicitly queues them), defines the coined term before it carries weight, advances one cognitive center, and ends with a specific relation/fork check — not three answer sections and not a bare 'does that make sense?'",
+      "expectations": [
+        "The reply reduces the questions to a stated hypothesis about a common missing prerequisite (e.g. how configuration flows end to end) and names it as a hypothesis the user can correct — or explicitly queues them with one taught first — rather than answering each question in its own section",
+        "The coined term ('gate contract') is defined in place, confirmed as known, or explicitly placeholdered before it carries argumentative weight; it is never assumed known just because 'everyone says it'",
+        "Exactly one cognitive center is advanced in this first reply",
+        "The reply ends by checking a specific relation, distinction, or next fork — not a bare 'does that make sense?'",
+        "Load-bearing claims either cite reviewable anchors (real file/type/method names) with implementation and evidence status labeled, or are explicitly marked as inference/unverified",
+        "No scenario-style metaphor (characters as subjects, role interaction); any metaphor is a one-sentence naming-style mapping, and plain statement dominates"
+      ]
+    }
+  ]
+}
