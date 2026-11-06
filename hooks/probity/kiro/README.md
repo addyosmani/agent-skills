@@ -11,7 +11,7 @@ contract.
 | `probity-kiro-translate.py` | `event` / `reason` translation helpers, `install` check |
 | `kiro-transcript-to-claude.py` | Kiro session JSONL → Anthropic JSONL (for history rules) |
 | `skill-activation-forced-eval.sh` | userPromptSubmit skill-activation hook |
-| `kiro-agent.template.json` | agent config template (skills + both hooks; matchers for kiro-cli 3.x and 2.x) |
+| `kiro-agent.template.json` | agent config template (skills + both hooks) |
 
 The shim still asks Probity's default judge, on the Claude login. To judge
 on kiro-cli as well, set `ai: judgeChain([kiroJudge(), claudeJudge()])` in

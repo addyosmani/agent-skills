@@ -35,8 +35,14 @@ The two agents disagree on the hook contract in three ways the shim reconciles:
    - **kiro-cli 3.x** (V3 engine, from 0.4.62; #176):
      - `fs_write` {path, text} → `Write`.
      - `str_replace` → `Edit`.
-     - `fs_append` → `Write` of the file on disk plus the text.
-     - `execute_bash` → `Bash`.
+     - `fs_append` → `Write` of the file on disk plus the text, with the
+       newline Kiro adds.
+     - `delete_file` → `Bash` `rm -- <file>`.
+     - `execute_bash`, `execute_pwsh`, `run_command`, and a
+       `control_*_process` `start` → `Bash`, judged in the call's own `cwd`.
+     - Any other tool Kiro files as a write (`edit_code`, `semantic_rename`,
+       `smart_relocate`, `create_hook`) is **blocked**, since the shim can't
+       express it to Probity. A translator failure is blocked too.
    - **kiro-cli 2.x:**
      - `fs_write` (create / strReplace / insert) → `Write` / `Edit`.
      - `shell` → `Bash`.
@@ -158,13 +164,19 @@ commands already point at the scripts you copied in step 2.
 ## Verification
 
 1. Start Kiro in the project and run `/hooks`. You should see one
-   `userPromptSubmit` entry and the `preToolUse` entries from the template:
-   - **kiro-cli 3.x:** matchers `fs_write`, `str_replace`, `fs_append` and
-     `execute_bash`. kiro-cli 3.1's agent auto-upgrade keeps the 2.x
-     matchers `write` and `shell`, which match no 3.x tool, so the hook
-     never runs. Add these four by hand to an auto-upgraded agent.
-   - **kiro-cli 2.x:** matchers `write` and `shell`. The template keeps
-     both, so one agent file works on either version.
+   `userPromptSubmit` entry and two `preToolUse` entries, with matchers
+   `write` and `shell`. These work on both versions:
+   - **kiro-cli 3.x** matches a hook by a tool's capability tag. `write`
+     covers every write tool (`fs_write`, `str_replace`, `fs_append`,
+     `delete_file`, …) and `shell` covers every shell tool.
+   - **Don't add per-tool matchers next to these.** A 3.x write would
+     match both entries and be judged twice.
+   - **kiro-cli 3.x ignores `timeout_ms`** in an agent file. A hook gets
+     60 s, and one that runs longer **lets the call through**. On a 3.x
+     event the shim gives Probity 55 s (`PROBITY_KIRO_TIMEOUT_S`, keep it
+     below 60) and blocks a call it hasn't judged by then. A judge that
+     often takes longer, such as Opus at high effort on big prompts,
+     shows up as those blocks.
 2. Confirm the deterministic wall blocks. Feed a synthetic event straight to
    the shim (this needs no model call):
 
@@ -196,9 +208,9 @@ commands already point at the scripts you copied in step 2.
   for Claude Code without a transcript. The deterministic rules (sleeps,
   UI-mechanics location, spec-backed test, glossary/parity gates) are
   unaffected.
-- **Tool-name coverage is scoped to the mutating tools.** On 3.x,
-  `fs_write`, `str_replace`, `fs_append` and `execute_bash` are gated. On
-  2.x, `write` and `shell` are. MCP tools and other built-ins are allowed. Widen the matchers if
+- **Tool-name coverage is scoped to the mutating tools.** The `write` and
+  `shell` matchers gate every write and shell tool on both versions. MCP
+  tools and other built-ins are allowed. Widen the matchers if
   a project needs more.
 - **Parity, not replacement.** Keep the Claude Code `.claude/settings.json`
   hook if you use both agents; they share the one `probity.config.ts`.

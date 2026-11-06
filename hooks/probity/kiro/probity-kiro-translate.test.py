@@ -169,6 +169,66 @@ with tempfile.TemporaryDirectory() as home:
     check("a session id cannot climb out of the sessions folder",
           run_transcript_path({"session_id": "../../etc"}, home) == "")
 
+# --- Review of #176: the rest of kiro-cli 3.x's write and shell tools ----
+def run_event_code(event):
+    old_in, old_out = sys.stdin, sys.stdout
+    sys.stdin, sys.stdout = io.StringIO(json.dumps(event)), io.StringIO()
+    try:
+        code = translate.cmd_event()
+        return code, sys.stdout.getvalue()
+    finally:
+        sys.stdin, sys.stdout = old_in, old_out
+
+
+with tempfile.TemporaryDirectory() as d:
+    path = os.path.join(d, "A.kt")
+    with open(path, "w", encoding="utf-8") as handle:
+        handle.write("class A {}")
+
+    code, out = run_event_code({"tool_name": "delete_file", "tool_input": {"targetFile": path, "explanation": "x"}, "cwd": d})
+    check("delete_file is judged as an rm", code == 0 and json.loads(out)["tool_input"]["command"] == f"rm -- '{path}'")
+    code, out = run_event_code({"tool_name": "control_bash_process", "tool_input": {"action": "start", "command": "git commit -m x", "cwd": d}, "cwd": d})
+    check("control_bash_process start is judged as Bash", json.loads(out)["tool_input"]["command"] == "git commit -m x")
+    code, out = run_event_code({"tool_name": "control_bash_process", "tool_input": {"action": "stop", "processId": 3}, "cwd": d})
+    check("control_bash_process stop is let through", code == 0 and out == "")
+    for tool in ("execute_pwsh", "run_command"):
+        code, out = run_event_code({"tool_name": tool, "tool_input": {"command": "rm -rf src"}, "cwd": d})
+        check(f"{tool} is judged as Bash", json.loads(out)["tool_name"] == "Bash")
+    for tool in ("edit_code", "semantic_rename", "smart_relocate", "create_hook"):
+        code, out = run_event_code({"tool_name": tool, "tool_input": {"path": path}, "cwd": d})
+        check(f"{tool} (a write the shim can't translate) is blocked", code == 2 and "can't judge" in out)
+
+    code, out = run_event_code({"tool_name": "fs_append", "tool_input": {"path": path, "text": "class B {}\n"}, "cwd": d})
+    check("fs_append adds the newline Kiro adds", json.loads(out)["tool_input"]["content"] == "class A {}\nclass B {}\n")
+    with open(os.path.join(d, "bin.dat"), "wb") as handle:
+        handle.write(b"\xff\xfe\x00")
+    code, out = run_event_code({"tool_name": "fs_append", "tool_input": {"path": os.path.join(d, "bin.dat"), "text": "x"}, "cwd": d})
+    check("fs_append to an unreadable file falls back to the text", code == 0 and json.loads(out)["tool_input"]["content"] == "x")
+
+    other = os.path.join(d, "other-tree")
+    code, out = run_event_code({"tool_name": "execute_bash", "tool_input": {"command": "sed -i s/a/b/ src/A.kt", "cwd": other}, "cwd": d})
+    check("execute_bash is judged in its own cwd", json.loads(out)["cwd"] == other)
+    code, out = run_event_code({"tool_name": "str_replace", "tool_input": {"path": path, "oldStr": "a", "newStr": "b", "replace_all": "false"}, "cwd": d})
+    check("replace_all is true only when it is true", json.loads(out)["tool_input"]["replace_all"] is False)
+
+with tempfile.TemporaryDirectory() as home:
+    for name in ("sess_root", "sess_child"):
+        os.makedirs(os.path.join(home, ".kiro", "sessions", "w", name))
+        open(os.path.join(home, ".kiro", "sessions", "w", name, "messages.jsonl"), "w").close()
+    os.environ["KIRO_SESSION_ID"] = "root"
+    old_in, old_out, old_home = sys.stdin, sys.stdout, os.environ.get("HOME")
+    sys.stdin, sys.stdout = io.StringIO(json.dumps({"session_id": "sess_child"})), io.StringIO()
+    os.environ["HOME"] = home
+    try:
+        translate.cmd_transcript_path()
+        found = sys.stdout.getvalue()
+    finally:
+        sys.stdin, sys.stdout = old_in, old_out
+        os.environ.pop("KIRO_SESSION_ID", None)
+        if old_home is not None:
+            os.environ["HOME"] = old_home
+    check("the event's session_id wins over KIRO_SESSION_ID (a subagent's own history)", found.endswith("sess_child/messages.jsonl"))
+
 if failures:
     print(f"\n{len(failures)} check(s) failed")
     raise SystemExit(1)

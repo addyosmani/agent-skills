@@ -114,6 +114,21 @@ check("a result whose output prints its own Exit Code keeps Kiro's last one",
       spoof["exit_status"] == "exit status: 1" and spoof["stdout"].endswith("Exit Code: 0"))
 check("a non-shell V3 result is passed through as text", emitted[3]["message"]["content"][0]["content"] == "Replaced text in /r/CountTest.kt")
 
+# --- Review of #176 -------------------------------------------------------
+emitted = []
+state = {}
+for line in [
+    v3({"type": "tool_call", "toolCallId": "k1", "toolName": "execute_bash", "args": {"command": "./gradlew check -q"}}),
+    v3({"type": "tool_result", "toolCallId": "k1", "content": "Output:\nslow\n\nExit Code: 0", "success": False}),
+    v3({"type": "tool_call", "toolCallId": "k2", "toolName": "delete_file", "args": {"targetFile": "/r/ATest.kt"}}),
+    v3({"type": "tool_call", "toolCallId": "k3", "toolName": "control_bash_process", "args": {"action": "start", "command": "./gradlew test"}}),
+]:
+    transducer.transduce_line(line, emitted.append, state)
+unsure = json.loads(emitted[1]["message"]["content"][0]["content"])
+check("a result Kiro didn't mark successful is never read as exit 0", unsure["exit_status"] != "exit status: 0")
+check("delete_file becomes an rm in history", emitted[2]["message"]["content"][0]["input"] == {"command": "rm -- '/r/ATest.kt'"})
+check("a started background process becomes Bash in history", emitted[3]["message"]["content"][0]["input"] == {"command": "./gradlew test"})
+
 if failures:
     print(f"\n{len(failures)} check(s) failed")
     raise SystemExit(1)

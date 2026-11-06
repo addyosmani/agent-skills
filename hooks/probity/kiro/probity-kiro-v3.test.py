@@ -101,6 +101,20 @@ with tempfile.TemporaryDirectory() as tmp:
     res, payload = shim("read_file", {"path": path})
     check("V3 read_file is let through without Probity", res.returncode == 0 and payload is None, res.stderr)
 
+    res, payload = shim("edit_code", {"path": path})
+    check("a write tool the shim can't translate is blocked", res.returncode == 2 and payload is None and "can't judge" in res.stderr, res.stderr)
+
+    # kiro-cli 3.x drops an agent hook's timeout_ms and lets a call through
+    # when the hook runs past 60 s; the shim blocks before that.
+    (bin_dir / "probity-claude").write_text("#!/bin/sh\nsleep 5\n")
+    os.environ["PROBITY_KIRO_TIMEOUT_S"] = "1"
+    try:
+        res, payload = shim("fs_write", {"path": path, "text": "x\n"})
+    finally:
+        del os.environ["PROBITY_KIRO_TIMEOUT_S"]
+    check("a judge slower than the 3.x hook timeout blocks instead of letting the call through",
+          res.returncode == 2 and "took longer than" in res.stderr, res.stderr)
+
 if failures:
     raise SystemExit(f"{len(failures)} check(s) failed")
 print("all checks passed")

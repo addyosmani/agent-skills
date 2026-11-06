@@ -91,7 +91,14 @@ trap cleanup EXIT
 
 # --- Translate the Kiro event to a claude-code payload --------------------
 # Empty stdout == non-mutating tool (or unparseable) -> allow, skip probity.
+# A non-zero exit is a write or shell tool the translator can't express, or
+# a translator failure: blocked, since allowing would skip every rule.
 PAYLOAD="$(printf '%s' "$EVENT" | python3 "$TRANSLATE" event)"
+TRANSLATED=$?
+if [ "$TRANSLATED" -ne 0 ]; then
+  printf '%s\n' "${PAYLOAD:-Probity: the Kiro shim could not translate this call (exit $TRANSLATED), so it is blocked.}" >&2
+  exit 2
+fi
 if [ -z "$PAYLOAD" ]; then
   exit 0
 fi
@@ -105,7 +112,18 @@ if [ ! -x "$PROBITY" ]; then
 fi
 
 # --- Invoke Probity and translate its response to Kiro's exit codes -------
-RESPONSE="$(printf '%s' "$PAYLOAD" | "$PROBITY" --agent claude-code 2>/dev/null)"
+# kiro-cli 3.x lets a call through when its hook runs past 60 s, so on a
+# 3.x event Probity gets a deadline below that and a late verdict blocks.
+DEADLINE="$(printf '%s' "$EVENT" | python3 "$TRANSLATE" deadline)"
+if [ -n "$DEADLINE" ]; then
+  RESPONSE="$(printf '%s' "$PAYLOAD" | python3 "$TRANSLATE" run "$DEADLINE" "$PROBITY" --agent claude-code 2>/dev/null)"
+  if [ $? -eq 124 ]; then
+    echo "Probity took longer than ${DEADLINE}s to judge this call. kiro-cli 3.x lets a call through when its hook runs past 60 s, so the shim blocks it instead. Retry it; if this keeps happening, use a faster judge or raise PROBITY_KIRO_TIMEOUT_S (below 60)." >&2
+    exit 2
+  fi
+else
+  RESPONSE="$(printf '%s' "$PAYLOAD" | "$PROBITY" --agent claude-code 2>/dev/null)"
+fi
 REASON="$(printf '%s' "$RESPONSE" | python3 "$TRANSLATE" reason)"
 
 if [ -n "$REASON" ]; then

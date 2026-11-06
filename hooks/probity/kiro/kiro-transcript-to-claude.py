@@ -98,8 +98,13 @@ def _map_tool(name, tool_input):
     Probity as an inert `other` action (no rule matches it).
     """
     tool_input = tool_input if isinstance(tool_input, dict) else {}
-    if name in ("shell", "execute_bash", "execute_cmd"):
+    if name in ("shell", "execute_bash", "execute_cmd", "execute_pwsh", "run_command"):
         return "Bash", {"command": tool_input.get("command", "")}
+    if name in ("control_bash_process", "control_pwsh_process", "control_process") and tool_input.get("action") == "start":
+        return "Bash", {"command": tool_input.get("command", "")}
+    if name in ("delete_file", "deleteFile"):
+        target = tool_input.get("targetFile") or tool_input.get("path") or ""
+        return "Bash", {"command": "rm -- '" + target.replace("'", "'\\''") + "'"}
     if name in ("str_replace", "strReplace"):
         return "Edit", {
             "file_path": tool_input.get("path", ""),
@@ -128,11 +133,17 @@ def _map_tool(name, tool_input):
     return name or "Unknown", tool_input
 
 
-def _v3_shell_result(content):
+def _v3_shell_result(content, success):
     match = V3_SHELL_RESULT.match(content)
     if not match:
         return content
-    return json.dumps({"exit_status": "exit status: " + match.group(2), "stdout": match.group(1), "stderr": ""})
+    code = match.group(2)
+    # Kiro adds the trailer only when it has an exit code; output that ends
+    # in its own "Exit Code: 0" must not pass for one. Zero counts only
+    # when Kiro also marked the call successful.
+    if code == "0" and success is not True:
+        code = "1"
+    return json.dumps({"exit_status": "exit status: " + code, "stdout": match.group(1), "stderr": ""})
 
 
 def transduce_v3(payload, emit, state):
@@ -152,8 +163,8 @@ def transduce_v3(payload, emit, state):
     elif kind == "tool_result":
         content = payload.get("content")
         content = content if isinstance(content, str) else _text_blocks(content)
-        if state.get(payload.get("toolCallId", "")) in ("execute_bash", "shell"):
-            content = _v3_shell_result(content)
+        if state.get(payload.get("toolCallId", "")) in ("execute_bash", "execute_pwsh", "run_command", "shell"):
+            content = _v3_shell_result(content, payload.get("success"))
         emit({"type": "user", "message": {"content": [{
             "type": "tool_result", "tool_use_id": payload.get("toolCallId", ""), "content": content}]}})
     # Other 3.x events (session_start, turn_start, usage_summary, ...) carry no history.
