@@ -1,0 +1,28 @@
+{
+  "integrations": [
+    {
+      "name": "crm-sync",
+      "token_type": "jwt",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmaXh0dXJlLXVzZXIiLCJzY29wZSI6ImNybS5yZWFkIiwiZXhwIjoxNzk5OTk5OTk5fQ.c2lnbmF0dXJlLWZpeHR1cmUtb25seQ",
+      "expires_at": "2027-02-01T00:00:00Z",
+      "scope": "crm.read",
+      "checked_at": "2026-11-05T02:00:00Z"
+    },
+    {
+      "name": "billing-sync",
+      "token_type": "jwt",
+      "token": "opq_8f3a91c27be04d5fa6c1e8d0b47a2f93c5e6d817",
+      "expires_at": "2027-01-15T00:00:00Z",
+      "scope": "billing.read",
+      "checked_at": "2026-11-05T02:00:00Z"
+    },
+    {
+      "name": "warehouse-export",
+      "token_type": "opaque",
+      "token": "whs_live_7c1d4b9e2a6f8035",
+      "expires_at": "2026-10-21T09:30:00Z",
+      "scope": "warehouse.export",
+      "checked_at": "2026-11-05T02:00:00Z"
+    }
+  ]
+}
