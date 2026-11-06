@@ -63,10 +63,16 @@ EVENT="$(cat)"
 cd "$ROOT" 2>/dev/null || true
 
 # --- Transcript: transduce Kiro's session JSONL to the Anthropic shape ----
+# kiro-cli 2.x keeps it at ~/.kiro/sessions/cli/$KIRO_SESSION_ID.jsonl;
+# 3.x at ~/.kiro/sessions/<workspace>/sess_<id>/messages.jsonl, named by
+# the event's session_id (#176). The helper finds either.
 TRANSCRIPT_TMP=""
-if [ -n "${KIRO_SESSION_ID:-}" ]; then
-  KIRO_JSONL="$HOME/.kiro/sessions/cli/${KIRO_SESSION_ID}.jsonl"
-  if [ -f "$KIRO_JSONL" ] && command -v python3 >/dev/null 2>&1; then
+KIRO_JSONL=""
+if command -v python3 >/dev/null 2>&1; then
+  KIRO_JSONL="$(printf '%s' "$EVENT" | python3 "$TRANSLATE" transcript-path 2>/dev/null)"
+fi
+if [ -n "$KIRO_JSONL" ]; then
+  if [ -f "$KIRO_JSONL" ]; then
     # Trailing X's only: BSD/macOS mktemp substitutes a run of X's solely when
     # it ends the template. A `.jsonl` suffix here would be taken literally,
     # colliding on every second invocation. Probity reads the path, not the
@@ -85,7 +91,14 @@ trap cleanup EXIT
 
 # --- Translate the Kiro event to a claude-code payload --------------------
 # Empty stdout == non-mutating tool (or unparseable) -> allow, skip probity.
+# A non-zero exit is a write or shell tool the translator can't express, or
+# a translator failure: blocked, since allowing would skip every rule.
 PAYLOAD="$(printf '%s' "$EVENT" | python3 "$TRANSLATE" event)"
+TRANSLATED=$?
+if [ "$TRANSLATED" -ne 0 ]; then
+  printf '%s\n' "${PAYLOAD:-Probity: the Kiro shim could not translate this call (exit $TRANSLATED), so it is blocked.}" >&2
+  exit 2
+fi
 if [ -z "$PAYLOAD" ]; then
   exit 0
 fi
@@ -99,7 +112,18 @@ if [ ! -x "$PROBITY" ]; then
 fi
 
 # --- Invoke Probity and translate its response to Kiro's exit codes -------
-RESPONSE="$(printf '%s' "$PAYLOAD" | "$PROBITY" --agent claude-code 2>/dev/null)"
+# kiro-cli 3.x lets a call through when its hook runs past 60 s, so on a
+# 3.x event Probity gets a deadline below that and a late verdict blocks.
+DEADLINE="$(printf '%s' "$EVENT" | python3 "$TRANSLATE" deadline)"
+if [ -n "$DEADLINE" ]; then
+  RESPONSE="$(printf '%s' "$PAYLOAD" | python3 "$TRANSLATE" run "$DEADLINE" "$PROBITY" --agent claude-code 2>/dev/null)"
+  if [ $? -eq 124 ]; then
+    echo "Probity took longer than ${DEADLINE}s to judge this call. kiro-cli 3.x lets a call through when its hook runs past 60 s, so the shim blocks it instead. Retry it; if this keeps happening, use a faster judge or raise PROBITY_KIRO_TIMEOUT_S (below 60)." >&2
+    exit 2
+  fi
+else
+  RESPONSE="$(printf '%s' "$PAYLOAD" | "$PROBITY" --agent claude-code 2>/dev/null)"
+fi
 REASON="$(printf '%s' "$RESPONSE" | python3 "$TRANSLATE" reason)"
 
 if [ -n "$REASON" ]; then

@@ -22,7 +22,19 @@ Kiro persists a different, versioned event stream at
     {"kind":"ToolResults","data":{"content":[
         {"kind":"toolResult","data":{"toolUseId","content":[{"kind":"text","data"}],"status"}}]}}
 
-This script maps the former onto the latter so Probity's history-based
+kiro-cli 3.x (V3 engine, #176) persists one event per line at
+~/.kiro/sessions/<workspace>/sess_<id>/messages.jsonl:
+
+    {"id","timestamp","payload":{"type":"user","content":<str>}}
+    {"id","timestamp","payload":{"type":"assistant","content":<str>}}
+    {"id","timestamp","payload":{"type":"tool_call","toolCallId","toolName","args"}}
+    {"id","timestamp","payload":{"type":"tool_result","toolCallId","content":<str>,"success"}}
+
+A V3 shell result is the output then "\n\nExit Code: N"; it is rewritten
+as 2.x's {exit_status, stdout, stderr} envelope, so the green gate's Kiro
+exit-status check reads both versions alike.
+
+This script maps both onto the Anthropic shape so Probity's history-based
 rules (the commit green-gate `requireGreenTestRun`, the TDD RED-before-GREEN
 judge, characterization/probe resolution) can see prior tool calls and their
 output when running under Kiro.
@@ -36,7 +48,12 @@ Reads Kiro JSONL from argv[1] (or stdin) and writes Claude JSONL to stdout.
 Malformed lines are skipped, mirroring Probity's own tolerant reader.
 """
 import json
+import re
 import sys
+
+# Kiro appends the exit code last, so the last match is Kiro's own even
+# when the command printed "Exit Code: …" itself.
+V3_SHELL_RESULT = re.compile(r"\AOutput:\n(.*)\n\nExit Code: (-?\d+)\s*\Z", re.S)
 
 
 def _text_blocks(content):
@@ -81,8 +98,22 @@ def _map_tool(name, tool_input):
     Probity as an inert `other` action (no rule matches it).
     """
     tool_input = tool_input if isinstance(tool_input, dict) else {}
-    if name in ("shell", "execute_bash", "execute_cmd"):
+    if name in ("shell", "execute_bash", "execute_cmd", "execute_pwsh", "run_command"):
         return "Bash", {"command": tool_input.get("command", "")}
+    if name in ("control_bash_process", "control_pwsh_process", "control_process") and tool_input.get("action") == "start":
+        return "Bash", {"command": tool_input.get("command", "")}
+    if name in ("delete_file", "deleteFile"):
+        target = tool_input.get("targetFile") or tool_input.get("path") or ""
+        return "Bash", {"command": "rm -- '" + target.replace("'", "'\\''") + "'"}
+    if name in ("str_replace", "strReplace"):
+        return "Edit", {
+            "file_path": tool_input.get("path", ""),
+            "old_string": tool_input.get("oldStr", ""),
+            "new_string": tool_input.get("newStr", ""),
+            "replace_all": bool(tool_input.get("replace_all", tool_input.get("replaceAll", False))),
+        }
+    if name in ("fs_append", "fsAppend"):
+        return "Write", {"file_path": tool_input.get("path", ""), "content": tool_input.get("text", "")}
     if name in ("write", "fs_write", "fsWrite"):
         op = tool_input.get("command")
         path = tool_input.get("path", "")
@@ -93,15 +124,53 @@ def _map_tool(name, tool_input):
                 "new_string": tool_input.get("newStr", ""),
                 "replace_all": bool(tool_input.get("replaceAll", False)),
             }
-        # create / insert / append: the introduced text is `content`.
+        # create / insert / append: the introduced text is `content` (2.x)
+        # or `text` (3.x).
         return "Write", {
             "file_path": path,
-            "content": tool_input.get("content", ""),
+            "content": tool_input.get("text", tool_input.get("content", "")),
         }
     return name or "Unknown", tool_input
 
 
-def transduce_line(raw, emit):
+def _v3_shell_result(content, success):
+    match = V3_SHELL_RESULT.match(content)
+    if not match:
+        return content
+    code = match.group(2)
+    # Kiro adds the trailer only when it has an exit code; output that ends
+    # in its own "Exit Code: 0" must not pass for one. Zero counts only
+    # when Kiro also marked the call successful.
+    if code == "0" and success is not True:
+        code = "1"
+    return json.dumps({"exit_status": "exit status: " + code, "stdout": match.group(1), "stderr": ""})
+
+
+def transduce_v3(payload, emit, state):
+    """One kiro-cli 3.x event. `state` maps toolCallId -> tool name, so a
+    result can be read the way its call's tool reports."""
+    kind = payload.get("type")
+    if kind == "user" and isinstance(payload.get("content"), str) and payload["content"]:
+        emit({"type": "user", "message": {"content": [{"type": "text", "text": payload["content"]}]}})
+    elif kind == "assistant" and isinstance(payload.get("content"), str) and payload["content"]:
+        emit({"type": "assistant", "message": {"content": [{"type": "text", "text": payload["content"]}]}})
+    elif kind == "tool_call":
+        name = payload.get("toolName")
+        state[payload.get("toolCallId", "")] = name
+        cname, cinput = _map_tool(name, payload.get("args"))
+        emit({"type": "assistant", "message": {"content": [{
+            "type": "tool_use", "id": payload.get("toolCallId", ""), "name": cname, "input": cinput}]}})
+    elif kind == "tool_result":
+        content = payload.get("content")
+        content = content if isinstance(content, str) else _text_blocks(content)
+        if state.get(payload.get("toolCallId", "")) in ("execute_bash", "execute_pwsh", "run_command", "shell"):
+            content = _v3_shell_result(content, payload.get("success"))
+        emit({"type": "user", "message": {"content": [{
+            "type": "tool_result", "tool_use_id": payload.get("toolCallId", ""), "content": content}]}})
+    # Other 3.x events (session_start, turn_start, usage_summary, ...) carry no history.
+
+
+def transduce_line(raw, emit, state=None):
     line = raw.strip()
     if not line:
         return
@@ -110,6 +179,9 @@ def transduce_line(raw, emit):
     except (ValueError, TypeError):
         return
     if not isinstance(entry, dict):
+        return
+    if isinstance(entry.get("payload"), dict):
+        transduce_v3(entry["payload"], emit, state if state is not None else {})
         return
     kind = entry.get("kind")
     data = entry.get("data") or {}
@@ -170,9 +242,10 @@ def main(argv):
         out.write(json.dumps(obj))
         out.write("\n")
 
+    state = {}
     try:
         for raw in src:
-            transduce_line(raw, emit)
+            transduce_line(raw, emit, state)
     finally:
         if src is not sys.stdin:
             src.close()

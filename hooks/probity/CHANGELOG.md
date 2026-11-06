@@ -1,5 +1,54 @@
 # Changelog
 
+## 0.4.62
+
+The Kiro shim judges kiro-cli 3.x writes again (#176).
+
+- **What broke.** kiro-cli auto-updated to 3.1.0, whose V3 engine renames
+  the mutating tools, and Probity judged none of Kiro's writes. In
+  mysudo-core a build agent wrote a new public class to `sdk/core` with no
+  test, and nothing blocked it. The hooks still ran: on 3.x the matchers
+  `write` and `shell` match by capability tag. The shim couldn't read
+  what they sent:
+  - **`fs_write`:** sends `{path, text}`, but the shim read `content`, so
+    Probity judged an empty file.
+  - **`str_replace`, `fs_append` and `delete_file`:** weren't recognised,
+    so they passed unjudged.
+  - **Session files:** they moved, and have a new line format, so the
+    history rules (TDD, green gate) would have seen no history.
+- **Now:** the shim maps the 3.x tools and keeps the 2.x names:
+  - `fs_write` {path, text} → `Write`;
+  - `str_replace` {path, oldStr, newStr, replace_all} → `Edit`;
+  - `fs_append` → `Write` of the file on disk plus the text, with Kiro's
+    newline;
+  - `delete_file` → `Bash` `rm`;
+  - `execute_bash`, `execute_pwsh`, `run_command` and a background
+    process `start` → `Bash`, judged in the call's own `cwd`.
+- **Fails closed:**
+  - **Untranslatable tools:** a write or shell tool the shim can't
+    express (`edit_code`, `semantic_rename`, `smart_relocate`,
+    `create_hook`) is blocked. So is a translator failure. Both used to
+    be allowed.
+  - **Slow judges:** kiro-cli 3.x ignores an agent hook's `timeout_ms`
+    and lets a call through when the hook runs past 60 s. On a 3.x event
+    the shim gives Probity 55 s (`PROBITY_KIRO_TIMEOUT_S`) and blocks a
+    call it hasn't judged by then.
+- **History:** the shim finds a 3.x session file
+  (`~/.kiro/sessions/<workspace>/sess_<id>/messages.jsonl`) from the hook
+  event's `session_id`, before `KIRO_SESSION_ID`, which on 3.x names the
+  root conversation. The transducer reads 3.x `user`, `assistant`,
+  `tool_call` and `tool_result` events. It rewrites a shell result ("…
+  Exit Code: N") into 2.x's exit-status envelope, so the green gate's Kiro
+  check works on both versions. Zero counts only when Kiro marked the call
+  successful.
+- **Checked against real sessions:** all 144 local kiro-cli 3.1 session
+  files convert. An end-to-end test runs the real shim on 3.x events;
+  against 0.4.61's shim it fails as reported.
+- **Agent setup:** keep the matchers `write` and `shell`, which cover
+  every 3.x write and shell tool. Per-tool matchers beside them would
+  judge each call twice. `docs/kiro-setup.md` covers both versions and the
+  60 s limit.
+
 ## 0.4.61
 
 Check compaction later without a live shadow: record, then replay

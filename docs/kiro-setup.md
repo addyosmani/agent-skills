@@ -30,9 +30,22 @@ The two agents disagree on the hook contract in three ways the shim reconciles:
 
 1. **No Kiro vendor in Probity.** Rather than fork Probity, the shim maps
    Kiro's tool events onto the `claude-code` payload Probity already
-   understands: `fs_write` (create / strReplace / insert) → `Write` / `Edit`,
-   and `shell` → `Bash`. Non-mutating tools (reads) are allowed immediately
-   without paying Node startup.
+   understands. Non-mutating tools (reads) are allowed immediately without
+   paying Node startup.
+   - **kiro-cli 3.x** (V3 engine, from 0.4.62; #176):
+     - `fs_write` {path, text} → `Write`.
+     - `str_replace` → `Edit`.
+     - `fs_append` → `Write` of the file on disk plus the text, with the
+       newline Kiro adds.
+     - `delete_file` → `Bash` `rm -- <file>`.
+     - `execute_bash`, `execute_pwsh`, `run_command`, and a
+       `control_*_process` `start` → `Bash`, judged in the call's own `cwd`.
+     - Any other tool Kiro files as a write (`edit_code`, `semantic_rename`,
+       `smart_relocate`, `create_hook`) is **blocked**, since the shim can't
+       express it to Probity. A translator failure is blocked too.
+   - **kiro-cli 2.x:**
+     - `fs_write` (create / strReplace / insert) → `Write` / `Edit`.
+     - `shell` → `Bash`.
 
 2. **Block signalling is inverted.** Probity's `claude-code` path signals a
    block by printing a deny JSON to stdout and exiting **0**. Kiro blocks a
@@ -42,11 +55,17 @@ The two agents disagree on the hook contract in three ways the shim reconciles:
 3. **History lives in a different place.** Probity's stateful rules (the
    commit green-gate, the TDD RED-before-GREEN judge) reconstruct
    conversation history from a transcript. Claude Code passes a
-   `transcript_path`; Kiro instead exposes `KIRO_SESSION_ID` and persists a
-   differently-shaped JSONL at `~/.kiro/sessions/cli/<id>.jsonl`. The
-   transducer rewrites that stream into the Anthropic message shape Probity's
-   reader expects (mapping `shell` tool calls to `Bash` so the green-gate can
-   see `xcodebuild … test` output), and the shim passes it as `transcript_path`.
+   `transcript_path`; Kiro persists a differently-shaped JSONL of its own:
+   - **kiro-cli 3.x:** `~/.kiro/sessions/<workspace>/sess_<id>/messages.jsonl`,
+     found from the hook event's `session_id`.
+   - **kiro-cli 2.x:** `~/.kiro/sessions/cli/<id>.jsonl`, found from
+     `KIRO_SESSION_ID`.
+
+   The transducer rewrites either into the Anthropic message shape Probity's
+   reader expects, and the shim passes it as `transcript_path`. It maps
+   shell calls to `Bash`, so the green-gate can see `xcodebuild … test`
+   output. It also rewrites a 3.x shell result ("…\n\nExit Code: N") into
+   2.x's exit-status envelope.
 
 **Fail-safe posture:** a genuine rule violation blocks (exit 2). An
 unparseable event warns on stderr and *allows* (exit 0), so a tooling bug never
@@ -145,8 +164,19 @@ commands already point at the scripts you copied in step 2.
 ## Verification
 
 1. Start Kiro in the project and run `/hooks`. You should see one
-   `userPromptSubmit` entry and two `preToolUse` entries (matchers `write`
-   and `shell`).
+   `userPromptSubmit` entry and two `preToolUse` entries, with matchers
+   `write` and `shell`. These work on both versions:
+   - **kiro-cli 3.x** matches a hook by a tool's capability tag. `write`
+     covers every write tool (`fs_write`, `str_replace`, `fs_append`,
+     `delete_file`, …) and `shell` covers every shell tool.
+   - **Don't add per-tool matchers next to these.** A 3.x write would
+     match both entries and be judged twice.
+   - **kiro-cli 3.x ignores `timeout_ms`** in an agent file. A hook gets
+     60 s, and one that runs longer **lets the call through**. On a 3.x
+     event the shim gives Probity 55 s (`PROBITY_KIRO_TIMEOUT_S`, keep it
+     below 60) and blocks a call it hasn't judged by then. A judge that
+     often takes longer, such as Opus at high effort on big prompts,
+     shows up as those blocks.
 2. Confirm the deterministic wall blocks. Feed a synthetic event straight to
    the shim (this needs no model call):
 
@@ -162,21 +192,25 @@ commands already point at the scripts you copied in step 2.
 
    ```bash
    python3 .kiro/hooks/kiro-transcript-to-claude.py \
-     ~/.kiro/sessions/cli/<some-session-id>.jsonl | head
+     ~/.kiro/sessions/<workspace>/sess_<id>/messages.jsonl | head   # 3.x
+   python3 .kiro/hooks/kiro-transcript-to-claude.py \
+     ~/.kiro/sessions/cli/<some-session-id>.jsonl | head           # 2.x
    ```
 
 ---
 
 ## Limitations
 
-- **History rules need a session transcript.** When `KIRO_SESSION_ID` is
-  unset or its JSONL is missing, the shim omits `transcript_path` and Probity's
+- **History rules need a session transcript.** When the shim finds no session
+  file (no `session_id` in the event or `KIRO_SESSION_ID`, or the file is
+  missing), it omits `transcript_path`, and Probity's
   history-based rules (green-gate, TDD) fail *open* — exactly as Probity does
   for Claude Code without a transcript. The deterministic rules (sleeps,
   UI-mechanics location, spec-backed test, glossary/parity gates) are
   unaffected.
-- **Tool-name coverage is scoped to the mutating tools.** `write` and `shell`
-  are gated; MCP tools and other built-ins are allowed. Widen the matchers if
+- **Tool-name coverage is scoped to the mutating tools.** The `write` and
+  `shell` matchers gate every write and shell tool on both versions. MCP
+  tools and other built-ins are allowed. Widen the matchers if
   a project needs more.
 - **Parity, not replacement.** Keep the Claude Code `.claude/settings.json`
   hook if you use both agents; they share the one `probity.config.ts`.
