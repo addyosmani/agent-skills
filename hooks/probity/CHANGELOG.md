@@ -1,5 +1,41 @@
 # Changelog
 
+## 0.4.62
+
+The Kiro shim judges kiro-cli 3.x writes again (#176).
+
+- **What broke.** kiro-cli auto-updated to 3.1.0, whose V3 engine renames
+  the mutating tools, and Probity judged none of Kiro's writes. In
+  mysudo-core a build agent wrote a new public class to `sdk/core` with no
+  test, and nothing blocked it.
+  - **Hook matchers:** 3.1's agent auto-upgrade keeps the matchers `write`
+    and `shell`, which match no V3 tool, so the hook never ran.
+  - **`fs_write`:** sends `{path, text}`, but the shim read `content`, so
+    Probity judged an empty file.
+  - **`str_replace` and `fs_append`:** weren't recognised at all, so they
+    passed unjudged.
+  - **Session files:** they moved, and have a new line format, so the
+    history rules (TDD, green gate) would have seen no history.
+- **Now:** the shim maps the V3 tools and keeps the 2.x names:
+  - `fs_write` {path, text} → `Write`;
+  - `str_replace` {path, oldStr, newStr, replace_all} → `Edit`;
+  - `fs_append` {path, text} → `Write` of the file on disk plus the text;
+  - `execute_bash` → `Bash`.
+- **History:** the shim finds a 3.x session file
+  (`~/.kiro/sessions/<workspace>/sess_<id>/messages.jsonl`) from the hook
+  event's `session_id`. The transducer reads its `user`, `assistant`,
+  `tool_call` and `tool_result` events. It rewrites a shell result ("…
+  Exit Code: N", taking Kiro's own last code) into 2.x's exit-status
+  envelope, so the green gate's Kiro check works on both versions.
+- **Checked against real sessions:** all 144 local kiro-cli 3.1 session
+  files convert: 798 transcript lines, with edits, writes, shell calls and
+  exit codes. An end-to-end test runs the real shim on V3 events; against
+  0.4.61's shim it fails as reported.
+- **Agent setup:** `kiro/kiro-agent.template.json` now has `preToolUse`
+  matchers `fs_write`, `str_replace`, `fs_append` and `execute_bash`,
+  beside `write` and `shell`. An agent auto-upgraded by kiro-cli 3.1
+  needs the four new matchers added, and `docs/kiro-setup.md` says so.
+
 ## 0.4.61
 
 Check compaction later without a live shadow: record, then replay

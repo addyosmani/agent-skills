@@ -63,10 +63,16 @@ EVENT="$(cat)"
 cd "$ROOT" 2>/dev/null || true
 
 # --- Transcript: transduce Kiro's session JSONL to the Anthropic shape ----
+# kiro-cli 2.x keeps it at ~/.kiro/sessions/cli/$KIRO_SESSION_ID.jsonl;
+# 3.x at ~/.kiro/sessions/<workspace>/sess_<id>/messages.jsonl, named by
+# the event's session_id (#176). The helper finds either.
 TRANSCRIPT_TMP=""
-if [ -n "${KIRO_SESSION_ID:-}" ]; then
-  KIRO_JSONL="$HOME/.kiro/sessions/cli/${KIRO_SESSION_ID}.jsonl"
-  if [ -f "$KIRO_JSONL" ] && command -v python3 >/dev/null 2>&1; then
+KIRO_JSONL=""
+if command -v python3 >/dev/null 2>&1; then
+  KIRO_JSONL="$(printf '%s' "$EVENT" | python3 "$TRANSLATE" transcript-path 2>/dev/null)"
+fi
+if [ -n "$KIRO_JSONL" ]; then
+  if [ -f "$KIRO_JSONL" ]; then
     # Trailing X's only: BSD/macOS mktemp substitutes a run of X's solely when
     # it ends the template. A `.jsonl` suffix here would be taken literally,
     # colliding on every second invocation. Probity reads the path, not the

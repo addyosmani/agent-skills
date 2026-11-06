@@ -16,18 +16,31 @@ piped payload on stdin, silently producing empty output = allow):
           deny, write the permissionDecisionReason on stdout; otherwise
           write nothing. The shim turns a non-empty reason into `exit 2`.
 
+  transcript-path
+          Read a Kiro preToolUse event JSON on stdin and write the path of
+          its session file, or nothing: kiro-cli 2.x's
+          ~/.kiro/sessions/cli/<id>.jsonl, or 3.x's
+          ~/.kiro/sessions/<workspace>/sess_<id>/messages.jsonl (#176).
+
   install Read a claude-code payload JSON on stdin; exit 0 when it is a
           shell command that only installs packages (`npm ci`, `npm
           install`, pnpm/yarn/bun install), 1 otherwise. When Probity is
           installed nowhere the shim blocks every call but this one, so
           the session can recover (issue #90).
 """
+import glob
 import json
 import os
 import re
 import sys
 
+# kiro-cli 2.x: `fs_write`/`write` with a `command` (create, strReplace,
+# insert) and `content`. kiro-cli 3.x (V3 engine, #176): `fs_write` {path,
+# text} rewrites the file, `str_replace` {path, oldStr, newStr,
+# replace_all} edits it, `fs_append` {path, text} appends to it.
 WRITE_TOOLS = {"fs_write", "write", "fsWrite"}
+REPLACE_TOOLS = {"str_replace", "strReplace"}
+APPEND_TOOLS = {"fs_append", "fsAppend"}
 SHELL_TOOLS = {"shell", "execute_bash", "execute_cmd", "executeBash", "executeCmd"}
 INSTALL_COMMAND = re.compile(
     r"^\s*(?:cd\s+\S+\s*(?:&&|;)\s*)?"
@@ -57,6 +70,31 @@ def _insert_result(path, cwd, content, insert_line):
     return existing + separator + content
 
 
+def _append_result(path, cwd, text):
+    """A V3 `fs_append`'s resulting file: what is on disk (the write hasn't
+    run yet) followed by the appended text, or the text alone for a new
+    file."""
+    full = path if os.path.isabs(path) else os.path.join(cwd, path)
+    try:
+        with open(full, "r", encoding="utf-8") as handle:
+            return handle.read() + text
+    except OSError:
+        return text
+
+
+def _edit(path, cwd, ti):
+    return {
+        "tool_name": "Edit",
+        "tool_input": {
+            "file_path": path,
+            "old_string": ti.get("oldStr", ""),
+            "new_string": ti.get("newStr", ""),
+            "replace_all": bool(ti.get("replace_all", ti.get("replaceAll", False))),
+        },
+        "cwd": cwd,
+    }
+
+
 def cmd_event():
     try:
         event = json.load(sys.stdin)
@@ -72,19 +110,19 @@ def cmd_event():
 
     if tool in SHELL_TOOLS:
         payload = {"tool_name": "Bash", "tool_input": {"command": ti.get("command", "")}, "cwd": cwd}
+    elif tool in REPLACE_TOOLS:
+        payload = _edit(ti.get("path", ""), cwd, ti)
+    elif tool in APPEND_TOOLS:
+        path = ti.get("path", "")
+        payload = {
+            "tool_name": "Write",
+            "tool_input": {"file_path": path, "content": _append_result(path, cwd, ti.get("text", ti.get("content", "")))},
+            "cwd": cwd,
+        }
     elif tool in WRITE_TOOLS:
         path = ti.get("path", "")
         if ti.get("command") == "strReplace":
-            payload = {
-                "tool_name": "Edit",
-                "tool_input": {
-                    "file_path": path,
-                    "old_string": ti.get("oldStr", ""),
-                    "new_string": ti.get("newStr", ""),
-                    "replace_all": bool(ti.get("replaceAll", False)),
-                },
-                "cwd": cwd,
-            }
+            payload = _edit(path, cwd, ti)
         elif ti.get("command") == "insert":
             # insert ADDS to an existing file; a Write of only the introduced
             # text would tell Probity the whole file became that text. Rebuild
@@ -97,10 +135,10 @@ def cmd_event():
                 },
                 "cwd": cwd,
             }
-        else:  # create -> Write of the whole-file content
+        else:  # create (2.x `content`, 3.x `text`) -> Write of the whole file
             payload = {
                 "tool_name": "Write",
-                "tool_input": {"file_path": path, "content": ti.get("content", "")},
+                "tool_input": {"file_path": path, "content": ti.get("text", ti.get("content", ""))},
                 "cwd": cwd,
             }
     else:
@@ -130,6 +168,38 @@ def cmd_reason():
     return 0
 
 
+SESSION_ID = re.compile(r"^[A-Za-z0-9_-]+$")
+
+
+def cmd_transcript_path():
+    try:
+        event = json.load(sys.stdin)
+    except Exception:
+        event = {}
+    candidates = [os.environ.get("KIRO_SESSION_ID") or ""]
+    if isinstance(event, dict):
+        candidates.append(str(event.get("session_id") or ""))
+    sessions = os.path.join(os.path.expanduser("~"), ".kiro", "sessions")
+    for session in candidates:
+        # An id that isn't a plain name could reach outside the sessions folder.
+        if not SESSION_ID.match(session):
+            continue
+        v2 = os.path.join(sessions, "cli", session + ".jsonl")
+        if os.path.isfile(v2):
+            sys.stdout.write(v2)
+            return 0
+        names = {session, session if session.startswith("sess_") else "sess_" + session}
+        found = [
+            path
+            for name in names
+            for path in glob.glob(os.path.join(glob.escape(sessions), "*", name, "messages.jsonl"))
+        ]
+        if found:
+            sys.stdout.write(max(found, key=os.path.getmtime))
+            return 0
+    return 0
+
+
 def cmd_install():
     try:
         payload = json.load(sys.stdin)
@@ -147,7 +217,9 @@ def main(argv):
         return cmd_reason()
     if mode == "install":
         return cmd_install()
-    sys.stderr.write("usage: probity-kiro-translate.py {event|reason|install}\n")
+    if mode == "transcript-path":
+        return cmd_transcript_path()
+    sys.stderr.write("usage: probity-kiro-translate.py {event|reason|transcript-path|install}\n")
     return 64
 
 

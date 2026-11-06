@@ -89,6 +89,86 @@ with tempfile.TemporaryDirectory() as d:
     })
     check("strReplace maps to Edit", json.loads(out)["tool_name"] == "Edit")
 
+# --- kiro-cli 3.x (V3 engine) tool names, issue #176 ----------------------
+with tempfile.TemporaryDirectory() as d:
+    path = os.path.join(d, "Thing.kt")
+    with open(path, "w", encoding="utf-8") as handle:
+        handle.write("class Thing\n")
+
+    out = json.loads(run_event({
+        "hook_event_name": "PreToolUse", "session_id": "s", "cwd": d,
+        "tool_name": "fs_write", "tool_input": {"path": path, "text": "class Thing(val x: Int)\n"},
+    }))
+    check("V3 fs_write maps to a Write of its text",
+          out["tool_name"] == "Write" and out["tool_input"] == {"file_path": path, "content": "class Thing(val x: Int)\n"})
+
+    out = json.loads(run_event({
+        "hook_event_name": "PreToolUse", "session_id": "s", "cwd": d,
+        "tool_name": "str_replace",
+        "tool_input": {"path": path, "oldStr": "Thing", "newStr": "Other", "replace_all": True},
+    }))
+    check("V3 str_replace maps to an Edit with replace_all",
+          out["tool_name"] == "Edit" and out["tool_input"] == {
+              "file_path": path, "old_string": "Thing", "new_string": "Other", "replace_all": True})
+
+    out = json.loads(run_event({
+        "hook_event_name": "PreToolUse", "session_id": "s", "cwd": d,
+        "tool_name": "fs_append", "tool_input": {"path": path, "text": "fun go() = 1\n"},
+    }))
+    check("V3 fs_append maps to a Write of the existing content plus the text",
+          out["tool_name"] == "Write" and out["tool_input"]["content"] == "class Thing\nfun go() = 1\n")
+
+    out = json.loads(run_event({
+        "hook_event_name": "PreToolUse", "session_id": "s", "cwd": d,
+        "tool_name": "fs_append", "tool_input": {"path": os.path.join(d, "New.kt"), "text": "x\n"},
+    }))
+    check("V3 fs_append to a new file writes just the text", out["tool_input"]["content"] == "x\n")
+
+    out = json.loads(run_event({
+        "hook_event_name": "PreToolUse", "session_id": "s", "cwd": d,
+        "tool_name": "execute_bash",
+        "tool_input": {"command": "git commit -m x", "cwd": d, "description": "commit", "run_in_background": False, "timeout": 60},
+    }))
+    check("V3 execute_bash maps to Bash", out == {"tool_name": "Bash", "tool_input": {"command": "git commit -m x"}, "cwd": d})
+
+    for tool in ("read_file", "grep_search", "file_search"):
+        check(f"V3 {tool} is not judged", run_event({"tool_name": tool, "tool_input": {"path": path}, "cwd": d}) == "")
+
+
+def run_transcript_path(event, home):
+    old_in, old_out, old_home = sys.stdin, sys.stdout, os.environ.get("HOME")
+    old_session = os.environ.pop("KIRO_SESSION_ID", None)
+    sys.stdin, sys.stdout = io.StringIO(json.dumps(event)), io.StringIO()
+    os.environ["HOME"] = home
+    try:
+        translate.cmd_transcript_path()
+        return sys.stdout.getvalue()
+    finally:
+        sys.stdin, sys.stdout = old_in, old_out
+        if old_home is not None:
+            os.environ["HOME"] = old_home
+        if old_session is not None:
+            os.environ["KIRO_SESSION_ID"] = old_session
+
+
+with tempfile.TemporaryDirectory() as home:
+    v3 = os.path.join(home, ".kiro", "sessions", "5c3b8f6213d4a67e", "sess_abc-123")
+    os.makedirs(v3)
+    with open(os.path.join(v3, "messages.jsonl"), "w") as handle:
+        handle.write("{}\n")
+    check("a V3 session is found by the event's session_id",
+          run_transcript_path({"session_id": "sess_abc-123"}, home) == os.path.join(v3, "messages.jsonl"))
+    check("a V3 session is found when session_id lacks the sess_ prefix",
+          run_transcript_path({"session_id": "abc-123"}, home) == os.path.join(v3, "messages.jsonl"))
+    v2 = os.path.join(home, ".kiro", "sessions", "cli")
+    os.makedirs(v2)
+    with open(os.path.join(v2, "old-id.jsonl"), "w") as handle:
+        handle.write("{}\n")
+    check("a V2 session is still found", run_transcript_path({"session_id": "old-id"}, home) == os.path.join(v2, "old-id.jsonl"))
+    check("an unknown session gives no path", run_transcript_path({"session_id": "nope"}, home) == "")
+    check("a session id cannot climb out of the sessions folder",
+          run_transcript_path({"session_id": "../../etc"}, home) == "")
+
 if failures:
     print(f"\n{len(failures)} check(s) failed")
     raise SystemExit(1)

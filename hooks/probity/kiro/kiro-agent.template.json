@@ -31,6 +31,26 @@
     ],
     "preToolUse": [
       {
+        "matcher": "fs_write",
+        "command": "bash \"$( (git rev-parse --show-toplevel 2>/dev/null || echo \"$PWD\") )/.kiro/hooks/probity-kiro.sh\"",
+        "timeout_ms": 300000
+      },
+      {
+        "matcher": "str_replace",
+        "command": "bash \"$( (git rev-parse --show-toplevel 2>/dev/null || echo \"$PWD\") )/.kiro/hooks/probity-kiro.sh\"",
+        "timeout_ms": 300000
+      },
+      {
+        "matcher": "fs_append",
+        "command": "bash \"$( (git rev-parse --show-toplevel 2>/dev/null || echo \"$PWD\") )/.kiro/hooks/probity-kiro.sh\"",
+        "timeout_ms": 300000
+      },
+      {
+        "matcher": "execute_bash",
+        "command": "bash \"$( (git rev-parse --show-toplevel 2>/dev/null || echo \"$PWD\") )/.kiro/hooks/probity-kiro.sh\"",
+        "timeout_ms": 300000
+      },
+      {
         "matcher": "write",
         "command": "bash \"$( (git rev-parse --show-toplevel 2>/dev/null || echo \"$PWD\") )/.kiro/hooks/probity-kiro.sh\"",
         "timeout_ms": 300000
