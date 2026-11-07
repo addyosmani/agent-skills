@@ -6,6 +6,7 @@ import type { Rule, RuleResult } from '@nizos/probity'
 
 import { gitSubcommand } from './commit-target.js'
 import { DEFAULT_PROTECTED_BRANCHES, type ReviewConfig } from './review-config.js'
+import { bareAgent, collectDiff, gitTop, parsePatch, routeReview, type DiffInput, type Routing } from './review-router.js'
 import { COMMAND_PREFIXES, parseShell, type SimpleCommand } from './shell-writes.js'
 
 /**
@@ -265,6 +266,39 @@ function violation(target: string, problems: string[]): RuleResult {
   }
 }
 
+/** Routed agents (#181) the record doesn't list, ran or skipped, as problems. */
+export function missingRoutedAgents(record: ReviewRecord, routing: Routing): string[] {
+  const listed = new Set(record.agents.map((entry) => entry.agent))
+  return routing.agents
+    .filter(({ agent }) => !listed.has(bareAgent(agent)))
+    .map(({ agent, why }) => `the router selected \`${agent}\` (${why.join('; ')}) but the record does not list it; run it, or list it as (skipped: <reason>)`)
+}
+
+/** Routes what `git merge <branches>` brings in: merge-base(HEAD, branch)..branch. */
+function defaultRouteMerge(review: ReviewConfig): (dir: string, branches: string[]) => Routing {
+  return (dir, branches) => {
+    const top = gitTop(dir)
+    const input: DiffInput = { files: [], added: {}, binary: [] }
+    for (const branch of branches) {
+      const base = execFileSync('git', ['merge-base', 'HEAD', branch], { cwd: top, encoding: 'utf8' }).trim()
+      const part = collectDiff(top, { base, head: branch })
+      input.files.push(...part.files.filter((file) => !input.files.includes(file)))
+      input.binary.push(...part.binary)
+      for (const [file, lines] of Object.entries(part.added)) (input.added[file] ??= []).push(...lines)
+    }
+    return routeReview(review, input, top)
+  }
+}
+
+/** Routes a PR from `gh pr diff` (no binary detection: gh's patch omits it). */
+function defaultRoutePr(review: ReviewConfig, git: ReviewRecordGit): (pr: string | undefined, dir: string) => Routing {
+  return (pr, dir) => {
+    const added: Record<string, string[]> = {}
+    parsePatch(run('gh', ['pr', 'diff', ...(pr ? [pr] : [])], dir), added)
+    return routeReview(review, { files: git.prFiles(pr, dir), added, binary: [] }, gitTop(dir))
+  }
+}
+
 /**
  * Denies a merge into a protected branch whose message lacks a valid
  * review record. Sibling of `requireGreenTestRun`: scoped by
@@ -280,11 +314,26 @@ function violation(target: string, problems: string[]): RuleResult {
  */
 export function requireReviewRecord(
   review: ReviewConfig,
-  deps: { git?: ReviewRecordGit } = {},
+  deps: {
+    git?: ReviewRecordGit
+    routeMerge?: (dir: string, branches: string[]) => Routing
+    routePr?: (pr: string | undefined, dir: string) => Routing
+  } = {},
 ): Rule {
   const git = deps.git ?? defaultReviewRecordGit
+  const routeMerge = deps.routeMerge ?? defaultRouteMerge(review)
+  const routePr = deps.routePr ?? defaultRoutePr(review, git)
   const options = review.record ?? {}
   const protectedBranches = options.protectedBranches ?? DEFAULT_PROTECTED_BRANCHES
+  /** Record errors, plus routed agents it misses when requireRoutedAgents is on. */
+  const problems = (record: ReviewRecord, route: () => Routing): string[] => {
+    if (record.errors.length > 0 || !options.requireRoutedAgents) return record.errors
+    try {
+      return missingRoutedAgents(record, route())
+    } catch (error) {
+      return [`could not route the merge to check its reviewers (${error instanceof Error ? error.message : String(error)})`]
+    }
+  }
   const touchesEnforced = (list: () => string[]): boolean => {
     if (!options.enforceForPaths) return true
     try {
@@ -331,8 +380,8 @@ export function requireReviewRecord(
           : 'no -m or -F message given',
       ])
     }
-    const record = parseReviewRecord(message)
-    return record.errors.length > 0 ? violation(target, record.errors) : undefined
+    const found = problems(parseReviewRecord(message), () => routeMerge(dir, incoming))
+    return found.length > 0 ? violation(target, found) : undefined
   }
 
   function judgeGhMerge({ dir, args, stdin }: Merge): RuleResult | undefined {
@@ -348,8 +397,8 @@ export function requireReviewRecord(
     const target = base ?? 'a protected branch'
     const body = ghBody(args, dir, stdin)
     if (body === undefined) return violation(target, ['no --body or --body-file given'])
-    const record = parseReviewRecord(body)
-    return record.errors.length > 0 ? violation(target, record.errors) : undefined
+    const found = problems(parseReviewRecord(body), () => routePr(pr, dir))
+    return found.length > 0 ? violation(target, found) : undefined
   }
 
   function safeFastForward(dir: string, branches: string[]): boolean {

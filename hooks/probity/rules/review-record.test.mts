@@ -287,3 +287,63 @@ test('should drive the real git adapter: branch, merge files, fast-forward', asy
   git('config', 'merge.ff', 'false')
   assert.equal(real.wouldFastForward(dir, ['b']), false)
 })
+
+// --- #181: the record must cover the agents the router selects ----------------
+
+test('should deny a merge whose record omits an agent the router selected', async () => {
+  const rule = requireReviewRecord(
+    { record: { requireRoutedAgents: true } },
+    {
+      git: fakeGit(),
+      routeMerge: () => ({ agents: [{ agent: 'agent-skills:security-auditor', why: ['auth/crypto in diff'] }] }),
+    },
+  )
+  const result = await rule(action(`git merge --no-ff b -m ${VALID}`))
+  assert.equal(result.kind, 'violation')
+  assert.match(result.reason ?? '', /security-auditor.*auth\/crypto in diff/)
+})
+
+test('should pass when every routed agent is listed, ran or skipped, prefixed or bare', async () => {
+  const rule = requireReviewRecord(
+    { record: { requireRoutedAgents: true } },
+    {
+      git: fakeGit(),
+      routeMerge: () => ({
+        agents: [
+          { agent: 'agent-skills:security-auditor', why: ['x'] },
+          { agent: 'code-reviewer', why: ['y'] },
+        ],
+      }),
+    },
+  )
+  const msg = '"Merge b\n\nReviewed-by-agent: code-reviewer (ran, 0 findings)\nReviewed-by-agent: security-auditor (skipped: only renames)"'
+  assert.equal((await rule(action(`git merge --no-ff b -m ${msg}`))).kind, 'pass')
+})
+
+test('should deny (fail safe) when the merge cannot be routed', async () => {
+  const rule = requireReviewRecord(
+    { record: { requireRoutedAgents: true } },
+    {
+      git: fakeGit(),
+      routeMerge: () => {
+        throw new Error('bad ref')
+      },
+    },
+  )
+  const result = await rule(action(`git merge --no-ff b -m ${VALID}`))
+  assert.equal(result.kind, 'violation')
+  assert.match(result.reason ?? '', /could not route/)
+})
+
+test('should not route at all unless requireRoutedAgents is on', async () => {
+  let called = false
+  const rule = requireReviewRecord({ record: {} }, {
+    git: fakeGit(),
+    routeMerge: () => {
+      called = true
+      return { agents: [] }
+    },
+  })
+  await rule(action(`git merge --no-ff b -m ${VALID}`))
+  assert.equal(called, false)
+})

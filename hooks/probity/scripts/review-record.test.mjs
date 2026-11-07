@@ -100,3 +100,40 @@ test('should exit 2 when the config has no review export', (t) => {
   assert.equal(status, 2, out)
   assert.match(out, /export const review/)
 })
+
+// --- #181: routed checks on the pushed range only ------------------------------
+
+const ROUTED_CONFIG = `
+export const review = {
+  record: { enforceForPaths: /^src\\//, requireRoutedAgents: true },
+  routes: [{ agent: 'agent-skills:security-auditor', why: 'secrets', added: /password/i }],
+}
+export default { rules: [] }
+`
+
+test('should check routed agents only on --routed-range, presence on --range', (t) => {
+  const { dir, base, merge, git } = repo(t)
+  writeFileSync(join(dir, 'probity.config.mjs'), ROUTED_CONFIG)
+  git('add', '.')
+  git('commit', '-q', '-m', 'config')
+  merge('old', 'src/old.kt', `Merge old\n\n${RECORD}`) // touches no secret: fine
+  const before = git('rev-parse', 'HEAD')
+  merge('password-reset', 'src/pw.kt', `Merge password-reset\n\n${RECORD}`) // content routes security-auditor; record omits it
+  const routed = check(dir, `${base}..HEAD`, ['--routed-range', `${before}..HEAD`])
+  assert.equal(routed.status, 1, routed.out)
+  assert.match(routed.out, /security-auditor/)
+  assert.match(routed.out, /Merge password-reset/)
+  // Without --routed-range, only presence and format are judged.
+  assert.equal(check(dir, `${base}..HEAD`).status, 0)
+})
+
+test('should skip routed checks for an all-zero before (new branch push)', (t) => {
+  const { dir, base, merge, git } = repo(t)
+  writeFileSync(join(dir, 'probity.config.mjs'), ROUTED_CONFIG)
+  git('add', '.')
+  git('commit', '-q', '-m', 'config')
+  merge('password-reset', 'src/pw.kt', `Merge password-reset\n\n${RECORD}`)
+  const res = check(dir, `${base}..HEAD`, ['--routed-range', `${'0'.repeat(40)}..HEAD`])
+  assert.equal(res.status, 0, res.out)
+  assert.match(res.out, /skipp/i)
+})
