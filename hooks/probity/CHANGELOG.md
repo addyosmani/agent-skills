@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.65
 
 `requireReviewRecord` gates GitLab merges ([#193](https://github.com/JJChill/agent-skills/issues/193)).
 
