@@ -69,6 +69,7 @@ function run(root, args = []) {
 }
 
 function runBehavioralWithGrading(root, raw, options = {}) {
+  const { args = [] } = options;
   writeSkill(root, 'alpha-skill', 'Handles alpha widgets.');
   const evalCase = completeCase('alpha-skill', 'change alpha widget');
   evalCase.evals = (options.ids || [1]).map((id) => ({ ...behavioralEval([]), id, kind: 'dialogue' }));
@@ -86,7 +87,7 @@ function runBehavioralWithGrading(root, raw, options = {}) {
   `);
   return spawnSync(process.execPath, [
     '--require', stub, path.join(root, 'scripts', 'run-evals.js'),
-    '--behavioral', 'alpha-skill',
+    '--behavioral', 'alpha-skill', ...args,
   ], { cwd: root, encoding: 'utf8' });
 }
 
@@ -130,6 +131,24 @@ for (const [name, trace] of Object.entries({
   });
 }
 
+for (const id of [null, 0, 2]) {
+  test(id === null ? 'behavioral default grades every case' : `behavioral --eval ${id} grades only the selected case`, () => {
+    const root = makeSandbox();
+    try {
+      const raw = JSON.stringify({
+        expectations: [{ id: 1, text: 'check', passed: true, evidence: 'observed' }],
+        summary: { passed: 1, failed: 0, total: 1, pass_rate: 1 },
+      });
+      const args = id === null ? [] : ['--eval', String(id)];
+      const result = runBehavioralWithGrading(root, raw, { args, ids: [0, 2] });
+      assert.equal(result.status, 0, result.stdout + result.stderr);
+      for (const candidate of [0, 2]) {
+        assert.equal(fs.existsSync(path.join(root, 'evals/results', `alpha-skill.eval-${candidate}.grading.json`)), id === null || id === candidate);
+      }
+    } finally { fs.rmSync(root, { recursive: true, force: true }); }
+  });
+}
+
 test('a returned failed probe can recover before successful completion', () => {
   const root = makeSandbox();
   try {
@@ -163,6 +182,49 @@ for (const code of ['ETIMEDOUT', 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER']) {
     } finally { fs.rmSync(root, { recursive: true, force: true }); }
   });
 }
+
+for (const args of [['--eval'], ['--eval', 'not-a-number'], ['--eval', '1.5'], ['--eval', '9007199254740993']]) {
+  test(`rejects an invalid behavioral selector ${JSON.stringify(args)}`, () => {
+    const root = makeSandbox();
+    try {
+      const result = run(root, ['--behavioral', 'alpha-skill', ...args]);
+      assert.equal(result.status, 1, result.stdout + result.stderr);
+      assert.match(result.stderr, /--eval must be an integer case id/);
+      assert.equal(fs.existsSync(path.join(root, 'evals/results')), false);
+    } finally { fs.rmSync(root, { recursive: true, force: true }); }
+  });
+}
+
+test('rejects an unknown behavioral case before creating results', () => {
+  const root = makeSandbox();
+  try {
+    const result = runBehavioralWithGrading(root, '{}', { args: ['--eval', '99'] });
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    assert.match(result.stderr, /has no behavioral eval id=99/);
+    assert.equal(fs.existsSync(path.join(root, 'evals/results')), false);
+    assert.equal(fs.existsSync(path.join(root, 'claude-calls.txt')), false);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test('a selector does not hide duplicate IDs among unselected cases', () => {
+  const root = makeSandbox();
+  try {
+    const result = runBehavioralWithGrading(root, '{}', { args: ['--eval', '0'], ids: [0, 2, 2] });
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    assert.match(result.stderr, /duplicate behavioral eval id=2/);
+    assert.equal(fs.existsSync(path.join(root, 'evals/results')), false);
+    assert.equal(fs.existsSync(path.join(root, 'claude-calls.txt')), false);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test('--eval is available only for behavioral runs', () => {
+  const root = makeSandbox();
+  try {
+    const result = run(root, ['--eval', '1']);
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    assert.match(result.stderr, /--eval applies only to behavioral evals/);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
 
 for (const passed of [true, false]) {
   for (const evidence of ['', ' \t\r\n', '\u00a0\u2003']) {
@@ -343,6 +405,27 @@ test('rejects incomplete or inconsistent grader summaries', () => {
   for (const { declared: d, ...grading } of cases) {
     assert.equal(parseGrading(JSON.stringify(grading), d), null);
   }
+});
+
+test('names a positive prompt that passes top_k but does not rank first', () => {
+  const root = makeSandbox();
+  writeSkill(root, 'alpha-skill', 'Handles alpha widgets. Use when changing alpha widgets.');
+  writeSkill(root, 'beta-skill', 'Tunes widget caches. Use when tuning the widget cache for alpha.');
+  writeJson(
+    path.join(root, 'evals', 'cases', 'alpha-skill.json'),
+    completeCase('alpha-skill', 'tune the alpha widget cache', 3),
+  );
+  writeJson(
+    path.join(root, 'evals', 'cases', 'beta-skill.json'),
+    completeCase('beta-skill', 'tune the widget cache', 1),
+  );
+
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /alpha-skill: positive prompt ranked #2, inside top 3 but not first/);
+  assert.match(result.stdout, /#1: beta-skill \(\d\.\d{3}\) vs \d\.\d{3}/);
+  assert.match(result.stdout, /rank-1 rate: 50% \(3\/6/);
 });
 
 test('fails when a skill has no eval case file', () => {

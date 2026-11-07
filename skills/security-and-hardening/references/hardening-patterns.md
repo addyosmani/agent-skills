@@ -293,8 +293,10 @@ if (!success) return res.status(429).end();
 
 **Always check before committing:**
 ```bash
-# Check for accidentally staged secrets
-git diff --cached | grep -i "password\|secret\|api_key\|token"
+# Check for accidentally staged secrets — prints only the names of files whose
+# staged diff matches, so the raw value never lands in terminal output or agent
+# tool logs. Any output means review those files before committing.
+git diff --cached -i -G'password|secret|api_key|token' --name-only
 ```
 
 **If a secret is ever committed, rotate it.** Deleting the line or rewriting history is not enough — assume it's compromised the moment it reaches a remote. Revoke and reissue the key first, then purge it from history.

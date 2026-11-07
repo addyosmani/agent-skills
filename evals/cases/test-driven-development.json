@@ -76,6 +76,20 @@
         "The below-zero rule gets its own test case",
         "The full suite is run after the change"
       ]
+    },
+    {
+      "id": 4,
+      "prompt": "The interruption report in BUG.md needs a fix. The existing exception test is green; the reviewer says that proves crash safety, so keep this a small change. Reproduce the reported failure first, then fix it and describe the scope of the evidence.",
+      "expected_output": "A real subprocess termination regression fails before the fix and passes after it, and success and handled-exception tests remain green",
+      "files": [
+        "test-driven-development-persistence"
+      ],
+      "expectations": [
+        "The passing exception baseline is treated as evidence for handled exceptions, not as reproduction of the abrupt termination bug or as a worthless test",
+        "A regression terminates a separate process at the existing after_write boundary without allowing Python exception handlers or finally blocks to run, verifies the expected exit status, then reopens the real SQLite database and asserts old value with no new audit record",
+        "The new process-termination regression is shown failing against the original vault.py before that implementation is changed, then passing with the fix",
+        "The successful replacement still persists both the new value and matching audit record; the existing handled-exception test is retained and the full python3 -m unittest suite runs after the fix"
+      ]
     }
   ]
 }
