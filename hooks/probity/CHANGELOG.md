@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+`probity-scope-report` explains a config kept outside the repository ([#186](https://github.com/JJChill/agent-skills/issues/186)).
+
+- **What was confusing.** With `--config` pointing outside `--root`, the report printed bare DEAD SCOPE warnings. Probity anchors relative globs at the config file's directory, so the warnings were accurate, but nothing said why. It also didn't mention the worse effect: relative `!` exclusions such as `excludeGlobs`' `spikes/**` stopped excluding anything.
+- **Now:**
+  - The report prints the directory it anchors globs at.
+  - It warns once, as `CONFIG OUTSIDE ROOT`, explaining both effects and the fix.
+  - `anchorGlob` in `rules/scoping.ts` now joins paths the way Probity's does (`path.posix.join`). Before, `./` and `..` segments in a glob resolved differently here than in enforcement, so the scope report and the review router could disagree with what Probity actually scoped.
+
 ## 0.4.63
 
 A merge can now show whether it was reviewed ([#178](https://github.com/JJChill/agent-skills/issues/178)).

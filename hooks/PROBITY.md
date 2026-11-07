@@ -327,6 +327,8 @@ Probity lives in the **consuming project** (the codebase you're building), not i
 
    The report resolves every `{ files, rules }` block against your real tree with Probity's own glob semantics and prints what each block claims, flagging dead scopes (globs matching zero files — the silent failure), core-purity rules claiming adapter/DI/UI-looking production paths (test files are skipped — a test-wide screen such as a no-mocking-library rule legitimately covers adapter tests), and the acceptance-language rule claiming Robot/driver files. Re-run it (or wire `--strict` into CI) whenever the layout or the globs change. On a greenfield repository every layer starts empty, so pass `--allow-empty <glob>` (repeatable, an exact glob from the block's `files`) for layers that don't exist yet — CI can then run `--strict` from the first commit; drop each flag once its first file lands (the report notes stale ones).
 
+   Relative globs are anchored at the config file's directory, as Probity anchors them. The report prints that directory. If the config sits outside `--root` (a scratch copy, or a monorepo keeping configs elsewhere), the report warns `CONFIG OUTSIDE ROOT`: relative include globs match nothing in the repo, and relative `!` exclusions (such as `excludeGlobs`' `spikes/**`) exclude nothing. That's also how enforcement behaves, so keep the config at the repo root, or write globs as `**/…` patterns ([#186](https://github.com/JJChill/agent-skills/issues/186)).
+
 5. Wire the hook. Easiest is the plugin:
 
    ```
