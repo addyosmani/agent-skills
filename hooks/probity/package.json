@@ -18,6 +18,7 @@
   "bin": {
     "probity-scope-report": "dist/scripts/scope-report.js",
     "probity-shadow-report": "dist/scripts/shadow-report.js",
+    "probity-review-record": "dist/scripts/review-record.js",
     "probity-spec-parity": "scripts/spec-parity.mjs",
     "probity-claude": "scripts/probity-claude.mjs"
   },

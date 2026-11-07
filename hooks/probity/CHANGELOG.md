@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+A merge can now show whether it was reviewed ([#178](https://github.com/JJChill/agent-skills/issues/178)).
+
+- **What was missing.** A green test run was enforced before a commit, but nothing recorded whether a review happened before a merge. A merge with no review fixes looked the same whether the code was reviewed and found clean or never reviewed.
+- **Now:**
+  - **The review record** is git trailers in the last paragraph of the merge message (code-review-and-quality, Step 6): `Reviewed-by-agent: <agent> (ran, N findings[, M fixed])` or `(skipped: <reason>)`, plus optional `Review-obligation:` and `Visual-check:` lines.
+  - **Agent names** may carry a plugin prefix (`agent-skills:code-reviewer`); the record stores the bare persona name.
+  - **`requireReviewRecord(review)`** denies a `git merge` or `gh pr merge` into a protected branch that touches `enforceForPaths` without a valid record, or one that would fast-forward.
+  - **`probity-review-record --range`** checks the same record in CI, including merges no agent made.
+  - **`reviewConfig`** types the new `export const review` in probity.config.ts.
+- **Not yet.** Checking the record against the reviewers a router selected, and against exemption obligations, comes with the review router (#181).
+
 ## 0.4.51
 
 New rules get a judging-task label without anyone remembering to add it.

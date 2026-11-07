@@ -31,7 +31,7 @@ const DATA_COMMANDS = new Set([
 ])
 // git's global options that take a separate value (`git -C <dir> commit`).
 const GIT_VALUE_OPTIONS = new Set(['-C', '-c', '--git-dir', '--work-tree', '--namespace', '--config-env', '--super-prefix'])
-function gitSubcommand(args: string[]): string | undefined {
+export function gitSubcommand(args: string[]): string | undefined {
   for (let k = 0; k < args.length; k++) {
     const arg = args[k]!
     if (GIT_VALUE_OPTIONS.has(arg)) k++
