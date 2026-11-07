@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.64
 
 `probity-scope-report` explains a config kept outside the repository ([#186](https://github.com/JJChill/agent-skills/issues/186)).
 
