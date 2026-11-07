@@ -1,5 +1,6 @@
 import picomatch from 'picomatch'
 
+import { posix } from 'node:path'
 import type { Action, RuleBlock, RuleEntry } from '@nizos/probity'
 
 /**
@@ -90,7 +91,9 @@ export function actionMatchesFilesScope(
 export function anchorGlob(glob: string, root: string): string {
   if (glob.startsWith('!')) return '!' + anchorGlob(glob.slice(1), root)
   if (glob.startsWith('**')) return glob
-  return `${root.replace(/\\/g, '/').replace(/\/$/, '')}/${glob}`
+  // posix.join, as Probity does: `./` and `..` segments normalise the
+  // same way here as in enforcement (issue #186).
+  return posix.join(root.replace(/\\/g, '/'), glob)
 }
 
 /**

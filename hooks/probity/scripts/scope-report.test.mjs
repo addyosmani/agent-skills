@@ -229,3 +229,33 @@ test('warns about a TDD exemption that declares no review obligation', (t) => {
   assert.equal(res.code, 1, res.out)
   assert.match(res.out, /!ui\/\*\*\/Browser\*\.kt is exempt with no review obligation/, res.out)
 })
+
+// Issue #186: a config outside --root. Probity anchors relative globs at
+// the config's directory (its loadConfig does, with --config too), so
+// the report must say so rather than leave bare DEAD SCOPE lines.
+test('names the anchor directory in the header', (t) => {
+  const dir = workspace(t, { 'probity.config.mjs': CONFIG, 'sdk/src/main/kotlin/domain/A.kt': 'x' })
+  assert.match(report(dir), new RegExp(`Globs anchored at: ${dir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`))
+})
+
+test('warns once, explaining both effects, when the config is outside --root', (t) => {
+  const repo = workspace(t, { 'docs/GLOSSARY.md': '# G', 'spikes/x.kt': 'x' })
+  const outside = workspace(t, {
+    'probity.config.mjs': `
+function surfaceGlossaryTermBreakage() { return { kind: 'pass' } }
+export default { rules: [{ files: ['docs/GLOSSARY.md', '!spikes/**'], rules: [surfaceGlossaryTermBreakage] }] }
+`,
+  })
+  const res = spawnSync(TSX, [SCRIPT, '--root', repo, '--config', join(outside, 'probity.config.mjs')], { encoding: 'utf8' })
+  const out = (res.stdout ?? '') + (res.stderr ?? '')
+  assert.match(out, /CONFIG OUTSIDE ROOT/, out)
+  assert.match(out, /relative include globs match nothing/, out)
+  assert.match(out, /relative `!` exclusions exclude nothing/, out)
+  assert.match(out, /Probity anchors the same way/, out)
+  assert.equal(out.match(/CONFIG OUTSIDE ROOT/g).length, 1, out)
+})
+
+test('does not warn about the config location when it sits inside --root', (t) => {
+  const dir = workspace(t, { 'probity.config.mjs': CONFIG, 'sdk/src/main/kotlin/domain/A.kt': 'x' })
+  assert.doesNotMatch(report(dir), /CONFIG OUTSIDE ROOT/)
+})

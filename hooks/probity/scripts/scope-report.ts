@@ -52,6 +52,7 @@ import { createJiti } from 'jiti'
 
 import type { Config, RuleBlock } from '@nizos/probity'
 
+import { isWithin } from '../rules/commit-target.js'
 import { obligationsOf, unreviewedExemptionsOf } from '../rules/review-obligations.js'
 import { anchorGlob, buildMatcher, isRuleBlock } from '../rules/scoping.js'
 
@@ -148,9 +149,22 @@ const config = await jiti.import<Config>(configPath, { default: true })
 const tree = walk(root)
 
 console.log(`Scope report for ${configPath}`)
-console.log(`Repo root: ${root} (${tree.length} files scanned)\n`)
+console.log(`Repo root: ${root} (${tree.length} files scanned)`)
+// Probity anchors relative globs at the config file's directory, both
+// when it finds the config and when given --config, so the report does
+// too and says where (issue #186).
+console.log(`Globs anchored at: ${configDir} (the config's directory, as Probity anchors them)\n`)
 
 const warnings: string[] = []
+if (!isWithin(root, configDir)) {
+  warnings.push(
+    `CONFIG OUTSIDE ROOT: ${configPath} is not inside ${root}. Probity anchors the same way at runtime: ` +
+      `relative globs resolve under ${configDir}, so relative include globs match nothing in the repo ` +
+      '(those blocks report DEAD SCOPE below) and relative `!` exclusions exclude nothing (excludeGlobs ' +
+      'such as spikes/** stop applying). Keep probity.config.ts at the repo root, or write the globs as **/… ' +
+      'patterns that do not depend on the anchor.',
+  )
+}
 const claimed = new Set<string>()
 const allowEmptyUsed = new Set<string>()
 let flatRules = 0
