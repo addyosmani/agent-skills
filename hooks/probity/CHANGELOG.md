@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.66
 
 `requireReviewRecord` no longer misses a merge that switches branches first ([#195](https://github.com/JJChill/agent-skills/issues/195)).
 

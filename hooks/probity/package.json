@@ -1,6 +1,6 @@
 {
   "name": "@jjchill/probity-rules",
-  "version": "0.4.65",
+  "version": "0.4.66",
   "description": "Versioned Probity rule presets and CLI tooling for the agent-skills catalog (test-driven-development, ports-and-adapters, acceptance-testing, spec-test parity, ubiquitous-language) — see hooks/PROBITY.md.",
   "license": "MIT",
   "repository": {
