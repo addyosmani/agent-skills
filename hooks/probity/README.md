@@ -108,15 +108,25 @@ To cut a release:
 2. Add a `## <version>` entry to `CHANGELOG.md`. `/probity-update` reads
    these entries to tell consumers what changed, so write them for the
    consumer: which rule changed, what a config may need.
-3. Merge to `main`. The workflow runs typecheck, build, tests, the Kiro
+3. Release the plugin in the same PR: set the same new version in every
+   manifest that `scripts/validate-versions.js` lists (`plugin.json`,
+   `.codex-plugin/plugin.json`, `.claude-plugin/plugin.json`,
+   `.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json`).
+   Pick the next patch above both the base branch's version and the newest
+   plugin tag, upstream's included (`git fetch upstream --tags` first), so
+   the fork never reuses a number upstream has published. CI fails a
+   probity-rules version change that leaves the plugin version alone, and
+   a plugin version that an existing tag already uses.
+4. Merge to `main`. The workflow runs typecheck, build, tests, the Kiro
    shim tests, the 48-step eval, and a pack dry run; if the version is not
    yet on the registry it publishes. If the version is already published,
    the workflow succeeds without publishing.
+5. Tag the plugin release on the merge commit (`git tag 0.6.14 && git push
+   origin 0.6.14`), so the next release's check sees it.
 
 Do **not** create a bare git tag such as `0.1.1` for an npm release. The
-repository's `scripts/validate-versions.js` resolves the nearest git tag
-as the plugin manifest version, and an npm-version tag would break that
-check. Plugin releases keep their tags; npm releases are tracked by
+repository's `scripts/validate-versions.js` reads every `x.y.z` tag as a
+plugin release, so an npm-version tag would be mistaken for one. Plugin releases keep their tags; npm releases are tracked by
 `package.json` and the registry.
 
 ### One-time setup on npmjs.com
