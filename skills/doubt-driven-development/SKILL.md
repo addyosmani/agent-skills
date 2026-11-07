@@ -82,6 +82,8 @@ A fresh-context reviewer needs the **artifact** and the **contract**, not the jo
 
 Strip your reasoning. If you hand over conclusions, you'll get back validation of your conclusions. The unit must be small enough that a reviewer can hold it in mind in one read — if it's a 500-line PR, decompose first.
 
+Strip reasoning, not evidence: if a caller, guard or test contradicts the claim, include it in the unit.
+
 ### Step 3: DOUBT — Invoke the fresh-context reviewer
 
 The reviewer's prompt **must be adversarial**. Framing decides the answer.

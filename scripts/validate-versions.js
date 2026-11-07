@@ -36,7 +36,10 @@ console.log(`All plugin manifests use version ${expectedVersion}.`);
 // Release pairing: compare against the base branch (the PR's base in CI,
 // origin/main locally). Skipped when no base ref is available.
 const { execFileSync } = require("node:child_process");
-const { releasePairingErrors } = require("./lib/release-pairing.js");
+const { releasePairingErrors, tagsFromLsRemote } = require("./lib/release-pairing.js");
+
+// Upstream publishes plugin versions too; a fork release must not reuse one.
+const UPSTREAM_REPO = process.env.PLUGIN_UPSTREAM_REPO || "https://github.com/addyosmani/agent-skills.git";
 
 const PROBITY_PACKAGE = "hooks/probity/package.json";
 const git = (...args) => execFileSync("git", args, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
@@ -62,6 +65,20 @@ if (mergeBase) {
     plugin: expectedVersion,
   };
   const tags = git("tag", "-l").split("\n").filter(Boolean);
+  if (head.plugin !== base.plugin || head.probity !== base.probity) {
+    try {
+      tags.push(...tagsFromLsRemote(execFileSync("git", ["ls-remote", "--tags", UPSTREAM_REPO], {
+        encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 30000,
+      })));
+    } catch {
+      // In CI an unreachable upstream must not let a reused number through
+      // (the 0.6.14 clash); locally, warn so offline runs still work.
+      if (process.env.CI) {
+        throw new Error(`Release pairing: could not list ${UPSTREAM_REPO} tags, so a plugin version upstream already published can't be ruled out. Re-run when the remote is reachable.`);
+      }
+      console.warn(`Release pairing: could not list ${UPSTREAM_REPO} tags; checking local tags only.`);
+    }
+  }
   const errors = releasePairingErrors({ base, head, tags });
   if (errors.length) {
     throw new Error(`Release pairing against ${baseRef}:\n  ${errors.join("\n  ")}`);

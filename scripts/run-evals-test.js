@@ -56,6 +56,7 @@ function makeSandbox() {
   fs.mkdirSync(path.join(root, 'evals', 'cases'), { recursive: true });
   fs.mkdirSync(path.join(root, 'evals', 'fixtures', 'project'), { recursive: true });
   fs.copyFileSync(RUNNER, path.join(root, 'scripts', 'run-evals.js'));
+  fs.cpSync(path.join(__dirname, 'lib'), path.join(root, 'scripts', 'lib'), { recursive: true });
   fs.writeFileSync(path.join(root, 'evals', 'fixtures', 'project', 'context.txt'), 'fixture\n');
   return root;
 }
@@ -67,6 +68,228 @@ function run(root, args = []) {
   });
 }
 
+function runBehavioralWithGrading(root, raw, options = {}) {
+  const { args = [] } = options;
+  writeSkill(root, 'alpha-skill', 'Handles alpha widgets.');
+  const evalCase = completeCase('alpha-skill', 'change alpha widget');
+  evalCase.evals = (options.ids || [1]).map((id) => ({ ...behavioralEval([]), id, kind: 'dialogue' }));
+  writeJson(path.join(root, 'evals', 'cases', 'alpha-skill.json'), evalCase);
+  const stub = path.join(root, 'stub-claude.cjs');
+  fs.writeFileSync(stub, `
+    const assert = require('node:assert/strict');
+    require('child_process').execFileSync = (command, args) => {
+      assert.equal(command, 'claude');
+      const executor = args.includes('--output-format');
+      require('node:fs').appendFileSync(${JSON.stringify(path.join(root, 'claude-calls.txt'))}, executor ? 'executor\\n' : 'grader\\n');
+      if (executor && ${JSON.stringify(Boolean(options.error))}) throw Object.assign(new Error('executor failed'), ${JSON.stringify(options.error || {})});
+      return executor ? ${JSON.stringify(options.trace ?? '{"type":"result","subtype":"success","is_error":false,"result":"done"}\n')} : ${JSON.stringify(raw)};
+    };
+  `);
+  return spawnSync(process.execPath, [
+    '--require', stub, path.join(root, 'scripts', 'run-evals.js'),
+    '--behavioral', 'alpha-skill', ...args,
+  ], { cwd: root, encoding: 'utf8' });
+}
+
+const passingGrading = JSON.stringify({
+  expectations: [{ id: 1, text: 'check', passed: true, evidence: 'observed' }],
+  summary: { passed: 1, failed: 0, total: 1, pass_rate: 1 },
+});
+const terminal = { type: 'result', subtype: 'success', is_error: false };
+const call = { type: 'assistant', message: { content: [{ type: 'tool_use', name: 'Bash', id: 'test', input: {} }] } };
+const returned = (id, is_error = false) => ({ type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: id, is_error }] } });
+const traceOf = (...events) => events.map((event) => JSON.stringify(event)).join('\n') + '\n';
+
+for (const [name, trace] of Object.entries({
+  'terminal error': traceOf({ type: 'result', subtype: 'error_max_turns', is_error: true }),
+  'missing terminal': traceOf(call),
+  'implicit success': traceOf({ type: 'result', subtype: 'success' }),
+  'stale terminal': traceOf(terminal, call),
+  'permission denial': traceOf({ ...terminal, permission_denials: [{ tool_name: 'Read' }] }),
+  'pending tool': traceOf(call, terminal),
+  'unmatched return': traceOf(returned('unknown'), terminal),
+  'malformed event': 'null\n',
+  'invalid JSON': 'not JSON\n',
+  'null assistant message': traceOf({ type: 'assistant', message: null }, terminal),
+  'array assistant message': traceOf({ type: 'assistant', message: [] }, terminal),
+  'null assistant content': traceOf({ type: 'assistant', message: { content: null } }, terminal),
+  'object assistant content': traceOf({ type: 'assistant', message: { content: { type: 'tool_use', id: 'hidden' } } }, terminal),
+  'null user message': traceOf({ type: 'user', message: null }, terminal),
+  'null content block': traceOf({ type: 'assistant', message: { content: [null] } }, terminal),
+})) {
+  test(`does not grade an incomplete execution: ${name}`, () => {
+    const root = makeSandbox();
+    try {
+      const result = runBehavioralWithGrading(root, passingGrading, { trace });
+      assert.equal(result.status, 1, result.stdout + result.stderr);
+      assert.match(result.stdout, /execution incomplete/);
+      const base = path.join(root, 'evals/results/alpha-skill.eval-1');
+      assert.equal(fs.existsSync(`${base}.grading.json`), false);
+      assert.equal(fs.readFileSync(`${base}.execution.raw.txt`, 'utf8'), trace);
+      assert.equal(fs.readFileSync(path.join(root, 'claude-calls.txt'), 'utf8'), 'executor\n');
+    } finally { fs.rmSync(root, { recursive: true, force: true }); }
+  });
+}
+
+for (const id of [null, 0, 2]) {
+  test(id === null ? 'behavioral default grades every case' : `behavioral --eval ${id} grades only the selected case`, () => {
+    const root = makeSandbox();
+    try {
+      const raw = JSON.stringify({
+        expectations: [{ id: 1, text: 'check', passed: true, evidence: 'observed' }],
+        summary: { passed: 1, failed: 0, total: 1, pass_rate: 1 },
+      });
+      const args = id === null ? [] : ['--eval', String(id)];
+      const result = runBehavioralWithGrading(root, raw, { args, ids: [0, 2] });
+      assert.equal(result.status, 0, result.stdout + result.stderr);
+      for (const candidate of [0, 2]) {
+        assert.equal(fs.existsSync(path.join(root, 'evals/results', `alpha-skill.eval-${candidate}.grading.json`)), id === null || id === candidate);
+      }
+    } finally { fs.rmSync(root, { recursive: true, force: true }); }
+  });
+}
+
+test('a returned failed probe can recover before successful completion', () => {
+  const root = makeSandbox();
+  try {
+    const next = { ...call, message: { content: [{ ...call.message.content[0], id: 'green' }] } };
+    const trace = traceOf(call, returned('test', true),
+      { type: 'user', message: { content: 'Continue the repair.' } }, next, returned('green'), terminal,
+      { type: 'system', subtype: 'status', status: 'idle' });
+    const result = runBehavioralWithGrading(root, passingGrading, { trace });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.equal(fs.existsSync(path.join(root, 'evals/results/alpha-skill.eval-1.grading.json')), true);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+for (const code of ['ETIMEDOUT', 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER']) {
+  test(`retains partial execution evidence and continues after ${code}`, () => {
+    const root = makeSandbox();
+    try {
+      const trace = traceOf(call);
+      const result = runBehavioralWithGrading(root, passingGrading,
+        { error: { code, stdout: trace, stderr: 'captured diagnostic' }, ids: [1, 2] });
+      assert.equal(result.status, 1, result.stdout + result.stderr);
+      assert.match(result.stdout, /eval 2: executing/);
+      for (const id of [1, 2]) {
+        const base = path.join(root, `evals/results/alpha-skill.eval-${id}`);
+        assert.equal(fs.existsSync(`${base}.grading.json`), false);
+        assert.equal(fs.readFileSync(`${base}.execution.raw.txt`, 'utf8'), trace);
+        assert.match(fs.readFileSync(`${base}.execution.error.txt`, 'utf8'), new RegExp(code));
+        assert.match(fs.readFileSync(`${base}.execution.error.txt`, 'utf8'), /captured diagnostic/);
+      }
+      assert.equal(fs.readFileSync(path.join(root, 'claude-calls.txt'), 'utf8'), 'executor\nexecutor\n');
+    } finally { fs.rmSync(root, { recursive: true, force: true }); }
+  });
+}
+
+for (const args of [['--eval'], ['--eval', 'not-a-number'], ['--eval', '1.5'], ['--eval', '9007199254740993']]) {
+  test(`rejects an invalid behavioral selector ${JSON.stringify(args)}`, () => {
+    const root = makeSandbox();
+    try {
+      const result = run(root, ['--behavioral', 'alpha-skill', ...args]);
+      assert.equal(result.status, 1, result.stdout + result.stderr);
+      assert.match(result.stderr, /--eval must be an integer case id/);
+      assert.equal(fs.existsSync(path.join(root, 'evals/results')), false);
+    } finally { fs.rmSync(root, { recursive: true, force: true }); }
+  });
+}
+
+test('rejects an unknown behavioral case before creating results', () => {
+  const root = makeSandbox();
+  try {
+    const result = runBehavioralWithGrading(root, '{}', { args: ['--eval', '99'] });
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    assert.match(result.stderr, /has no behavioral eval id=99/);
+    assert.equal(fs.existsSync(path.join(root, 'evals/results')), false);
+    assert.equal(fs.existsSync(path.join(root, 'claude-calls.txt')), false);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test('a selector does not hide duplicate IDs among unselected cases', () => {
+  const root = makeSandbox();
+  try {
+    const result = runBehavioralWithGrading(root, '{}', { args: ['--eval', '0'], ids: [0, 2, 2] });
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    assert.match(result.stderr, /duplicate behavioral eval id=2/);
+    assert.equal(fs.existsSync(path.join(root, 'evals/results')), false);
+    assert.equal(fs.existsSync(path.join(root, 'claude-calls.txt')), false);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test('--eval is available only for behavioral runs', () => {
+  const root = makeSandbox();
+  try {
+    const result = run(root, ['--eval', '1']);
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    assert.match(result.stderr, /--eval applies only to behavioral evals/);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+for (const passed of [true, false]) {
+  for (const evidence of ['', ' \t\r\n', '\u00a0\u2003']) {
+    test(`behavioral CLI diagnoses blank evidence for ${passed ? 'passing' : 'failing'} verdict ${JSON.stringify(evidence)}`, () => {
+      const root = makeSandbox();
+      try {
+        const raw = JSON.stringify({
+          expectations: [{ id: 1, text: 'check the result', passed, evidence }],
+          summary: { passed: Number(passed), failed: Number(!passed), total: 1, pass_rate: Number(passed) },
+        });
+        const base = path.join(root, 'evals', 'results', 'alpha-skill.eval-1');
+        writeJson(`${base}.grading.json`, { stale: true });
+
+        const result = runBehavioralWithGrading(root, raw);
+
+        assert.equal(result.status, 1, result.stdout + result.stderr);
+        assert.match(result.stdout, /grader returned blank evidence/);
+        assert.doesNotMatch(result.stdout, /invalid JSON/);
+        assert.match(result.stdout, /raw saved to .*alpha-skill\.eval-1\.grading\.raw\.txt/);
+        assert.equal(fs.readFileSync(`${base}.grading.raw.txt`, 'utf8'), raw);
+        assert.equal(fs.existsSync(`${base}.grading.json`), false);
+      } finally {
+        fs.rmSync(root, { recursive: true, force: true });
+      }
+    });
+  }
+}
+
+for (const raw of ['not JSON', '{"expectations":', '{"expectations":[]}']) {
+  test(`behavioral CLI retains the generic diagnostic for invalid grading ${raw}`, () => {
+    const root = makeSandbox();
+    try {
+      const result = runBehavioralWithGrading(root, raw);
+      assert.equal(result.status, 1, result.stdout + result.stderr);
+      assert.match(result.stdout, /grader returned invalid JSON/);
+      assert.doesNotMatch(result.stdout, /blank evidence/);
+      const base = path.join(root, 'evals', 'results', 'alpha-skill.eval-1');
+      assert.equal(fs.readFileSync(`${base}.grading.raw.txt`, 'utf8'), raw);
+      assert.equal(fs.existsSync(`${base}.grading.json`), false);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+}
+
+test('behavioral CLI still publishes valid grading without a rejection diagnostic', () => {
+  const root = makeSandbox();
+  try {
+    const evidence = '  observed in the trace  ';
+    const raw = JSON.stringify({
+      expectations: [{ id: 1, text: 'check the result', passed: true, evidence }],
+      summary: { passed: 1, failed: 0, total: 1, pass_rate: 1 },
+    });
+    const result = runBehavioralWithGrading(root, raw);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.doesNotMatch(result.stdout, /grader returned/);
+    const base = path.join(root, 'evals', 'results', 'alpha-skill.eval-1');
+    const grading = JSON.parse(fs.readFileSync(`${base}.grading.json`, 'utf8'));
+    assert.equal(grading.expectations[0].evidence, evidence);
+    assert.equal(fs.existsSync(`${base}.grading.raw.txt`), false);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('accepts a complete and consistent grader result', () => {
   const raw = JSON.stringify({
     expectations: [
@@ -77,6 +300,44 @@ test('accepts a complete and consistent grader result', () => {
   });
 
   assert.deepEqual(parseGrading(raw, ['first expectation', 'second expectation']), JSON.parse(raw));
+});
+
+for (const passed of [true, false]) {
+  for (const evidence of ['', ' \t\r\n', '\u00a0\u2003']) {
+    test(`rejects ${passed ? 'passing' : 'failing'} grading with blank evidence ${JSON.stringify(evidence)}`, () => {
+      const raw = JSON.stringify({
+        expectations: [{ id: 1, text: 'check the result', passed, evidence }],
+        summary: { passed: Number(passed), failed: Number(!passed), total: 1, pass_rate: Number(passed) },
+      });
+      assert.equal(parseGrading(raw, ['check the result']), null);
+    });
+  }
+}
+
+test('preserves nonblank evidence including surrounding whitespace', () => {
+  const evidence = '  No matching tool call was found.\n';
+  const raw = JSON.stringify({
+    expectations: [{ id: 1, text: 'check the result', passed: false, evidence }],
+    summary: { passed: 0, failed: 1, total: 1, pass_rate: 0 },
+  });
+  assert.equal(parseGrading(raw, ['check the result']).expectations[0].evidence, evidence);
+});
+
+test('blank evidence retains raw grading without publishing a scored artifact', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'grading-blank-evidence-'));
+  try {
+    const base = path.join(dir, 'my-skill.eval-1');
+    const raw = JSON.stringify({
+      expectations: [{ id: 1, text: 'check the result', passed: true, evidence: '' }],
+      summary: { passed: 1, failed: 0, total: 1, pass_rate: 1 },
+    });
+    clearGradingSlot(base);
+    assert.equal(persistGradingOutcome(base, parseGrading(raw, ['check the result']), raw), false);
+    assert.equal(fs.existsSync(`${base}.grading.json`), false);
+    assert.equal(fs.readFileSync(`${base}.grading.raw.txt`, 'utf8'), raw);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('rejects grader results that omit expectations', () => {
@@ -144,6 +405,27 @@ test('rejects incomplete or inconsistent grader summaries', () => {
   for (const { declared: d, ...grading } of cases) {
     assert.equal(parseGrading(JSON.stringify(grading), d), null);
   }
+});
+
+test('names a positive prompt that passes top_k but does not rank first', () => {
+  const root = makeSandbox();
+  writeSkill(root, 'alpha-skill', 'Handles alpha widgets. Use when changing alpha widgets.');
+  writeSkill(root, 'beta-skill', 'Tunes widget caches. Use when tuning the widget cache for alpha.');
+  writeJson(
+    path.join(root, 'evals', 'cases', 'alpha-skill.json'),
+    completeCase('alpha-skill', 'tune the alpha widget cache', 3),
+  );
+  writeJson(
+    path.join(root, 'evals', 'cases', 'beta-skill.json'),
+    completeCase('beta-skill', 'tune the widget cache', 1),
+  );
+
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /alpha-skill: positive prompt ranked #2, inside top 3 but not first/);
+  assert.match(result.stdout, /#1: beta-skill \(\d\.\d{3}\) vs \d\.\d{3}/);
+  assert.match(result.stdout, /rank-1 rate: 50% \(3\/6/);
 });
 
 test('fails when a skill has no eval case file', () => {
@@ -297,6 +579,78 @@ test('rejects an invalid rank-1 floor', () => {
 
   assert.equal(result.status, 1, result.stdout + result.stderr);
   assert.match(result.stderr, /--min-rank1 must be a number from 0 to 100/);
+});
+
+test('routes clipped prompt forms to their long-form skill (see #660)', () => {
+  const root = makeSandbox();
+  // Note: the skill name must not contain the clipped form itself — name
+  // tokens are weighted 2x, which would route the prompt even without the
+  // alias map. The prompt shares no vocabulary with the description except
+  // the clipped/long pair (auth/authentication): without the alias map the
+  // skill scores zero and the positive prompt fails.
+  writeSkill(
+    root,
+    'credential-skill',
+    'Protects credential verification. Use when configuring authentication ceremonies.',
+  );
+  writeSkill(root, 'paint-skill', 'Paints sheds. Use when choosing exterior paint colors.');
+  writeJson(
+    path.join(root, 'evals', 'cases', 'credential-skill.json'),
+    completeCase('credential-skill', 'fix broken auth checks', 1),
+  );
+  writeJson(
+    path.join(root, 'evals', 'cases', 'paint-skill.json'),
+    completeCase('paint-skill', 'choose exterior paint colors', 1),
+  );
+
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test('folds -ifications to their -ify verb, not to the unrelated "specific" (see #660)', () => {
+  const root = makeSandbox();
+  // "specification" is a nominalization of "specify", so it must reach the
+  // spec skill. Stripping a bare "-ation" instead yields "specific", which
+  // silently cross-merges the two words and starves the spec skill. Each
+  // prompt shares vocabulary with its own skill only.
+  writeSkill(root, 'spec-skill', 'Agree on requirements up front. Use when you specify behaviour.');
+  writeSkill(root, 'specific-skill', 'Narrow a choice down. Use when one target matters.');
+  writeJson(
+    path.join(root, 'evals', 'cases', 'spec-skill.json'),
+    completeCase('spec-skill', 'document a specification for the billing rollout', 1),
+  );
+  writeJson(
+    path.join(root, 'evals', 'cases', 'specific-skill.json'),
+    completeCase('specific-skill', 'narrow the choice down to one target', 1),
+  );
+
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test('strips -ations as well as -ation so plurals do not out-stem singulars (see #660)', () => {
+  const root = makeSandbox();
+  // "migration" and "migrations" are the same word, so both forms have to
+  // reach the migration skill. With only "-ation" in the suffix list the
+  // plural keeps its "-s" ("migration" -> "migr" vs "migrations" ->
+  // "migration"), which splits the pair and halves the score. Neither
+  // prompt shares vocabulary with the other skill.
+  writeSkill(root, 'migration-skill', 'Move old data stores off production without downtime.');
+  writeSkill(root, 'recipe-skill', 'Plan tonight dinner from what is already in the cupboard.');
+  writeJson(
+    path.join(root, 'evals', 'cases', 'migration-skill.json'),
+    completeCase('migration-skill', 'plan the database migrations', 1),
+  );
+  writeJson(
+    path.join(root, 'evals', 'cases', 'recipe-skill.json'),
+    completeCase('recipe-skill', 'plan tonight dinner from the cupboard', 1),
+  );
+
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
 });
 
 // ---------- parseGrading expectation-binding tests ----------
@@ -491,6 +845,8 @@ test('a grader that throws leaves no result file behind', () => {
     // Stale files from a prior run
     fs.writeFileSync(`${base}.grading.json`, '{"previous":"run"}\n');
     fs.writeFileSync(`${base}.grading.raw.txt`, 'previous raw output');
+    fs.writeFileSync(`${base}.execution.raw.txt`, 'previous partial trace');
+    fs.writeFileSync(`${base}.execution.error.txt`, 'previous execution failure');
 
     clearGradingSlot(base);
 
@@ -498,6 +854,8 @@ test('a grader that throws leaves no result file behind', () => {
 
     assert.equal(fs.existsSync(`${base}.grading.json`), false, 'stale grading.json must not survive a crash');
     assert.equal(fs.existsSync(`${base}.grading.raw.txt`), false, 'stale grading.raw.txt must not survive a crash');
+    assert.equal(fs.existsSync(`${base}.execution.raw.txt`), false, 'old partial trace must not survive a new attempt');
+    assert.equal(fs.existsSync(`${base}.execution.error.txt`), false, 'old execution failure must not survive a new attempt');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -620,4 +978,86 @@ test('materializes a git baseline and applies a working-tree patch', () => {
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
+});
+
+
+test('fixture baseline commits ignore inherited user signing requirements', () => {
+  const root = makeSandbox();
+  const config = path.join(root, 'global.gitconfig');
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'fixture-signing-test-'));
+  try {
+    fs.writeFileSync(config, '[commit]\n\tgpgsign = true\n[gpg]\n\tprogram = definitely-missing-eval-signer\n');
+    const result = spawnSync(process.execPath, ['-e', `
+      const fs = require('node:fs');
+      const { materializeWorkspace } = require(${JSON.stringify(path.join(root, 'scripts', 'run-evals.js'))});
+      let workspace;
+      try { workspace = materializeWorkspace({ files: ['project/context.txt'] }); }
+      finally { if (workspace) fs.rmSync(workspace, { recursive: true, force: true }); }
+    `], { cwd: root, encoding: 'utf8', env: { ...process.env, GIT_CONFIG_GLOBAL: config, TMPDIR: temp, TMP: temp, TEMP: temp } });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+    fs.rmSync(temp, { recursive: true, force: true });
+  }
+});
+
+test('rejects duplicate behavioral IDs before they can overwrite a grading slot', () => {
+  const root = makeSandbox();
+  try {
+    writeSkill(root, 'alpha-skill', 'Handles alpha widgets. Use when changing alpha widgets.');
+    const evalCase = completeCase('alpha-skill', 'change alpha widget');
+    evalCase.evals.push({ ...behavioralEval(), prompt: 'A different evaluation' });
+    writeJson(path.join(root, 'evals', 'cases', 'alpha-skill.json'), evalCase);
+    const result = run(root);
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    assert.match(result.stdout, /duplicate behavioral eval id=1/);
+    const dryRun = run(root, ['--behavioral', 'alpha-skill', '--dry-run']);
+    assert.equal(dryRun.status, 1, dryRun.stdout + dryRun.stderr);
+    assert.match(dryRun.stderr, /duplicate behavioral eval id=1/);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test('accepts distinct behavioral IDs including zero', () => {
+  const root = makeSandbox();
+  try {
+    writeSkill(root, 'alpha-skill', 'Handles alpha widgets. Use when changing alpha widgets.');
+    const evalCase = completeCase('alpha-skill', 'change alpha widget');
+    evalCase.evals.push({ ...behavioralEval(), id: 0 });
+    writeJson(path.join(root, 'evals', 'cases', 'alpha-skill.json'), evalCase);
+    const result = run(root);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test('removes the throwaway workspace when fixture setup fails', () => {
+  const root = makeSandbox();
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'workspace-cleanup-test-'));
+  try {
+    const result = spawnSync(process.execPath, ['-e', `
+      const { materializeWorkspace } = require(${JSON.stringify(path.join(root, 'scripts', 'run-evals.js'))});
+      try { materializeWorkspace({ files: ['project/context.txt', 'missing.txt'] }); }
+      catch (error) { console.error(error.message); }
+    `], { cwd: root, encoding: 'utf8', env: { ...process.env, TMPDIR: temp, TMP: temp, TEMP: temp } });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.match(result.stderr, /fixture listed in files\[\] not found/);
+    assert.deepEqual(fs.readdirSync(temp), [], 'partially copied fixture data must be removed');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+    fs.rmSync(temp, { recursive: true, force: true });
+  }
+});
+
+
+test('loads quoted YAML skill identities using their decoded values', () => {
+  const root = makeSandbox();
+  try {
+    writeSkill(root, 'alpha', 'code unit tests');
+    const skill = path.join(root, 'skills', 'alpha', 'SKILL.md');
+    fs.writeFileSync(skill, fs.readFileSync(skill, 'utf8').replace('name: alpha', "name: 'alpha'")
+      .replace('description: code unit tests', 'description: "code unit tests"'));
+    writeJson(path.join(root, 'evals', 'cases', 'alpha.json'), completeCase('alpha', 'code unit tests'));
+    const result = run(root);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.match(result.stdout, /PASSED/);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });

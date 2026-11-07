@@ -104,6 +104,20 @@ test('ignores non-artifact markdown references (no false positives)', () => {
   assert.match(result.stdout, /1 files checked — 0 error\(s\) — PASSED/);
 });
 
+test('does not mistake the tail of an unrelated filename for an artifact path', () => {
+  const root = makeSandbox();
+  writeFile(
+    root,
+    'skills/planning-and-task-breakdown/SKILL.md',
+    'Attach `test-plan.md` and `release_todo.md`. Save the plan to `tasks/plan.md`.\n',
+  );
+
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /1 files checked — 0 error\(s\) — PASSED/);
+});
+
 test('skips guarded files that do not exist', () => {
   const root = makeSandbox();
   writeFile(root, '.claude/commands/spec.md', 'Save the spec as `SPEC.md`.\n');

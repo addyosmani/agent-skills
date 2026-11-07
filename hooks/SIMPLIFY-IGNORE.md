@@ -54,7 +54,7 @@ One script, three hook events:
 |---|---|
 | `PreToolUse Read` | Backs up file, replaces blocks with `BLOCK_<hash>` placeholders in-place |
 | `PostToolUse Edit\|Write` | Expands placeholders back to real code, saves model's changes, re-filters |
-| `Stop` | Expands the placeholders left in each file on disk, so changes made outside `Edit`/`Write` survive; falls back to the backup only if no placeholder is left |
+| `Stop` | Expands the placeholders left in each file on disk, so changes made outside `Edit`/`Write` survive; keeps a file that was put back whole (a `git checkout`/`stash` revert, an undo) instead of the stale backup; falls back to the backup only if no placeholder is left |
 
 Each block is content-hashed (8 hex chars via `shasum`/`sha1sum`) so the round-trip is unambiguous even if the model duplicates or reorders placeholders. Cache is project-scoped to prevent cross-session interference.
 
@@ -77,13 +77,14 @@ echo '{}' | bash hooks/simplify-ignore.sh
 ```
 
 Backups are stored in `.claude/.simplify-ignore-cache/` within your project directory.
+If a change is reverted while the hook is active, the superseded session backup is retained there as `<id>.superseded.<pid>`; review it and remove it when it is no longer needed.
 
 ## Known limitations
 
 - **Single-line blocks hide the entire line.** If `simplify-ignore-start` and `simplify-ignore-end` appear on the same line as other code, the whole line is hidden from the model, not just the annotated portion. Use dedicated lines for annotations.
 - **Comment suffix detection covers `*/` and `-->` only.** Template engines with non-standard comment closers (ERB `%>`, Blade `--}}`) may produce unbalanced placeholders. Use `#` or `//` style comments instead.
 - **Fallback expansion is progressive, not exact.** If the model alters a placeholder's formatting (e.g. changes the reason text), the hook tries progressively simpler matches: full placeholder → prefix+hash+suffix → hash-only. The hash-only fallback may leave cosmetic debris (e.g. stray `:` or reason text). A warning is printed to stderr when this happens.
-- **A wholesale rewrite falls back to the backup.** If something replaces a filtered file's entire contents and removes every `BLOCK_<hash>` placeholder, the hook can no longer tell where the protected block belongs. At `Stop` it restores the backup and prints a warning; the rewrite is not lost but is kept in the cache as `.claude/.simplify-ignore-cache/<id>.recovered`, whose path the warning prints, and you merge it back by hand. Changes that leave the placeholders in place — a `Bash` edit, a formatter, an external editor — are kept in the file itself.
+- **A removed placeholder falls back to the backup.** If an edit deletes a `BLOCK_<hash>` line, or something replaces the whole file, the hook can no longer tell where that protected block belongs. An `Edit` or `Write` that does this is reported back to the model (exit 2) with the placeholder to restore, and the backup is not updated. If the placeholder is still missing at `Stop`, the hook restores the backup and prints a warning; the changed file is not lost but is kept in the cache as `.claude/.simplify-ignore-cache/<id>.recovered`, whose path the warning prints, and you merge it back by hand. Changes that leave the placeholders in place — a `Bash` edit, a formatter, an external editor — are kept in the file itself.
 - **File renaming leaves placeholders.** If the model renames or moves a file via a shell command, the new file will retain `BLOCK_<hash>` placeholders. The original code is saved as `<old-filename>.recovered` when the session stops. You must manually restore the recovered code into the new file.
 
 ## Requirements

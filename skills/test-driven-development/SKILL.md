@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: Drives development with tests using the red-green-refactor loop. Use when implementing any logic, fixing any bug, or changing any behavior. Use when you need to prove that code works, when a bug report arrives, or when you're about to modify existing functionality.
+description: Drives development with tests using the red-green-refactor loop. Use when implementing any logic, fixing any bug, or changing any behavior. Use when you need to prove that code works, when a bug report arrives, or when you're about to modify existing functionality. Use when asked to add tests to a function, fix a bug in it or change its behavior, even when the code is pasted inline and the request does not mention tests.
 ---
 
 # Test-Driven Development
@@ -255,6 +255,8 @@ This order is for unit and component tests. At the acceptance layer, an external
 **Use mocks only when:** the real implementation is too slow, non-deterministic, or has side effects you can't control (external APIs, email sending). Over-mocking creates tests that pass while production breaks.
 
 **Substitute test doubles only at ports.** In this codebase every dependency we don't own or don't deploy with our code (databases, third-party APIs, frameworks, the UI, the OS clock/filesystem/env) sits behind a port — see `ports-and-adapters`. Fakes and stubs replace the adapter at that port; never mock internal classes, patch your own modules, or spy on private methods. This keeps the maximum amount of our own code inside the test and gives the test full control of state (including time, via the clock port).
+
+For crash or rollback behavior, exercise the real boundary: an injected exception is not process termination, and a mocked transaction call is not a database rollback.
 
 ### Use the Arrange-Act-Assert Pattern
 

@@ -50,3 +50,9 @@ If the project has *no* convention at all, your finding is that gap itself — r
 | "We'll add telemetry when we see problems" | You see problems *through* telemetry. Added after, it ships in the fix release — one incident too late. |
 | "The SDK/framework already logs internally" | Vendor logs are unstructured, unqueryable alongside yours, and disappear at the next major version. Emit your own boundary event. |
 | "It's just a dev/demo feature" | Dev builds are where port taps belong — that's where you learn what the integration actually returns. |
+
+## Composition
+
+- **Invoke directly when:** a change adds or reshapes an integration point (an adapter, an external call, a retry or error path, auth/session lifecycle, a background job) and the question is whether it will be diagnosable in the field.
+- **Invoke via:** a project's review routing: a route naming this agent in `export const review` (`probity.config.ts`), which `probity-review-route` prints for the diffs it matches.
+- **Do not invoke from another persona.** If `code-reviewer` spots a blind integration path, the user or a slash command starts this pass, not the reviewer. See [docs/agents.md](../docs/agents.md).

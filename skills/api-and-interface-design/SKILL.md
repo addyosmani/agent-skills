@@ -196,7 +196,9 @@ The unique constraint *is* the mechanism. A store that cannot enforce uniqueness
 
 ```typescript
 if (existing.requestHash !== hash(req.body)) {
-  return res.status(422).json({ error: 'idempotency key reused with a different payload' });
+  return res.status(422).json({
+    error: { code: 'IDEMPOTENCY_KEY_REUSED', message: 'Idempotency key reused with a different payload' },
+  });
 }
 ```
 
