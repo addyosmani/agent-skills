@@ -54,5 +54,5 @@ If the project has *no* convention at all, your finding is that gap itself — r
 ## Composition
 
 - **Invoke directly when:** a change adds or reshapes an integration point (an adapter, an external call, a retry or error path, auth/session lifecycle, a background job) and the question is whether it will be diagnosable in the field.
-- **Invoke via:** a project's review routing (`export const review` routes in `probity.config.ts`, printed by `probity-review-route`), or `/review` when the diff touches integration code.
+- **Invoke via:** a project's review routing: a route naming this agent in `export const review` (`probity.config.ts`), which `probity-review-route` prints for the diffs it matches.
 - **Do not invoke from another persona.** If `code-reviewer` spots a blind integration path, the user or a slash command starts this pass, not the reviewer. See [docs/agents.md](../docs/agents.md).

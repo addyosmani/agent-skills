@@ -226,7 +226,9 @@ export class WebTasksDriver implements TasksDriver {
     await this.page.getByRole('checkbox', { name: `Complete ${title}` }).check();
   }
   async assertDone(user: string, title: string) {
-    await expect(this.page.getByRole('listitem', { name: title })).toHaveAttribute('aria-checked', 'true');
+    // listitem has no accessible name from its content, so filter by text
+    const task = this.page.getByRole('listitem').filter({ hasText: title });
+    await expect(task.getByRole('checkbox', { name: `Complete ${title}` })).toBeChecked();
   }
   // signIn and createTask likewise
 }

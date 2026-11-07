@@ -71,7 +71,12 @@ if (mergeBase) {
         encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 30000,
       })));
     } catch {
-      console.log(`Release pairing: could not list ${UPSTREAM_REPO} tags; checking local tags only.`);
+      // In CI an unreachable upstream must not let a reused number through
+      // (the 0.6.14 clash); locally, warn so offline runs still work.
+      if (process.env.CI) {
+        throw new Error(`Release pairing: could not list ${UPSTREAM_REPO} tags, so a plugin version upstream already published can't be ruled out. Re-run when the remote is reachable.`);
+      }
+      console.warn(`Release pairing: could not list ${UPSTREAM_REPO} tags; checking local tags only.`);
     }
   }
   const errors = releasePairingErrors({ base, head, tags });

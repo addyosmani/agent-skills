@@ -101,3 +101,89 @@ test("an upstream-only tag blocks reusing its number", () => {
   assert.match(errors.join("\n"), /0\.6\.14 is already used by tag/);
   assert.match(errors.join("\n"), /above 0\.6\.15/);
 });
+
+// End to end: run validate-versions.js in a scratch repo whose upstream is a
+// local repository, so the ls-remote path and its failure handling are real.
+const { execFileSync, spawnSync } = require("node:child_process");
+const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = require("node:fs");
+const { tmpdir } = require("node:os");
+const { join, resolve } = require("node:path");
+
+const SCRIPT = resolve(__dirname, "validate-versions.js");
+
+function scratchRepo(t, { plugin, probity }) {
+  const dir = mkdtempSync(join(tmpdir(), "validate-versions-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const run = (...args) => execFileSync("git", args, { cwd: dir, stdio: "pipe" });
+  run("init", "-q", "-b", "main");
+  run("config", "user.email", "t@example.com");
+  run("config", "user.name", "t");
+  run("config", "commit.gpgsign", "false");
+  const write = (version, probityVersion) => {
+    for (const path of manifestPaths) {
+      mkdirSync(join(dir, path, ".."), { recursive: true });
+      const body = path.endsWith("marketplace.json") ? { plugins: [{ version }] } : { version };
+      writeFileSync(join(dir, path), JSON.stringify(body));
+    }
+    mkdirSync(join(dir, "hooks/probity"), { recursive: true });
+    writeFileSync(join(dir, "hooks/probity/package.json"), JSON.stringify({ version: probityVersion }));
+    run("add", "-A");
+    run("commit", "-q", "--allow-empty", "-m", `v${version}`);
+  };
+  write(plugin.base, probity.base);
+  run("update-ref", "refs/remotes/origin/main", "HEAD");
+  write(plugin.head, probity.head);
+  return { dir, run };
+}
+
+function upstreamWithTags(t, tagNames) {
+  const dir = mkdtempSync(join(tmpdir(), "validate-versions-upstream-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const run = (...args) => execFileSync("git", args, { cwd: dir, stdio: "pipe" });
+  run("init", "-q", "-b", "main");
+  run("-c", "user.email=t@example.com", "-c", "user.name=t", "-c", "commit.gpgsign=false", "commit", "-q", "--allow-empty", "-m", "x");
+  for (const tag of tagNames) run("tag", tag);
+  return dir;
+}
+
+function validate(dir, env) {
+  const { GITHUB_BASE_REF, CI, ...rest } = process.env;
+  return spawnSync(process.execPath, [SCRIPT], { cwd: dir, encoding: "utf8", env: { ...rest, ...env } });
+}
+
+test("validate-versions rejects a plugin version only upstream has tagged", (t) => {
+  const { dir } = scratchRepo(t, { plugin: { base: "0.6.12", head: "0.6.14" }, probity: { base: "0.4.63", head: "0.4.64" } });
+  const upstream = upstreamWithTags(t, ["0.6.14", "0.6.15"]);
+  const result = validate(dir, { PLUGIN_UPSTREAM_REPO: upstream });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /0\.6\.14 is already used by tag/);
+});
+
+test("validate-versions passes a plugin version above upstream's tags", (t) => {
+  const { dir } = scratchRepo(t, { plugin: { base: "0.6.12", head: "0.6.16" }, probity: { base: "0.4.63", head: "0.4.64" } });
+  const upstream = upstreamWithTags(t, ["0.6.14", "0.6.15"]);
+  const result = validate(dir, { PLUGIN_UPSTREAM_REPO: upstream });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Release pairing .*: ok/);
+});
+
+test("validate-versions fails in CI when upstream's tags can't be listed", (t) => {
+  const { dir } = scratchRepo(t, { plugin: { base: "0.6.12", head: "0.6.16" }, probity: { base: "0.4.63", head: "0.4.63" } });
+  const result = validate(dir, { PLUGIN_UPSTREAM_REPO: join(dir, "no-such-repo"), CI: "true" });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /could not list .*no-such-repo.* tags/);
+});
+
+test("validate-versions warns but passes locally when upstream's tags can't be listed", (t) => {
+  const { dir } = scratchRepo(t, { plugin: { base: "0.6.12", head: "0.6.16" }, probity: { base: "0.4.63", head: "0.4.63" } });
+  const result = validate(dir, { PLUGIN_UPSTREAM_REPO: join(dir, "no-such-repo") });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout + result.stderr, /could not list .*no-such-repo.* tags; checking local tags only/);
+});
+
+test("validate-versions skips the upstream lookup when no version changed", (t) => {
+  const { dir } = scratchRepo(t, { plugin: { base: "0.6.12", head: "0.6.12" }, probity: { base: "0.4.63", head: "0.4.63" } });
+  const result = validate(dir, { PLUGIN_UPSTREAM_REPO: join(dir, "no-such-repo"), CI: "true" });
+  assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(result.stdout + result.stderr, /could not list/);
+});

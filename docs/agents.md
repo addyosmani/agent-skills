@@ -7,6 +7,7 @@ Specialist personas that play a single role with a single perspective. Each pers
 | [code-reviewer](../agents/code-reviewer.md) | Senior Staff Engineer | Five-axis review before merge |
 | [design-conformance-reviewer](../agents/design-conformance-reviewer.md) | Design Systems Engineer | UI changes checked against the design source, tokens and screenshots |
 | [domain-expert-proxy](../agents/domain-expert-proxy.md) | Domain Expert Stand-in | Source-cited domain rulings when no human expert is available; domain seat in three-amigos sessions |
+| [observability-coverage-auditor](../agents/observability-coverage-auditor.md) | Observability Engineer | Whether a change keeps integration points diagnosable: telemetry gaps and field hygiene (no secrets/PII) |
 | [product-owner-proxy](../agents/product-owner-proxy.md) | Product Owner Stand-in | Source-cited value/priority/scope rulings when no human owner is available; product seat in event storming and release slicing |
 | [security-auditor](../agents/security-auditor.md) | Security Engineer | Vulnerability detection, OWASP-style audit |
 | [test-engineer](../agents/test-engineer.md) | QA Engineer | Test strategy, coverage analysis, Prove-It pattern |
