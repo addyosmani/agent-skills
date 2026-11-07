@@ -61,6 +61,7 @@ import {
 import { surfaceGlossaryTermBreakage } from '../rules/ubiquitous-language.js'
 import { withShellWriteScreen } from '../rules/shell-writes.js'
 import { withJudgeTasks } from '../rules/judge-task.js'
+import { type CompactJudgeFilesOptions, compactingPreset } from '../rules/compact-judge-files.js'
 import { enforceSwiftTdd } from '../internal/swift-tdd.js'
 import {
   withJudgeFailureDiagnostics,
@@ -91,7 +92,9 @@ const SWIFT_TELEMETRY_LINES = [
  * this file's directory.
  */
 export function swiftRuleEntries(root: string, options: SwiftPresetOptions = {}): RuleEntry[] {
-  return withJudgeTasks(withShellWriteScreen(swiftEntries(root, options), { root, enabled: options.shellWriteScreen }))
+  return withJudgeTasks(
+    compactingPreset(withShellWriteScreen(swiftEntries(root, options), { root, enabled: options.shellWriteScreen }), options),
+  )
 }
 
 export type SwiftPresetOptions = {
@@ -99,6 +102,11 @@ export type SwiftPresetOptions = {
    *  files-scoped block covers, so the edit goes through the write
    *  tool and the content rules judge it (issue #79). Default: on. */
   shellWriteScreen?: boolean
+  /** Send the judge a unified diff, with context, in place of a large
+   *  file an edit changes, so the file isn't sent twice per verdict
+   *  (issue #168). Rules still see the whole file. Default on:
+   *  `{ minBytes: 8000, contextLines: 20 }`; `false` sends whole files. */
+  compactJudgeFiles?: false | CompactJudgeFilesOptions
   /** Judge each changed Covers-tagged test against the scenario it
    *  claims (issue #120): same Given/When/Then, no unstated outcome.
    *  One model call per write that changes a claim. Default: on. */
@@ -421,7 +429,7 @@ function swiftEntries(root: string, options: SwiftPresetOptions): RuleEntry[] {
         'AcceptanceTests/Scenarios/**',
         'AcceptanceTests/DSL/**',
       ],
-      rules: [enforceAcceptanceLanguage({ glossaryPath: glossary })],
+      rules: [enforceAcceptanceLanguage({ glossaryPath: glossary, specsDir: join(root, 'docs/specs') })],
     },
 
     // Scenario fidelity (issue #120): a changed Covers-tagged test

@@ -25,6 +25,7 @@ import { enforceAcceptanceLanguage } from '../rules/acceptance-language.js'
 import {
   forbidNewAmbientEffects,
   JS_AMBIENT_EFFECT_PATTERNS,
+  isJsTestInvocation,
   requireGreenTestRun,
   withJudgeFailureDiagnostics,
   withContradictionRetry,
@@ -39,6 +40,7 @@ import type { Globs } from '../rules/scoping.js'
 import { withExcludeGlobs } from '../rules/scoping.js'
 import { withShellWriteScreen } from '../rules/shell-writes.js'
 import { withJudgeTasks } from '../rules/judge-task.js'
+import { type CompactJudgeFilesOptions, compactingPreset } from '../rules/compact-judge-files.js'
 import { drivingAdapterBlock } from './driving-adapter.js'
 import { testIsolationBlock } from './test-isolation.js'
 import { scenarioFidelityBlock } from './scenario-fidelity.js'
@@ -103,7 +105,14 @@ export type JsPresetOptions = {
   /** Absolute path to a glossary (ubiquitous-language skill) to hold
    *  specs to. */
   glossaryPath?: string
-  /** The real test command your commit gate should look for. */
+  /**
+   * The real test command your commit gate should look for. It is
+   * matched against the whole shell command, so anchor it
+   * (`/^\s*make check\b/`): an unanchored pattern also matches a
+   * command that only mentions it, like an issue body. The default
+   * counts only a command that starts npm/pnpm/yarn test, vitest or
+   * jest ({@link isJsTestInvocation}).
+   */
   commitCommand?: RegExp
   /** Your runner's green summary line. */
   commitSuccessPattern?: RegExp
@@ -193,6 +202,11 @@ export type JsPresetOptions = {
    *  files-scoped block covers, so the edit goes through the write
    *  tool and the content rules judge it (issue #79). Default: on. */
   shellWriteScreen?: boolean
+  /** Send the judge a unified diff, with context, in place of a large
+   *  file an edit changes, so the file isn't sent twice per verdict
+   *  (issue #168). Rules still see the whole file. Default on:
+   *  `{ minBytes: 8000, contextLines: 20 }`; `false` sends whole files. */
+  compactJudgeFiles?: false | CompactJudgeFilesOptions
 }
 
 /**
@@ -370,7 +384,7 @@ export function jsRuleEntries(options: JsPresetOptions = {}): RuleEntry[] {
   //   })
   entries.push({
     files: specGlobs,
-    rules: [enforceAcceptanceLanguage({ glossaryPath: options.glossaryPath })],
+    rules: [enforceAcceptanceLanguage({ glossaryPath: options.glossaryPath, specsDir: options.specsDir })],
   })
 
   // Test isolation on the acceptance DSL (issue #119): opt-in, for
@@ -414,13 +428,16 @@ export function jsRuleEntries(options: JsPresetOptions = {}): RuleEntry[] {
   entries.push(
     requireGreenTestRun({
       command: options.commitCommand ?? /npm (run )?test|vitest|jest/,
+      // The default regex finds runner names anywhere, issue bodies
+      // included (#150); only a command that starts the runner counts.
+      commandPredicate: options.commitCommand ? undefined : isJsTestInvocation,
       successPattern:
         options.commitSuccessPattern ?? /Test Files\s+\d+ passed|Tests:\s+.*\b\d+ passed/,
       failurePattern: options.commitFailurePattern ?? /\d+ failed|FAIL\s/,
     }),
   )
 
-  return withJudgeTasks(withShellWriteScreen(withExcludeGlobs(entries, excludeGlobs), {
+  return withJudgeTasks(compactingPreset(withShellWriteScreen(withExcludeGlobs(entries, excludeGlobs), {
     enabled: options.shellWriteScreen,
-  }))
+  }), options))
 }

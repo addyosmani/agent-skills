@@ -4,6 +4,7 @@ import {
   withJudgeFailureDiagnostics,
   withContradictionRetry,
 } from '../rules/gates.js'
+import { GENERALISING_TDD_RULE } from './generalising-tdd.js'
 import { IN_PROGRESS_TDD_RULE } from './in-progress-tdd.js'
 
 const KOTLIN_DETERMINISTIC_PATHS =
@@ -26,7 +27,8 @@ export const KOTLIN_TDD_ADDENDUM = `## Kotlin/JVM TDD clarification
 - Boundary events are part of the minimum green. When the codebase records one structured event or telemetry call per external call or outcome (an observability rule requires it at adapter boundaries), the event at each external call or outcome that an observed red covers is part of the minimum green for that call, even when no test asserts it. Events at calls no red covers, events carrying values from the data, and other behavior beside the event still need their own red. So does a platform attribute that changes what is stored or who can read it (a Keychain accessibility class, an access group, a synchronizable flag): it is behavior, not part of the call, unless a check asserts it.
 - After a compile red for a missing symbol, a declaration whose bodies are only \`TODO()\` (or a literal the assertion rejects) is the authorized placeholder, in a new file as in an existing one.
 - Git staging and git-index state are irrelevant. Judge only the recent session evidence, current file content, and pending action; do not require a test or production file to be staged.
-${IN_PROGRESS_TDD_RULE}`
+${IN_PROGRESS_TDD_RULE}
+${GENERALISING_TDD_RULE}`
 
 /**
  * Kotlin sessions commonly include Gradle output plus several source reads between

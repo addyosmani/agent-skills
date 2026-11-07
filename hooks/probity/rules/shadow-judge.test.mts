@@ -9,7 +9,9 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
 
-import type { Agent, Verdict } from '@nizos/probity'
+import type { Agent, Rule, RuleContext, Verdict } from '@nizos/probity'
+
+import { compactJudgeFiles, wholeFiles } from './compact-judge-files.ts'
 
 import { withJudgeTask } from './judge-task.ts'
 import { rateUpperBound, shadowJudge, summarizeShadowLog, type ShadowLogEntry } from './shadow-judge.ts'
@@ -108,6 +110,34 @@ test('includePrompt: false logs only the prompt hash', async (t) => {
   assert.match(entry!.promptSha256, /^[0-9a-f]{64}$/)
 })
 
+test("includePrompt: 'disagreements' logs the prompt only when a candidate disagrees", async (t) => {
+  const log = join(dir(t), 'shadow.jsonl')
+  let candidate: () => Verdict = pass
+  const shadow = shadowJudge(judge('claude', async () => pass()).agent, [judge('c', async () => candidate()).agent], {
+    log,
+    includePrompt: 'disagreements',
+  })
+  await shadow.reason('agreed source')
+  candidate = deny
+  await shadow.reason('disputed source')
+  const [agreed, disputed] = readLog(log)
+  assert.equal('prompt' in agreed!, false)
+  assert.match(agreed!.promptSha256, /^[0-9a-f]{64}$/)
+  assert.equal(disputed!.prompt, 'disputed source')
+})
+
+test("includePrompt: 'disagreements' leaves the prompt out when a candidate only failed to answer", async (t) => {
+  const log = join(dir(t), 'shadow.jsonl')
+  const shadow = shadowJudge(
+    judge('claude', async () => pass()).agent,
+    [judge('c', async () => { throw new Error('socket hang up') }).agent],
+    { log, includePrompt: 'disagreements' },
+  )
+  await shadow.reason('source')
+  const [entry] = readLog(log)
+  assert.equal('prompt' in entry!, false)
+})
+
 function entry(primary: Verdict, candidate: Partial<ShadowLogEntry['candidates'][number]>, durations = [1000, 400]): ShadowLogEntry {
   return {
     at: '2026-10-21T00:00:00.000Z',
@@ -189,4 +219,49 @@ test('rateUpperBound is the one-sided 95% Clopper-Pearson bound', () => {
   assert.ok(Math.abs(rateUpperBound(0, 100)! - (1 - 0.05 ** (1 / 100))) < 1e-6)
   // Known value: 3 in 60 gives about 12.5%.
   assert.ok(Math.abs(rateUpperBound(3, 60)! - 0.1253) < 0.002, String(rateUpperBound(3, 60)))
+})
+
+// Issue #168: compacted prompts (a diff in place of a large file) are
+// on by default, so the log says which verdicts saw one, and a
+// wholeFiles() candidate gets the uncompacted prompt for a direct A/B.
+function bigEdit() {
+  const before = Array.from({ length: 1000 }, (_, i) => `line ${i + 1}`).join('\n') + '\n'
+  const after = before.replace('line 500\n', 'line 500 changed\n')
+  const rule: Rule = async (action, ctx) => {
+    if (action.kind !== 'write') return { kind: 'pass' }
+    return ctx!.agent!.reason(
+      `## Rules\n\n## Current file content\n\n${before}\n\n## Pending action\n\nFile: ${action.path}\n\n${action.content}\n\n## Response format`,
+    )
+  }
+  return { before, after, rule }
+}
+
+test('a compacted verdict logs its full and sent prompt sizes', async (t) => {
+  const log = join(dir(t), 'shadow.jsonl')
+  const shadow = shadowJudge(judge('claude', async () => pass()).agent, [judge('c', async () => pass()).agent], { log })
+  const { before, after, rule } = bigEdit()
+  const ctx = { readFile: async () => ({ kind: 'present', content: before }), agent: shadow } as RuleContext
+  await compactJudgeFiles(rule)({ kind: 'write', path: '/repo/Big.kt', content: after }, ctx)
+  await shadow.reason('a prompt no rule compacted')
+  const [compacted, whole] = readLog(log)
+  assert.ok(compacted!.compaction, 'compacted verdict records compaction')
+  assert.ok(compacted!.compaction!.sentChars < compacted!.compaction!.fullChars / 2)
+  assert.equal(compacted!.compaction!.sentChars, compacted!.prompt!.length)
+  assert.equal(whole!.compaction, undefined)
+})
+
+test('a wholeFiles() candidate is asked the uncompacted prompt, under its own name', async (t) => {
+  const log = join(dir(t), 'shadow.jsonl')
+  const primary = judge('claude', async () => pass())
+  const same = judge('claude', async () => pass())
+  const shadow = shadowJudge(primary.agent, [wholeFiles(same.agent)], { log })
+  const { before, after, rule } = bigEdit()
+  const ctx = { readFile: async () => ({ kind: 'present', content: before }), agent: shadow } as RuleContext
+  await compactJudgeFiles(rule)({ kind: 'write', path: '/repo/Big.kt', content: after }, ctx)
+  assert.match(primary.prompts[0]!, /Unified diff/)
+  assert.ok(same.prompts[0]!.includes(before), 'candidate saw the whole file')
+  assert.equal(readLog(log)[0]!.candidates[0]!.name, 'claude:whole-files')
+  // Outside a compacted call it is the candidate unchanged.
+  await shadow.reason('plain')
+  assert.equal(same.prompts[1], 'plain')
 })

@@ -12,6 +12,360 @@ A merge can now show whether it was reviewed ([#178](https://github.com/JJChill/
   - **`probity-review-record --range`** checks the same record in CI, including merges no agent made.
   - **`reviewConfig`** types the new `export const review` in probity.config.ts.
 - **Not yet.** Checking the record against the reviewers a router selected, and against exemption obligations, comes with the review router (#181).
+## 0.4.62
+
+The Kiro shim judges kiro-cli 3.x writes again (#176).
+
+- **What broke.** kiro-cli auto-updated to 3.1.0, whose V3 engine renames
+  the mutating tools, and Probity judged none of Kiro's writes. In
+  mysudo-core a build agent wrote a new public class to `sdk/core` with no
+  test, and nothing blocked it. The hooks still ran: on 3.x the matchers
+  `write` and `shell` match by capability tag. The shim couldn't read
+  what they sent:
+  - **`fs_write`:** sends `{path, text}`, but the shim read `content`, so
+    Probity judged an empty file.
+  - **`str_replace`, `fs_append` and `delete_file`:** weren't recognised,
+    so they passed unjudged.
+  - **Session files:** they moved, and have a new line format, so the
+    history rules (TDD, green gate) would have seen no history.
+- **Now:** the shim maps the 3.x tools and keeps the 2.x names:
+  - `fs_write` {path, text} → `Write`;
+  - `str_replace` {path, oldStr, newStr, replace_all} → `Edit`;
+  - `fs_append` → `Write` of the file on disk plus the text, with Kiro's
+    newline;
+  - `delete_file` → `Bash` `rm`;
+  - `execute_bash`, `execute_pwsh`, `run_command` and a background
+    process `start` → `Bash`, judged in the call's own `cwd`.
+- **Fails closed:**
+  - **Untranslatable tools:** a write or shell tool the shim can't
+    express (`edit_code`, `semantic_rename`, `smart_relocate`,
+    `create_hook`) is blocked. So is a translator failure. Both used to
+    be allowed.
+  - **Slow judges:** kiro-cli 3.x ignores an agent hook's `timeout_ms`
+    and lets a call through when the hook runs past 60 s. On a 3.x event
+    the shim gives Probity 55 s (`PROBITY_KIRO_TIMEOUT_S`) and blocks a
+    call it hasn't judged by then.
+- **History:** the shim finds a 3.x session file
+  (`~/.kiro/sessions/<workspace>/sess_<id>/messages.jsonl`) from the hook
+  event's `session_id`, before `KIRO_SESSION_ID`, which on 3.x names the
+  root conversation. The transducer reads 3.x `user`, `assistant`,
+  `tool_call` and `tool_result` events. It rewrites a shell result ("…
+  Exit Code: N") into 2.x's exit-status envelope, so the green gate's Kiro
+  check works on both versions. Zero counts only when Kiro marked the call
+  successful.
+- **Checked against real sessions:** all 144 local kiro-cli 3.1 session
+  files convert. An end-to-end test runs the real shim on 3.x events;
+  against 0.4.61's shim it fails as reported.
+- **Agent setup:** keep the matchers `write` and `shell`, which cover
+  every 3.x write and shell tool. Per-tool matchers beside them would
+  judge each call twice. `docs/kiro-setup.md` covers both versions and the
+  60 s limit.
+
+## 0.4.61
+
+Check compaction later without a live shadow: record, then replay
+(#174).
+
+- **What was missing.** After 0.4.59, mysudo-core-sdk ran a
+  `wholeFiles(kiroJudge())` shadow for 5 hours (1,444 verdicts):
+  - compacted against whole prompts disagreed on 2 of 170 (1.2%);
+  - whole against whole disagreed on 8 of 965 (0.8%), the noise between
+    two runs of the same judge.
+
+  The shadow doubles judge cost, so the owner wanted to stop it and
+  keep a way to check compaction later.
+- **Record:** `compactJudgeFiles: { record: { log, sample } }` (default
+  sample 0.1) appends, for a sampled share of compacted verdicts:
+  - the whole-file prompt that wasn't sent, built locally with no model
+    call;
+  - the compacted prompt's SHA-256;
+  - the judging task;
+  - the verdict and reason the compacted prompt got.
+
+  The record also keeps the primary's telemetry. The log is kept at
+  `0600`, and recording never changes or blocks a verdict. Each judge
+  call is recorded, so a deny that `withContradictionRetry` later
+  retries is recorded as it was given.
+- **Replay:** `npx probity-shadow-replay <log>` asks a judge each recorded
+  prompt and prints the same agreement, leaks and friction (with
+  `--show`) as `probity-shadow-report`.
+  - **Judge:** it defaults to the one the recorded primary ran on
+    (`kiro`, `claude`, `claude:<model>`), so disagreements measure
+    compaction rather than a different model. On another judge, the
+    report's heading says so.
+  - **Options:** `--judge claude|kiro`, `--model ID`, `--limit N` (caps
+    the spend), `--concurrency N` (default 4). An unknown option, or one
+    missing its value, is an error, so a mistyped `--limit` can't
+    silently replay the whole log.
+  - It streams the log line by line.
+  - The report's output now comes from one shared formatter, so both
+    read the same.
+- **Size and privacy:** about 120 KB per recorded prompt, so about
+  10 MB a day at 10% of 800 compacted verdicts. The prompts hold code
+  and session context: keep the log local.
+
+## 0.4.60
+
+More self-contradicting judge denies are retried (#169), and the docs say
+to pin the judge's model (#169–#171).
+
+- **What happened.** A JS/TS project whose judge ran on Sonnet
+  (`claudeJudge()` follows the CLI's default model) hit three kinds of
+  judge mistake. It denied single-test writes with text concluding they
+  were allowed (#169). It counted tests already on disk as new (#170).
+  It refused an import sent alone before the code using it (#171).
+- **Retry:** `withContradictionRetry` also retries a deny whose last
+  sentence ends "this/it is a valid … add/step/write" or "Correction:
+  …, which is allowed …". The second verdict stands. Qualified forms
+  aren't retried, such as "which is allowed only after …" or "Neither is
+  a valid red step".
+- **Docs:** "Choosing the AI judge" in `hooks/PROBITY.md` says the TDD
+  rules were measured on Opus. It says to set
+  `claudeJudge({ model: 'claude-opus-5-5' })`, or to measure with a
+  shadow judge first.
+- **Not shipped:** fast paths that pass, without the judge, a write
+  adding one test or only imports. Three adversarial reviews each got
+  past a version of them. The bypasses were real writes that made a
+  failing test pass or be skipped: `expect.extend`, a test that skips
+  its siblings, code hidden from the parser, a new test placed under an
+  unbraced `if`. Skipping the judge safely would need to prove arbitrary
+  test code harmless.
+
+## 0.4.59
+
+Judges get a diff, not the whole file twice, for an edit to a large file
+(#168).
+
+- **What was missing.** Probity applies an edit before the rules see it,
+  so a write carries the whole file. Every judge prompt held it twice,
+  as the current content and the pending one. In mysudo-core-sdk the
+  median judge prompt was 42 KB, and the Opus judge was about a quarter
+  of the week's Kiro credits. One build run's 173 small edits resent a
+  few large files 173 times each.
+- **Now:** every preset sends the judge a unified diff in place of the
+  `Current file content` and `Pending action` sections, with up to 20
+  unchanged lines either side of each change. The file's import and
+  package lines are kept wherever they are, because some judges tell an
+  adapter from core code by its imports. This applies when:
+  - the file is at least 8,000 bytes;
+  - it already exists;
+  - the prompt holds those exact sections. Probity's `enforceTdd` and
+    most of this package's AI rules do;
+  - and the result is clearly smaller.
+
+  Past 1,000 changed lines the file is sent whole. Any other prompt is
+  sent as before. Upstream's TDD instructions already allow the pending
+  action as a diff.
+- **Effect:** a one-line edit to a 45 KB file cut the TDD prompt from
+  100 KB to 13 KB. Shadow logs shrink with it.
+- **Unchanged:** rules still see the whole file, so deterministic
+  checks and fast paths behave as before.
+- **Options:** `compactJudgeFiles: { minBytes, contextLines }` tunes
+  it, and `compactJudgeFiles: false` sends whole files again. Outside a
+  preset, wrap rules with `withCompactJudgeFiles(entries)`.
+- **Measuring it.** The judge now sees 20 lines either side of a change
+  rather than the whole file, and whether that changes verdicts isn't
+  measured yet.
+  - The shadow log records each compacted verdict's full and sent
+    prompt size.
+  - `probity-shadow-report` prints how many verdicts were compacted,
+    and each candidate's agreement on compacted and whole prompts.
+  - `wholeFiles(candidate)` asks a shadow candidate the uncompacted
+    prompt. On the primary's model, its disagreements are exactly what
+    the diff changed:
+    `shadowJudge(primary, [wholeFiles(sameModel)], { log })`.
+
+## 0.4.58
+
+Two fixes for the JS/TS preset (#150, #166).
+
+- **The commit gate counts only a command that runs the suite (#150).**
+  The default command pattern, `/npm (run )?test|vitest|jest/`, matched
+  those words anywhere in a shell command. A `gh issue create` whose body
+  mentioned vitest was recorded as the latest test run, and the next
+  commit was denied as not green. In reverse, `echo "Test Files 4
+  passed"` mentioning vitest could pass as a green run.
+  - **Now:** the default counts a command only when one of its
+    top-level commands starts the suite: `npm test`, `npm run
+    test[:…]`, pnpm, yarn or bun the same way, or vitest or jest,
+    directly or through npx. Pipes and chains still count (`cd /repo
+    && npm test | tail`).
+  - The check is exported as `isJsTestInvocation`.
+  - The Gradle check and this one now share one quote-aware splitter.
+  - **Unchanged:** a custom `commitCommand` is used as given; its doc
+    now says to anchor it.
+- **The JS/TS TDD judge allows a type-only fix for a type-check
+  failure (#166).** vitest doesn't type-check. In the Tax repo, a green
+  step widened a union, and `tsc --noEmit` then failed in an existing
+  test. Every type-only fix was refused as "not driven by a failing
+  test": narrowing a return type, splitting the type, and restating the
+  assertion. That left no path forward.
+  - **Now:** a write that changes only types to make the type check pass
+    is part of the step that caused the failure, or a refactor under
+    green. That covers production or test code. A restated assertion
+    must stay at least as strong.
+  - **Still judged as usual:** a write that also changes runtime
+    behavior or weakens an assertion. A block must say which part of
+    the write isn't type-only.
+
+## 0.4.57
+
+Three fixes from real sessions (#164, #162, #151).
+
+- **The shadow report reads a log of any size (#164).** In
+  mysudo-core-sdk a week of verdicts made a 620 MB log, because every
+  record keeps its ~100 KB judge prompt. `probity-shadow-report` read
+  the file into one string and failed: `Cannot create a string longer
+  than 0x1fffffe8 characters`.
+  - **Now:** the report reads the log line by line and drops each
+    prompt as it goes.
+  - **New option:** `shadowJudge({ includePrompt: 'disagreements' })`
+    keeps a prompt only where a candidate disagreed with the primary,
+    the leaks and friction that `--show` lists.
+- **The commit gate says when a run lost its summary line (#162).** A
+  run of `npm test 2>&1 | grep -E 'FAIL|Error' | head` passed every test,
+  but the filter removed the summary line the gate reads as green. The
+  deny said the run "was not green", which suggests there were failures.
+  - **Now:** a run with no failure and no summary line gets its own
+    message. It names the summary pattern it looked for and says that
+    `| grep`, `| head` and `| tail` drop it. A run that shows a failure
+    keeps the old message.
+- **The TDD judges accept generalising as the minimum green (#151).**
+  In a JS/TS project, code hard-coded a sale spilling into a second
+  parcel. A test that needed three parcels was refused both as a loop
+  and as a recursive call, because the judge wanted a hard-coded third
+  parcel. Only refactoring under green got the agent through, and the
+  deny never mentioned that route.
+  - **Now:** the Kotlin, Swift and JS/TS TDD judges are told that
+    replacing special cases with a loop or recursion is the minimum
+    green when the failing test needs the general case.
+  - **Still over-implementation:** a write that also adds behavior no
+    failing test needs.
+  - **When the judge blocks over-implementation,** it names the step it
+    would accept and the refactor-under-green route.
+
+## 0.4.56
+
+A new rule, `enforceLayeredImports`, keeps ordered layers pointing
+down (#154).
+
+- **What was missing.** mysudo-core builds its Compose design system
+  with atomic design, one package per level: tokens, atoms, molecules,
+  organisms, templates. A level may use the levels below it, never one
+  above. A unit test scanned the sources for upward imports, so it
+  caught one only after the write. Probity had no rule for an ordered
+  set of layers.
+- **Now:** `enforceLayeredImports({ layers })` blocks a write that adds
+  a reference from a layer to one above it, naming the edge, the
+  references and the layer order:
+  - Kotlin `import` lines and fully-qualified names in code; Swift
+    `import` lines. Comments and strings are skipped.
+  - `strict: true` allows only the layer directly below.
+  - Siblings at one rank may not use each other: a nested array of
+    layers, or a `*` package segment (`com.x.feature.*`) for feature
+    modules nobody lists.
+  - Delta-based: existing upward imports don't freeze their file.
+- **Opt-in.** No preset turns it on; add a block scoped to the layered
+  code. See "Layered imports" in `hooks/PROBITY.md`.
+
+## 0.4.55
+
+The thin driving adapter judge lets a screen decide what to show from
+the rows it already shows (#159).
+
+- **What was missing.** In mysudo-core a Compose view function hid the
+  Home screen's "Edit order" link when fewer than two Sudos were shown.
+  The judge refused it as a domain rule for `sdk/core`, although the
+  core's `order()` accepts any order, one Sudo included. Hiding "Move
+  up" on the first row and "Move down" on the last passed in the same
+  change.
+- **Now:** the judge's always-pass list names display conditions over
+  the data the view already holds: an empty state, a single item, the
+  first or last row. A pure view function over the screen's state is
+  named as a fine home for them.
+- **Still blocked:** a display condition that repeats a rule the core
+  enforces, such as hiding "Delete" on the last admin when the core
+  refuses that delete.
+
+## 0.4.54
+
+Scenario fidelity lets a scenario and its test gain a step together
+(#155).
+
+- **What was missing.** In mysudo-core-sdk a new business rule gave
+  seven claimed scenarios an extra precondition, and their tests the
+  matching DSL call. Each write was judged against the other side's old
+  text: the test write was refused because the scenario didn't state the
+  step, the spec write because the test didn't establish it. Marking the
+  scenario `@wip` didn't help, so the only route was to remove each
+  test's `Covers:` claim and add it back.
+- **Now:** a scenario marked wip (`@wip`, `@planned`, `(wip)`) is not
+  held to its claims on a spec write. The step lands in three writes:
+  1. mark the scenario wip and add the step;
+  2. update the claiming test, which is judged against the new text;
+  3. remove the marker, which judges every claim on the scenario again.
+     A Gherkin `@wip` tag line sits outside the scenario's text, so its
+     removal now counts as a change too.
+- **Limit:** a scenario left wip is not judged against its claims until
+  the marker comes off.
+
+## 0.4.53
+
+The commit-on-green gate judges the worktree being committed, not the
+last test run anywhere in the session (#152).
+
+- **What was missing.** In mysudo-core-sdk one session had two sibling
+  worktrees open. A docs commit in `-234`, whose build was green, was
+  blocked by a deliberate red TDD run in `-382`:
+  `requireGreenTestRun` took the last matching run in the transcript,
+  wherever it ran.
+- **Now:** when the repository has more than one worktree, the gate
+  leaves out:
+  - **runs placed in another worktree**: a command that starts with
+    `cd <absolute path> &&` (or `;`) into a different worktree;
+  - **writes to another worktree**, which no longer demand a rerun
+    in this one.
+- **Still counted everywhere:** a run with no leading `cd`, or a
+  relative one. The transcript doesn't record where a command ran, so
+  the gate can't tell, and stays fail closed. A nested worktree
+  (`.claude/worktrees/<name>`) is told apart from the main checkout
+  that contains it.
+
+## 0.4.52
+
+The Language Test judges a step the same way in every feature file and
+sees a whole glossary (#146).
+
+- **What was missing.** The judge saw only the file being written and
+  the first 8,000 characters of the glossary:
+  - **One step, two verdicts.** `And nothing was asked of the service`
+    passed in a feature file that already used it, then was rejected
+    minutes later in another file as protocol mechanics.
+  - **A glossary verb rejected.** In mysudo-core-sdk the glossary is
+    21,000 characters long. The entry that uses "provision" lies past
+    the cut, so "provisioned" in a scenario title was rejected as
+    back-end vocabulary.
+- **Now:**
+  - **Settled wording.** With `specsDir`, the prompt lists each step the
+    write adds that another specification already uses word for word,
+    with where it is used. The judge doesn't block on those. If such a
+    step leaks mechanics, it says so in the reason and still passes,
+    since the fix belongs across all the specifications at once. Every
+    preset passes its specs directory.
+  - **The glossary limit** is raised from 8,000 to 32,000 characters.
+    A glossary over the limit is cut with a note that a missing term
+    is no reason to block.
+  - **Word forms.** A word the glossary or the specifications already
+    use for a domain action counts as domain language in any grammatical
+    form ("provisioned" and "Provisioning").
+- **Cost.** The prompt grows with the glossary, to about 41,500
+  characters on mysudo-core-sdk. Scanning the specs adds about 50 ms
+  per judged write.
+- **Decision to check.** A settled step is passed even if the judge
+  thinks it leaks, so one leak accepted in the past can spread. The
+  alternative, a judge that can reject wording the specs already use,
+  is the inconsistency this release removes. The judge still names the
+  leak in its reason, so it can be fixed across the specifications.
 
 ## 0.4.51
 

@@ -196,6 +196,18 @@ test('the judge sees the rules, the before and after, and the allow-list', async
   assert.match(prompt, /"reason":"<your analysis>","kind":"pass"\|"violation"/)
 })
 
+test('the judge is told a display condition over the shown rows passes (#159)', async () => {
+  const prompts: string[] = []
+  await enforceThinDrivingAdapter()(
+    write('const after = 1'),
+    judgeCtx('', { kind: 'pass', reason: '' }, prompts),
+  )
+  const prompt = prompts[0] ?? ''
+  assert.match(prompt, /display condition over the data the view already holds/)
+  assert.match(prompt, /a single item, the first or last row/)
+  assert.match(prompt, /a rule the core enforces/)
+})
+
 test('a judge violation is returned as the block reason', async () => {
   const result = await enforceThinDrivingAdapter()(
     write('x'),

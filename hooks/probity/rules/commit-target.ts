@@ -119,3 +119,74 @@ export function nestedCommitTree(command: string, base: string): string | null {
   const [outer, inner] = [canonical(base), canonical(top)]
   return outer !== inner && isWithin(outer, inner) ? inner : null
 }
+
+/** Every working tree of the repository `dir` is in (`git worktree list`), canonical; [] when git can't say. */
+export function worktreeRoots(dir: string): string[] {
+  try {
+    return execFileSync('git', ['worktree', 'list', '--porcelain'], {
+      cwd: dir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    })
+      .split('\n')
+      .filter((line) => line.startsWith('worktree '))
+      .map((line) => canonical(line.slice('worktree '.length)))
+  } catch {
+    return []
+  }
+}
+
+/** The tree among `roots` that holds `path` (the deepest, so a nested worktree wins), or null. */
+export function owningTree(path: string, roots: string[]): string | null {
+  const target = canonical(path)
+  return roots
+    .filter((root) => isWithin(root, target))
+    .reduce<string | null>((deepest, root) => (deepest && deepest.length >= root.length ? deepest : root), null)
+}
+
+/**
+ * The directory a command says it runs in: a leading `cd <absolute dir>`
+ * followed by `&&` or `;`. Null when it doesn't say, or says it relative to a
+ * directory the transcript doesn't record.
+ */
+export function leadingCdDirectory(command: string): string | null {
+  const cd = command.match(/^\s*cd\s+("[^"]+"|'[^']+'|[^\s;&|]+)\s*(?:&&|;)/)
+  const dir = cd?.[1]?.replace(/^(['"])(.*)\1$/, '$2')
+  return dir && isAbsolute(dir) ? dir : null
+}
+
+/** Splits on top-level `;`, `&&`, `||`, `|`, background `&`, and
+ *  newlines, quote-aware, without splitting a redirect's `&` (`2>&1`).
+ *  Shared by the Gradle (Kotlin) and JS test-command checks. */
+export function splitTopLevelCommands(command: string): string[] {
+  const segments: string[] = []
+  let current = ''
+  let quote: '"' | "'" | null = null
+  for (let i = 0; i < command.length; i++) {
+    const ch = command[i]!
+    if (quote) {
+      current += ch
+      if (ch === quote && command[i - 1] !== '\\') quote = null
+      continue
+    }
+    if (ch === '"' || ch === "'") {
+      quote = ch
+      current += ch
+      continue
+    }
+    const isRedirectAmpersand =
+      ch === '&' &&
+      (command[i - 1] === '>' ||
+        command[i - 1] === '<' ||
+        command[i + 1] === '>')
+    if ('\n|;&'.includes(ch) && !isRedirectAmpersand) {
+      if ('|&'.includes(ch) && command[i + 1] === ch) i++
+      segments.push(current)
+      current = ''
+      continue
+    }
+    current += ch
+  }
+  segments.push(current)
+  return segments
+}

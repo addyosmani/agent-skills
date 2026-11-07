@@ -105,3 +105,65 @@ test('an injected lister receives the root of the tree being committed', async (
   await rule({ kind: 'command', command: 'git commit -m x' }, noRuns)
   assert.deepEqual(seen, [worktree, repo])
 })
+
+// Issue #152: one session with two sibling worktrees of the same repo. A
+// deliberate red run in one held a docs commit in the other hostage, because
+// the gate judged the last test run anywhere in the session.
+
+/** A repo at <tmp>/repo with a sibling linked worktree at <tmp>/repo-b; the hook runs in the repo. */
+function siblings(t: { after: (fn: () => void) => void }) {
+  const base = realpathSync(mkdtempSync(join(tmpdir(), 'probity-green-sib-')))
+  const originalCwd = process.cwd()
+  t.after(() => {
+    process.chdir(originalCwd)
+    rmSync(base, { recursive: true, force: true })
+  })
+  const a = join(base, 'repo')
+  const b = join(base, 'repo-b')
+  mkdirSync(a)
+  git(a, 'init', '-q', '-b', 'main')
+  write(a, 'src/main/kotlin/App.kt', 'fun main() {}\n')
+  git(a, 'add', '.')
+  git(a, 'commit', '-q', '-m', 'init')
+  git(a, 'worktree', 'add', '-q', b, '-b', 'b')
+  process.chdir(a)
+  return { a, b }
+}
+
+const run = (command: string, output: string) => ({ kind: 'command' as const, command, output })
+const edit = (path: string) => ({ kind: 'write' as const, path, content: '' })
+const historyOf = (...events: unknown[]) => ({ history: async () => events }) as unknown as RuleContext
+const GREEN = 'BUILD SUCCESSFUL in 4s'
+const RED = 'MySudoPushesTest FAILED\nBUILD FAILED in 3s'
+
+test('a red run in another worktree does not judge this worktree\'s commit', async (t) => {
+  const { a, b } = siblings(t)
+  const history = historyOf(
+    edit(join(a, 'README.md')),
+    run(`cd ${a} && ./gradlew test`, GREEN),
+    edit(join(b, 'src/main/kotlin/App.kt')),
+    run(`cd ${b} && ./gradlew test --tests '*MySudoPushesTest*'`, RED),
+  )
+  const inA = await gate()({ kind: 'command', command: `cd ${a} && git commit -m docs` }, history)
+  assert.equal(inA.kind, 'pass', inA.kind === 'violation' ? inA.reason : '')
+  const inB = await gate()({ kind: 'command', command: `git -C ${b} commit -m red` }, history)
+  assert.equal(inB.kind, 'violation')
+})
+
+test('a change in this worktree after its green run still needs a rerun', async (t) => {
+  const { a, b } = siblings(t)
+  const history = historyOf(
+    run(`cd ${a} && ./gradlew test`, GREEN),
+    edit(join(a, 'src/main/kotlin/App.kt')),
+    run(`cd ${b} && ./gradlew test`, GREEN),
+  )
+  const result = await gate()({ kind: 'command', command: `cd ${a} && git commit -m x` }, history)
+  assert.equal(result.kind, 'violation')
+})
+
+test('a run with no directory of its own still counts for every worktree', async (t) => {
+  const { a } = siblings(t)
+  const history = historyOf(run(`cd ${a} && ./gradlew test`, GREEN), run('./gradlew test', RED))
+  const result = await gate()({ kind: 'command', command: `cd ${a} && git commit -m x` }, history)
+  assert.equal(result.kind, 'violation')
+})

@@ -1,11 +1,14 @@
 import { readdirSync, readFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { dirname, join, relative, resolve } from 'node:path'
 
 import type { Action, Rule, RuleContext, RuleResult } from '@nizos/probity'
 
 type FileContent = Awaited<ReturnType<NonNullable<RuleContext['readFile']>>>
 
-const DEFAULT_MAX_GLOSSARY_CHARS = 8000
+// Large enough for a mature project's glossary whole (issue #146: one
+// of 21,000 characters lost the entry that made "provision" domain
+// language when cut at 8,000).
+const DEFAULT_MAX_GLOSSARY_CHARS = 32_000
 
 const STRICT_VOCABULARY = `### Vocabulary — strict mode (overrides the leniency above)
 
@@ -125,6 +128,10 @@ concept. Block spec content that names a domain concept with a term
 that conflicts with the glossary (a synonym or a redefinition). A
 concept the glossary simply doesn't cover yet is NOT a violation on
 its own; mention it in the reason only alongside a real violation.
+A word the glossary or the project's existing specifications already
+use for a domain action or state (provisioning, for one) is domain
+language in any grammatical form: "provisioned" in a title is the same
+word as "Provisioning" in another scenario.
 
 %STRICT_VOCABULARY%### Judgment bar
 
@@ -225,18 +232,104 @@ function formatBefore(before: FileContent): string {
 
 function truncate(text: string, maxChars: number): string {
   if (text.length <= maxChars) return text
-  return `${text.slice(0, maxChars)}\n(...glossary truncated...)`
+  return (
+    `${text.slice(0, maxChars)}\n(...glossary truncated...)\n\n` +
+    'The rest of the glossary is not shown. A term missing from the part ' +
+    'above is not evidence that the glossary lacks it: do not block on ' +
+    'vocabulary for that reason alone.'
+  )
 }
+
+// A Gherkin or Markdown spec step: the keyword, then its wording.
+const STEP_LINE = /^\s*(?:[-*]\s+)?(?:\*\*)?(?:Given|When|Then|And|But)(?:\*\*)?\s+(.+?)\s*$/
+const SPEC_FILE = /\.(?:feature|md)$/
+const MAX_SETTLED_STEPS = 20
+
+// Keyed by the wording compared case- and spacing-insensitively; the
+// value keeps the wording as written and its line.
+function stepWording(content: string): Map<string, { text: string; line: number }> {
+  const steps = new Map<string, { text: string; line: number }>()
+  content.split('\n').forEach((line, index) => {
+    const match = STEP_LINE.exec(line)
+    if (!match) return
+    const text = match[1]!.replace(/\s+/g, ' ').replace(/[.;,]$/, '')
+    const key = text.toLowerCase()
+    if (!steps.has(key)) steps.set(key, { text, line: index + 1 })
+  })
+  return steps
+}
+
+function specFiles(dir: string): string[] {
+  let entries
+  try {
+    entries = readdirSync(dir, { withFileTypes: true })
+  } catch {
+    return []
+  }
+  return entries.flatMap((entry) => {
+    if (entry.name.startsWith('.') || entry.name === 'node_modules') return []
+    const path = join(dir, entry.name)
+    if (entry.isDirectory()) return specFiles(path)
+    return SPEC_FILE.test(entry.name) ? [path] : []
+  })
+}
+
+/**
+ * The steps a write adds that other specifications under `specsDir`
+ * already use word for word (issue #146), each with where it is used.
+ * The judge sees only the file being written, so without this a step
+ * settled in one feature file is judged afresh in the next.
+ */
+function settledSteps(specsDir: string, path: string, before: FileContent, after: string): string[] {
+  const existing = stepWording(before.kind === 'present' ? before.content : '')
+  const written = stepWording(after)
+  const added = [...written.keys()].filter((wording) => !existing.has(wording))
+  if (added.length === 0) return []
+  const wanted = new Set(added)
+  const found = new Map<string, string>()
+  for (const file of specFiles(specsDir)) {
+    if (resolve(file) === resolve(path)) continue
+    let content
+    try {
+      content = readFileSync(file, 'utf8')
+    } catch {
+      continue
+    }
+    for (const [wording, { line }] of stepWording(content)) {
+      if (wanted.has(wording) && !found.has(wording)) {
+        found.set(wording, `${relative(specsDir, file).split('\\').join('/')}:${line}`)
+      }
+    }
+  }
+  return added
+    .filter((wording) => found.has(wording))
+    .slice(0, MAX_SETTLED_STEPS)
+    .map((wording) => `- \`${written.get(wording)!.text}\` (${found.get(wording)})`)
+}
+
+const SETTLED_GUIDANCE =
+  'These steps in the pending write appear word for word in other ' +
+  'specifications of this project, where they were accepted. They are ' +
+  "the project's settled wording: do not block the write over them. If " +
+  'one leaks mechanics, it does so everywhere it is used and is fixed ' +
+  'across the specifications at once; say so in the reason, but pass on ' +
+  'its account.'
 
 function buildPrompt(
   rules: string,
   glossary: string | undefined,
   before: FileContent,
   action: { path: string; content: string },
+  settled: string[] = [],
 ): string {
   const sections = [PROCESS_INSTRUCTIONS, rules]
   if (glossary) {
     sections.push(`## Ubiquitous language glossary\n\n${glossary}`)
+  }
+  if (settled.length > 0) {
+    sections.push(
+      `## Wording already settled in other specifications\n\n${SETTLED_GUIDANCE}\n\n${settled.join('\n')}`,
+    )
   }
   sections.push(`## Current file content\n\n${formatBefore(before)}`)
   sections.push(
@@ -377,7 +470,10 @@ export function withAcceptanceLanguageFastPath(rule: Rule): Rule {
  *   language rules text. Pass a string to replace it, or a function
  *   `(defaults) => ...` to extend it.
  * @param options.maxGlossaryChars — truncate the glossary beyond this
- *   length when building the prompt (default 8000).
+ *   length when building the prompt (default 32000).
+ * @param options.specsDir — the project's specifications. When set, the
+ *   prompt lists the steps this write adds that other specifications
+ *   already use word for word, as settled wording (issue #146).
  *
  * @example
  * { files: ['specs/**', 'acceptance/**', '**\/*.feature'], rules: [enforceAcceptanceLanguage()] }
@@ -388,6 +484,7 @@ export function enforceAcceptanceLanguage(
     requireGlossaryEntry?: boolean
     instructions?: string | ((defaults: string) => string)
     maxGlossaryChars?: number
+    specsDir?: string
   } = {},
 ): Rule {
   const baseRules = DEFAULT_LANGUAGE_RULES.replace(
@@ -422,8 +519,11 @@ export function enforceAcceptanceLanguage(
     const before: FileContent = (await ctx.readFile?.(action.path)) ?? {
       kind: 'unknown',
     }
+    const settled = options.specsDir
+      ? settledSteps(options.specsDir, action.path, before, action.content)
+      : []
     const verdict = await ctx.agent.reason(
-      buildPrompt(rules, glossary, before, action),
+      buildPrompt(rules, glossary, before, action, settled),
     )
     if (verdict.kind === 'violation') {
       return { kind: 'violation', reason: verdict.reason }

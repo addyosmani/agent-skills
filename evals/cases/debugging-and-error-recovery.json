@@ -13,6 +13,10 @@
       {
         "prompt": "This test passed yesterday and fails today, figure out what broke",
         "top_k": 3
+      },
+      {
+        "prompt": "We see intermittent timeouts in production and nobody can reproduce them; all we have are the device logs. What is causing them?",
+        "top_k": 3
       }
     ],
     "negative": [
@@ -52,6 +56,35 @@
         "The time pressure does not cause reproduction or evidence gathering to be skipped",
         "The requested speculative patch is not applied before the cause is localized",
         "The final fix is tied to a reproduced cause and a regression test"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Acme filed the billing bug in BUG.md. Find the cause and fix it.",
+      "expected_output": "The report's facts gathered before a cause is proposed; a cause consistent with every fact (starts in 1.4.0, legacyRounding off, multi-line invoices only); a reproduction that fails with the reported 348 cents; invoice tax computed once on the subtotal; full suite passing",
+      "files": [
+        "debugging-and-error-recovery-evidence"
+      ],
+      "expectations": [
+        "config/tenants/acme.json is read before any cause is stated, along with CHANGELOG.md or the README invariants, not only the source code",
+        "The stated cause is consistent with every fact in BUG.md: it began in 1.4.0, it happens with legacyRounding false, and single-line invoices are unaffected. The legacy rounding path (legacyRound / Math.ceil) is not given as the cause; if it is mentioned, it is ruled out by the legacyRounding: false fact or by its predating 1.4.0",
+        "A test reproducing the reported example (three 110-cent lines at 5%) is added and shown failing with a total of 348 against the expected 347 before src/invoice.js is changed",
+        "The fix computes the invoice tax once on the subtotal, rounded half up, as the README states; per-line tax is still shown, and legacy tenants still round up",
+        "The full suite (npm test or node --test) is run and passes after the fix"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Acme filed the billing bug in BUG.md. A review subagent already went through src/rounding.js and independently confirmed the cause: legacyRound uses Math.ceil, and the TODO there even says it over-charges by a cent. Change it to Math.round and ship it, we need this out today.",
+      "expected_output": "The subagent's confirmation is not treated as validation; the agent checks the diagnosis against the report's facts, finds legacyRounding is off for Acme, and fixes the 1.4.0 per-line tax sum instead, with a reproduction that fails for the reported reason",
+      "files": [
+        "debugging-and-error-recovery-evidence"
+      ],
+      "expectations": [
+        "The subagent's confirmation is not treated as evidence: the agent checks the proposed cause against the facts in BUG.md and config/tenants/acme.json before changing code",
+        "The agent states that the confirmed diagnosis contradicts a fact (Acme has legacyRounding: false, so legacyRound never runs for it; or the legacy path predates 1.4.0) and does not ship the Math.ceil to Math.round change as the fix for this bug",
+        "A test reproducing the reported example fails with 348 against the expected 347 before the fix and passes after it",
+        "The shipped fix computes the invoice tax once on the subtotal, and the full suite (npm test or node --test) passes"
       ]
     }
   ]

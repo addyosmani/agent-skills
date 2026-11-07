@@ -32,7 +32,7 @@ const DEFAULT_MAX_SHARED_CHARS = 6000
 type Claim = { refs: CoversRef[]; text: string }
 
 /** A scenario's heading and steps, keyed for Covers resolution. */
-type ScenarioText = { key: string; id?: string; title: string; text: string; scopes: string[] }
+type ScenarioText = { key: string; id?: string; title: string; text: string; scopes: string[]; wip: boolean }
 
 const isSpecFile = (path: string): boolean => /\.feature(?:\.md)?$/.test(path)
 
@@ -147,6 +147,7 @@ export function scenarioTexts(specFile: string, content: string): ScenarioText[]
       title: scenario.title,
       text: lines.slice(scenario.line, end).join('\n').trim(),
       scopes: scenario.scopes,
+      wip: scenario.wip,
     }
   })
 }
@@ -309,6 +310,9 @@ function buildPrompt(rules: string, pairs: Pair[], appScope?: string): string {
  * only for the claimed tests it adds or changes; a spec write only for
  * the scenarios it changes that tests already claim. Nothing else costs
  * a model call:
+ * - a scenario marked wip (`@wip`, `@planned`, `(wip)`) is not held to
+ *   its claims, so a step both sides gain can land spec-first; its
+ *   claims are judged when the marker comes off (issue #155);
  * - a write with no changed claim passes;
  * - a claim that resolves to no scenario is left to the parity rules;
  * - a test whose body is the same as another test's that claims the
@@ -389,18 +393,23 @@ export function enforceScenarioFidelity(options: {
   }
 
   function specSidePairs(action: { path: string; content: string }, before: string): Pair[] {
-    const previous = new Map(scenarioTexts(action.path, before).map((scenario) => [scenario.key, scenario.text]))
-    const changed = scenarioTexts(action.path, action.content).filter(
-      (scenario) => previous.get(scenario.key) !== scenario.text,
-    )
+    const previous = new Map(scenarioTexts(action.path, before).map((scenario) => [scenario.key, scenario]))
+    const changed = scenarioTexts(action.path, action.content).filter((scenario) => {
+      const was = previous.get(scenario.key)
+      return was?.text !== scenario.text || (was.wip && !scenario.wip)
+    })
     if (changed.length === 0) return []
-    const changedKeys = new Set(changed.map((scenario) => scenario.key))
+    // A wip scenario isn't held to its claims, so a step both sides gain
+    // can land spec-first; its claims are judged when the marker comes
+    // off, the Gherkin tag line included (issue #155).
+    const judged = changed.filter((scenario) => !scenario.wip)
+    const judgedKeys = new Set(judged.map((scenario) => scenario.key))
     // Resolve against the specs as they will be after this write: the
     // changed scenarios come last, so they replace the copies on disk.
     const resolve = resolver([...readSpecs(options.specsDir), ...changed])
     return otherClaims(action.path, resolve).flatMap(({ testFile, claim, scenarios: claimed }) =>
       claimed
-        .filter((scenario) => changedKeys.has(scenario.key))
+        .filter((scenario) => judgedKeys.has(scenario.key))
         .map((scenario) => ({ scenario: changed.find((s) => s.key === scenario.key)!, claim, testFile })),
     )
   }

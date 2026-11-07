@@ -79,6 +79,9 @@ for (const reason of [
   'The helper only moves existing logic. So, allowed.',
   'Reconsidering: the write only moves covered logic, so it is not a violation.',
   'On reflection the extra branch is required by the assertion; this is not over-implementation.',
+  // A Sonnet judge's endings (#169).
+  'The file on disk has the earlier tests; this write adds one, so this is a valid single red test add.',
+  'Correction: this write adds exactly one new test, which is allowed as the red step.',
 ]) {
   test(`a deny concluding it passes is retried: ${reason.slice(-40)}`, async () => {
     const { rule, calls } = sequence({ kind: 'violation', reason }, { kind: 'pass' })
@@ -95,6 +98,11 @@ for (const reason of [
   'The green adds an unasserted branch even though the tests pass.',
   'The tests pass. The NotSent branch is still over-implementation.',
   'This does not pass.',
+  'Adding one test would be allowed as the red step, but this write adds two, so it is not allowed as the red step.',
+  'Correction: the write adds two new tests, which is a violation.',
+  'Correction: it adds production logic, which is allowed only after an observed failing test.',
+  'Neither is a valid red step.',
+  'Only a deletion is a valid refactor step.',
 ]) {
   test(`a consistent deny is not retried: ${reason.slice(0, 40)}`, async () => {
     const { rule, calls } = sequence({ kind: 'violation', reason })

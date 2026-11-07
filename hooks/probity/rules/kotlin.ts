@@ -12,7 +12,7 @@ import {
   type GreenRunOptions,
   type NamedPattern,
 } from './gates.js'
-import { isGitCommit, nestedCommitTree } from './commit-target.js'
+import { isGitCommit, nestedCommitTree, splitTopLevelCommands } from './commit-target.js'
 import type { ApiDumpFormat, ExportLanguage } from './ports-and-adapters.js'
 
 /**
@@ -793,42 +793,6 @@ function isMalformedKiroEnvelope(output: string): boolean {
     trimmed.includes('"exit_status"') &&
     parseKiroExitStatus(output) === null
   )
-}
-
-/** Splits on top-level `;`, `&&`, `||`, `|`, background `&`, and
- *  newlines, quote-aware, without splitting a redirect's `&` (`2>&1`).
- *  Used only to find the LAST simple command for the Kiro check. */
-function splitTopLevelCommands(command: string): string[] {
-  const segments: string[] = []
-  let current = ''
-  let quote: '"' | "'" | null = null
-  for (let i = 0; i < command.length; i++) {
-    const ch = command[i]!
-    if (quote) {
-      current += ch
-      if (ch === quote && command[i - 1] !== '\\') quote = null
-      continue
-    }
-    if (ch === '"' || ch === "'") {
-      quote = ch
-      current += ch
-      continue
-    }
-    const isRedirectAmpersand =
-      ch === '&' &&
-      (command[i - 1] === '>' ||
-        command[i - 1] === '<' ||
-        command[i + 1] === '>')
-    if ('\n|;&'.includes(ch) && !isRedirectAmpersand) {
-      if ('|&'.includes(ch) && command[i + 1] === ch) i++
-      segments.push(current)
-      current = ''
-      continue
-    }
-    current += ch
-  }
-  segments.push(current)
-  return segments
 }
 
 /** True when the LAST top-level simple command is itself a genuine

@@ -118,6 +118,8 @@ Bug report arrives
   Run full test suite (no regressions)
 ```
 
+The test must fail **for the reported reason**: the same error, value or signal the bug report shows, not just any failure. A test that fails some other way reproduces a different bug (see `debugging-and-error-recovery`, Step 1).
+
 **Example:**
 
 ```typescript

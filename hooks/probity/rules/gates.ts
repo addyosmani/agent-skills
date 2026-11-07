@@ -4,7 +4,17 @@ import { join } from 'node:path'
 
 import type { Action, Rule, RuleContext, RuleResult } from '@nizos/probity'
 
-import { isGitCommit, gitToplevel, nestedCommitTree } from './commit-target.js'
+import {
+  canonical,
+  commitDirectory,
+  gitToplevel,
+  isGitCommit,
+  leadingCdDirectory,
+  nestedCommitTree,
+  owningTree,
+  splitTopLevelCommands,
+  worktreeRoots,
+} from './commit-target.js'
 import { withJudgeTask } from './judge-task.js'
 
 /**
@@ -325,14 +335,28 @@ export function requireGreenTestRun(options: {
     } catch (error) {
       return transcriptLimitViolation(error)
     }
+    // With several worktrees of one repo in a session, a write or a run
+    // that is placed in a different worktree says nothing about this
+    // commit (issue #152). A run places itself only by a leading absolute
+    // `cd`; anything not placed still counts, so the gate fails closed.
+    const commitTree = canonical(
+      gitToplevel(commitDirectory(action.command)) ?? gitToplevel(process.cwd()) ?? process.cwd(),
+    )
+    const roots = worktreeRoots(commitTree)
+    const elsewhere = (path: string | null): boolean => {
+      if (path === null || roots.length < 2) return false
+      const owner = owningTree(path, roots)
+      return owner !== null && owner !== commitTree
+    }
     const lastWrite = history.reduce(
-      (last, event, index) => (event.kind === 'write' ? index : last),
+      (last, event, index) => (event.kind === 'write' && !elsewhere(event.path) ? index : last),
       -1,
     )
     const runs = history.filter(
       (event, index) =>
         index > lastWrite &&
         event.kind === 'command' &&
+        !elsewhere(leadingCdDirectory(event.command)) &&
         options.command.test(event.command) &&
         (!options.commandPredicate || options.commandPredicate(event.command)),
     )
@@ -347,14 +371,28 @@ export function requireGreenTestRun(options: {
     }
     const lastRun = runs[runs.length - 1]!
     if (!isGreenRun(lastRun, options)) {
+      // Name the run, so a surprising deny shows which one was judged (issue #138).
+      const judged = ` Judged run: \`${shortened(lastRun.kind === 'command' ? lastRun.command : '')}\``
+      if (!isRedRun(lastRun, options)) {
+        // Issue #162: a passing run piped through grep/head/tail loses the
+        // summary line, and "not green" sent the agent hunting for failures.
+        return {
+          kind: 'violation',
+          reason:
+            'The last recorded test run after your changes shows no failure, but ' +
+            "its output has no runner summary line matching " +
+            `\`${options.successPattern.source}\`, so it can't count as green. ` +
+            'Output filtered or cut short (`| grep`, `| head`, `| tail`) drops ' +
+            'that line: rerun the suite with its summary in the output, then ' +
+            `commit.${extra}${judged}`,
+        }
+      }
       return {
         kind: 'violation',
         reason:
           'The last recorded test run after your changes was not ' +
           'green — a recorded invocation is not a passing suite. Fix ' +
-          `the failures (or the build) and rerun before committing.${extra}` +
-          // Name the run, so a surprising deny shows which one was judged (issue #138).
-          ` Judged run: \`${shortened(lastRun.kind === 'command' ? lastRun.command : '')}\``,
+          `the failures (or the build) and rerun before committing.${extra}${judged}`,
       }
     }
     return { kind: 'pass' }
@@ -370,6 +408,36 @@ function shortened(command: string): string {
 
 // Probity doesn't export its canonical event type; derive it from the context.
 type SessionEvent = Awaited<ReturnType<NonNullable<RuleContext['history']>>>[number]
+
+const PACKAGE_MANAGERS = new Set(['npm', 'pnpm', 'yarn', 'bun'])
+const PACKAGE_RUNNERS = new Set(['npx', 'bunx'])
+const JS_RUNNER = /^(?:[\w./-]*\/)?(?:vitest|jest)$/
+
+/**
+ * Whether a shell command runs a JS/TS test suite: one of its top-level
+ * commands (split on `;`, `&&`, `||`, `|` and newlines, quote-aware)
+ * starts with `npm test`/`npm t`/`npm run test[:…]` (or pnpm, yarn, bun)
+ * or the vitest or jest binary, directly or through npx. A command that
+ * only mentions a runner (`echo vitest`, an issue body, `npm install -D
+ * vitest`) is not a run (issue #150). For `requireGreenTestRun`'s
+ * `commandPredicate`; the JS preset uses it with its default command.
+ */
+export function isJsTestInvocation(command: string): boolean {
+  return splitTopLevelCommands(command).some((segment) => {
+    const words = segment.trim().split(/\s+/).filter(Boolean)
+    if (words[0] === 'env') words.shift()
+    while (words.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(words[0]!)) words.shift()
+    const [first = '', second = '', third = ''] = words
+    if (PACKAGE_MANAGERS.has(first)) {
+      if (second === 'test' || second === 't') return true
+      if (second === 'run') return /^test(?::[\w:-]+)?$/.test(third)
+      if (first === 'pnpm' && (second === 'exec' || second === 'dlx')) return JS_RUNNER.test(third)
+      return first === 'yarn' && JS_RUNNER.test(second)
+    }
+    if (PACKAGE_RUNNERS.has(first)) return JS_RUNNER.test(second)
+    return JS_RUNNER.test(first)
+  })
+}
 
 /** How a test or build run is recognized and judged green, shared by the gates below. */
 export type GreenRunOptions = {
@@ -389,15 +457,22 @@ function isMatchingRun(event: SessionEvent, options: GreenRunOptions): boolean {
   )
 }
 
+/** A matching run is red when its output shows a failure signal. */
+function isRedRun(event: SessionEvent, options: GreenRunOptions): boolean {
+  const output = 'output' in event ? (event.output ?? '') : ''
+  const command = event.kind === 'command' ? event.command : ''
+  return (
+    options.failurePattern.test(output) ||
+    (options.extraFailurePredicate?.(command, output) ?? false)
+  )
+}
+
 /** A matching run is green when no failure signal shows and a success signal does. */
 function isGreenRun(event: SessionEvent, options: GreenRunOptions): boolean {
   const output = 'output' in event ? (event.output ?? '') : ''
   const command = event.kind === 'command' ? event.command : ''
-  const isRed =
-    options.failurePattern.test(output) ||
-    (options.extraFailurePredicate?.(command, output) ?? false)
   return (
-    !isRed &&
+    !isRedRun(event, options) &&
     (options.successPattern.test(output) ||
       (options.extraSuccessPredicate?.(command, output) ?? false))
   )
@@ -733,9 +808,13 @@ export function surfaceRemovedStringUsage(options: {
 // "... This is permitted." (#45), a bare verdict word such as "Pass."
 // or "Verdict: pass." (#50), or "... is not over-implementation."
 // Negated forms ("is not permitted", "does not pass"), qualified ones
-// ("permitted, but ...") and "the tests pass" do not match.
+// ("permitted, but ...") and "the tests pass" do not match. A Sonnet
+// judge's endings (#169): "... this is a valid single red test add." and
+// "Correction: ..., which is allowed as the red step."
 const PERMITTED_CONCLUSION = new RegExp(
   [
+    String.raw`\b(?:this|it|the write|the change) is a valid (?:[\w-]+ ){0,4}(?:add|addition|step|write|change)\.?\s*$`,
+    String.raw`^correction:.*\bwhich is (?:allowed|permitted)\b(?!\s+(?:only|after|if|when|once|unless)\b)[^,;]*\.?\s*$`,
     String.raw`\b(?:is|are) (?:permitted|allowed|acceptable|valid)\.?\s*$`,
     String.raw`\bshould (?:pass|be allowed)\.?\s*$`,
     String.raw`\bno violation\.?\s*$`,

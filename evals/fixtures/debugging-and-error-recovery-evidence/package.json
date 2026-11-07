@@ -1,0 +1,9 @@
+{
+  "name": "invoicing",
+  "version": "1.4.0",
+  "description": "Builds tenant invoices in integer cents.",
+  "private": true,
+  "scripts": {
+    "test": "node --test"
+  }
+}

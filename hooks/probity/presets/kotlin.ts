@@ -55,6 +55,7 @@ import type { Globs } from '../rules/scoping.js'
 import { withExcludeGlobs } from '../rules/scoping.js'
 import { withShellWriteScreen } from '../rules/shell-writes.js'
 import { withJudgeTasks } from '../rules/judge-task.js'
+import { type CompactJudgeFilesOptions, compactingPreset } from '../rules/compact-judge-files.js'
 import { drivingAdapterBlock } from './driving-adapter.js'
 import { testIsolationBlock } from './test-isolation.js'
 import { fixedWaitBlock } from './fixed-waits.js'
@@ -159,6 +160,11 @@ export type KotlinPresetOptions = {
    *  files-scoped block covers, so the edit goes through the write
    *  tool and the content rules judge it (issue #79). Default: on. */
   shellWriteScreen?: boolean
+  /** Send the judge a unified diff, with context, in place of a large
+   *  file an edit changes, so the file isn't sent twice per verdict
+   *  (issue #168). Rules still see the whole file. Default on:
+   *  `{ minBytes: 8000, contextLines: 20 }`; `false` sends whole files. */
+  compactJudgeFiles?: false | CompactJudgeFilesOptions
 }
 
 /**
@@ -357,7 +363,7 @@ export function kotlinRuleEntries(root: string, options: KotlinPresetOptions = {
       files: acceptanceLanguageGlobs,
       rules: [
         withAcceptanceLanguageFastPath(
-          enforceAcceptanceLanguage({ glossaryPath: glossary }),
+          enforceAcceptanceLanguage({ glossaryPath: glossary, specsDir: join(root, 'docs/specs') }),
         ),
       ],
     },
@@ -387,8 +393,8 @@ export function kotlinRuleEntries(root: string, options: KotlinPresetOptions = {
     requireGreenTestRun({ command: options.commitCommand ?? GRADLE_TEST_COMMAND }),
   ]
 
-  return withJudgeTasks(withShellWriteScreen(withExcludeGlobs(entries, excludeGlobs), {
+  return withJudgeTasks(compactingPreset(withShellWriteScreen(withExcludeGlobs(entries, excludeGlobs), {
     root,
     enabled: options.shellWriteScreen,
-  }))
+  }), options))
 }

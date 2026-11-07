@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { closeSync, mkdtempSync, openSync, rmSync, writeFileSync, writeSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import test from 'node:test'
@@ -85,4 +85,66 @@ test('unlabelled verdicts are flagged with how to label them', (t) => {
 test('a log where every verdict has a task carries no such warning', (t) => {
   const res = report(t, line('pass', 'pass', {}, 'enforceTdd') + '\n')
   assert.doesNotMatch(res.stdout, /no judging task/)
+})
+
+// Issue #164: a week of full prompts made a 620 MB log, past V8's
+// longest string, and the report read it whole. Read under a small heap,
+// a log far larger than the heap must still report.
+test('a log larger than the heap is read line by line, prompts dropped', (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'shadow-report-big-'))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const log = join(dir, 'shadow.jsonl')
+  const prompt = 'x'.repeat(100_000)
+  const fd = openSync(log, 'w')
+  for (let i = 0; i < 1500; i++) {
+    const entry = JSON.parse(line('pass', i % 2 ? 'pass' : 'violation'))
+    writeSync(fd, JSON.stringify({ ...entry, prompt }) + '\n')
+  }
+  closeSync(fd)
+  const res = spawnSync(TSX, [SCRIPT, log], {
+    encoding: 'utf8',
+    env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=64' },
+  })
+  assert.equal(res.status, 0, res.stderr.slice(-500))
+  assert.match(res.stdout, /1500 verdicts/)
+  assert.match(res.stdout, /agreed 750 of 1500/)
+})
+
+test('the report compares agreement on compacted prompts with the rest (#168)', (t) => {
+  const compaction = (entry) => JSON.stringify({ ...JSON.parse(entry), compaction: { fullChars: 40000, sentChars: 8000 } })
+  const res = report(t, [compaction(line('pass', 'pass')), compaction(line('violation', 'pass')), line('pass', 'pass')].join('\n') + '\n')
+  assert.equal(res.status, 0, res.stderr)
+  assert.match(res.stdout, /2 of 3 verdicts had a compacted prompt \(a diff in place of the file\), median 40\.0K chars sent as 8\.0K chars/)
+  assert.match(res.stdout, /on compacted prompts: agreed 1 of 2/)
+  assert.match(res.stdout, /on whole prompts: agreed 1 of 1/)
+})
+
+// Issue #174: the replay command shares the report's output.
+const REPLAY = join(HERE, 'shadow-replay.ts')
+
+test('the replay command needs a record log and a known judge', (t) => {
+  const none = spawnSync(TSX, [REPLAY], { encoding: 'utf8' })
+  assert.equal(none.status, 1)
+  assert.match(none.stderr, /usage: probity-shadow-replay/)
+  const bad = spawnSync(TSX, [REPLAY, join(tmpdir(), 'x.jsonl'), '--judge', 'gpt'], { encoding: 'utf8' })
+  assert.equal(bad.status, 1)
+  assert.match(bad.stderr, /--judge takes claude or kiro/)
+})
+
+test('the replay command refuses option mistakes that would lift the spend cap', (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'shadow-replay-test-'))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const log = join(dir, 'whole.jsonl')
+  writeFileSync(log, '')
+  for (const [args, message] of [
+    [['--limit'], /--limit needs a value/],
+    [['--limit=1'], /unknown option --limit=1/],
+    [['--limt', '1'], /unknown option --limt/],
+    [['--judge'], /--judge needs a value/],
+    [['--judge', '--limit', '1'], /--judge needs a value/],
+  ]) {
+    const res = spawnSync(TSX, [REPLAY, log, ...args], { encoding: 'utf8' })
+    assert.equal(res.status, 1, args.join(' '))
+    assert.match(res.stderr, message)
+  }
 })

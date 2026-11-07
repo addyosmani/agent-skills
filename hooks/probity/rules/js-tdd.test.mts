@@ -4,7 +4,7 @@ import test from 'node:test'
 import type { Rule, RuleContext } from '@nizos/probity'
 
 import { jsRuleEntries } from '../presets/js.ts'
-import { enforceJsTdd } from './js-tdd.ts'
+import { enforceJsTdd, JS_TDD_ADDENDUM } from './js-tdd.ts'
 
 const testWrite = {
   kind: 'write' as const,
@@ -69,4 +69,14 @@ test('JS TDD addendum extends the default rules rather than replacing them', asy
     prompt.indexOf('#### Enforcing the refactor phase') < prompt.indexOf('## Adding a red test'),
     'addendum comes after the defaults',
   )
+})
+
+// Issue #166: vitest doesn't type-check, so a green step can leave
+// `tsc --noEmit` failing; the judge refused every type-only fix as "not
+// driven by a failing test" and left no path.
+test('the JS TDD addendum allows a type-only fix for a type-check failure', () => {
+  assert.match(JS_TDD_ADDENDUM, /type-check failure/)
+  assert.match(JS_TDD_ADDENDUM, /changes only types/)
+  assert.match(JS_TDD_ADDENDUM, /at least as strong/)
+  assert.match(JS_TDD_ADDENDUM, /runtime behavior/)
 })

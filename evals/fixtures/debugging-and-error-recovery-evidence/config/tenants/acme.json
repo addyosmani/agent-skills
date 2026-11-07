@@ -1,0 +1,5 @@
+{
+  "tenant": "acme",
+  "taxRate": 0.05,
+  "legacyRounding": false
+}

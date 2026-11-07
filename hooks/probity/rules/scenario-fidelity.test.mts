@@ -293,6 +293,57 @@ test('a Gherkin scenario body is read up to the next scenario', async () => {
   assert.doesNotMatch(j.prompts[0]!, /Given a catalogue/)
 })
 
+// ── Issue #155: a precondition both sides gain ─────────────────────
+// A new precondition on a claimed scenario deadlocked: the test write was
+// refused (the scenario doesn't state it) and the spec write was refused
+// (the test doesn't establish it). A wip scenario is not held to its
+// claims, and the claims are judged again when the marker comes off.
+
+const GAINED = 'Given a shopper with a basket\nAnd the shopper has a saved address'
+
+test('a claimed scenario marked wip may change without judging its claims', async () => {
+  const w = world({ 'app/src/test/kotlin/shop/acceptance/CheckoutSpec.kt': specClass(PLACING) })
+  const j = judge('violation')
+  const after = SPEC.replace('## Scenario: Placing an order', '## Scenario (wip): Placing an order').replace(
+    'Given a shopper with a basket',
+    GAINED,
+  )
+  const result = await rule(w)(write(join(w.specsDir, 'checkout.feature.md'), after), j.ctx(SPEC))
+  assert.equal(result.kind, 'pass', result.kind === 'violation' ? result.reason : '')
+  assert.equal(j.prompts.length, 0)
+})
+
+test('a test write is still judged against a wip scenario', async () => {
+  const wipSpec = SPEC.replace('## Scenario: Placing an order', '## Scenario (wip): Placing an order').replace(
+    'Given a shopper with a basket',
+    GAINED,
+  )
+  const w = world({ 'docs/specs/checkout.feature.md': wipSpec })
+  const j = judge('pass')
+  const test = PLACING.replace('shopper.hasABasket()', 'shopper.hasABasket()\n        shopper.hasASavedAddress()')
+  await rule(w)(write(join(w.testDir, 'CheckoutSpec.kt'), specClass(test)), j.ctx(specClass(PLACING)))
+  assert.equal(j.prompts.length, 1)
+  assert.match(j.prompts[0]!, /And the shopper has a saved address/)
+})
+
+test('removing a Gherkin @wip tag judges the claims on that scenario', async () => {
+  const steps =
+    '  Scenario: Placing an order\n    Given a shopper with a basket\n    When the shopper places the order\n    Then the shopper receives an order confirmation\n'
+  const before = `Feature: Checkout\n\n  @wip\n${steps}`
+  const after = `Feature: Checkout\n\n${steps}`
+  const test = PLACING.replace('checkout.feature.md', 'checkout.feature')
+  const w = world({
+    'docs/specs/checkout.feature': before,
+    'docs/specs/checkout.feature.md': '# empty\n',
+    'app/src/test/kotlin/shop/acceptance/CheckoutSpec.kt': specClass(test),
+  })
+  const j = judge('violation', 'The test does not establish the saved address.')
+  const result = await rule(w)(write(join(w.specsDir, 'checkout.feature'), after), j.ctx(before))
+  assert.equal(result.kind, 'violation')
+  assert.equal(j.prompts.length, 1)
+  assert.match(j.prompts[0]!, /receivesAnOrderConfirmation/)
+})
+
 // ── Issue #129: the tier check, when an app scope is named ─────────
 
 test('with appScope, the prompt carries the tier rules and each scenario\'s tier', async () => {
