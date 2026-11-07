@@ -113,10 +113,11 @@ To cut a release:
    `.codex-plugin/plugin.json`, `.claude-plugin/plugin.json`,
    `.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json`).
    Pick the next patch above both the base branch's version and the newest
-   plugin tag, upstream's included (`git fetch upstream --tags` first), so
-   the fork never reuses a number upstream has published. CI fails a
-   probity-rules version change that leaves the plugin version alone, and
-   a plugin version that an existing tag already uses.
+   plugin tag, upstream's included (`git ls-remote --tags upstream` lists
+   them), so the fork never reuses a number upstream has published. CI
+   fails a probity-rules version change that leaves the plugin version
+   alone, and a plugin version that a fork or upstream tag already uses
+   (it reads upstream's tags from addyosmani/agent-skills directly).
 4. Merge to `main`. The workflow runs typecheck, build, tests, the Kiro
    shim tests, the 48-step eval, and a pack dry run; if the version is not
    yet on the registry it publishes. If the version is already published,

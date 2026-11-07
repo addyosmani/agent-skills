@@ -57,4 +57,13 @@ function releasePairingErrors({ base, head, tags }) {
   return errors;
 }
 
-module.exports = { compareVersions, releasePairingErrors };
+// Tag names from `git ls-remote --tags` output, peeled (^{}) lines dropped.
+function tagsFromLsRemote(output) {
+  return output
+    .split("\n")
+    .map((line) => line.split("\t")[1] ?? "")
+    .filter((ref) => ref.startsWith("refs/tags/") && !ref.endsWith("^{}"))
+    .map((ref) => ref.slice("refs/tags/".length));
+}
+
+module.exports = { compareVersions, releasePairingErrors, tagsFromLsRemote };

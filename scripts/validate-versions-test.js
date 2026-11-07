@@ -80,3 +80,24 @@ test("ignores non-version tags", () => {
     [],
   );
 });
+
+// Upstream's plugin tags are read straight from its remote, since a CI
+// checkout (or a stale clone) has only the fork's tags.
+const { tagsFromLsRemote } = require("./lib/release-pairing.js");
+
+test("reads tag names from git ls-remote --tags output", () => {
+  const output = [
+    "3d48c77a6ccace108ea643dd9b6449206f75fb31\trefs/tags/0.6.14",
+    "eb07f19f52c2669f2364897aaa293e2aaddd7b1c\trefs/tags/0.6.14^{}",
+    "a350e34334688f28b692ba93ed0538e157ce51d4\trefs/tags/0.6.15",
+    "",
+  ].join("\n");
+  assert.deepEqual(tagsFromLsRemote(output), ["0.6.14", "0.6.15"]);
+});
+
+test("an upstream-only tag blocks reusing its number", () => {
+  const upstream = tagsFromLsRemote("abc\trefs/tags/0.6.14\nabd\trefs/tags/0.6.15\n");
+  const errors = releasePairingErrors({ base, head: { probity: "0.4.64", plugin: "0.6.14" }, tags: [...tags, ...upstream] });
+  assert.match(errors.join("\n"), /0\.6\.14 is already used by tag/);
+  assert.match(errors.join("\n"), /above 0\.6\.15/);
+});
