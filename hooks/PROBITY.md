@@ -103,7 +103,7 @@ If your project *can* get credentials into a session, a device test that runs ag
 
 ## Review record (`requireReviewRecord`)
 
-`requireGreenTestRun` proves the tests ran. Nothing proved a review ran ([#178](https://github.com/JJChill/agent-skills/issues/178)). Unreleased: a merge into a protected branch can be required to carry the review record from code-review-and-quality (Step 6): `Reviewed-by-agent:` trailers in the last paragraph of the merge message. The record lists every reviewer considered, with `(ran, N findings[, M fixed])` or `(skipped: <reason>)`.
+`requireGreenTestRun` proves the tests ran. Nothing proved a review ran ([#178](https://github.com/JJChill/agent-skills/issues/178)). From 0.4.63, a merge into a protected branch can be required to carry the review record from code-review-and-quality (Step 6): `Reviewed-by-agent:` trailers in the last paragraph of the merge message. The record lists every reviewer considered, with `(ran, N findings[, M fixed])` or `(skipped: <reason>)`.
 
 Settings live in a named `review` export next to the default one, because Probity's `Config` only takes `rules` and `ai`:
 

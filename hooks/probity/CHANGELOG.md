@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.63
 
 A merge can now show whether it was reviewed ([#178](https://github.com/JJChill/agent-skills/issues/178)).
 
