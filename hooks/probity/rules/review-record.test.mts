@@ -2,13 +2,14 @@
 // record of which review agents ran, so "reviewed and clean" and "never
 // reviewed" no longer look the same in history.
 import assert from 'node:assert/strict'
-import { mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
 
 import {
   mergeMessage,
+  patchFiles,
   parseReviewRecord,
   requireReviewRecord,
   type ReviewRecordGit,
@@ -390,4 +391,161 @@ test('should deny (config error) when requireObligations has no obligationsFrom'
   const rule = requireReviewRecord({ record: { requireObligations: true } }, { git: fakeGit(), routeMerge: () => INCURRED })
   const result = await rule(action(`git merge --no-ff b -m ${VALID}`))
   assert.match(result.reason ?? '', /obligationsFrom/)
+})
+
+// --- glab mr merge (#193) ----------------------------------------------------
+// GitLab projects merge with `glab mr merge`; its -m/--message is the merge
+// commit message, so that is where the record goes.
+
+function fakeGlab(overrides: Partial<ReviewRecordGit> = {}): ReviewRecordGit {
+  return fakeGit({
+    mrBase: () => 'main',
+    mrFiles: () => ['src/app.kt'],
+    mrMergeMethod: () => 'rebase_merge',
+    ...overrides,
+  })
+}
+
+test('should gate glab mr merge into main on its --message text', async () => {
+  const git = fakeGlab()
+  assert.equal((await judge('glab mr merge 42 -y --message "Merge"', git)).kind, 'violation')
+  assert.equal((await judge(`glab mr merge 42 -y --message ${VALID}`, git)).kind, 'pass')
+  assert.equal((await judge(`glab mr merge 42 -m ${VALID}`, git)).kind, 'pass')
+  assert.equal((await judge(`glab mr merge 42 --message=${VALID}`, git)).kind, 'pass')
+})
+
+test('should gate the glab mr accept alias and --auto-merge merges', async () => {
+  const git = fakeGlab()
+  assert.equal((await judge('glab mr accept 42 -y', git)).kind, 'violation')
+  assert.equal((await judge('glab mr merge 42 --auto-merge -y -m "Merge"', git)).kind, 'violation')
+  assert.equal((await judge(`glab mr merge 42 --auto-merge=false -y -m ${VALID}`, git)).kind, 'pass')
+})
+
+test('should deny glab mr merge with no message, naming -m', async () => {
+  const result = await judge('glab mr merge 42 -y', fakeGlab())
+  assert.equal(result.kind, 'violation')
+  assert.match(result.reason ?? '', /no -m\/--message given/)
+})
+
+test('should pass glab mr merge into a branch that is not protected', async () => {
+  assert.equal((await judge('glab mr merge 42 -y', fakeGlab({ mrBase: () => 'release' }))).kind, 'pass')
+})
+
+test('should pass glab mr merge that touches no enforced path', async () => {
+  assert.equal((await judge('glab mr merge 42 -y', fakeGlab({ mrFiles: () => ['README.md'] }))).kind, 'pass')
+})
+
+test('should enforce glab mr merge when the target branch cannot be read (fail safe)', async () => {
+  const git = fakeGlab({
+    mrBase: () => {
+      throw new Error('glab: not logged in')
+    },
+  })
+  assert.equal((await judge('glab mr merge 42 -y', git)).kind, 'violation')
+})
+
+test('should deny glab mr merge when the project merges fast-forward, naming the merge method fix', async () => {
+  const result = await judge(`glab mr merge 42 -y -m ${VALID}`, fakeGlab({ mrMergeMethod: () => 'ff' }))
+  assert.equal(result.kind, 'violation')
+  assert.match(result.reason ?? '', /fast-forward/)
+  assert.match(result.reason ?? '', /semi-linear/)
+})
+
+test('should not deny on the merge method alone when it cannot be read', async () => {
+  const git = fakeGlab({
+    mrMergeMethod: () => {
+      throw new Error('403')
+    },
+  })
+  assert.equal((await judge(`glab mr merge 42 -y -m ${VALID}`, git)).kind, 'pass')
+})
+
+test('should look up the MR named on the command line, in the -R repo', async () => {
+  const seen: [string | undefined, string | undefined][] = []
+  const git = fakeGlab({
+    mrBase: (mr, repo) => {
+      seen.push([mr, repo])
+      return 'main'
+    },
+  })
+  await judge(`glab mr merge -R group/sub/proj --sha abc123 -m ${VALID} 42`, git)
+  await judge(`glab mr merge --repo=group/proj -m ${VALID}`, git)
+  assert.deepEqual(seen, [
+    ['42', 'group/sub/proj'],
+    [undefined, 'group/proj'],
+  ])
+})
+
+test('should deny a glab merge whose record omits an agent the router selected', async () => {
+  const rule = requireReviewRecord(
+    { record: { requireRoutedAgents: true } },
+    {
+      git: fakeGlab(),
+      routeMr: () => ({ agents: [{ agent: 'security-auditor', why: ['auth/crypto in diff'] }] }),
+    },
+  )
+  const result = await rule(action(`glab mr merge 42 -y -m ${VALID}`))
+  assert.equal(result.kind, 'violation')
+  assert.match(result.reason ?? '', /security-auditor/)
+})
+
+test('should not gate glab commands that are not a merge', async () => {
+  assert.equal((await judge('glab mr view 42 -F json', fakeGlab())).kind, 'pass')
+  assert.equal((await judge('glab mr create --title merge', fakeGlab())).kind, 'pass')
+})
+
+test('should read changed files from a raw MR patch, deletions and renames included', () => {
+  const patch = [
+    'diff --git a/src/old.kt b/src/new.kt',
+    'similarity index 90%',
+    'rename from src/old.kt',
+    'rename to src/new.kt',
+    'diff --git a/src/gone.kt b/src/gone.kt',
+    'deleted file mode 100644',
+    '--- a/src/gone.kt',
+    '+++ /dev/null',
+    '@@ -1 +0,0 @@',
+    '-x',
+    'diff --git a/README.md b/README.md',
+    '--- a/README.md',
+    '+++ b/README.md',
+    '@@ -1 +1 @@',
+    '+y',
+    '',
+  ].join('\n')
+  assert.deepEqual(patchFiles(patch), ['src/new.kt', 'src/gone.kt', 'README.md'])
+})
+
+test('should call glab with the documented argv in the default adapter', { skip: process.platform === 'win32' }, async () => {
+  const bin = mkdtempSync(join(tmpdir(), 'fake-glab-'))
+  const log = join(bin, 'calls')
+  writeFileSync(
+    join(bin, 'glab'),
+    [
+      '#!/bin/sh',
+      `echo "$*" >> '${log}'`,
+      'case "$1 $2" in',
+      '  "mr view") echo \'{"target_branch":"main","target_project_id":7}\' ;;',
+      '  "mr diff") printf "diff --git a/src/a.kt b/src/a.kt\\n--- a/src/a.kt\\n+++ b/src/a.kt\\n@@ -1 +1 @@\\n+x\\n" ;;',
+      '  "api projects/7") echo \'{"merge_method":"ff"}\' ;;',
+      'esac',
+    ].join('\n'),
+    { mode: 0o755 },
+  )
+  const path = process.env.PATH
+  process.env.PATH = `${bin}:${path}`
+  try {
+    const { defaultGlab } = await import('./review-record.ts')
+    assert.equal(defaultGlab.mrBase('42', 'group/proj', bin), 'main')
+    assert.deepEqual(defaultGlab.mrFiles('42', 'group/proj', bin), ['src/a.kt'])
+    assert.equal(defaultGlab.mrMergeMethod(undefined, undefined, bin), 'ff')
+  } finally {
+    process.env.PATH = path
+  }
+  assert.deepEqual(readFileSync(log, 'utf8').trim().split('\n'), [
+    'mr view 42 -R group/proj -F json',
+    'mr diff 42 -R group/proj --raw',
+    'mr view -F json',
+    'api projects/7',
+  ])
 })

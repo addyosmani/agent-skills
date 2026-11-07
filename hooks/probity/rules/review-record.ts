@@ -165,6 +165,12 @@ export type ReviewRecordGit = {
   wouldFastForward(dir: string, branches: string[]): boolean
   prFiles(pr: string | undefined, dir: string): string[]
   prBase(pr: string | undefined, dir: string): string
+  /** glab (#193): the MR's target branch, files, and the target project's
+   *  merge method ('merge' | 'rebase_merge' | 'ff'). Optional so existing
+   *  custom adapters still type-check; missing ones use the glab defaults. */
+  mrBase?(mr: string | undefined, repo: string | undefined, dir: string): string
+  mrFiles?(mr: string | undefined, repo: string | undefined, dir: string): string[]
+  mrMergeMethod?(mr: string | undefined, repo: string | undefined, dir: string): string
 }
 
 function run(command: string, args: string[], cwd: string): string {
@@ -195,8 +201,66 @@ export const defaultReviewRecordGit: ReviewRecordGit = {
   prBase: (pr, dir) => run('gh', ['pr', 'view', ...(pr ? [pr] : []), '--json', 'baseRefName', '-q', '.baseRefName'], dir),
 }
 
+/** `glab mr <sub> [<mr>] [-R <repo>] <extra>` as an argv. */
+const glabArgs = (sub: string, mr: string | undefined, repo: string | undefined, extra: string[]) => [
+  'mr',
+  sub,
+  ...(mr ? [mr] : []),
+  ...(repo ? ['-R', repo] : []),
+  ...extra,
+]
+const mrView = (mr: string | undefined, repo: string | undefined, dir: string) =>
+  JSON.parse(run('glab', glabArgs('view', mr, repo, ['-F', 'json']), dir)) as Record<string, unknown>
+
+export const defaultGlab = {
+  mrBase: (mr: string | undefined, repo: string | undefined, dir: string) => String(mrView(mr, repo, dir).target_branch),
+  mrFiles: (mr: string | undefined, repo: string | undefined, dir: string) =>
+    patchFiles(run('glab', glabArgs('diff', mr, repo, ['--raw']), dir)),
+  mrMergeMethod(mr: string | undefined, repo: string | undefined, dir: string) {
+    const project = mrView(mr, repo, dir).target_project_id
+    const info = JSON.parse(run('glab', ['api', `projects/${String(project)}`], dir)) as { merge_method?: string }
+    return String(info.merge_method)
+  },
+}
+
+/**
+ * Repo-relative files a raw git patch (`glab mr diff --raw`) touches, in
+ * order: a deletion by its old path, a rename by its new one.
+ */
+export function patchFiles(patch: string): string[] {
+  const files: string[] = []
+  let header: string | undefined
+  let from: string | undefined
+  let to: string | undefined
+  const flush = () => {
+    if (header === undefined) return
+    const fromHeader = / b\/(.*)$/.exec(header)?.[1]
+    const file = to ?? from ?? fromHeader
+    if (file && !files.includes(file)) files.push(file)
+    header = from = to = undefined
+  }
+  for (const raw of patch.split('\n')) {
+    const line = raw.endsWith('\r') ? raw.slice(0, -1) : raw
+    if (line.startsWith('diff --git ')) {
+      flush()
+      header = line
+    } else if (header !== undefined) {
+      if (line.startsWith('rename to ')) to = unquotePath(line.slice('rename to '.length))
+      else if (line.startsWith('--- a/') || line.startsWith('--- "a/')) from = unquotePath(line.slice(4)).replace(/^a\//, '')
+      else if (line.startsWith('+++ ')) {
+        const target = unquotePath(line.slice(4))
+        if (target !== '/dev/null') to = target.replace(/^b\//, '')
+      } else if (line.startsWith('@@')) flush()
+    }
+  }
+  flush()
+  return files
+}
+
+const unquotePath = (path: string) => (path.startsWith('"') ? (JSON.parse(path) as string) : path)
+
 type Merge = {
-  kind: 'git' | 'gh'
+  kind: 'git' | 'gh' | 'glab'
   dir: string
   args: string[]
   stdin: string[]
@@ -221,6 +285,8 @@ function findMerges(command: string): Merge[] {
       merges.push({ kind: 'git', dir: mergeDir, args: words.slice(index), stdin: simple.stdin })
     } else if (name === 'gh' && words[1] === 'pr' && words[2] === 'merge') {
       merges.push({ kind: 'gh', dir, args: words.slice(2), stdin: simple.stdin })
+    } else if (name === 'glab' && words[1] === 'mr' && (words[2] === 'merge' || words[2] === 'accept')) {
+      merges.push({ kind: 'glab', dir, args: words.slice(2), stdin: simple.stdin })
     }
   }
   return merges
@@ -256,13 +322,30 @@ function ghPr(args: string[]): string | undefined {
   return undefined
 }
 
+const GLAB_VALUE = new Set(['-m', '--message', '--sha', '--squash-message', '-R', '--repo'])
+
+/** The MR (id or branch), -R repo and -m message of a `glab mr merge` argv. */
+function glabMerge(args: string[]): { mr?: string; repo?: string; message?: string } {
+  const out: { mr?: string; repo?: string; message?: string } = {}
+  for (let k = 1; k < args.length; k++) {
+    const arg = args[k]!
+    const eq = arg.indexOf('=')
+    const flag = arg.startsWith('--') && eq > 0 ? arg.slice(0, eq) : arg
+    const value = flag !== arg ? arg.slice(eq + 1) : GLAB_VALUE.has(arg) ? args[++k] : undefined
+    if (flag === '-m' || flag === '--message') out.message = unwrap(value ?? '')
+    else if (flag === '-R' || flag === '--repo') out.repo = value
+    else if (!arg.startsWith('-') && out.mr === undefined) out.mr = arg
+  }
+  return out
+}
+
 function violation(target: string, problems: string[]): RuleResult {
   return {
     kind: 'violation',
     reason:
       `Merging into ${target} needs a review record (code-review-and-quality, "Review Record"). ` +
       'Put one trailer per reviewer you considered, ran or skipped, in the LAST paragraph of the merge ' +
-      'message (-m or -F), in the same block as any Co-Authored-By line:' +
+      'message (git merge -m/-F, gh pr merge --body, glab mr merge -m), in the same block as any Co-Authored-By line:' +
       `\n${RECORD_TEMPLATE}\nProblems: ${problems.join('; ')}.`,
   }
 }
@@ -329,6 +412,19 @@ function defaultRoutePr(
   }
 }
 
+/** Routes an MR from `glab mr diff --raw`. */
+function defaultRouteMr(
+  review: ReviewConfig,
+  obligations: readonly ReviewedExemption[],
+): (mr: string | undefined, repo: string | undefined, dir: string) => Routing {
+  return (mr, repo, dir) => {
+    const patch = run('glab', glabArgs('diff', mr, repo, ['--raw']), dir)
+    const added: Record<string, string[]> = {}
+    parsePatch(patch, added)
+    return routeReview(review, { files: patchFiles(patch), added, binary: [] }, gitTop(dir), obligations)
+  }
+}
+
 /**
  * Denies a merge into a protected branch whose message lacks a valid
  * review record. Sibling of `requireGreenTestRun`: scoped by
@@ -336,7 +432,9 @@ function defaultRoutePr(
  * any error listing those files enforces (fail safe).
  *
  * Gated: `git merge` run directly (after `cd`, or with `git -C`) and
- * `gh pr merge` (record in `--body`/`--body-file`). Not gated:
+ * `gh pr merge` (record in `--body`/`--body-file`), and `glab mr merge`
+ * or `glab mr accept` (record in `-m`/`--message`; denied when the GitLab
+ * project merges fast-forward, which makes no merge commit). Not gated:
  * `--squash`, `--no-commit`, `--abort`/`--continue`/`--quit`, and a
  * merge hidden inside `bash -c` or a script; the CI checker
  * (`probity-review-record`) is the backstop for those and for merges
@@ -348,6 +446,7 @@ export function requireReviewRecord(
     git?: ReviewRecordGit
     routeMerge?: (dir: string, branches: string[]) => Routing
     routePr?: (pr: string | undefined, dir: string) => Routing
+    routeMr?: (mr: string | undefined, repo: string | undefined, dir: string) => Routing
     /** The rule entries whose exemption obligations apply (a preset's
      *  output); needed for `record.requireObligations`. */
     obligationsFrom?: readonly RuleEntry[]
@@ -357,6 +456,12 @@ export function requireReviewRecord(
   const obligations = deps.obligationsFrom ? obligationsOf(deps.obligationsFrom) : []
   const routeMerge = deps.routeMerge ?? defaultRouteMerge(review, obligations)
   const routePr = deps.routePr ?? defaultRoutePr(review, git, obligations)
+  const routeMr = deps.routeMr ?? defaultRouteMr(review, obligations)
+  const glab = {
+    mrBase: git.mrBase ?? defaultGlab.mrBase,
+    mrFiles: git.mrFiles ?? defaultGlab.mrFiles,
+    mrMergeMethod: git.mrMergeMethod ?? defaultGlab.mrMergeMethod,
+  }
   const options = review.record ?? {}
   const protectedBranches = options.protectedBranches ?? DEFAULT_PROTECTED_BRANCHES
   /** Record errors, plus routed agents it misses when requireRoutedAgents is on. */
@@ -385,9 +490,10 @@ export function requireReviewRecord(
   }
 
   return async function requireReviewRecord(action): Promise<RuleResult> {
-    if (action.kind !== 'command' || !/\bmerge\b/.test(action.command)) return { kind: 'pass' }
+    if (action.kind !== 'command' || !/\b(merge|accept)\b/.test(action.command)) return { kind: 'pass' }
     for (const merge of findMerges(action.command)) {
-      const result = merge.kind === 'git' ? judgeGitMerge(merge) : judgeGhMerge(merge)
+      const result =
+        merge.kind === 'git' ? judgeGitMerge(merge) : merge.kind === 'gh' ? judgeGhMerge(merge) : judgeGlabMerge(merge)
       if (result) return result
     }
     return { kind: 'pass' }
@@ -439,6 +545,33 @@ export function requireReviewRecord(
     const body = ghBody(args, dir, stdin)
     if (body === undefined) return violation(target, ['no --body or --body-file given'])
     const found = problems(parseReviewRecord(body), () => routePr(pr, dir))
+    return found.length > 0 ? violation(target, found) : undefined
+  }
+
+  function judgeGlabMerge({ dir, args }: Merge): RuleResult | undefined {
+    const { mr, repo, message } = glabMerge(args)
+    let base: string | undefined
+    try {
+      base = glab.mrBase(mr, repo, dir)
+    } catch {
+      base = undefined // unknown: enforce (fail safe)
+    }
+    if (base !== undefined && !protectedBranches.includes(base)) return undefined
+    if (!touchesEnforced(() => glab.mrFiles(mr, repo, dir))) return undefined
+    const target = base ?? 'a protected branch'
+    let method: string | undefined
+    try {
+      method = glab.mrMergeMethod(mr, repo, dir)
+    } catch {
+      method = undefined // unreadable: judge the message; CI checks the result
+    }
+    if (method === 'ff') {
+      return violation(target, [
+        "the GitLab project merges fast-forward, so no merge commit holds the record; set Settings → Merge requests → Merge method to 'Merge commit' or 'Merge commit with semi-linear history'",
+      ])
+    }
+    if (message === undefined) return violation(target, ['no -m/--message given (glab uses it as the merge commit message)'])
+    const found = problems(parseReviewRecord(message), () => routeMr(mr, repo, dir))
     return found.length > 0 ? violation(target, found) : undefined
   }
 

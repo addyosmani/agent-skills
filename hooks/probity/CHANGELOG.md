@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+`requireReviewRecord` gates GitLab merges ([#193](https://github.com/JJChill/agent-skills/issues/193)).
+
+- **Before:** the gate covered `git merge` and `gh pr merge` only. A `glab mr merge` from an agent session went unchecked until the CI checker ran after the merge.
+- **Now:**
+  - `glab mr merge` and `glab mr accept` into a protected branch need a record in `-m`/`--message`, which glab uses as the merge commit message.
+  - The target branch and files come from `glab mr view -F json` and `glab mr diff --raw`, and routed agents from the same raw diff.
+  - When the project's merge method is fast-forward (`merge_method: ff`, from `glab api projects/<id>`), the gate denies the merge and names the setting to change. If the method can't be read, the gate still judges the message.
+- **For custom adapters:** `ReviewRecordGit` gains optional `mrBase`, `mrFiles` and `mrMergeMethod`; adapters without them fall back to the glab defaults. `requireReviewRecord` takes an optional `routeMr`.
+
 ## 0.4.64
 
 `probity-scope-report` explains a config kept outside the repository ([#186](https://github.com/JJChill/agent-skills/issues/186)).
