@@ -6,5 +6,5 @@ Skills are plain `SKILL.md` folders, so any agent that reads the Agent Skills la
 
 - **Dojo Workspace**: `dojo skills add addyosmani/agent-skills`
 - **fx**: `git clone https://github.com/addyosmani/agent-skills.git /tmp/agent-skills && mkdir -p .fx/skills && cp -R /tmp/agent-skills/skills/* .fx/skills/` (project scope; use `~/.fx/skills/` instead for every workspace; needs fx 0.0.5 or later)
-- **Oh My Pi**: `omp plugin marketplace add addyosmani/agent-skills`, then `omp plugin install agent-skills@addy-agent-skills`
+- **Oh My Pi**: `omp plugin marketplace add addyosmani/agent-skills`, then `omp plugin install agent-skills@addy-agent-skills` (omp names plugin commands `plugin:command`, so run them as `/agent-skills:build auto`, `/agent-skills:spec` and so on; a bare `/build auto` reaches the model as plain text and the mode is lost)
 - **Pi**: `pi install git:github.com/addyosmani/agent-skills`
