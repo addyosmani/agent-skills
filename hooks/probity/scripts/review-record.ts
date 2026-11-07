@@ -8,33 +8,40 @@
  * Usage (from the project root, next to probity.config.ts):
  *
  *   npx probity-review-record --range <base>..<head>
+ *                             [--routed-range <before>..<head>]
  *                             [--config probity.config.ts] [--root .]
  *                             [--all-first-parent]
  *
- * Checks every merge commit on the first-parent line of the range (the
- * merges INTO the branch) whose own diff (first parent → merge) touches
- * `review.record.enforceForPaths`. `--all-first-parent` also checks
- * non-merge first-parent commits, for squash-merge workflows. Choose
- * the base to start from adoption: earlier merges are not judged.
+ * --range: every merge commit on the first-parent line (the merges INTO
+ * the branch) whose own diff (first parent → merge) touches
+ * `review.record.enforceForPaths` must carry a valid record. Start it at
+ * adoption: earlier merges are not judged. `--all-first-parent` also
+ * checks non-merge first-parent commits, for squash-merge workflows.
  *
- * Exit codes: 0 all records valid, 1 a record is missing or malformed,
- * 2 usage or config error.
+ * --routed-range (issue #181): with `record.requireRoutedAgents`, the
+ * commits in this range must also list every agent the CURRENT routes
+ * select for their diff. Give it only the newly pushed commits
+ * (`${{ github.event.before }}..HEAD`): re-routing old merges with
+ * today's routes would fail every merge made before a route was added.
+ * An all-zero start (a new branch or force push) skips these checks.
+ *
+ * Exit codes: 0 all records valid, 1 a record is missing, malformed or
+ * incomplete, 2 usage or config error.
  */
 import { execFileSync } from 'node:child_process'
-import { existsSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { resolve } from 'node:path'
 
-import { createJiti } from 'jiti'
+import { missingRoutedAgents, parseReviewRecord } from '../rules/review-record.js'
+import { collectDiff, routeReview } from '../rules/review-router.js'
+import { loadReview } from './load-review.js'
 
-import type { ReviewConfig } from '../rules/review-config.js'
-import { parseReviewRecord } from '../rules/review-record.js'
-
-const jiti = createJiti(import.meta.url)
-
-type Args = { range?: string; config?: string; root: string; allFirstParent: boolean }
+type Args = { range?: string; routedRange?: string; config?: string; root: string; allFirstParent: boolean }
 
 function usage(message: string): never {
-  console.error(`${message}\nUsage: probity-review-record --range <base>..<head> [--config <path>] [--root <dir>] [--all-first-parent]`)
+  console.error(
+    `${message}\nUsage: probity-review-record --range <base>..<head> [--routed-range <before>..<head>] ` +
+      '[--config <path>] [--root <dir>] [--all-first-parent]',
+  )
   process.exit(2)
 }
 
@@ -42,6 +49,7 @@ function parseArgs(argv: string[]): Args {
   const out: Args = { root: process.cwd(), allFirstParent: false }
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--range') out.range = argv[++i]
+    else if (argv[i] === '--routed-range') out.routedRange = argv[++i]
     else if (argv[i] === '--config') out.config = argv[++i]
     else if (argv[i] === '--root') out.root = resolve(argv[++i] ?? '.')
     else if (argv[i] === '--all-first-parent') out.allFirstParent = true
@@ -52,46 +60,69 @@ function parseArgs(argv: string[]): Args {
 }
 
 const args = parseArgs(process.argv.slice(2))
-const configPath =
-  args.config ??
-  ['probity.config.ts', 'probity.config.mts', 'probity.config.js', 'probity.config.mjs']
-    .map((name) => join(args.root, name))
-    .find(existsSync)
-if (!configPath) usage(`No probity.config.{ts,mts,js,mjs} in ${args.root}`)
-
-const module = await jiti.import<{ review?: ReviewConfig }>(resolve(configPath))
-const review = module.review
-if (!review) {
-  usage(`${configPath} has no review settings. Add: export const review = reviewConfig({ record: { … } })`)
+let review
+try {
+  ;({ review } = await loadReview(args.root, args.config))
+} catch (error) {
+  usage(error instanceof Error ? error.message : String(error))
 }
 const enforce = review.record?.enforceForPaths
 
 const git = (...gitArgs: string[]): string =>
-  execFileSync('git', gitArgs, { cwd: args.root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }).trim()
+  execFileSync('git', gitArgs, {
+    cwd: args.root,
+    encoding: 'utf8',
+    maxBuffer: 64 * 1024 * 1024,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  }).trim()
 
-const revListArgs = ['rev-list', '--first-parent', '--reverse', ...(args.allFirstParent ? [] : ['--merges']), args.range!]
-let commits: string[]
-try {
-  commits = git(...revListArgs).split('\n').filter(Boolean)
-} catch {
-  usage(`git could not list the range ${args.range}`)
-}
-
-let checked = 0
-const failures: string[] = []
-for (const commit of commits) {
-  const files = git('diff', '--name-only', `${commit}^1`, commit).split('\n').filter(Boolean)
-  if (enforce && !files.some((file) => enforce.test(file))) continue
-  checked++
-  const record = parseReviewRecord(git('log', '-1', '--format=%B', commit))
-  if (record.errors.length > 0) {
-    const subject = git('log', '-1', '--format=%h %s', commit)
-    failures.push(`${subject}\n  - ${record.errors.join('\n  - ')}`)
+function firstParentCommits(range: string): string[] {
+  const revList = ['rev-list', '--first-parent', '--reverse', ...(args.allFirstParent ? [] : ['--merges']), range]
+  try {
+    return git(...revList).split('\n').filter(Boolean)
+  } catch {
+    usage(`git could not list the range ${range} (in CI, check out full history: fetch-depth: 0)`)
   }
 }
 
+const touchesEnforced = (commit: string): boolean => {
+  if (!enforce) return true
+  return git('diff', '--name-only', `${commit}^1`, commit).split('\n').some((file) => enforce.test(file))
+}
+
+let routed: Set<string> = new Set()
+const notes: string[] = []
+if (args.routedRange) {
+  if (!review.record?.requireRoutedAgents) {
+    notes.push('--routed-range given but review.record.requireRoutedAgents is off: routed checks skipped.')
+  } else if (/^0+\.\./.test(args.routedRange)) {
+    notes.push(`--routed-range ${args.routedRange} starts at the all-zero commit (new branch or force push): routed checks skipped.`)
+  } else {
+    routed = new Set(firstParentCommits(args.routedRange))
+  }
+}
+
+const top = git('rev-parse', '--show-toplevel')
+let checked = 0
+const failures: string[] = []
+for (const commit of firstParentCommits(args.range!)) {
+  if (!touchesEnforced(commit)) continue
+  checked++
+  const record = parseReviewRecord(git('log', '-1', '--format=%B', commit))
+  const problems = [...record.errors]
+  if (problems.length === 0 && routed.has(commit)) {
+    const input = collectDiff(top, { base: `${commit}^1`, head: commit })
+    problems.push(...missingRoutedAgents(record, routeReview(review, input, top)))
+  }
+  if (problems.length > 0) {
+    const subject = git('log', '-1', '--format=%h %s', commit)
+    failures.push(`${subject}\n  - ${problems.join('\n  - ')}`)
+  }
+}
+
+for (const note of notes) console.log(note)
 if (failures.length > 0) {
-  console.log(`Review record missing or malformed on ${failures.length} of ${checked} checked commit(s):\n`)
+  console.log(`Review record missing, malformed or incomplete on ${failures.length} of ${checked} checked commit(s):\n`)
   console.log(failures.join('\n\n'))
   process.exit(1)
 }

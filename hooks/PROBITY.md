@@ -124,7 +124,37 @@ export default probityConfig({
 
 - **The gate (PreToolUse).** It denies `git merge` into a protected branch when the merge brings in a file matching `enforceForPaths` and its `-m`/`-F` message has no valid record. It finds the merge after a `cd` and with `git -C`, and reads a `-m "$(cat <<'EOF' … EOF)"` heredoc. It also denies a merge that would fast-forward, because no commit would hold the record (use `--no-ff`). For `gh pr merge`, it reads `--body`/`--body-file` and checks the PR's base branch. If it can't list the merged files, it enforces anyway (fail safe).
 - **Not gated:** `--squash`, `--no-commit`, `--abort`/`--continue`, and a merge hidden in `bash -c` or a script.
-- **The CI backstop.** `npx probity-review-record --range <base>..HEAD` checks every first-parent merge in the range whose own diff touches `enforceForPaths`, and exits 1 naming each commit with a missing or malformed record. It is the only check that sees merges made outside an agent session (a web UI, a human at a shell). Set the base to the commit where you adopted the record, so earlier merges aren't judged. Pass `--all-first-parent` to check direct and squashed commits on the branch too.
+- **The CI backstop.** `npx probity-review-record --range <base>..HEAD` checks every first-parent merge in the range whose own diff touches `enforceForPaths`, and exits 1 naming each commit with a missing or malformed record. It is the only check that sees merges made outside an agent session (a web UI, a human at a shell). Set the base to the commit where you adopted the record, so earlier merges aren't judged. Pass `--all-first-parent` to check direct and squashed commits on the branch too. In GitHub Actions, check out full history (`fetch-depth: 0`), or the range won't resolve and the checker exits 2.
+
+## Review routing (`probity-review-route`)
+
+Which reviewers a change gets shouldn't depend on the agent's judgement ([#181](https://github.com/JJChill/agent-skills/issues/181)). The router maps a diff to the review agents it warrants, using routes in the `review` export, with no model calls:
+
+```ts
+export const review = reviewConfig({
+  ignore: ['.claude/curator/**'],
+  routes: [
+    { agent: 'dependency-auditor', why: 'manifest changed', paths: ['**/build.gradle.kts', '**/package.json'] },
+    { agent: 'silent-failure-hunter', why: 'error handling', added: /\b(catch|runCatching)\b|getOrNull/ },
+    { agent: 'architecture-conformance-reviewer', why: 'test doubles', added: /\b(mockk|Mockito)\b/, lines: 'code' },
+    { agent: 'architecture-conformance-reviewer', why: 'third-party import',
+      added: /^\s*import /, notAdded: /^\s*import (myapp|kotlin|kotlinx\.coroutines)\./ },
+    { agent: 'agent-skills:security-auditor', why: 'secrets', added: /(password|apiKey|bearer|jwt)\b/i },
+  ],
+  fallback: ['code-reviewer'],
+  record: { enforceForPaths: CODE, requireRoutedAgents: true },
+})
+```
+
+- **A route fires** when a changed file matches `paths`, or when an added line matches `added` and that same line doesn't match `notAdded`. `lines: 'prod'` (the default) greps code files outside `testPaths`. `lines: 'code'` includes test sources too.
+- **Never grepped:** files matching `nonCode` (Markdown, text, YAML, JSON, TOML, lockfiles, images), binary files, and `ignore` globs. Ignored files are left out of routing entirely.
+- **When nothing fires:** `fallback` runs if a production code file changed. A docs- or config-only diff runs nothing. `always` agents run on any change.
+- **Agent names** keep their configured spelling (`agent-skills:security-auditor`). An agent is listed once, with every reason it fired.
+- **Globs** in `paths` and `ignore` are relative to `root` (default: the repository root). Regex options are tested against repo-relative paths.
+
+`npx probity-review-route [--base <ref>] [--format text|json]` prints one `agent|why` line per agent, so it can replace a hand-written router hook. The base defaults to the merge-base with `origin/<mainBranch>`. The diff runs from the base to the working tree, plus the index and any untracked files that aren't gitignored. It reads only added lines, never the `+++ b/<path>` header, so a file name can't fire a content route.
+
+With `record.requireRoutedAgents`, the merge gate routes what the merge brings in and denies a record that doesn't list each selected agent (ran, or skipped with a reason). A routing error denies (fail safe). In CI, pass `--routed-range ${{ github.event.before }}..HEAD` to `probity-review-record`, so only newly pushed merges are judged against today's routes. Re-routing old merges would fail every merge made before a route existed. An all-zero start (a new branch or a force push) skips the routed checks.
 
 ## Shell writes to scoped files (`shellWriteScreen`)
 

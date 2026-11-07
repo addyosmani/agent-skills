@@ -11,7 +11,9 @@ A merge can now show whether it was reviewed ([#178](https://github.com/JJChill/
   - **`requireReviewRecord(review)`** denies a `git merge` or `gh pr merge` into a protected branch that touches `enforceForPaths` without a valid record, or one that would fast-forward.
   - **`probity-review-record --range`** checks the same record in CI, including merges no agent made.
   - **`reviewConfig`** types the new `export const review` in probity.config.ts.
-- **Not yet.** Checking the record against the reviewers a router selected, and against exemption obligations, comes with the review router (#181).
+  - **Review routing ([#181](https://github.com/JJChill/agent-skills/issues/181)).** `routes`, `fallback`, `always`, `ignore`, `testPaths` and `nonCode` in `review` map a diff to the agents it warrants, with no model calls. `probity-review-route` prints them as `agent|why` lines (or JSON) against the merge-base with main. It greps only real added lines: not diff headers, non-code files, binaries or ignored paths.
+  - **`record.requireRoutedAgents`** makes the gate deny a record that misses a routed agent. `probity-review-record --routed-range <before>..HEAD` checks the same thing in CI, for newly pushed merges only.
+- **Not yet.** Exemption obligations (#181, part 2).
 ## 0.4.62
 
 The Kiro shim judges kiro-cli 3.x writes again (#176).
