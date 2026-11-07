@@ -245,6 +245,8 @@ Preference order (most to least preferred):
 
 **Use mocks only when:** the real implementation is too slow, non-deterministic, or has side effects you can't control (external APIs, email sending). Over-mocking creates tests that pass while production breaks.
 
+For crash or rollback behavior, exercise the real boundary: an injected exception is not process termination, and a mocked transaction call is not a database rollback.
+
 ### Use the Arrange-Act-Assert Pattern
 
 ```typescript

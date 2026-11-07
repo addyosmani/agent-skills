@@ -1,6 +1,6 @@
 ---
-description: A failing-test diagnosis with the diff pasted inline. Checks that debugging-and-error-recovery activates and ties its diagnosis to a reproduction and a regression guard.
-expected_outcome: An explanation of the exclusive slice end, a concrete reproduction of the missing row, and a minimal correction with a regression check and verification guidance.
+description: A failing-test diagnosis with the diff pasted inline. Checks that debugging-and-error-recovery activates and that the reply names the cause, makes the minimal fix and says how to confirm it.
+expected_outcome: The exclusive slice end named as the cause, the one-token fix to start + size, and a way to confirm it, such as re-running the failing test or adding a test that asserts a full page and the last page's boundary.
 max_turns: 12
 allowed_tools: [Read, Glob, Grep, Skill]
 ---
