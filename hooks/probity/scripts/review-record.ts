@@ -33,7 +33,7 @@ import { resolve } from 'node:path'
 
 import { obligationsOf } from '../rules/review-obligations.js'
 import { missingObligations, missingRoutedAgents, parseReviewRecord } from '../rules/review-record.js'
-import { collectDiff, routeReview } from '../rules/review-router.js'
+import { collectDiff, rootWarning, routeReview } from '../rules/review-router.js'
 import { loadReview } from './load-review.js'
 
 type Args = { range?: string; routedRange?: string; config?: string; root: string; allFirstParent: boolean }
@@ -107,6 +107,8 @@ if (args.routedRange) {
 }
 
 const top = git('rev-parse', '--show-toplevel')
+const warning = routed.size > 0 ? rootWarning(review, top) : undefined
+if (warning) notes.push(`warning: ${warning}`)
 let checked = 0
 const failures: string[] = []
 for (const commit of firstParentCommits(args.range!)) {

@@ -8,6 +8,7 @@ import {
   type ReviewConfig,
 } from './review-config.js'
 import type { ReviewedExemption } from './review-obligations.js'
+import { isWithin } from './commit-target.js'
 import { anchorGlob, buildMatcher } from './scoping.js'
 
 /**
@@ -106,6 +107,23 @@ export function routeReview(
 
   const agents = [...found.values()].sort((a, b) => bareAgent(a.agent).localeCompare(bareAgent(b.agent)))
   return { agents, obligations: incurred }
+}
+
+/**
+ * A warning when `config.root` lies outside the repository at `top`, as
+ * when an absolute root names the main checkout but the router runs in
+ * another worktree: changed files then resolve under `top`, every path
+ * route, ignore and obligation glob is anchored elsewhere, and all of
+ * them silently match nothing.
+ */
+export function rootWarning(config: ReviewConfig, top: string): string | undefined {
+  if (config.root === undefined) return undefined
+  const root = isAbsolute(config.root) ? config.root : resolve(top, config.root)
+  if (isWithin(top, root)) return undefined
+  return (
+    `review.root (${root}) is outside the repository being routed (${top}), so no path route, ignore ` +
+    'or obligation glob can match. In another worktree, set root relative to the repository, or derive it from the config file\'s location.'
+  )
 }
 
 /** `text`: one `agent|why; why` line per agent. `json`: the routing object. */

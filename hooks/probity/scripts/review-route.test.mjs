@@ -89,3 +89,14 @@ export default { rules: [reviewedBlock({ files: ['ui/**', { glob: '!ui/**/*Scree
   assert.deepEqual(json.obligations.map((o) => [o.id, o.files]), [['thin-rendering', ['ui/notes/NotesScreen.kt']]])
   assert.match(route(dir).stdout, /^code-reviewer\|.*obligation thin-rendering: renders only/m)
 })
+
+test('should warn when review.root lies outside the repository (another worktree)', (t) => {
+  const { dir, write } = repo(t)
+  write('probity.config.mjs', `
+export const review = { root: '/somewhere/else', routes: [{ agent: 'ui-reviewer', why: 'ui', paths: ['ui/**'] }] }
+export default { rules: [] }
+`)
+  write('ui/A.kt', 'x\n')
+  const res = route(dir)
+  assert.match(res.stderr, /review\.root .*outside the repository/)
+})

@@ -150,7 +150,7 @@ export const review = reviewConfig({
 - **Never grepped:** files matching `nonCode` (Markdown, text, YAML, JSON, TOML, lockfiles, images), binary files, and `ignore` globs. Ignored files are left out of routing entirely.
 - **When nothing fires:** `fallback` runs if a production code file changed. A docs- or config-only diff runs nothing. `always` agents run on any change.
 - **Agent names** keep their configured spelling (`agent-skills:security-auditor`). An agent is listed once, with every reason it fired.
-- **Globs** in `paths` and `ignore` are relative to `root` (default: the repository root). Regex options are tested against repo-relative paths.
+- **Globs** in `paths` and `ignore` are relative to `root` (default: the repository root). Regex options are tested against repo-relative paths. Don't point `root` at an absolute path in one checkout: run from another worktree, nothing would match. The CLIs warn when `root` lies outside the repository they route.
 
 `npx probity-review-route [--base <ref>] [--format text|json]` prints one `agent|why` line per agent, so it can replace a hand-written router hook. The base defaults to the merge-base with `origin/<mainBranch>`. The diff runs from the base to the working tree, plus the index and any untracked files that aren't gitignored. It reads only added lines, never the `+++ b/<path>` header, so a file name can't fire a content route.
 
