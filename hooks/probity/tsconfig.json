@@ -14,6 +14,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["index.ts", "rules/**/*.ts", "presets/**/*.ts", "scripts/scope-report.ts", "scripts/shadow-report.ts", "scripts/shadow-format.ts", "scripts/shadow-replay.ts"],
+  "include": ["index.ts", "rules/**/*.ts", "presets/**/*.ts", "scripts/scope-report.ts", "scripts/shadow-report.ts", "scripts/shadow-format.ts", "scripts/shadow-replay.ts", "scripts/review-record.ts"],
   "exclude": ["**/*.test.*", "evals", "dist", "node_modules", "probity.config*.ts"]
 }

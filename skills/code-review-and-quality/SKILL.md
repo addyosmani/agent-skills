@@ -213,6 +213,28 @@ Check the author's verification story:
 - Is there a before/after comparison?
 ```
 
+### Step 6: Write the Review Record
+
+A merge with no review fixes looks the same whether the code was reviewed and found clean or never reviewed. Close every review with a record: git trailers in the **last paragraph** of the merge commit message, one line per reviewer you considered.
+
+```
+Merge feat/notes-sync: sync notes offline
+
+Reviewed-by-agent: code-reviewer (ran, 3 findings, 3 fixed)
+Reviewed-by-agent: security-auditor (ran, 0 findings)
+Reviewed-by-agent: design-conformance-reviewer (skipped: no UI paths in diff)
+Review-obligation: thin-rendering (addressed by code-reviewer)
+Visual-check: ran (390w webkit, 1280w chromium; states: loading, empty, error, populated)
+```
+
+- `Reviewed-by-agent: <agent> (ran, <N> findings[, <M> fixed])` or `(skipped: <reason>)`. List a reviewer that found nothing as `0 findings`. Don't leave it out. A skip without a reason is invalid.
+- `Review-obligation: <id> (addressed by <agent>)`: one line for each review obligation the diff incurred (a TDD exemption that requires a reviewer).
+- `Visual-check:` records what the visual verification checkpoint captured, or `skipped: <reason>`.
+- Keep the record and any other trailers (`Co-Authored-By`, `Signed-off-by`) in **one** final block, with no blank line between them. A trailer paragraph after the record hides it from git and from the gate.
+- Merge with `git merge --no-ff <branch> -m "…"`. A fast-forward merge creates no commit to hold the record.
+
+Agent names are the persona file names in `agents/`. A plugin prefix (`agent-skills:code-reviewer`) is accepted and matched as the bare name. The record states what happened. It does not claim the review was enough: a skip with an honest reason beats a reviewer listed as ran when it never did. A project can enforce the record at merge time and in CI. See `requireReviewRecord` and `probity-review-record` in [hooks/PROBITY.md](../../hooks/PROBITY.md#review-record-requirereviewrecord).
+
 ## Multi-Model Review Pattern
 
 Use different models for different review perspectives:
@@ -386,6 +408,7 @@ For triaging `npm audit` findings and supply-chain risk (typosquatting, compromi
 ## Red Flags
 
 - PRs merged without any review
+- A merge into the main branch with no review record, or one that lists only the reviewers who found something
 - Review that only checks if tests pass (ignoring other axes)
 - "LGTM" without evidence of actual review
 - Security-sensitive changes without security-focused review
@@ -414,6 +437,7 @@ After review is complete:
 - [ ] Tests pass
 - [ ] Build succeeds
 - [ ] The verification story is documented (what changed, how it was verified)
+- [ ] The merge message ends with a review record that lists every reviewer considered, ran or skipped with a reason
 - [ ] Dependency upgrades were reviewed against their changelog, isolated per package, and verified by a green suite with the lockfile diff reviewed
 
 **Presumptive blockers:** surface and propose the simpler design for each of these; escalate to Required only when the change actively makes structure worse: a refactor that relocates complexity instead of reducing it; a change that pushes a file past the size boundary with no decomposition; feature logic added to a shared module; a near-duplicate of an existing canonical helper; a silent fallback that hides an unclear invariant.

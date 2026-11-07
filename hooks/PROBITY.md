@@ -101,6 +101,31 @@ rules: kmpRuleEntries(ROOT, { vendorAdapterGlobs: ['**/src/androidMain/kotlin/**
 
 If your project *can* get credentials into a session, a device test that runs against the real service is still the stronger evidence: its failing run is an ordinary red for the TDD gate, and the file needs no `vendorAdapterGlobs`.
 
+## Review record (`requireReviewRecord`)
+
+`requireGreenTestRun` proves the tests ran. Nothing proved a review ran ([#178](https://github.com/JJChill/agent-skills/issues/178)). Unreleased: a merge into a protected branch can be required to carry the review record from code-review-and-quality (Step 6): `Reviewed-by-agent:` trailers in the last paragraph of the merge message. The record lists every reviewer considered, with `(ran, N findings[, M fixed])` or `(skipped: <reason>)`.
+
+Settings live in a named `review` export next to the default one, because Probity's `Config` only takes `rules` and `ai`:
+
+```ts
+import { probityConfig, requireReviewRecord, reviewConfig } from '@jjchill/probity-rules'
+
+// One regex for "code a gate cares about", shared with requireGreenTestRun's enforceForPaths.
+const CODE = /^(src|app)\//
+
+export const review = reviewConfig({
+  record: { enforceForPaths: CODE, protectedBranches: ['main'] },
+})
+
+export default probityConfig({
+  rules: [...kotlinRuleEntries(ROOT), requireReviewRecord(review)],
+})
+```
+
+- **The gate (PreToolUse).** It denies `git merge` into a protected branch when the merge brings in a file matching `enforceForPaths` and its `-m`/`-F` message has no valid record. It finds the merge after a `cd` and with `git -C`, and reads a `-m "$(cat <<'EOF' … EOF)"` heredoc. It also denies a merge that would fast-forward, because no commit would hold the record (use `--no-ff`). For `gh pr merge`, it reads `--body`/`--body-file` and checks the PR's base branch. If it can't list the merged files, it enforces anyway (fail safe).
+- **Not gated:** `--squash`, `--no-commit`, `--abort`/`--continue`, and a merge hidden in `bash -c` or a script.
+- **The CI backstop.** `npx probity-review-record --range <base>..HEAD` checks every first-parent merge in the range whose own diff touches `enforceForPaths`, and exits 1 naming each commit with a missing or malformed record. It is the only check that sees merges made outside an agent session (a web UI, a human at a shell). Set the base to the commit where you adopted the record, so earlier merges aren't judged. Pass `--all-first-parent` to check direct and squashed commits on the branch too.
+
 ## Shell writes to scoped files (`shellWriteScreen`)
 
 Probity's content rules judge write actions: `Write`, `Edit` and `NotebookEdit` in Claude Code, the write tool in Kiro. A file changed by a shell command (`sed -i`, `cat > file <<EOF`, `tee`, `cp`/`mv`, `git apply`, or a `python3 - <<'EOF' … open(p, 'w')` script) reaches Probity as a command, so none of those rules see it. Scripted edits are an ordinary shell idiom, which makes this an easy bypass to take by accident ([#79](https://github.com/JJChill/agent-skills/issues/79)).
