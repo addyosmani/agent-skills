@@ -370,6 +370,13 @@ Slow CI pipeline?
     └── GitHub-hosted larger runners or self-hosted for CPU-heavy builds
 ```
 
+**Self-hosted runners run your repository's code on your machine.** Any job, and any pull request that can trigger one, executes with whatever the runner can reach. Isolate the runner before the first job:
+
+- **No host filesystem.** Check what the VM or container actually mounts. Some local VM tools mount the user's home directory read-write by default, even when the config lists no mounts (colima does).
+- **No host network.** A local VM's gateway address often forwards to the host's loopback (on colima, `192.168.5.2` reaches the Mac's `localhost`). Firewall the VM so jobs can't reach databases, admin UIs or other services that trust localhost.
+- **No untrusted code.** Don't run workflows from fork pull requests on a self-hosted runner. Keep it to branches and events from people with write access.
+- **Prove it.** From inside a job, try reading a host file and connecting to a host-only port. Both should fail.
+
 **Example: caching and parallelism**
 ```yaml
 jobs:
@@ -426,6 +433,7 @@ jobs:
 - Automatic retries of failed acceptance tests
 - No rollback mechanism
 - Secrets stored in code or CI config files (not secrets manager)
+- A self-hosted runner that can read the host's files or reach its localhost services, or that runs fork pull requests
 - Long CI times with no optimization effort
 
 ## Verification
@@ -437,6 +445,7 @@ After setting up or modifying CI:
 - [ ] Failures block merge (branch protection configured)
 - [ ] CI results feed back into the development loop
 - [ ] Secrets are stored in the secrets manager, not in code
+- [ ] Any self-hosted runner is isolated: no host mounts, no route to the host's loopback services, no fork pull requests, checked from inside a job
 - [ ] Deployment has a rollback mechanism
 - [ ] The commit stage runs in under 10 minutes
 - [ ] An acceptance stage deploys that release candidate into a production-like environment with production deploy tooling, and runs the executable specifications in under an hour
