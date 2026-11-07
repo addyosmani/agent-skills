@@ -86,7 +86,6 @@ const REQUIRED_SECTIONS = [
 // Every entry must have a documented reason.
 const SECTION_EXEMPT_SKILLS = {
   'using-agent-skills': 'Meta-skill — orchestrates other skills; When-to-Use and Verification are not applicable to a routing document.',
-  'idea-refine':        'Legacy structure predating skill-anatomy.md — uses How-It-Works/Usage/Anti-patterns instead of standard headings. Tracked for conformance in https://github.com/addyosmani/agent-skills/issues',
 };
 
 // Regex patterns that indicate an explicit cross-skill reference.
@@ -184,11 +183,12 @@ function parseFrontmatter(content) {
 
   const result = {};
   for (const line of match[1].split(/\r?\n/)) {
-    const colonIdx = line.indexOf(':');
-    if (colonIdx === -1) continue;
-    const key   = line.slice(0, colonIdx).trim();
-    const value = line.slice(colonIdx + 1).trim().replace(/^['"]|['"]$/g, '');
-    if (key) result[key] = value;
+    if (/^\s*#/.test(line)) continue;
+    const m = line.match(/^([A-Za-z0-9_-]+)\s*:\s*(.*)$/);
+    if (!m) continue;
+    const key   = m[1];
+    const value = m[2].trim().replace(/^['"]|['"]$/g, '');
+    result[key] = value;
   }
   return result;
 }
@@ -234,7 +234,7 @@ function frontmatterYamlErrors(content) {
   const lines = match[1].split(/\r?\n/);
   lines.forEach((line, i) => {
     const lineNo = i + 2; // the opening `---` is line 1
-    if (!line.trim()) return;
+    if (!line.trim() || /^\s*#/.test(line)) return;
 
     if (/^[ ]*\t/.test(line)) {
       errors.push(
@@ -544,6 +544,59 @@ function lintSkillLayout(skillDir) {
 }
 
 /**
+ * Lint a persona file (agents/<name>.md) against the three rules docs/agents.md
+ * states for them: frontmatter in the same format as a skill, with `name`
+ * equal to the file stem (the name is the `subagent_type` commands spawn) and
+ * a `description`; and a closing `## Composition` section. Headings inside
+ * fenced blocks are ignored, so an example after Composition does not count as
+ * a later section. Pure: no filesystem access. Returns { errors }.
+ */
+function lintPersonaContent(stem, content) {
+  const errors = [];
+
+  const fm = parseFrontmatter(content);
+  if (!fm) {
+    errors.push('Missing or malformed YAML frontmatter (expected --- block at top of file)');
+    return { errors };
+  }
+  errors.push(...frontmatterYamlErrors(content));
+
+  if (!fm.name) {
+    errors.push("Frontmatter missing required field: 'name'");
+  } else if (fm.name !== stem) {
+    errors.push(`Frontmatter name '${fm.name}' does not match file name '${stem}' (the name is the subagent_type commands spawn)`);
+  }
+  if (!fm.description) {
+    errors.push("Frontmatter missing required field: 'description'");
+  }
+
+  const headings = [...stripFencedCodeBlocks(content).matchAll(/^## +(.+?)\s*$/gm)].map(m => m[1]);
+  const compositionAt = headings.findIndex(h => /^Composition$/i.test(h));
+  if (compositionAt === -1) {
+    errors.push('Missing "## Composition" section (docs/agents.md: every persona file ends with a Composition block)');
+  } else if (compositionAt !== headings.length - 1) {
+    errors.push(`"## Composition" must be the last section, but "## ${headings[headings.length - 1]}" follows it`);
+  }
+
+  return { errors };
+}
+
+/**
+ * Lint a persona by file name: reads agents/<file>, then delegates to
+ * lintPersonaContent. Returns { errors }.
+ */
+function lintPersona(fileName, agentsDir) {
+  const stem = fileName.replace(/\.md$/, '');
+  let content;
+  try {
+    content = fs.readFileSync(path.join(agentsDir, fileName), 'utf8');
+  } catch (err) {
+    return { errors: [`Unreadable persona file: ${err.message}`] };
+  }
+  return lintPersonaContent(stem, content);
+}
+
+/**
  * Lint a skill by directory name: reads its SKILL.md, then delegates to
  * lintSkillContent. This is the thin filesystem wrapper the CLI uses.
  * Returns { errors, warnings, exempt }.
@@ -581,4 +634,6 @@ module.exports = {
   lintSkillContent,
   lintSkillLayout,
   lintSkill,
+  lintPersonaContent,
+  lintPersona,
 };

@@ -17,6 +17,14 @@
       {
         "prompt": "Commit this work and open a pull request",
         "top_k": 3
+      },
+      {
+        "prompt": "Write me a commit message for this diff.",
+        "top_k": 1
+      },
+      {
+        "prompt": "Write the changelog entry for this diff.",
+        "top_k": 1
       }
     ],
     "negative": [
@@ -26,6 +34,10 @@
       {
         "prompt": "Write integration tests for the payments API",
         "owner": "test-driven-development"
+      },
+      {
+        "prompt": "This test started failing right after this change, here is the diff, what broke?",
+        "owner": "debugging-and-error-recovery"
       }
     ]
   },

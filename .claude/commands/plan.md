@@ -1,5 +1,6 @@
 ---
 description: Break work into small verifiable tasks with acceptance criteria and dependency ordering
+disable-model-invocation: true
 ---
 
 Invoke the agent-skills:planning-and-task-breakdown skill.

@@ -45,12 +45,12 @@ Two complementary approaches — use both:
 - **RUM (web-vitals library, CrUX):** Real user data in real conditions. Required to validate that a fix actually improved user experience.
 
 **Frontend:**
-```bash
-# Synthetic: Lighthouse in Chrome DevTools (or CI)
-# Chrome DevTools → Performance tab → Record
-# Chrome DevTools MCP → Performance trace
+```javascript
+// Synthetic: Lighthouse in Chrome DevTools (or CI)
+// Chrome DevTools → Performance tab → Record
+// Chrome DevTools MCP → Performance trace
 
-# RUM: Web Vitals library in code
+// RUM: Web Vitals library in code
 import { onLCP, onINP, onCLS } from 'web-vitals';
 
 onLCP(console.log);
@@ -59,12 +59,12 @@ onCLS(console.log);
 ```
 
 **Backend:**
-```bash
-# Response time logging
-# Application Performance Monitoring (APM)
-# Database query logging with timing
+```javascript
+// Response time logging
+// Application Performance Monitoring (APM)
+// Database query logging with timing
 
-# Simple timing
+// Simple timing
 console.time('db-query');
 const result = await db.query(...);
 console.timeEnd('db-query');
@@ -205,8 +205,8 @@ Lighthouse Performance score: ≥ 90
 # Bundle size check
 npx bundlesize --config bundlesize.config.json
 
-# Lighthouse CI
-npx lhci autorun
+# Lighthouse CI. The CLI package is @lhci/cli; unscoped `lhci` on npm is not it.
+npx --package=@lhci/cli lhci autorun
 ```
 
 ## See Also

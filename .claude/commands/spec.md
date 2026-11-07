@@ -1,5 +1,6 @@
 ---
 description: Start spec-driven development — write a structured specification before writing code
+disable-model-invocation: true
 ---
 
 Invoke the agent-skills:spec-driven-development skill.

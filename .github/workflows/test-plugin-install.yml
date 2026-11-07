@@ -43,6 +43,9 @@ jobs:
       - name: Test reference-link validator
         run: node --test scripts/validate-reference-links-test.js
 
+      - name: Test staged-secret scan reference
+        run: node --test scripts/staged-secret-scan-test.js
+
       - name: Test session-start hook payload
         run: bash hooks/session-start-test.sh
 
