@@ -13,9 +13,9 @@ name: probity-rules
 #   hooks/probity/README.md "Releasing".
 #
 # Releasing = bump "version" in hooks/probity/package.json, add a
-# CHANGELOG entry, merge to main. Do NOT git-tag npm versions with bare
-# tags: scripts/validate-versions.js reads the nearest tag as the plugin
-# manifest version.
+# CHANGELOG entry, bump the plugin manifests too (scripts/validate-versions.js
+# fails the PR otherwise), merge to main. Do NOT git-tag npm versions with
+# bare tags: validate-versions.js reads every x.y.z tag as a plugin release.
 
 on:
   push:
