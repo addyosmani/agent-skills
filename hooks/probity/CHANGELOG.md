@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+`requireReviewRecord` no longer misses a merge that switches branches first ([#195](https://github.com/JJChill/agent-skills/issues/195)).
+
+- **Before:** PreToolUse runs before the whole command, so `git switch main && git merge --no-ff b -m "…"` was judged while HEAD was still the feature branch. The gate saw an unprotected branch and passed a merge into `main` with no record. Only `probity-review-record` in CI caught it. The issue blamed the router selecting no agents; that wasn't the cause.
+- **Now:**
+  - A `git switch` or `git checkout` earlier in the same command, in the same repository (`cd`, `git -C`), sets the branch the merge is judged against.
+  - Merge files, fast-forward detection and routing are measured from that branch, not HEAD.
+  - `git switch -` is treated as unknown and enforced (fail safe).
+  - Path checkouts (`git checkout -- <path>`, `git checkout <tree> <path>`) don't count as switches.
+- **For custom adapters:** `ReviewRecordGit.mergeFiles` and `wouldFastForward`, and the `routeMerge` dependency, take an optional third `head` argument (default `HEAD`). Existing two-argument adapters still type-check.
+- **Docs:** code-review-and-quality's Review Record says what to write when the router selects no agents.
+
 ## 0.4.65
 
 `requireReviewRecord` gates GitLab merges ([#193](https://github.com/JJChill/agent-skills/issues/193)).

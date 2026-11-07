@@ -160,9 +160,11 @@ function mergeBranches(args: string[]): string[] {
 /** Git and GitHub lookups the gate makes; injectable for tests. */
 export type ReviewRecordGit = {
   currentBranch(dir: string): string
-  /** Repo-relative files the merge would bring in. */
-  mergeFiles(dir: string, branches: string[]): string[]
-  wouldFastForward(dir: string, branches: string[]): boolean
+  /** Repo-relative files the merge would bring in. `head` is the branch the
+   *  merge lands on: `HEAD`, or the branch a `git switch` earlier in the same
+   *  command moves to (#195). */
+  mergeFiles(dir: string, branches: string[], head?: string): string[]
+  wouldFastForward(dir: string, branches: string[], head?: string): boolean
   prFiles(pr: string | undefined, dir: string): string[]
   prBase(pr: string | undefined, dir: string): string
   /** glab (#193): the MR's target branch, files, and the target project's
@@ -180,10 +182,10 @@ const lines = (text: string) => text.split('\n').map((line) => line.trim()).filt
 
 export const defaultReviewRecordGit: ReviewRecordGit = {
   currentBranch: (dir) => run('git', ['rev-parse', '--abbrev-ref', 'HEAD'], dir),
-  mergeFiles: (dir, branches) => [
-    ...new Set(branches.flatMap((branch) => lines(run('git', ['diff', '--name-only', `HEAD...${branch}`], dir)))),
+  mergeFiles: (dir, branches, head = 'HEAD') => [
+    ...new Set(branches.flatMap((branch) => lines(run('git', ['diff', '--name-only', `${head}...${branch}`], dir)))),
   ],
-  wouldFastForward(dir, branches) {
+  wouldFastForward(dir, branches, head = 'HEAD') {
     if (branches.length !== 1) return false
     try {
       if (run('git', ['config', '--get', 'merge.ff'], dir) === 'false') return false
@@ -191,7 +193,7 @@ export const defaultReviewRecordGit: ReviewRecordGit = {
       // unset: git's default allows fast-forward
     }
     try {
-      run('git', ['merge-base', '--is-ancestor', 'HEAD', branches[0]!], dir)
+      run('git', ['merge-base', '--is-ancestor', head, branches[0]!], dir)
       return true
     } catch {
       return false
@@ -264,11 +266,42 @@ type Merge = {
   dir: string
   args: string[]
   stdin: string[]
+  /** git merges after a `git switch`/`git checkout` in the same command:
+   *  the branch switched to (`null` when unknown, e.g. `git switch -`) and
+   *  the ref to diff from. */
+  switched?: Switch
+}
+
+type Switch = { branch: string | null; head: string }
+
+/**
+ * The branch a `git switch` / `git checkout` argv (from the subcommand on)
+ * moves to, or undefined when it doesn't switch branches (a path checkout).
+ */
+function branchSwitch(args: string[]): Switch | undefined {
+  const sub = args[0]
+  if (args.includes('--')) return undefined // checkout [<tree>] -- <paths>
+  const CREATE = sub === 'switch' ? ['-c', '-C', '--create', '--force-create', '--orphan'] : ['-b', '-B', '--orphan']
+  const VALUE = new Set(['--conflict', '--pathspec-from-file'])
+  const positional: string[] = []
+  let created: string | undefined
+  for (let k = 1; k < args.length; k++) {
+    const arg = args[k]!
+    if (CREATE.includes(arg)) created = args[++k]
+    else if (VALUE.has(arg)) k++
+    else if (arg === '-d' || arg === '--detach') return { branch: 'HEAD', head: 'HEAD' }
+    else if (arg === '-' || !arg.startsWith('-')) positional.push(arg)
+  }
+  if (created !== undefined) return { branch: created, head: positional[0] ?? 'HEAD' }
+  if (positional.length !== 1) return undefined // checkout <tree> <paths>, or nothing to switch to
+  const target = positional[0]!
+  return target === '-' ? { branch: null, head: '@{-1}' } : { branch: target, head: target }
 }
 
 /** The `git merge` / `gh pr merge` invocations in a shell command, with the directory each runs in. */
 function findMerges(command: string): Merge[] {
   const merges: Merge[] = []
+  const switched = new Map<string, Switch>()
   let dir = process.cwd()
   for (const simple of parseShell(command)) {
     const words = skipPrefixes(simple)
@@ -277,12 +310,18 @@ function findMerges(command: string): Merge[] {
       dir = isAbsolute(words[1]) ? words[1] : resolve(dir, words[1])
       continue
     }
-    if (name === 'git' && gitSubcommand(words.slice(1)) === 'merge') {
-      const index = words.indexOf('merge')
+    const sub = name === 'git' ? gitSubcommand(words.slice(1)) : undefined
+    if (sub === 'merge' || sub === 'switch' || sub === 'checkout') {
+      const index = words.indexOf(sub)
       const dashC = words.slice(1, index).indexOf('-C')
       const target = dashC >= 0 ? words[dashC + 2]! : undefined
-      const mergeDir = target ? (isAbsolute(target) ? target : resolve(dir, target)) : dir
-      merges.push({ kind: 'git', dir: mergeDir, args: words.slice(index), stdin: simple.stdin })
+      const gitDir = target ? (isAbsolute(target) ? target : resolve(dir, target)) : dir
+      if (sub === 'merge') {
+        merges.push({ kind: 'git', dir: gitDir, args: words.slice(index), stdin: simple.stdin, switched: switched.get(gitDir) })
+      } else {
+        const move = branchSwitch(words.slice(index))
+        if (move) switched.set(gitDir, move)
+      }
     } else if (name === 'gh' && words[1] === 'pr' && words[2] === 'merge') {
       merges.push({ kind: 'gh', dir, args: words.slice(2), stdin: simple.stdin })
     } else if (name === 'glab' && words[1] === 'mr' && (words[2] === 'merge' || words[2] === 'accept')) {
@@ -380,16 +419,16 @@ export function missingObligations(record: ReviewRecord, routing: Routing): stri
   })
 }
 
-/** Routes what `git merge <branches>` brings in: merge-base(HEAD, branch)..branch. */
+/** Routes what `git merge <branches>` brings in: merge-base(head, branch)..branch. */
 function defaultRouteMerge(
   review: ReviewConfig,
   obligations: readonly ReviewedExemption[],
-): (dir: string, branches: string[]) => Routing {
-  return (dir, branches) => {
+): (dir: string, branches: string[], head?: string) => Routing {
+  return (dir, branches, head = 'HEAD') => {
     const top = gitTop(dir)
     const input: DiffInput = { files: [], added: {}, binary: [] }
     for (const branch of branches) {
-      const base = execFileSync('git', ['merge-base', 'HEAD', branch], { cwd: top, encoding: 'utf8' }).trim()
+      const base = execFileSync('git', ['merge-base', head, branch], { cwd: top, encoding: 'utf8' }).trim()
       const part = collectDiff(top, { base, head: branch })
       input.files.push(...part.files.filter((file) => !input.files.includes(file)))
       input.binary.push(...part.binary)
@@ -444,7 +483,7 @@ export function requireReviewRecord(
   review: ReviewConfig,
   deps: {
     git?: ReviewRecordGit
-    routeMerge?: (dir: string, branches: string[]) => Routing
+    routeMerge?: (dir: string, branches: string[], head?: string) => Routing
     routePr?: (pr: string | undefined, dir: string) => Routing
     routeMr?: (mr: string | undefined, repo: string | undefined, dir: string) => Routing
     /** The rule entries whose exemption obligations apply (a preset's
@@ -499,21 +538,26 @@ export function requireReviewRecord(
     return { kind: 'pass' }
   }
 
-  function judgeGitMerge({ dir, args }: Merge): RuleResult | undefined {
+  function judgeGitMerge({ dir, args, switched }: Merge): RuleResult | undefined {
     if (args.some((arg) => /^--(abort|continue|quit|squash|no-commit)$/.test(arg))) return undefined
     let branch: string | undefined
-    try {
-      branch = git.currentBranch(dir)
-    } catch {
-      branch = undefined // unknown: enforce (fail safe)
+    if (switched) {
+      branch = switched.branch ?? undefined // switched to an unknown branch: enforce (fail safe)
+    } else {
+      try {
+        branch = git.currentBranch(dir)
+      } catch {
+        branch = undefined // unknown: enforce (fail safe)
+      }
     }
     if (branch !== undefined && !protectedBranches.includes(branch)) return undefined
     const target = branch ?? 'the current branch'
+    const head = switched?.head ?? 'HEAD'
     const branches = mergeBranches(args)
-    const incoming = branches.length > 0 ? branches : ['@{upstream}']
-    if (!touchesEnforced(() => git.mergeFiles(dir, incoming))) return undefined
+    const incoming = branches.length > 0 ? branches : [head === 'HEAD' ? '@{upstream}' : `${head}@{upstream}`]
+    if (!touchesEnforced(() => git.mergeFiles(dir, incoming, head))) return undefined
     const noFf = args.includes('--no-ff')
-    if (args.includes('--ff-only') || (!noFf && safeFastForward(dir, incoming))) {
+    if (args.includes('--ff-only') || (!noFf && safeFastForward(dir, incoming, head))) {
       return violation(target, [
         'a fast-forward merge creates no commit to hold the record; merge with `git merge --no-ff <branch> -m "…"`',
       ])
@@ -527,7 +571,7 @@ export function requireReviewRecord(
           : 'no -m or -F message given',
       ])
     }
-    const found = problems(parseReviewRecord(message), () => routeMerge(dir, incoming))
+    const found = problems(parseReviewRecord(message), () => routeMerge(dir, incoming, head))
     return found.length > 0 ? violation(target, found) : undefined
   }
 
@@ -575,9 +619,9 @@ export function requireReviewRecord(
     return found.length > 0 ? violation(target, found) : undefined
   }
 
-  function safeFastForward(dir: string, branches: string[]): boolean {
+  function safeFastForward(dir: string, branches: string[], head: string): boolean {
     try {
-      return git.wouldFastForward(dir, branches)
+      return git.wouldFastForward(dir, branches, head)
     } catch {
       return false
     }

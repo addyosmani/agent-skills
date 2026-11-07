@@ -549,3 +549,94 @@ test('should call glab with the documented argv in the default adapter', { skip:
     'api projects/7',
   ])
 })
+
+// --- #195: a branch switch earlier in the same command -------------------------
+// PreToolUse runs before the whole command, so `git switch main && git merge b`
+// is judged while HEAD is still the feature branch. The gate must judge the
+// merge against the branch the command switches to.
+
+function onFeature(overrides: Partial<ReviewRecordGit> = {}) {
+  return fakeGit({ currentBranch: () => 'feature', ...overrides })
+}
+
+const switchThenMerge: [string, string][] = [
+  ['git switch', 'git switch -q main && git merge --no-ff b -m "Merge b"'],
+  ['git checkout', 'git checkout main && git merge --no-ff b -m "Merge b"'],
+  ['git -C', 'git -C repo switch main; git -C repo merge --no-ff b -m "Merge b"'],
+  ['a cd before both', 'cd repo && git switch main && git merge --no-ff b -m "Merge b"'],
+  ['switch to the previous branch (unknown: fail safe)', 'git switch - && git merge --no-ff b -m "Merge b"'],
+]
+for (const [name, command] of switchThenMerge) {
+  test(`should judge a merge after a branch switch in the same command: ${name}`, async () => {
+    assert.equal((await judge(command, onFeature())).kind, 'violation')
+  })
+}
+
+test('should pass a valid record after switching to main in the same command', async () => {
+  assert.equal((await judge(`git switch main && git merge --no-ff b -m ${VALID}`, onFeature())).kind, 'pass')
+})
+
+const switchAway: [string, string][] = [
+  ['to an unprotected branch', 'git switch release && git merge --no-ff b -m "Merge b"'],
+  ['to a new branch', 'git switch -c topic && git merge --no-ff b -m "Merge b"'],
+  ['with checkout -b', 'git checkout -b topic main && git merge --no-ff b -m "Merge b"'],
+]
+for (const [name, command] of switchAway) {
+  test(`should pass a merge after switching away from main: ${name}`, async () => {
+    assert.equal((await judge(command, fakeGit())).kind, 'pass')
+  })
+}
+
+test('should not treat a path checkout as a branch switch', async () => {
+  assert.equal((await judge('git checkout -- main && git merge --no-ff b -m "Merge b"', onFeature())).kind, 'pass')
+  assert.equal((await judge('git checkout main -- src/a.kt && git merge --no-ff b -m "Merge b"', onFeature())).kind, 'pass')
+})
+
+test('should not carry a switch in one repository over to a merge in another', async () => {
+  assert.equal((await judge('git -C other switch main && git merge --no-ff b -m "Merge b"', onFeature())).kind, 'pass')
+})
+
+test('should list merge files and fast-forward from the switched-to branch, not HEAD', async () => {
+  const heads: string[] = []
+  const git = onFeature({
+    mergeFiles: (_dir, _branches, head) => {
+      heads.push(`files:${head}`)
+      return ['src/app.kt']
+    },
+    wouldFastForward: (_dir, _branches, head) => {
+      heads.push(`ff:${head}`)
+      return false
+    },
+  })
+  await judge('git switch main && git merge --no-ff b -m "Merge b"', git)
+  await judge('git switch main && git merge b -m "Merge b"', git)
+  assert.deepEqual(heads, ['files:main', 'files:main', 'ff:main'])
+})
+
+test('should deny the exact homelab command against a real repository (#195)', async () => {
+  const { execFileSync } = await import('node:child_process')
+  const { mkdirSync } = await import('node:fs')
+  const dir = mkdtempSync(join(tmpdir(), 'review-record-switch-'))
+  const git = (...args: string[]) => execFileSync('git', args, { cwd: dir, encoding: 'utf8' })
+  git('init', '-q', '-b', 'main')
+  git('config', 'user.email', 't@example.com')
+  git('config', 'user.name', 't')
+  git('config', 'commit.gpgsign', 'false')
+  writeFileSync(join(dir, 'README.md'), 'x\n')
+  git('add', '.')
+  git('commit', '-q', '-m', 'init')
+  git('switch', '-q', '-c', 'feature')
+  mkdirSync(join(dir, 'src'))
+  writeFileSync(join(dir, 'src/a.kt'), 'x\n')
+  git('add', '.')
+  git('commit', '-q', '-m', 'work')
+  // HEAD stays on feature, as it was when the hook ran.
+  const rule = requireReviewRecord({ record: { enforceForPaths: /^src\// } })
+  const merge = (message: string) =>
+    rule(action(`cd ${dir} && git switch -q main && git merge --no-ff feature -m ${message}`))
+  assert.equal((await merge('"Merge feature\n\nFixes #70"')).kind, 'violation')
+  assert.equal((await merge(VALID)).kind, 'pass')
+  const ff = await rule(action(`cd ${dir} && git switch -q main && git merge feature -m ${VALID}`))
+  assert.equal(ff.kind, 'violation')
+  assert.match(ff.reason ?? '', /fast-forward/)
+})
