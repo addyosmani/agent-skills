@@ -209,7 +209,7 @@ Check the author's verification story:
 - What tests were run?
 - Did the build pass?
 - Was the change tested manually?
-- Are there screenshots for UI changes?
+- Are there screenshots for UI changes, at phone and desktop widths, in each key state? (frontend-ui-engineering, Visual Verification Checkpoint)
 - Is there a before/after comparison?
 ```
 

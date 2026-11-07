@@ -34,6 +34,7 @@ Once all three reports are back, the main agent (not a sub-persona) synthesizes 
 4. **Accessibility** — Verify keyboard nav, screen reader support, contrast (not covered by the three personas — handle directly here, or invoke the accessibility checklist).
 5. **Infrastructure** — Env vars, migrations, monitoring, feature flags. Verify directly.
 6. **Documentation** — README, ADRs, changelog. Verify directly.
+7. **UI** — If the launch includes UI changes, confirm the visual verification checkpoint ran for them (`frontend-ui-engineering`): there should be a `Visual-check:` line in each merge's review record, and the app shell itself (not just `/health`) should load after deploy. If it didn't run, run it before deciding.
 
 ## Phase C — Decision and rollback
 
