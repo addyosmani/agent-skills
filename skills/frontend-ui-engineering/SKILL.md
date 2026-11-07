@@ -303,6 +303,17 @@ function useToggleTask() {
 }
 ```
 
+## Visual Verification Checkpoint
+
+Tests and code review can all pass while the page is visibly broken on a phone. Before merging any diff that touches UI source or page assets (components, styles, templates, and the HTML/CSS/JS that glues them), look at what you built:
+
+1. **Run it for real.** Build, then run it locally or deploy a preview. A component test harness alone doesn't count: the page shell, routing, and viewport meta are part of what breaks.
+2. **Load it at phone and desktop widths.** Use 390px and 1280px at minimum, plus the breakpoints above that the change affects. Use WebKit wherever iOS users matter: iOS viewport and touch-scroll bugs don't reproduce in Chromium.
+3. **Capture each changed screen in each key state:** loading, empty, error, populated, and any other state the design shows. Name each file `<screen>.<state>.<width>w[.<engine>].png` (e.g. `notes.empty.390w.webkit.png`), so a reviewer can tell what it shows. For how to drive the browser and capture, see `browser-testing-with-devtools`.
+4. **Compare against the design.** When a design source exists, hand the screenshots, the tokens, and the list of parts deliberately not built to the [design-conformance-reviewer](../../agents/design-conformance-reviewer.md) persona. Without a design source, compare against the screen's previous version and the design system yourself.
+5. **After deploy, check that the app shell loads.** Open `/` (or the app's entry route) and confirm it renders. A `/health` endpoint only proves the server is up, not that the bundle loads.
+6. **Record what you checked.** Add a `Visual-check:` line to the review record (`code-review-and-quality`, Step 6), e.g. `Visual-check: ran (390w webkit, 1280w chromium; states: loading, empty, error, populated)`, or `Visual-check: skipped: <reason>`. List any state you couldn't capture.
+
 ## See Also
 
 For detailed accessibility requirements and testing tools, see `../../references/accessibility-checklist.md`.
@@ -317,6 +328,7 @@ Components are driving adapters: they render core-supplied state and forward use
 | "We'll make it responsive later" | Retrofitting responsive design is 3x harder than building it from the start. |
 | "The design isn't final, so I'll skip styling" | Use the design system defaults. Unstyled UI creates a broken first impression for reviewers. |
 | "This is just a prototype" | Prototypes become production code. Build the foundation right. |
+| "The tests pass, so the page is fine" | Tests don't render the page at a phone width in WebKit. Look at it before merging (Visual Verification Checkpoint). |
 | "The AI aesthetic is fine for now" | It signals low quality. Use the project's actual design system from the start. |
 
 ## Red Flags
@@ -328,6 +340,8 @@ Components are driving adapters: they render core-supplied state and forward use
 - No keyboard navigation testing
 - Color as the sole indicator of state (red/green without text or icons)
 - Generic "AI look" (purple gradients, oversized cards, stock layouts)
+- A UI change merged without anyone loading it at a phone width
+- A post-deploy check that hits `/health` but never loads the app shell
 
 ## Verification
 
@@ -341,3 +355,4 @@ After building UI:
 - [ ] Follows the project's design system (spacing, colors, typography)
 - [ ] The rendered result passes a final UI-specific finish-gate review
 - [ ] No accessibility warnings in dev tools or axe-core
+- [ ] Visual verification checkpoint done: each changed screen captured at phone and desktop widths in its key states, compared against the design, and recorded as a `Visual-check:` line
