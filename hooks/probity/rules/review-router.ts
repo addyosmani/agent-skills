@@ -7,6 +7,7 @@ import {
   DEFAULT_TEST_PATHS,
   type ReviewConfig,
 } from './review-config.js'
+import type { ReviewedExemption } from './review-obligations.js'
 import { anchorGlob, buildMatcher } from './scoping.js'
 
 /**
@@ -27,7 +28,9 @@ export type DiffInput = {
 }
 
 export type RoutedAgent = { agent: string; why: string[] }
-export type Routing = { agents: RoutedAgent[] }
+/** An obligation (#181) the diff incurs: a changed file sits in its exemption. */
+export type IncurredObligation = Omit<ReviewedExemption, 'glob'> & { files: string[] }
+export type Routing = { agents: RoutedAgent[]; obligations?: IncurredObligation[] }
 
 /** A persona's bare name: `agent-skills:code-reviewer` → `code-reviewer`. */
 export function bareAgent(agent: string): string {
@@ -40,10 +43,17 @@ function test(pattern: RegExp, text: string): boolean {
 }
 
 /**
- * Routes `input`. `top` is the repository root (absolute); route and
- * ignore globs are anchored at `config.root`, resolved against it.
+ * Routes `input`. `top` is the repository root (absolute); route,
+ * ignore and obligation globs are anchored at `config.root`, resolved
+ * against it. Each obligation a changed file falls under adds its
+ * `reviewWith` agent; obligations never suppress the fallback.
  */
-export function routeReview(config: ReviewConfig, input: DiffInput, top: string): Routing {
+export function routeReview(
+  config: ReviewConfig,
+  input: DiffInput,
+  top: string,
+  obligations: readonly ReviewedExemption[] = [],
+): Routing {
   const root = config.root === undefined ? top : isAbsolute(config.root) ? config.root : resolve(top, config.root)
   const absolute = (file: string) => `${top.replace(/\/$/, '')}/${file}`
   const matcher = (globs: string[]) => buildMatcher(globs.map((glob) => anchorGlob(glob, root)))
@@ -84,10 +94,18 @@ export function routeReview(config: ReviewConfig, input: DiffInput, top: string)
   if (found.size === 0 && files.some(isProd)) {
     for (const agent of config.fallback ?? []) add(agent, 'no specific trigger; default pass for source changes')
   }
+  const incurred: IncurredObligation[] = []
+  for (const { glob, ...obligation } of obligations) {
+    const inExemption = matcher([glob.replace(/^!/, '')])
+    const hit = files.filter((file) => inExemption(absolute(file)))
+    if (hit.length === 0) continue
+    incurred.push({ ...obligation, files: hit })
+    add(obligation.reviewWith, `obligation ${obligation.id}: ${obligation.check}`)
+  }
   if (files.length > 0) for (const agent of config.always ?? []) add(agent, 'runs on every change')
 
   const agents = [...found.values()].sort((a, b) => bareAgent(a.agent).localeCompare(bareAgent(b.agent)))
-  return { agents }
+  return { agents, obligations: incurred }
 }
 
 /** `text`: one `agent|why; why` line per agent. `json`: the routing object. */

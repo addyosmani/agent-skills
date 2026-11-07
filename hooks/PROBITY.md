@@ -156,6 +156,38 @@ export const review = reviewConfig({
 
 With `record.requireRoutedAgents`, the merge gate routes what the merge brings in and denies a record that doesn't list each selected agent (ran, or skipped with a reason). A routing error denies (fail safe). In CI, pass `--routed-range ${{ github.event.before }}..HEAD` to `probity-review-record`, so only newly pushed merges are judged against today's routes. Re-routing old merges would fail every merge made before a route existed. An all-zero start (a new branch or a force push) skips the routed checks.
 
+## Review obligations (TDD exemptions that name a reviewer)
+
+Projects carve files out of TDD where no harness can drive them red, such as `!**/*Screen.kt` for thin rendering. The carve-out is only safe while review keeps those files thin. Nothing tied the two together, and logic leaked into an exempt screen ([#181](https://github.com/JJChill/agent-skills/issues/181)). An exemption can now declare its obligation on the negation itself:
+
+```ts
+const rules = kotlinRuleEntries(ROOT, {
+  tddGlobs: [
+    'ui/web/src/**',
+    {
+      glob: '!ui/web/src/commonMain/**/*Screen.kt',
+      id: 'thin-rendering',
+      reviewWith: 'code-reviewer',
+      check: 'no branching on domain state; only renders view-model fields',
+      reason: 'screens are thin rendering; logic is unit-tested in the view model',
+    },
+  ],
+})
+
+export const review = reviewConfig({ record: { enforceForPaths: CODE, requireObligations: true } })
+
+export default probityConfig({
+  rules: [...rules, requireReviewRecord(review, { obligationsFrom: rules })],
+})
+```
+
+- **Where it's accepted.** `tddGlobs` in the Kotlin, JS and Swift presets, and `tddExemptions` in the KMP preset, whose TDD globs are fixed. For hand-written blocks, use `reviewedBlock({ files: [...], rules })`. Other glob options take strings only.
+- **What the block gets.** The plain `!` negation, so TDD scoping is unchanged. The obligation travels with the block as metadata.
+- **Routing.** `probity-review-route` lists each obligation a diff incurs, with its files. It also routes the `reviewWith` agent, with the `check` as the reason. Obligations never suppress the fallback.
+- **The record.** It must carry `Review-obligation: <id> (addressed by <agent>)`, and that agent must have run, not been skipped. With `requireObligations`, the merge gate denies otherwise, and so does `probity-review-record --routed-range` in CI.
+- **Setup.** `probity-scope-report` lists each obligation with the number of files it covers. It warns (exit 1 under `--strict`) about a plain `!` in `tddGlobs` that declares no obligation.
+- **Paths.** Obligation globs, like route globs, are matched relative to `review.root`, which defaults to the repository root. If `probity.config.ts` isn't at the root, set `root: ROOT`.
+
 ## Shell writes to scoped files (`shellWriteScreen`)
 
 Probity's content rules judge write actions: `Write`, `Edit` and `NotebookEdit` in Claude Code, the write tool in Kiro. A file changed by a shell command (`sed -i`, `cat > file <<EOF`, `tee`, `cp`/`mv`, `git apply`, or a `python3 - <<'EOF' … open(p, 'w')` script) reaches Probity as a command, so none of those rules see it. Scripted edits are an ordinary shell idiom, which makes this an easy bypass to take by accident ([#79](https://github.com/JJChill/agent-skills/issues/79)).

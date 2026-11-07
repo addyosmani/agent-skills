@@ -347,3 +347,47 @@ test('should not route at all unless requireRoutedAgents is on', async () => {
   await rule(action(`git merge --no-ff b -m ${VALID}`))
   assert.equal(called, false)
 })
+
+// --- #181 part 2: obligations must be addressed in the record -----------------
+
+const INCURRED = {
+  agents: [{ agent: 'code-reviewer', why: ['obligation thin-rendering: no branching'] }],
+  obligations: [{ id: 'thin-rendering', reviewWith: 'agent-skills:code-reviewer', check: 'no branching', reason: 'r', files: ['ui/AScreen.kt'] }],
+}
+function obligationRule(route = () => INCURRED) {
+  return requireReviewRecord(
+    { record: { requireObligations: true } },
+    { git: fakeGit(), routeMerge: route, obligationsFrom: [] },
+  )
+}
+const withLines = (...lines: string[]) => `"Merge b\n\n${lines.join('\n')}"`
+
+test('should deny a merge that incurs an obligation the record does not address', async () => {
+  const result = await obligationRule()(action(`git merge --no-ff b -m ${withLines('Reviewed-by-agent: code-reviewer (ran, 0 findings)')}`))
+  assert.equal(result.kind, 'violation')
+  assert.match(result.reason ?? '', /thin-rendering.*ui\/AScreen\.kt.*no branching/)
+  assert.match(result.reason ?? '', /Review-obligation: thin-rendering \(addressed by code-reviewer\)/)
+})
+
+test('should pass an obligation addressed by its reviewer, who ran', async () => {
+  const msg = withLines('Reviewed-by-agent: code-reviewer (ran, 0 findings)', 'Review-obligation: thin-rendering (addressed by agent-skills:code-reviewer)')
+  assert.equal((await obligationRule()(action(`git merge --no-ff b -m ${msg}`))).kind, 'pass')
+})
+
+test('should deny an obligation addressed by the wrong agent', async () => {
+  const msg = withLines('Reviewed-by-agent: code-reviewer (ran, 0 findings)', 'Review-obligation: thin-rendering (addressed by security-auditor)')
+  const result = await obligationRule()(action(`git merge --no-ff b -m ${msg}`))
+  assert.match(result.reason ?? '', /thin-rendering must be addressed by code-reviewer, not security-auditor/)
+})
+
+test('should deny an obligation whose reviewer was skipped', async () => {
+  const msg = withLines('Reviewed-by-agent: code-reviewer (skipped: busy)', 'Review-obligation: thin-rendering (addressed by code-reviewer)')
+  const result = await obligationRule()(action(`git merge --no-ff b -m ${msg}`))
+  assert.match(result.reason ?? '', /code-reviewer is recorded as skipped/)
+})
+
+test('should deny (config error) when requireObligations has no obligationsFrom', async () => {
+  const rule = requireReviewRecord({ record: { requireObligations: true } }, { git: fakeGit(), routeMerge: () => INCURRED })
+  const result = await rule(action(`git merge --no-ff b -m ${VALID}`))
+  assert.match(result.reason ?? '', /obligationsFrom/)
+})

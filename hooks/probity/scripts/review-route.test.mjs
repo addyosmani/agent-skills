@@ -76,3 +76,16 @@ test('should honour --base', (t) => {
   git('commit', '-q', '-m', 'work')
   assert.equal(route(dir, ['--base', 'HEAD']).stdout, '')
 })
+
+test('should list the obligations a diff incurs, from the config\'s rule blocks', (t) => {
+  const { dir, write } = repo(t)
+  write('probity.config.mjs', `
+import { reviewedBlock } from '${join(HERE, '..', 'rules', 'review-obligations.ts')}'
+export const review = { fallback: ['code-reviewer'] }
+export default { rules: [reviewedBlock({ files: ['ui/**', { glob: '!ui/**/*Screen.kt', id: 'thin-rendering', reviewWith: 'code-reviewer', check: 'renders only', reason: 'thin' }], rules: [] })] }
+`)
+  write('ui/notes/NotesScreen.kt', 'Text(title)\n')
+  const json = JSON.parse(route(dir, ['--format', 'json']).stdout)
+  assert.deepEqual(json.obligations.map((o) => [o.id, o.files]), [['thin-rendering', ['ui/notes/NotesScreen.kt']]])
+  assert.match(route(dir).stdout, /^code-reviewer\|.*obligation thin-rendering: renders only/m)
+})

@@ -19,6 +19,7 @@
  */
 import { resolve } from 'node:path'
 
+import { obligationsOf } from '../rules/review-obligations.js'
 import { collectDiff, defaultBase, formatRouting, gitTop, routeReview } from '../rules/review-router.js'
 import { loadReview } from './load-review.js'
 
@@ -59,7 +60,8 @@ try {
 const base = args.base ?? defaultBase(top, review.mainBranch)
 let routing
 try {
-  routing = routeReview(review, collectDiff(top, { base, includeUntracked: review.includeUntracked }), top)
+  const input = collectDiff(top, { base, includeUntracked: review.includeUntracked })
+  routing = routeReview(review, input, top, obligationsOf(loaded.config?.rules ?? []))
 } catch (error) {
   usage(`git could not diff against ${base} (${error instanceof Error ? error.message : String(error)})`)
 }

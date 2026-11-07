@@ -235,3 +235,42 @@ test('should collect a committed range only, between two commits', (t) => {
   assert.deepEqual(input.files, ['a/src/main/B.kt'])
   assert.deepEqual(input.added['a/src/main/B.kt'], ['val b = getOrNull()'])
 })
+
+// --- #181 part 2: obligations a diff incurs ---------------------------------
+
+const THIN = {
+  glob: '!ui/web/src/commonMain/**/*Screen.kt',
+  id: 'thin-rendering',
+  reviewWith: 'agent-skills:code-reviewer',
+  check: 'no branching on domain state',
+  reason: 'screens are thin rendering; logic is unit-tested in the view model',
+}
+
+test('should list an obligation the diff incurs, with its files, and route its reviewer', () => {
+  const input = diff({ 'ui/web/src/commonMain/notes/NotesScreen.kt': ['Text(state.title)'] })
+  const routing = routeReview(HOMELAB, input, ROOT, [THIN])
+  assert.deepEqual(routing.obligations, [
+    { id: 'thin-rendering', reviewWith: 'agent-skills:code-reviewer', check: 'no branching on domain state', reason: THIN.reason, files: ['ui/web/src/commonMain/notes/NotesScreen.kt'] },
+  ])
+  assert.deepEqual(
+    routing.agents.find((a) => a.agent === 'code-reviewer'),
+    { agent: 'code-reviewer', why: ['no specific trigger; default pass for source changes', 'obligation thin-rendering: no branching on domain state'] },
+  )
+})
+
+test('should not let an obligation suppress the fallback, nor duplicate its reviewer', () => {
+  const input = diff({ 'ui/web/src/commonMain/notes/NotesScreen.kt': ['Text(state.title)'] })
+  const agents = routeReview(HOMELAB, input, ROOT, [THIN]).agents.map((a) => a.agent)
+  // fallback code-reviewer and the obligation's agent-skills:code-reviewer are one persona
+  assert.deepEqual(agents, ['code-reviewer', 'silent-failure-hunter'])
+})
+
+test('should incur nothing when no changed file matches the exemption', () => {
+  const routing = routeReview(HOMELAB, diff({ 'ui/web/src/commonMain/notes/NotesViewModel.kt': ['val x = 1'] }), ROOT, [THIN])
+  assert.deepEqual(routing.obligations, [])
+})
+
+test('should print obligations in text output as extra agent lines', () => {
+  const routing = routeReview(reviewConfig({}), diff({ 'ui/web/src/commonMain/A/AScreen.kt': ['x'] }), ROOT, [THIN])
+  assert.equal(formatRouting(routing, 'text'), 'agent-skills:code-reviewer|obligation thin-rendering: no branching on domain state\n')
+})

@@ -17,6 +17,7 @@
  * copies the thin template (which calls this factory) and overrides
  * only the options its layout needs.
  */
+import { splitReviewedGlobs, tagReviewedBlock, type ReviewedExemption, type ReviewedGlobs } from '../rules/review-obligations.js'
 import { basename } from 'node:path'
 
 import { forbidContentPattern, type RuleEntry } from '@nizos/probity'
@@ -96,9 +97,10 @@ export type JsPresetOptions = {
   /** Files where internal-module mocking is forbidden (the only test
    *  seam is a port). */
   mockGlobs?: Globs
-  /** Files the TDD gate (the expensive, AI-validated rule) applies
-   *  to — scope this to the code you actually TDD. */
-  tddGlobs?: Globs
+  /** Source sets the TDD gate applies to. A `!` exemption may be an
+   *  object `{ glob, id, reviewWith, check, reason }` declaring the
+   *  review that keeps it safe (issue #181); see hooks/PROBITY.md. */
+  tddGlobs?: ReviewedGlobs
   /** The spec/acceptance layer the Language Test applies to. Do NOT
    *  widen this to DSL or protocol-driver files. */
   specGlobs?: Globs
@@ -219,7 +221,8 @@ export type JsPresetOptions = {
 export function jsRuleEntries(options: JsPresetOptions = {}): RuleEntry[] {
   const coreGlobs: Globs = options.coreGlobs ?? ['src/core/**', 'src/domain/**']
   const mockGlobs: Globs = options.mockGlobs ?? ['**/*.test.*', '**/*.spec.*', 'test/**', 'tests/**']
-  const tddGlobs: Globs = options.tddGlobs ?? ['src/**', 'test/**', 'tests/**']
+  const tddSplit = splitReviewedGlobs(options.tddGlobs ?? ['src/**', 'test/**', 'tests/**'], { requireInclude: true })
+  const tddGlobs = tddSplit.globs as unknown as Globs
   const specGlobs: Globs = options.specGlobs ?? ['specs/**', 'acceptance/**', '**/*.feature']
   const excludeGlobs = options.excludeGlobs ?? ['spikes/**', '**/build/**']
   const drivingAdapterGlobs: readonly string[] = options.drivingAdapterGlobs ?? [
@@ -437,7 +440,7 @@ export function jsRuleEntries(options: JsPresetOptions = {}): RuleEntry[] {
     }),
   )
 
-  return withJudgeTasks(compactingPreset(withShellWriteScreen(withExcludeGlobs(entries, excludeGlobs), {
+  return withJudgeTasks(compactingPreset(withShellWriteScreen(withExcludeGlobs(tagReviewedBlock(entries, tddGlobs, tddSplit), excludeGlobs), {
     enabled: options.shellWriteScreen,
   }), options))
 }

@@ -31,7 +31,8 @@
 import { execFileSync } from 'node:child_process'
 import { resolve } from 'node:path'
 
-import { missingRoutedAgents, parseReviewRecord } from '../rules/review-record.js'
+import { obligationsOf } from '../rules/review-obligations.js'
+import { missingObligations, missingRoutedAgents, parseReviewRecord } from '../rules/review-record.js'
 import { collectDiff, routeReview } from '../rules/review-router.js'
 import { loadReview } from './load-review.js'
 
@@ -60,12 +61,15 @@ function parseArgs(argv: string[]): Args {
 }
 
 const args = parseArgs(process.argv.slice(2))
-let review
+let loaded
 try {
-  ;({ review } = await loadReview(args.root, args.config))
+  loaded = await loadReview(args.root, args.config)
 } catch (error) {
   usage(error instanceof Error ? error.message : String(error))
 }
+const { review } = loaded
+const obligations = obligationsOf(loaded.config?.rules ?? [])
+const routedChecks = Boolean(review.record?.requireRoutedAgents || review.record?.requireObligations)
 const enforce = review.record?.enforceForPaths
 
 const git = (...gitArgs: string[]): string =>
@@ -93,8 +97,8 @@ const touchesEnforced = (commit: string): boolean => {
 let routed: Set<string> = new Set()
 const notes: string[] = []
 if (args.routedRange) {
-  if (!review.record?.requireRoutedAgents) {
-    notes.push('--routed-range given but review.record.requireRoutedAgents is off: routed checks skipped.')
+  if (!routedChecks) {
+    notes.push('--routed-range given but neither requireRoutedAgents nor requireObligations is on: routed checks skipped.')
   } else if (/^0+\.\./.test(args.routedRange)) {
     notes.push(`--routed-range ${args.routedRange} starts at the all-zero commit (new branch or force push): routed checks skipped.`)
   } else {
@@ -112,7 +116,9 @@ for (const commit of firstParentCommits(args.range!)) {
   const problems = [...record.errors]
   if (problems.length === 0 && routed.has(commit)) {
     const input = collectDiff(top, { base: `${commit}^1`, head: commit })
-    problems.push(...missingRoutedAgents(record, routeReview(review, input, top)))
+    const routing = routeReview(review, input, top, obligations)
+    if (review.record?.requireRoutedAgents) problems.push(...missingRoutedAgents(record, routing))
+    if (review.record?.requireObligations) problems.push(...missingObligations(record, routing))
   }
   if (problems.length > 0) {
     const subject = git('log', '-1', '--format=%h %s', commit)
