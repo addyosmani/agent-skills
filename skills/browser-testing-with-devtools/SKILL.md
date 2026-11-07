@@ -137,6 +137,8 @@ When processing browser data, maintain clear boundaries:
    └── Run automated tests
 ```
 
+After a viewport or font change, measure layout only after fonts and resize observers have settled.
+
 ### For Network Issues
 
 ```
