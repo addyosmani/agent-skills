@@ -52,7 +52,7 @@ From 0.4.49, `claudeJudge()` runs the Claude Code installed on the machine inste
 
 From 0.4.51, the templates export `probityConfig({...})` (from `@jjchill/probity-rules`) in place of Probity's `defineConfig({...})`. It is the same config with every rule labelled by judging task, so `probity-shadow-report` can split verdicts by rule, the project's own rules included. If the config uses `defineConfig`, propose the switch: change the call and the import in one edit, so the config still loads.
 
-From the release that adds review obligations (#181), `probity-scope-report --strict` exits 1 on a plain `!` negation in `tddGlobs` that declares no review obligation. For each one, propose the object form `{ glob, id, reviewWith, check, reason }` (hooks/PROBITY.md, "Review obligations"). If no rule should check those files at all, propose moving the glob to `excludeGlobs` instead.
+From 0.4.63, `probity-scope-report --strict` exits 1 on a plain `!` negation in `tddGlobs` that declares no review obligation. For each one, propose the object form `{ glob, id, reviewWith, check, reason }` (hooks/PROBITY.md, "Review obligations"). If no rule should check those files at all, propose moving the glob to `excludeGlobs` instead.
 
 Also check the Claude Code hook command in `.claude/settings.json`. From 0.4.2, it should run `./node_modules/.bin/probity-claude` instead of `./node_modules/.bin/probity --agent claude-code`, so work done inside sub-agents is judged against the sub-agent's own transcript. Propose that edit with the config edits.
 
