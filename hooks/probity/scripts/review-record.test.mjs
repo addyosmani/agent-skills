@@ -137,3 +137,22 @@ test('should skip routed checks for an all-zero before (new branch push)', (t) =
   assert.equal(res.status, 0, res.out)
   assert.match(res.out, /skipp/i)
 })
+
+test('should check obligations on --routed-range when requireObligations is on', (t) => {
+  const { dir, base, merge, git } = repo(t)
+  writeFileSync(join(dir, 'probity.config.mjs'), `
+import { reviewedBlock } from '${join(HERE, '..', 'rules', 'review-obligations.ts')}'
+export const review = { record: { enforceForPaths: /^src\\//, requireObligations: true } }
+export default { rules: [reviewedBlock({ files: ['src/**', { glob: '!src/ui/**', id: 'thin-rendering', reviewWith: 'code-reviewer', check: 'renders only', reason: 'thin' }], rules: [] })] }
+`)
+  git('add', '.')
+  git('commit', '-q', '-m', 'config')
+  const before = git('rev-parse', 'HEAD')
+  merge('screen', 'src/ui/Screen.kt', `Merge screen\n\n${RECORD}`)
+  const missing = check(dir, `${base}..HEAD`, ['--routed-range', `${before}..HEAD`])
+  assert.equal(missing.status, 1, missing.out)
+  assert.match(missing.out, /thin-rendering/)
+  merge('screen2', 'src/ui/Screen2.kt', `Merge screen2\n\n${RECORD}\nReview-obligation: thin-rendering (addressed by code-reviewer)`)
+  const last = git('rev-parse', 'HEAD~1')
+  assert.equal(check(dir, `${base}..HEAD`, ['--routed-range', `${last}..HEAD`]).status, 0)
+})

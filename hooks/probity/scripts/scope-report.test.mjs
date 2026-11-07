@@ -198,3 +198,34 @@ test('the KMP preset driving-adapter block claims CLI commands, not the core', (
   )
   assert.doesNotMatch(out, /DEAD SCOPE: block \d+ \[forbidNewDomainDiscriminantChecks/, out)
 })
+
+// Issue #181: exemption obligations at setup time.
+const REVIEWED_CONFIG = `
+import { reviewedBlock } from '${join(HERE, '..', 'rules', 'review-obligations.ts')}'
+function enforceKotlinTdd() { return { kind: 'pass' } }
+export default {
+  rules: [
+    reviewedBlock({
+      files: ['ui/**', { glob: '!ui/**/*Screen.kt', id: 'thin-rendering', reviewWith: 'code-reviewer', check: 'renders only', reason: 'thin' }, '!ui/**/Browser*.kt'],
+      rules: [enforceKotlinTdd],
+    }),
+  ],
+}
+`
+
+test('lists each review obligation with the files it covers', (t) => {
+  const dir = workspace(t, {
+    'probity.config.mjs': REVIEWED_CONFIG,
+    'ui/notes/NotesScreen.kt': 'x',
+    'ui/notes/NotesViewModel.kt': 'x',
+  })
+  const out = report(dir)
+  assert.match(out, /Review obligations:\n\s+thin-rendering \(code-reviewer\): !ui\/\*\*\/\*Screen\.kt {2}\(1\)/, out)
+})
+
+test('warns about a TDD exemption that declares no review obligation', (t) => {
+  const dir = workspace(t, { 'probity.config.mjs': REVIEWED_CONFIG, 'ui/notes/NotesScreen.kt': 'x' })
+  const res = strictReport(dir)
+  assert.equal(res.code, 1, res.out)
+  assert.match(res.out, /!ui\/\*\*\/Browser\*\.kt is exempt with no review obligation/, res.out)
+})

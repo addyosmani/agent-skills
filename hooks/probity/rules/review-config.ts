@@ -25,6 +25,11 @@ export type ReviewRecordOptions = {
   /** Also require every agent the router selects for the merge's diff to
    *  appear in the record, ran or skipped with a reason. Default false. */
   requireRoutedAgents?: boolean
+  /** Also require a `Review-obligation:` line, addressed by the declared
+   *  reviewer who ran, for every exemption obligation the merge incurs.
+   *  The gate needs `requireReviewRecord(review, { obligationsFrom })`.
+   *  Default false. */
+  requireObligations?: boolean
 }
 
 /**

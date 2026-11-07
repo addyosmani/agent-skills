@@ -375,7 +375,7 @@ This separation ensures the test is written without knowledge of the fix, making
 
 For JavaScript/TypeScript testing patterns illustrating these principles — Jest, React Testing Library, Supertest, Playwright — see `../../references/testing-patterns.md`. The principles transfer to any ecosystem; the syntax and tools there are JS/TS-specific.
 
-For the outer loop — executable specifications that act as a story's definition of done — see `acceptance-testing`. For where fakes may be substituted (ports, and only ports), see `ports-and-adapters`.
+For the outer loop — executable specifications that act as a story's definition of done — see `acceptance-testing`. When a file is carved out of TDD because nothing can drive it red (thin rendering, pure delegation glue), the carve-out is only safe while review keeps the file thin. Declare that review with the exemption, so the review step has to address it: see "Review obligations" in `../../hooks/PROBITY.md`. For where fakes may be substituted (ports, and only ports), see `ports-and-adapters`.
 
 ## Common Rationalizations
 
@@ -400,6 +400,7 @@ For the outer loop — executable specifications that act as a story's definitio
 - Test names that don't describe the expected behavior
 - Skipping tests to make the suite pass
 - Running the same test command twice in a row without any intervening code change
+- A path exempted from TDD with no reviewer assigned to keep it free of logic
 
 ## Verification
 

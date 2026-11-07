@@ -13,7 +13,9 @@ A merge can now show whether it was reviewed ([#178](https://github.com/JJChill/
   - **`reviewConfig`** types the new `export const review` in probity.config.ts.
   - **Review routing ([#181](https://github.com/JJChill/agent-skills/issues/181)).** `routes`, `fallback`, `always`, `ignore`, `testPaths` and `nonCode` in `review` map a diff to the agents it warrants, with no model calls. `probity-review-route` prints them as `agent|why` lines (or JSON) against the merge-base with main. It greps only real added lines: not diff headers, non-code files, binaries or ignored paths.
   - **`record.requireRoutedAgents`** makes the gate deny a record that misses a routed agent. `probity-review-record --routed-range <before>..HEAD` checks the same thing in CI, for newly pushed merges only.
-- **Not yet.** Exemption obligations (#181, part 2).
+  - **Review obligations (#181).** A TDD exemption in `tddGlobs` (Kotlin, JS, Swift), in `tddExemptions` (KMP), or in a `reviewedBlock`'s files can be `{ glob, id, reviewWith, check, reason }`. The router lists the obligations a diff incurs and routes their reviewer. `record.requireObligations` with `requireReviewRecord(review, { obligationsFrom })` requires `Review-obligation: <id> (addressed by <agent>)` from a reviewer who ran. `probity-scope-report` lists obligations and warns about plain `!` exemptions that declare none.
+- **Behavior change.** `probity-scope-report --strict` now exits 1 on a plain `!` negation in `tddGlobs` that declares no review obligation. Convert it to the object form, or move the glob to `excludeGlobs` if no rule should check it. `/probity-update` proposes the edit. `tddGlobs` must also contain at least one include glob: a list of only exemptions would widen TDD to the whole repo, so it now throws.
+
 ## 0.4.62
 
 The Kiro shim judges kiro-cli 3.x writes again (#176).

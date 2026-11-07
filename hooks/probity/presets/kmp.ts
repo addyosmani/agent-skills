@@ -20,6 +20,7 @@
  * package next to gradlew. The TDD fast-path parser ships as optional
  * dependencies of the rule package.
  */
+import { splitReviewedGlobs, tagReviewedBlock, type ReviewedExemption } from '../rules/review-obligations.js'
 import { join, relative, sep } from 'node:path'
 
 import { forbidContentPattern, type RuleEntry } from '@nizos/probity'
@@ -171,6 +172,11 @@ export type KmpPresetOptions = {
    *  shell-write screen. The judge counts their checks' device output as
    *  the red for the adapters they exercise. Default: none. */
   harnessGlobs?: string[]
+  /** TDD exemptions that declare the review keeping them safe (issue
+   *  #181): each `{ glob, id, reviewWith, check, reason }` leaves the TDD
+   *  block as a `!` negation and is listed by the review router whenever
+   *  a diff touches it. See hooks/PROBITY.md. */
+  tddExemptions?: readonly ReviewedExemption[]
   /** Vendor adapters whose success path can't be tested offline (issue
    *  #102): SDK callbacks that fire only during a live call or with a
    *  real push or token, e.g. `['**\/adapter/Twilio*.kt']`. They leave the
@@ -310,6 +316,16 @@ export function kmpRuleEntries(root: string, options: KmpPresetOptions = {}): Ru
     instructions: (defaults) => defaults + KOTLIN_DRIVING_ADAPTER_ADDENDUM,
   })
 
+  const tddSplit = splitReviewedGlobs(options.tddExemptions ?? [])
+  const tddFiles = [
+    '**/src/*Main/kotlin/**',
+    '**/src/*Test/kotlin/**',
+    '**/src/main/kotlin/**',
+    '**/src/test/kotlin/**',
+    ...harnessExclusions,
+    ...vendorAdapterExclusions(options.vendorAdapterGlobs),
+    ...tddSplit.globs,
+  ] as unknown as Globs
   const entries: RuleEntry[] = [
     // ── Deterministic wall ───────────────────────────────────────────
 
@@ -414,14 +430,7 @@ export function kmpRuleEntries(root: string, options: KmpPresetOptions = {}): Ru
     ...(vendorAdapter ? [vendorAdapter] : []),
 
     {
-      files: [
-        '**/src/*Main/kotlin/**',
-        '**/src/*Test/kotlin/**',
-        '**/src/main/kotlin/**',
-        '**/src/test/kotlin/**',
-        ...harnessExclusions,
-        ...vendorAdapterExclusions(options.vendorAdapterGlobs),
-      ],
+      files: tddFiles,
       // Telemetry-only additions (a complete logger.event/breadcrumb
       // line) pass deterministically — instrumentation demanded by the
       // adapter-observability rule must not be judged as unasserted
@@ -591,7 +600,7 @@ export function kmpRuleEntries(root: string, options: KmpPresetOptions = {}): Ru
     requireGreenTestRun({ command: GRADLE_TEST_COMMAND }),
   ]
 
-  return withJudgeTasks(compactingPreset(withShellWriteScreen(withExcludeGlobs(entries, excludeGlobs), {
+  return withJudgeTasks(compactingPreset(withShellWriteScreen(withExcludeGlobs(tagReviewedBlock(entries, tddFiles, tddSplit), excludeGlobs), {
     root,
     enabled: options.shellWriteScreen,
   }), options))

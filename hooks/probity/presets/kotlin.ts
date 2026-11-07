@@ -13,6 +13,7 @@
  * project needs `npm install -D @nizos/probity` (a one-dependency
  * package.json next to gradlew is fine).
  */
+import { splitReviewedGlobs, tagReviewedBlock, type ReviewedExemption, type ReviewedGlobs } from '../rules/review-obligations.js'
 import { join } from 'node:path'
 
 import { forbidContentPattern, type RuleEntry } from '@nizos/probity'
@@ -88,8 +89,10 @@ export type KotlinPresetOptions = {
   /** Files the Language Test applies to (acceptance test globs plus
    *  any Gherkin feature files). */
   acceptanceLanguageGlobs?: Globs
-  /** Source sets the TDD gate applies to. */
-  tddGlobs?: Globs
+  /** Source sets the TDD gate applies to. A `!` exemption may be an
+   *  object `{ glob, id, reviewWith, check, reason }` declaring the
+   *  review that keeps it safe (issue #181); see hooks/PROBITY.md. */
+  tddGlobs?: ReviewedGlobs
   /** Adapter/data packages that must carry boundary observability. */
   adapterGlobs?: Globs
   /** Driving (inbound) adapter files held thin by
@@ -196,12 +199,13 @@ export function kotlinRuleEntries(root: string, options: KotlinPresetOptions = {
     ...acceptanceTestGlobs,
     '**/*.feature',
   ]
-  const tddGlobs: Globs = options.tddGlobs ?? [
+  const tddSplit = splitReviewedGlobs(options.tddGlobs ?? [
     '**/src/main/java/**',
     '**/src/main/kotlin/**',
     '**/src/test/**',
     '**/src/sharedTest/**',
-  ]
+  ], { requireInclude: true })
+  const tddGlobs = tddSplit.globs as unknown as Globs
   const adapterGlobs: Globs = options.adapterGlobs ?? [
     '**/src/main/**/adapter/**',
     '**/src/main/**/adapters/**',
@@ -228,6 +232,7 @@ export function kotlinRuleEntries(root: string, options: KotlinPresetOptions = {
     instructions: (defaults) => defaults + KOTLIN_DRIVING_ADAPTER_ADDENDUM,
   })
 
+  const tddFiles = [tddGlobs[0], ...tddGlobs.slice(1), ...harnessExclusions, ...vendorAdapterExclusions(options.vendorAdapterGlobs)] as Globs
   const entries: RuleEntry[] = [
     // ── Deterministic wall ───────────────────────────────────────────
 
@@ -307,7 +312,7 @@ export function kotlinRuleEntries(root: string, options: KotlinPresetOptions = {
     ...(vendorAdapter ? [vendorAdapter] : []),
 
     {
-      files: [tddGlobs[0], ...tddGlobs.slice(1), ...harnessExclusions, ...vendorAdapterExclusions(options.vendorAdapterGlobs)],
+      files: tddFiles,
       // Telemetry-only additions pass deterministically — see the
       // KMP preset's note on the TDD/observability tension.
       rules: [
@@ -393,7 +398,7 @@ export function kotlinRuleEntries(root: string, options: KotlinPresetOptions = {
     requireGreenTestRun({ command: options.commitCommand ?? GRADLE_TEST_COMMAND }),
   ]
 
-  return withJudgeTasks(compactingPreset(withShellWriteScreen(withExcludeGlobs(entries, excludeGlobs), {
+  return withJudgeTasks(compactingPreset(withShellWriteScreen(withExcludeGlobs(tagReviewedBlock(entries, tddFiles, tddSplit), excludeGlobs), {
     root,
     enabled: options.shellWriteScreen,
   }), options))

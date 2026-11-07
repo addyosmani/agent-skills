@@ -52,6 +52,7 @@ import { createJiti } from 'jiti'
 
 import type { Config, RuleBlock } from '@nizos/probity'
 
+import { obligationsOf, unreviewedExemptionsOf } from '../rules/review-obligations.js'
 import { anchorGlob, buildMatcher, isRuleBlock } from '../rules/scoping.js'
 
 const jiti = createJiti(import.meta.url)
@@ -225,6 +226,29 @@ for (const [index, entry] of config.rules.entries()) {
           'the mechanics the Language Test blocks. Exclude them (e.g. !**/*Robot.kt).',
       )
     }
+  }
+}
+
+// Review obligations (issue #181): what each reviewed exemption covers,
+// and exemptions that declared no reviewer to keep them safe.
+const obligations = obligationsOf(config.rules)
+if (obligations.length > 0) {
+  console.log('Review obligations:')
+  for (const obligation of obligations) {
+    const covered = tree.filter(buildMatcher([anchorGlob(obligation.glob.slice(1), configDir)])).length
+    console.log(`  ${obligation.id} (${obligation.reviewWith}): ${obligation.glob}  (${covered})`)
+  }
+  console.log('')
+}
+for (const { block, globs } of unreviewedExemptionsOf(config.rules)) {
+  const entry = config.rules[block]
+  const label = isRuleBlock(entry!) ? `block ${block + 1} [${ruleNames(entry)}]` : `block ${block + 1}`
+  for (const glob of globs) {
+    warnings.push(
+      `${glob} is exempt with no review obligation in ${label}. Nothing keeps those files to what the ` +
+        "exemption assumes; declare the review: { glob: '" + glob + "', id, reviewWith, check, reason } " +
+        '(hooks/PROBITY.md, "Review obligations").',
+    )
   }
 }
 

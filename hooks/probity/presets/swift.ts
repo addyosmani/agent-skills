@@ -14,6 +14,7 @@
  * one-dependency package.json with `"type": "module"` next to the
  * xcworkspace is fine).
  */
+import { splitReviewedGlobs, tagReviewedBlock, type ReviewedExemption, type ReviewedGlobs } from '../rules/review-obligations.js'
 import { join } from 'node:path'
 
 import { forbidContentPattern, type RuleEntry } from '@nizos/probity'
@@ -121,9 +122,10 @@ export type SwiftPresetOptions = {
    *  fidelity judge also checks each changed claim's tier against the
    *  acceptance-testing skill's tier rules. Pair with `driverScopes`. */
   appScope?: string
-  /** Files the TDD judge covers. Default: `App/*.swift`, `App/Sources/**`,
-   *  `AcceptanceTests/**`, `VPNNetworkExtension/**`. */
-  tddGlobs?: Globs
+  /** Source sets the TDD gate applies to. A `!` exemption may be an
+   *  object `{ glob, id, reviewWith, check, reason }` declaring the
+   *  review that keeps it safe (issue #181); see hooks/PROBITY.md. */
+  tddGlobs?: ReviewedGlobs
   /** Where ports and core behavior live, for the boundary judge (and the
    *  core exports the driving-adapter judge is given). Default:
    *  `App/Sources/Modules/**`, `App/Sources/Utilities/Providers/**`. */
@@ -193,7 +195,9 @@ export type SwiftPresetOptions = {
 
 function swiftEntries(root: string, options: SwiftPresetOptions): RuleEntry[] {
   const glossary = join(root, 'docs/GLOSSARY.md')
-  const tddGlobs: Globs = options.tddGlobs ?? ['App/*.swift', 'App/Sources/**', 'AcceptanceTests/**', 'VPNNetworkExtension/**']
+  const tddSplit = splitReviewedGlobs(options.tddGlobs ?? ['App/*.swift', 'App/Sources/**', 'AcceptanceTests/**', 'VPNNetworkExtension/**'], { requireInclude: true })
+  const tddGlobs = tddSplit.globs as unknown as Globs
+  const tddFiles = [tddGlobs[0], ...tddGlobs.slice(1), ...vendorAdapterExclusions(options.vendorAdapterGlobs)] as Globs
   const coreGlobs: Globs = options.coreGlobs ?? ['App/Sources/Modules/**', 'App/Sources/Utilities/Providers/**']
   const adapterGlobs: Globs = options.adapterGlobs ?? [
     'App/Sources/**/Adapters/**',
@@ -228,7 +232,7 @@ function swiftEntries(root: string, options: SwiftPresetOptions): RuleEntry[] {
   // listed before any AI-validated rule (a model call per matching
   // write).
 
-  return [
+  return tagReviewedBlock([
     // ── Deterministic wall ───────────────────────────────────────────
 
     // No fixed waits anywhere in the acceptance suite: synchronize
@@ -335,7 +339,7 @@ function swiftEntries(root: string, options: SwiftPresetOptions): RuleEntry[] {
     ...(vendorAdapter ? [vendorAdapter] : []),
 
     {
-      files: [tddGlobs[0], ...tddGlobs.slice(1), ...vendorAdapterExclusions(options.vendorAdapterGlobs)],
+      files: tddFiles,
       rules: [
         // The inverse-scenario wrapper changes only the DENY TEXT, and
         // only on the test-control layer (the acceptance composition
@@ -519,5 +523,5 @@ function swiftEntries(root: string, options: SwiftPresetOptions): RuleEntry[] {
       failurePattern: XCODEBUILD_TEST_FAILED,
       enforceForPaths: /^(?:App|AcceptanceTests|VPNNetworkExtension)\//,
     }),
-  ]
+  ], tddFiles, tddSplit)
 }

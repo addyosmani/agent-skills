@@ -2,10 +2,11 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { basename, isAbsolute, resolve } from 'node:path'
 
-import type { Rule, RuleResult } from '@nizos/probity'
+import type { Rule, RuleEntry, RuleResult } from '@nizos/probity'
 
 import { gitSubcommand } from './commit-target.js'
 import { DEFAULT_PROTECTED_BRANCHES, type ReviewConfig } from './review-config.js'
+import { obligationsOf, type ReviewedExemption } from './review-obligations.js'
 import { bareAgent, collectDiff, gitTop, parsePatch, routeReview, type DiffInput, type Routing } from './review-router.js'
 import { COMMAND_PREFIXES, parseShell, type SimpleCommand } from './shell-writes.js'
 
@@ -274,8 +275,33 @@ export function missingRoutedAgents(record: ReviewRecord, routing: Routing): str
     .map(({ agent, why }) => `the router selected \`${agent}\` (${why.join('; ')}) but the record does not list it; run it, or list it as (skipped: <reason>)`)
 }
 
+/** Incurred obligations (#181) the record doesn't address, as problems. */
+export function missingObligations(record: ReviewRecord, routing: Routing): string[] {
+  return (routing.obligations ?? []).flatMap((obligation) => {
+    const reviewer = bareAgent(obligation.reviewWith)
+    const files = obligation.files.join(', ')
+    const line = record.obligations.find((entry) => entry.id === obligation.id)
+    if (!line) {
+      return [
+        `the diff touches files exempt under obligation \`${obligation.id}\` (${files}); ${reviewer} must confirm: ` +
+          `${obligation.check}. Then add \`Review-obligation: ${obligation.id} (addressed by ${reviewer})\``,
+      ]
+    }
+    if (line.addressedBy !== reviewer) {
+      return [`obligation ${obligation.id} must be addressed by ${reviewer}, not ${line.addressedBy}`]
+    }
+    const entry = record.agents.find((agent) => agent.agent === reviewer)
+    if (!entry) return [`obligation ${obligation.id} names ${reviewer}, but the record has no Reviewed-by-agent line for it`]
+    if (entry.status === 'skipped') return [`obligation ${obligation.id} needs ${reviewer} to run, but ${reviewer} is recorded as skipped`]
+    return []
+  })
+}
+
 /** Routes what `git merge <branches>` brings in: merge-base(HEAD, branch)..branch. */
-function defaultRouteMerge(review: ReviewConfig): (dir: string, branches: string[]) => Routing {
+function defaultRouteMerge(
+  review: ReviewConfig,
+  obligations: readonly ReviewedExemption[],
+): (dir: string, branches: string[]) => Routing {
   return (dir, branches) => {
     const top = gitTop(dir)
     const input: DiffInput = { files: [], added: {}, binary: [] }
@@ -286,16 +312,20 @@ function defaultRouteMerge(review: ReviewConfig): (dir: string, branches: string
       input.binary.push(...part.binary)
       for (const [file, lines] of Object.entries(part.added)) (input.added[file] ??= []).push(...lines)
     }
-    return routeReview(review, input, top)
+    return routeReview(review, input, top, obligations)
   }
 }
 
 /** Routes a PR from `gh pr diff` (no binary detection: gh's patch omits it). */
-function defaultRoutePr(review: ReviewConfig, git: ReviewRecordGit): (pr: string | undefined, dir: string) => Routing {
+function defaultRoutePr(
+  review: ReviewConfig,
+  git: ReviewRecordGit,
+  obligations: readonly ReviewedExemption[],
+): (pr: string | undefined, dir: string) => Routing {
   return (pr, dir) => {
     const added: Record<string, string[]> = {}
     parsePatch(run('gh', ['pr', 'diff', ...(pr ? [pr] : [])], dir), added)
-    return routeReview(review, { files: git.prFiles(pr, dir), added, binary: [] }, gitTop(dir))
+    return routeReview(review, { files: git.prFiles(pr, dir), added, binary: [] }, gitTop(dir), obligations)
   }
 }
 
@@ -318,18 +348,29 @@ export function requireReviewRecord(
     git?: ReviewRecordGit
     routeMerge?: (dir: string, branches: string[]) => Routing
     routePr?: (pr: string | undefined, dir: string) => Routing
+    /** The rule entries whose exemption obligations apply (a preset's
+     *  output); needed for `record.requireObligations`. */
+    obligationsFrom?: readonly RuleEntry[]
   } = {},
 ): Rule {
   const git = deps.git ?? defaultReviewRecordGit
-  const routeMerge = deps.routeMerge ?? defaultRouteMerge(review)
-  const routePr = deps.routePr ?? defaultRoutePr(review, git)
+  const obligations = deps.obligationsFrom ? obligationsOf(deps.obligationsFrom) : []
+  const routeMerge = deps.routeMerge ?? defaultRouteMerge(review, obligations)
+  const routePr = deps.routePr ?? defaultRoutePr(review, git, obligations)
   const options = review.record ?? {}
   const protectedBranches = options.protectedBranches ?? DEFAULT_PROTECTED_BRANCHES
   /** Record errors, plus routed agents it misses when requireRoutedAgents is on. */
   const problems = (record: ReviewRecord, route: () => Routing): string[] => {
-    if (record.errors.length > 0 || !options.requireRoutedAgents) return record.errors
+    if (record.errors.length > 0 || !(options.requireRoutedAgents || options.requireObligations)) return record.errors
+    if (options.requireObligations && !deps.obligationsFrom) {
+      return ['record.requireObligations is on, but the rule has no obligations to check: use requireReviewRecord(review, { obligationsFrom: <your rule entries> })']
+    }
     try {
-      return missingRoutedAgents(record, route())
+      const routing = route()
+      return [
+        ...(options.requireRoutedAgents ? missingRoutedAgents(record, routing) : []),
+        ...(options.requireObligations ? missingObligations(record, routing) : []),
+      ]
     } catch (error) {
       return [`could not route the merge to check its reviewers (${error instanceof Error ? error.message : String(error)})`]
     }
