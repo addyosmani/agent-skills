@@ -19,9 +19,9 @@ Skills encode the workflows, quality gates, and best practices that senior engin
 
 ---
 
-## What's new in this fork — Raza7x Advanced
+## New security skills
 
-This fork keeps all 25 upstream skills unchanged and adds 5 new security skills, a skill validator, and a machine-readable index — 30 skills in total.
+This PR adds 4 new security skills, a skill validator, and a machine-readable index — 29 skills in total. The 25 existing skills are unchanged.
 
 **New skills** (all under `skills/`, in the repo's format):
 
@@ -29,18 +29,12 @@ This fork keeps all 25 upstream skills unchanged and adds 5 new security skills,
 - **secret-management** — Secrets lifecycle: detection and scanning, vaults and env handling, rotation without downtime, least privilege, and leaked-secret incident handling.
 - **incident-response** — IR playbook: preparation, detection and triage, containment, eradication, recovery, blameless postmortem, and communications.
 - **api-security-audit** — API testing: authn/authz, BOLA/IDOR, mass assignment, rate limiting and pagination abuse, business-logic flaws, and webhook verification.
-- **supply-chain-security** — SBOM, dependency pinning and lockfiles, provenance and attestation, typosquatting and dependency confusion, audit triage, and update policy.
 
 **Also new:**
 
 - `scripts/validate-skills.py` — Python (stdlib only) validator for every skill: frontmatter, name/description contract, required sections, and placeholder check. Run it with `python3 scripts/validate-skills.py`.
-- `skills.json` — Machine-readable index of all 30 skills (name, description, path, category).
+- `skills.json` — Machine-readable index of all 29 skills (name, description, path, category).
 
-Install with:
-
-```sh
-npx skills add devilking7x/agent-skills
-```
 
 
 ## Commands
