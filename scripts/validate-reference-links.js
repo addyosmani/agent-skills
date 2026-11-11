@@ -62,9 +62,16 @@ const REFERENCE_LINK_RE = /(?<![A-Za-z0-9._/-])((?:\.\.\/)*references\/[A-Za-z0-
 // GitHub's heading anchor: the rendered text, lowercased, with everything but
 // letters, numbers, `_`, `-` and spaces dropped, then spaces turned to hyphens.
 function slugify(heading) {
-  const text = heading
-    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1') // links and images keep their text
-    .replace(/<[^>]+>/g, '');                  // inline HTML renders no text
+  // One left-to-right pass, so markup inside a code span is left alone: GitHub
+  // renders `<dialog>` in a code span as the text <dialog>, which slugs to `dialog`.
+  const text = heading.replace(
+    /(`+)([\s\S]*?)\1|!?\[([^\]]*)\]\([^)]*\)|<[^>]+>/g,
+    (match, ticks, code, linkText) => {
+      if (ticks) return code;                      // code spans keep their text as written
+      if (linkText !== undefined) return linkText; // links and images keep their text
+      return '';                                   // inline HTML renders no text
+    }
+  );
   return text.toLowerCase().replace(/[^\p{L}\p{M}\p{N}_\- ]/gu, '').replace(/ /g, '-');
 }
 
