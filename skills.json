@@ -1,0 +1,182 @@
+[
+  {
+    "name": "api-and-interface-design",
+    "description": "Guides stable API and interface design. Use when designing APIs, module boundaries, or any public interface. Use when creating REST or GraphQL endpoints, defining type contracts between modules, or establishing boundaries between frontend and backend.",
+    "path": "skills/api-and-interface-design/SKILL.md",
+    "category": "design"
+  },
+  {
+    "name": "api-security-audit",
+    "description": "Audits and tests a REST, GraphQL, or webhook API for security flaws. Use when testing whether one user can read or change another user's data through an API, when reviewing authentication, tokens, or OAuth flows, or when probing for mass assignment, rate-limit, or business-logic flaws. Use when webhooks need signature and replay verification, or when writing a report with proof-of-concept requests.",
+    "path": "skills/api-security-audit/SKILL.md",
+    "category": "security"
+  },
+  {
+    "name": "browser-testing-with-devtools",
+    "description": "Tests in real browsers via Chrome DevTools MCP. Use when building or debugging anything that runs in a browser. Use when you need to inspect the DOM, capture console errors, analyze network requests, profile performance, or verify visual output with real runtime data. Requires the chrome-devtools MCP server to be configured.",
+    "path": "skills/browser-testing-with-devtools/SKILL.md",
+    "category": "testing"
+  },
+  {
+    "name": "bug-bounty-hunting",
+    "description": "Hunts vulnerabilities on authorized bug bounty programs and writes reports that survive triage. Use when starting a hunt on a HackerOne, Bugcrowd, or private program and you need to check scope, fees, and program status before testing. Use when you have a candidate vulnerability and need to prove it is not a duplicate, build a runnable proof of concept on an authorized target, and score it honestly with CVSS. Use when drafting, submitting, or defending a bounty report, or when one comes back triaged, duplicate, informative, or N/A and you need to decide whether to withdraw or push back.",
+    "path": "skills/bug-bounty-hunting/SKILL.md",
+    "category": "security"
+  },
+  {
+    "name": "ci-cd-and-automation",
+    "description": "Automates CI/CD pipeline setup. Use when setting up or modifying build and deployment pipelines. Use when you need to automate quality gates, configure test runners in CI, or establish deployment strategies.",
+    "path": "skills/ci-cd-and-automation/SKILL.md",
+    "category": "devops"
+  },
+  {
+    "name": "code-review-and-quality",
+    "description": "Conducts multi-axis code review. Use before merging any change. Use when reviewing code written by yourself, another agent, or a human. Use when you need to assess code quality across multiple dimensions before it enters the main branch. Use when asked to review a diff or a pull request, even when the diff is pasted inline.",
+    "path": "skills/code-review-and-quality/SKILL.md",
+    "category": "quality"
+  },
+  {
+    "name": "code-simplification",
+    "description": "Simplifies code for clarity. Use when refactoring code for clarity without changing behavior. Use when code works but is harder to read, maintain, or extend than it should be. Use when reviewing code that has accumulated unnecessary complexity. Use when asked to simplify, clean up, or reduce the nesting of a function or module that already works, even when the code is pasted inline and nothing else needs to change.",
+    "path": "skills/code-simplification/SKILL.md",
+    "category": "quality"
+  },
+  {
+    "name": "constraint-driven-development",
+    "description": "Establishes a project's quality bar as a written contract and stops agents quietly lowering it. Interviews the user on which dimensions matter, supplies sane default thresholds when they have no number in mind, records everything in CONSTRAINTS.md, and watches the diff for a weakened bar — new @ts-ignore or eslint-disable suppressions, skipped or deleted tests, assertions stripped out, unimplemented stubs, thresholds edited down. Use when no quality bar is written down, when the user says \"set up constraints\" or \"define our standards\", when the user wants dimensions they care about — accessibility, web performance, coverage — set up as enforced constraints, when an agent keeps silencing checks or skipping tests to get to green, when you need a coverage or performance threshold and don't know what number to pick, or when an agent writes more code than anyone will read.",
+    "path": "skills/constraint-driven-development/SKILL.md",
+    "category": "development"
+  },
+  {
+    "name": "context-engineering",
+    "description": "Optimizes agent context setup. Use when starting a new session, when agent output quality degrades, when switching between tasks, or when you need to configure rules files and context for a project.",
+    "path": "skills/context-engineering/SKILL.md",
+    "category": "ai-agents"
+  },
+  {
+    "name": "debugging-and-error-recovery",
+    "description": "Guides systematic root-cause debugging. Use when tests fail, builds break, something that worked yesterday broke, behavior doesn't match expectations, or you encounter any unexpected error. Use when you need to figure out what broke and why — a systematic approach to finding and fixing the root cause rather than guessing.",
+    "path": "skills/debugging-and-error-recovery/SKILL.md",
+    "category": "development"
+  },
+  {
+    "name": "deprecation-and-migration",
+    "description": "Manages deprecation and migration. Use when removing old systems, APIs, or features. Use when migrating users from one implementation to another. Use when migrating a database schema in production, such as renaming or dropping a column without downtime (expand/contract). Use when deciding whether to maintain or sunset existing code.",
+    "path": "skills/deprecation-and-migration/SKILL.md",
+    "category": "development"
+  },
+  {
+    "name": "documentation-and-adrs",
+    "description": "Records decisions and documentation. Use when you need to document an architecture decision (ADR) or the reasoning behind a design choice, when changing public APIs, shipping features, or when you need to record context that future engineers and agents will need to understand the codebase.",
+    "path": "skills/documentation-and-adrs/SKILL.md",
+    "category": "documentation"
+  },
+  {
+    "name": "doubt-driven-development",
+    "description": "Subjects every non-trivial decision to a fresh-context adversarial review before it stands. Use when you want every assumption cross-examined before proceeding, when stress-testing a plan for hidden failure modes, when correctness matters more than speed, when working in unfamiliar code, when stakes are high (production auth, security-sensitive logic, a high-stakes migration, irreversible operations), or any time a confident output would be cheaper to verify now than to debug later.",
+    "path": "skills/doubt-driven-development/SKILL.md",
+    "category": "development"
+  },
+  {
+    "name": "frontend-ui-engineering",
+    "description": "Builds production-quality, accessible, responsive user-facing UIs. Use when building or modifying interfaces and pages, creating components, implementing layouts, meeting WCAG accessibility requirements, managing state, or when the output needs to look and feel production-quality rather than AI-generated.",
+    "path": "skills/frontend-ui-engineering/SKILL.md",
+    "category": "frontend"
+  },
+  {
+    "name": "git-workflow-and-versioning",
+    "description": "Structures git workflow practices. Use when making any code change. Use when committing, branching, resolving conflicts, splitting uncommitted work in a messy working tree into clean atomic commits, opening or reviewing a pull request (PR), pushing to a remote, or when you need to organize work across multiple parallel streams. Use when cutting a release, choosing a semantic version bump, tagging, or writing a changelog. Use when asked to write a commit message or a changelog entry for a change, or to split a change into commits, even when the diff is pasted inline and the message seems easy to write from it.",
+    "path": "skills/git-workflow-and-versioning/SKILL.md",
+    "category": "devops"
+  },
+  {
+    "name": "idea-refine",
+    "description": "Refines raw ideas into sharp, actionable concepts through structured divergent and convergent thinking. Use when an idea is still vague, when you need to stress-test assumptions before committing to a plan, or when you want to expand options before converging on one. Triggers on \"ideate\", \"refine this idea\", or \"stress-test my plan\".",
+    "path": "skills/idea-refine/SKILL.md",
+    "category": "planning"
+  },
+  {
+    "name": "incident-response",
+    "description": "Runs a security or production incident end to end, from declaration to blameless postmortem. Use when a breach, outage, data leak, ransomware alert, or suspicious activity is suspected or confirmed. Use when you need to triage an alert, contain a compromised system, or decide whether to observe an attacker or cut them off. Use when coordinating a response across engineers, support, and leadership, or when writing a postmortem after an incident is over.",
+    "path": "skills/incident-response/SKILL.md",
+    "category": "security"
+  },
+  {
+    "name": "incremental-implementation",
+    "description": "Delivers changes incrementally in thin, verifiable slices. Use when implementing any feature or change that touches more than one file, or when picking up the next task from a plan. Use when rolling a change out behind a feature flag, when you're about to write a large amount of code at once, or when a task feels too big to land in one step.",
+    "path": "skills/incremental-implementation/SKILL.md",
+    "category": "development"
+  },
+  {
+    "name": "interview-me",
+    "description": "Extracts what the user actually wants instead of what they think they should want. Achieves this through one-question-at-a-time interview until ~95% confidence about the underlying intent. Use when an ask is underspecified (\"build me X\" without \"for whom\" or \"why now\"), when the user explicitly invokes (\"interview me\", \"grill me\", \"are we sure?\", \"stress-test my thinking\"), or when you catch yourself silently filling in ambiguous requirements before any plan, spec, or code exists.",
+    "path": "skills/interview-me/SKILL.md",
+    "category": "planning"
+  },
+  {
+    "name": "observability-and-instrumentation",
+    "description": "Instruments code so production behavior is visible and diagnosable. Use when adding logging, metrics, tracing, or alerting. Use when shipping any feature that runs in production and you need evidence it works. Use when production issues are reported but you can't tell what happened from the available data.",
+    "path": "skills/observability-and-instrumentation/SKILL.md",
+    "category": "devops"
+  },
+  {
+    "name": "performance-optimization",
+    "description": "Optimizes application performance across frontend, backend, queries, and databases. Use when performance requirements exist, when you suspect performance regressions, when Core Web Vitals or load times need improvement, when N+1 query patterns need fixing, or when profiling reveals bottlenecks.",
+    "path": "skills/performance-optimization/SKILL.md",
+    "category": "performance"
+  },
+  {
+    "name": "planning-and-task-breakdown",
+    "description": "Breaks work into ordered tasks. Use when you have a spec or clear requirements and need to break work into implementable tasks. Use when a task feels too large to start, when you need to estimate scope, or when parallel work is possible.",
+    "path": "skills/planning-and-task-breakdown/SKILL.md",
+    "category": "planning"
+  },
+  {
+    "name": "secret-management",
+    "description": "Manages the full lifecycle of secrets — API keys, tokens, passwords, private keys, and cloud credentials — from detection and storage to rotation, runtime injection, and leaked-secret incident response. Use when adding or changing any credential, API key, or token in a codebase. Use when setting up a vault or secret manager, wiring secrets into CI/CD or Docker, or reviewing a repository for leaked values. Use when a secret may have been exposed in git history, logs, screenshots, or chat, or when rotating credentials after a staff departure or suspected breach.",
+    "path": "skills/secret-management/SKILL.md",
+    "category": "security"
+  },
+  {
+    "name": "security-and-hardening",
+    "description": "Hardens code against vulnerabilities. Use when auditing an input handler for vulnerabilities, when handling user input, authentication, data storage, or external integrations, or when checking a login flow is safe against the OWASP Top Ten. Use when building any feature that accepts untrusted data, manages user sessions or session cookies, or interacts with third-party services. Use when auditing dependencies for known vulnerabilities, triaging package-manager audit findings, or assessing supply-chain risk in a new package. Use when personal data or privacy compliance (GDPR, CCPA) is involved.",
+    "path": "skills/security-and-hardening/SKILL.md",
+    "category": "security"
+  },
+  {
+    "name": "shipping-and-launch",
+    "description": "Prepares production launches. Use when preparing to deploy to production, or when asking what needs to be in place before shipping. Use when you need a pre-launch checklist, when setting up monitoring, when planning a staged rollout, or when you need a rollback strategy.",
+    "path": "skills/shipping-and-launch/SKILL.md",
+    "category": "devops"
+  },
+  {
+    "name": "source-driven-development",
+    "description": "Grounds every implementation decision in official documentation. Use when you want to verify an approach against the official docs before implementing it, or when you want authoritative, source-cited code free from outdated patterns. Use when building with any framework or library where correctness matters.",
+    "path": "skills/source-driven-development/SKILL.md",
+    "category": "development"
+  },
+  {
+    "name": "spec-driven-development",
+    "description": "Creates specs before coding. Use when starting a new project, feature, or significant change and no specification exists yet. Use when drafting a PRD or requirements document with objectives and scope, or when requirements are unclear, ambiguous, or only exist as a vague idea. Use when a single requirement spans several independently testable capabilities and needs decomposing into a capability map of modules before specifying.",
+    "path": "skills/spec-driven-development/SKILL.md",
+    "category": "planning"
+  },
+  {
+    "name": "supply-chain-security",
+    "description": "Secures the software supply chain from dependency to deployed artifact. Use when adding, updating, or auditing a dependency, when generating or reviewing an SBOM, when verifying build provenance or signatures, or when a dependency turns malicious or a critical CVE drops. Use when setting up Dependabot or Renovate, pinning CI actions, or reviewing a lockfile diff. Use when triaging package-manager audit findings or investigating a typosquatted or dependency-confusion package.",
+    "path": "skills/supply-chain-security/SKILL.md",
+    "category": "security"
+  },
+  {
+    "name": "test-driven-development",
+    "description": "Drives development with tests using the red-green-refactor loop. Use when implementing any logic, fixing any bug, or changing any behavior. Use when you need to prove that code works, when a bug report arrives, or when you're about to modify existing functionality. Use when asked to add tests to a function, fix a bug in it or change its behavior, even when the code is pasted inline and the request does not mention tests.",
+    "path": "skills/test-driven-development/SKILL.md",
+    "category": "testing"
+  },
+  {
+    "name": "using-agent-skills",
+    "description": "Discovers and invokes agent skills. Use when starting a session, or when you need to decide which skill or workflow applies to the piece of work at hand. This is the meta-skill that governs how all other skills are discovered and invoked.",
+    "path": "skills/using-agent-skills/SKILL.md",
+    "category": "meta"
+  }
+]
