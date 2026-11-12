@@ -217,18 +217,20 @@ res.status(500).json({
 
 ## OWASP Top 10 Quick Reference
 
+Numbering follows the [OWASP Top 10:2025](https://owasp.org/Top10/2025/). Cite a category with its year (`A06:2025`), since the 2021 edition used different numbers for several of the same categories.
+
 | # | Vulnerability | Prevention |
 |---|---|---|
-| 1 | Broken Access Control | Auth checks on every endpoint, ownership verification |
-| 2 | Cryptographic Failures | HTTPS, strong hashing, no secrets in code |
-| 3 | Injection | Parameterized queries, input validation |
-| 4 | Insecure Design | Threat modeling, spec-driven development |
-| 5 | Security Misconfiguration | Security headers, minimal permissions, audit deps |
-| 6 | Vulnerable Components | The ecosystem's dependency audit (`npm audit`, `pip-audit`, ...), keep deps updated, minimal deps |
-| 7 | Auth Failures | Strong passwords, rate limiting, session management |
-| 8 | Data Integrity Failures | Verify updates/dependencies, signed artifacts |
-| 9 | Logging Failures | Log security events, don't log secrets |
-| 10 | SSRF | Validate/allowlist URLs, restrict outbound requests |
+| A01 | Broken Access Control (now includes SSRF) | Auth checks on every endpoint, ownership verification; validate/allowlist server-side fetch URLs, restrict outbound requests |
+| A02 | Security Misconfiguration | Security headers, minimal permissions, secure defaults |
+| A03 | Software Supply Chain Failures | The ecosystem's dependency audit (`npm audit`, `pip-audit`, ...), keep deps updated, minimal deps, review new packages and install scripts |
+| A04 | Cryptographic Failures | HTTPS, strong hashing, no secrets in code |
+| A05 | Injection | Parameterized queries, input validation |
+| A06 | Insecure Design | Threat modeling, spec-driven development |
+| A07 | Authentication Failures | Strong passwords, rate limiting, session management |
+| A08 | Software or Data Integrity Failures | Verify updates, signed artifacts, no deserialization of untrusted data |
+| A09 | Security Logging and Alerting Failures | Log security events, alert on them, don't log secrets |
+| A10 | Mishandling of Exceptional Conditions | Fail closed, handle every error path, generic error bodies |
 
 ## OWASP Top 10 for LLMs Quick Reference
 
