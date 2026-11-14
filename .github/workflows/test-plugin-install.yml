@@ -107,6 +107,7 @@ jobs:
           scripts/validate-artifact-paths-test.js
           scripts/floor-guard-reference-test.js
           scripts/quality-gate-test.js
+          scripts/staged-secret-scan-test.js
 
       - name: Validate all skills
         run: node scripts/validate-skills.js
@@ -127,16 +128,33 @@ jobs:
         run: node scripts/run-evals.js --min-rank1 95
 
   test-hooks:
-    name: Hook regression tests
-    runs-on: ubuntu-latest
+    name: Hook regression tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    # The hooks run under whatever bash the host has, and versions disagree:
+    # bash 5.2 corrupted protected blocks on Linux while macOS stayed clean
+    # (7b31a90). On macOS, put /bin first so the suites run under the stock
+    # bash 3.2 that a Mac without Homebrew bash invokes, not a newer one.
+    env:
+      BASH_PATH_PREFIX: ${{ matrix.os == 'macos-latest' && '/bin:' || '' }}
     steps:
       - uses: actions/checkout@v6
 
+      - name: Show bash and jq
+        run: |
+          export PATH="${BASH_PATH_PREFIX}$PATH"
+          bash --version | head -1
+          # Without jq the hook suites skip their round-trip tests and pass.
+          jq --version
+
       - name: Test sdd-cache hooks (stubbed curl, no network)
-        run: bash hooks/sdd-cache-test.sh
+        run: PATH="${BASH_PATH_PREFIX}$PATH" bash hooks/sdd-cache-test.sh
 
       - name: Test simplify-ignore hook
-        run: bash hooks/simplify-ignore-test.sh
+        run: PATH="${BASH_PATH_PREFIX}$PATH" bash hooks/simplify-ignore-test.sh
 
   validate:
     name: Validate plugin structure
