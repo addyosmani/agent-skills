@@ -1,0 +1,26 @@
+{
+  "name": "agent-skills",
+  "version": "0.6.16",
+  "description": "Production-grade engineering skills for AI coding agents covering the full software development lifecycle from spec to ship.",
+  "keywords": [
+    "skills",
+    "engineering",
+    "spec",
+    "tdd",
+    "review",
+    "ship",
+    "kimi-code"
+  ],
+  "author": "Addy Osmani",
+  "homepage": "https://skills.addy.ie",
+  "license": "MIT",
+  "skills": "./skills/",
+  "skillInstructions": "Select skills on demand using their descriptions and load only those relevant to the current task. Follow the selected workflow and its verification gates. Use only tools available in the current session; do not assume host-specific commands, hooks, or external MCP servers are installed.",
+  "interface": {
+    "displayName": "Addy's Agent Skills",
+    "shortDescription": "Engineering skills",
+    "longDescription": "Twenty-five production-grade engineering workflows covering specifications, planning, implementation, testing, debugging, review, security, performance, observability, documentation, and release.",
+    "developerName": "Addy Osmani",
+    "websiteURL": "https://skills.addy.ie"
+  }
+}
