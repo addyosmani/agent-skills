@@ -281,6 +281,51 @@ test('a selector does not hide duplicate IDs among unselected cases', () => {
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
 
+for (const [args, diagnostic] of [
+  [['--min-rank-1', '95'], /Unknown option: --min-rank-1/],
+  [['--help'], /Unknown option: --help/],
+  [['extra'], /Unexpected argument: extra/],
+  [['--min-rank1', '95', 'extra'], /Unexpected argument: extra/],
+  [['--min-rank1', '95', '--min-rank1', '0'], /Duplicate option: --min-rank1/],
+  [['--behavioral', 'alpha-skill', '--dry-run', '--dry-run'], /Duplicate option: --dry-run/],
+  [['--behavioral'], /--behavioral requires a value/],
+  [['--behavioral', '--dry-run'], /--behavioral requires a value/],
+  [['--behavioral', ''], /--behavioral requires a value/],
+  [['--min-rank1'], /--min-rank1 must be a number from 0 to 100/],
+  [['--min-rank1', '--dry-run'], /--min-rank1 must be a number from 0 to 100/],
+  [['--min-rank1', ' '], /--min-rank1 must be a number from 0 to 100/],
+  [['--min-rank1', 'NaN'], /--min-rank1 must be a number from 0 to 100/],
+  [['--min-rank1', 'Infinity'], /--min-rank1 must be a number from 0 to 100/],
+  [['--min-rank1', '-1'], /--min-rank1 must be a number from 0 to 100/],
+  [['--dry-run'], /--dry-run applies only to behavioral evals/],
+  [['--behavioral', 'alpha-skill', '--min-rank1', '95'], /--min-rank1 applies only to deterministic evals/],
+]) {
+  test(`rejects invalid CLI arguments before running evals: ${JSON.stringify(args)}`, () => {
+    const root = makeSandbox();
+    try {
+      const result = run(root, args);
+      assert.equal(result.status, 1, result.stdout + result.stderr);
+      assert.match(result.stderr, diagnostic);
+      assert.equal(result.stdout, '');
+      assert.equal(fs.existsSync(path.join(root, 'evals/results')), false);
+    } finally { fs.rmSync(root, { recursive: true, force: true }); }
+  });
+}
+
+test('accepts reordered behavioral flags and a negative integer eval id', () => {
+  const root = makeSandbox();
+  try {
+    writeSkill(root, 'alpha-skill', 'Handles alpha widgets.');
+    const evalCase = completeCase('alpha-skill', 'change alpha widget');
+    evalCase.evals[0].id = -1;
+    writeJson(path.join(root, 'evals/cases/alpha-skill.json'), evalCase);
+    const result = run(root, ['--dry-run', '--eval', '-1', '--behavioral', 'alpha-skill']);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.match(result.stdout, /\[dry-run\] eval -1/);
+    assert.equal(fs.existsSync(path.join(root, 'evals/results')), false);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
 test('--eval is available only for behavioral runs', () => {
   const root = makeSandbox();
   try {

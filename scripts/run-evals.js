@@ -721,7 +721,26 @@ function runBehavioral(skillName, dryRun, evalId = null) {
 // ---------- main ----------
 
 function main(args = process.argv.slice(2)) {
+  const knownOptions = new Set(['--behavioral', '--eval', '--min-rank1', '--dry-run']);
+  const seen = new Set();
+  for (let i = 0; i < args.length; i++) {
+    const option = args[i];
+    if (!knownOptions.has(option)) {
+      console.error(`${option.startsWith('-') ? 'Unknown option' : 'Unexpected argument'}: ${option}`);
+      process.exit(1);
+    }
+    if (seen.has(option)) {
+      console.error(`Duplicate option: ${option}`);
+      process.exit(1);
+    }
+    seen.add(option);
+    if (option !== '--dry-run' && args[i + 1] !== undefined && !args[i + 1].startsWith('--')) i++;
+  }
   const bIdx = args.indexOf('--behavioral');
+  if (bIdx !== -1 && (!args[bIdx + 1]?.trim() || args[bIdx + 1].startsWith('--'))) {
+    console.error('--behavioral requires a value');
+    process.exit(1);
+  }
   const evalIdx = args.indexOf('--eval');
   let evalId = null;
   if (evalIdx !== -1) {
@@ -741,10 +760,14 @@ function main(args = process.argv.slice(2)) {
   if (rankIdx !== -1) {
     const raw = args[rankIdx + 1];
     minRank1 = Number(raw);
-    if (raw === undefined || raw === '' || !Number.isFinite(minRank1) || minRank1 < 0 || minRank1 > 100) {
+    if (raw === undefined || !raw.trim() || !Number.isFinite(minRank1) || minRank1 < 0 || minRank1 > 100) {
       console.error('--min-rank1 must be a number from 0 to 100');
       process.exit(1);
     }
+  }
+  if (args.includes('--dry-run') && bIdx === -1) {
+    console.error('--dry-run applies only to behavioral evals');
+    process.exit(1);
   }
   if (bIdx !== -1) {
     if (minRank1 !== null) {

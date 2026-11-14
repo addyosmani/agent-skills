@@ -37,6 +37,9 @@ node scripts/run-evals.js --behavioral test-driven-development --eval 1   # run 
 `--eval <id>` selects one behavioral case by its integer `id` (including `0`)
 and also works with `--dry-run`. Unknown or invalid IDs fail before execution;
 omitting the selector runs every case as before.
+Unknown options, duplicate flags, unexpected arguments, and missing or invalid
+values fail before any eval runs. `--dry-run` requires `--behavioral`;
+`--min-rank1` applies only to deterministic runs.
 
 Tier 3 supports two behavioral artifact kinds. `execution` is the default: each eval runs in a throwaway git repository, real project inputs from `files[]` are materialized out of `evals/fixtures/` and committed as the baseline, and the grader judges the full `--output-format stream-json --verbose` execution trace, including tool calls. `dialogue` is reserved for skills whose deliverable is the conversation itself; it needs no fixture, and the grader judges the assistant's conversational turns without requiring file edits or commands. Claiming `dialogue` is a human-reviewed exemption, not a general escape hatch for execution skills.
 
