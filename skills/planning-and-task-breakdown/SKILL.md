@@ -168,6 +168,8 @@ When using an external tracker, note it in `tasks/plan.md` (e.g. "Tasks tracked 
 ```markdown
 # Implementation Plan: [Feature/Project Name]
 
+Source spec: [path to the spec this plan was generated from, e.g. SPEC.md or SPEC-<change>.md; omit if no spec]
+
 ## Overview
 [One paragraph summary of what we're building]
 
