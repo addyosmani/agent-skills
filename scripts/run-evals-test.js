@@ -1142,6 +1142,60 @@ test('accepts distinct behavioral IDs including zero', () => {
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
 
+for (const error of [
+  { code: 'ETIMEDOUT', signal: 'SIGTERM', stdout: 'partial grade', stderr: 'grader timed out' },
+  { status: 2, stdout: 'partial grade', stderr: 'grader exited' },
+  { code: 'ENOENT', stderr: 'grader missing' },
+  { code: 'ENOBUFS', stdout: 'partial grade', stderr: 'output too large' },
+]) {
+  test(`retains grader failure evidence and continues remaining evals: ${error.code || error.status}`, () => {
+    const root = makeSandbox();
+    try {
+      writeSkill(root, 'alpha-skill', 'Handles alpha widgets.');
+      const evalCase = completeCase('alpha-skill', 'change alpha widget');
+      evalCase.evals = [1, 2].map((id) => ({ ...behavioralEval([]), id, kind: 'dialogue' }));
+      writeJson(path.join(root, 'evals/cases/alpha-skill.json'), evalCase);
+      const base = path.join(root, 'evals/results/alpha-skill.eval-1');
+      writeJson(`${base}.grading.json`, JSON.parse(passingGrading));
+      const trace = traceOf(terminal);
+      const stub = path.join(root, 'failing-grader.cjs');
+      fs.writeFileSync(stub, `
+        const fs = require('node:fs');
+        let grades = 0;
+        require('child_process').execFileSync = (command, args, options) => {
+          if (args.includes('--output-format')) {
+            fs.appendFileSync(${JSON.stringify(path.join(root, 'workspaces.txt'))}, options.cwd + '\\n');
+            return ${JSON.stringify(trace)};
+          }
+          if (++grades === 1) throw Object.assign(new Error('grader failed'), ${JSON.stringify(error)});
+          return ${JSON.stringify(passingGrading)};
+        };
+      `);
+      const result = spawnSync(process.execPath, ['--require', stub,
+        path.join(root, 'scripts/run-evals.js'), '--behavioral', 'alpha-skill'], { cwd: root, encoding: 'utf8' });
+      assert.equal(result.status, 1, result.stdout + result.stderr);
+      assert.match(result.stdout, /eval 1: grading incomplete/);
+      assert.equal(fs.readFileSync(`${base}.execution.raw.txt`, 'utf8'), trace);
+      assert.equal(fs.readFileSync(`${base}.grading.raw.txt`, 'utf8'), error.stdout || '');
+      const diagnostic = fs.readFileSync(`${base}.grading.error.txt`, 'utf8');
+      assert.match(diagnostic, /grader failed/);
+      assert.ok(diagnostic.includes(error.stderr));
+      assert.ok(diagnostic.includes(String(error.code || error.status)));
+      assert.equal(fs.existsSync(`${base}.grading.json`), false);
+      assert.equal(fs.existsSync(`${base}.execution.error.txt`), false);
+      assert.equal(JSON.parse(fs.readFileSync(path.join(root, 'evals/results/alpha-skill.eval-2.grading.json'))).summary.passed, 1);
+      const workspaces = fs.readFileSync(path.join(root, 'workspaces.txt'), 'utf8').trim().split('\n');
+      assert.equal(workspaces.length, 2);
+      for (const workspace of workspaces) assert.equal(fs.existsSync(workspace), false);
+      const retry = runBehavioralWithGrading(root, passingGrading);
+      assert.equal(retry.status, 0, retry.stdout + retry.stderr);
+      for (const suffix of ['execution.raw.txt', 'grading.raw.txt', 'grading.error.txt']) {
+        assert.equal(fs.existsSync(`${base}.${suffix}`), false, `stale ${suffix} after successful retry`);
+      }
+    } finally { fs.rmSync(root, { recursive: true, force: true }); }
+  });
+}
+
 test('removes the throwaway workspace when fixture setup fails', () => {
   const root = makeSandbox();
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'workspace-cleanup-test-'));

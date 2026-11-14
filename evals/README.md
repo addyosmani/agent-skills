@@ -54,6 +54,10 @@ call. A returned failed probe may still recover before completion. Failed or
 incomplete executions retain `.execution.raw.txt` and `.execution.error.txt`
 beside the case's result slot, produce no score, and do not stop later cases.
 These latest-attempt diagnostics are cleared when that case is rerun.
+Grader timeouts and other subprocess failures retain the completed trace in
+`.execution.raw.txt`, partial grader output in `.grading.raw.txt`, and the
+error in `.grading.error.txt`. Remaining cases still run, and the command
+exits nonzero. Rerunning a case clears its previous failure artifacts.
 
 ## Plugin evals (Claude Code)
 
