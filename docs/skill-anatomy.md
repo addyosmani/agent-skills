@@ -134,6 +134,7 @@ Skills load on demand: only the skill name and description sit in context at sta
 - **Use progressive disclosure.** Reference supporting files that are read only when the workflow reaches them.
 - **Prefer scripts over inline code.** Executing a script consumes no context; only its output does. Inline code blocks are paid for on every load.
 - **Keep file references one level deep.** Link directly from `SKILL.md` to supporting files rather than chaining through intermediate documents.
+- **Keep human-facing guidance out of `SKILL.md`.** Review checkpoints for the person steering the run go in a `HUMAN.md` beside `SKILL.md`. `SKILL.md` never references it, so no host loads it and it costs no context; it travels with the folder when the skill is copied.
 
 ## Script Requirements
 
@@ -173,6 +174,7 @@ This is about skill *content*; the portability of `references/` *paths* is a sep
 
 - Skill directories: `lowercase-hyphen-separated`
 - Skill files: `SKILL.md` (always uppercase)
+- Human sidecar: `HUMAN.md` (always uppercase, skill root only). Review gates for the person following the run; see [Context Efficiency](#context-efficiency).
 - Supporting files: `lowercase-hyphen-separated.md`
 - Shared references: stored in the root `references/` directory, not inside skill directories (see [Shared References](#shared-references) for why).
 - Skill-specific references: a single supporting doc can stay as a loose file in the skill directory (the `Supporting files` entry above); when several related docs travel with the skill, the emerging convention for self-contained, distributable skills is to group them in a `references/` directory inside the skill directory, so the skill carries its own supporting docs.
