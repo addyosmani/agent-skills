@@ -161,7 +161,7 @@ Tests reveal intent and coverage:
 - Would the tests catch a regression if the code changed?
 ```
 
-Answer the last question by experiment, not by reading. Invert one condition the change adds (drop a negation, swap `&&` for `||`), run the suite, then restore the file from a copy. A mutation that stays green is a finding: name the test case that is missing. For a project-wide mutation score, see `constraint-driven-development`.
+Answer the last question by experiment — never in the checkout under review. Copy the change into a scratch worktree (`git worktree add /tmp/review-mut HEAD && git diff HEAD | git -C /tmp/review-mut apply`). Invert one condition the change adds (drop a negation, swap `&&` for `||`), run the suite there, then discard the scratch worktree. If you can't isolate, skip the experiment and name the test you'd expect to fail. A mutation that stays green is a finding: name the test case that is missing. For a project-wide mutation score, see `constraint-driven-development`.
 
 ### Step 3: Review the Implementation
 
