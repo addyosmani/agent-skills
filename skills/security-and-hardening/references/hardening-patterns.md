@@ -32,8 +32,10 @@ const hashedPassword = await hash(plaintext, SALT_ROUNDS);
 const isValid = await compare(plaintext, hashedPassword);
 
 // Session management
+const SESSION_SECRET = process.env.SESSION_SECRET;  // From environment, not code
+if (!SESSION_SECRET) throw new Error('SESSION_SECRET not configured');
 app.use(session({
-  secret: process.env.SESSION_SECRET,  // From environment, not code
+  secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
