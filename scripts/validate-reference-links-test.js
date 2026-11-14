@@ -446,6 +446,25 @@ test('slugs come from the rendered heading text, not its markdown', () => {
   assert.equal(result.status, 0, result.stdout + result.stderr);
 });
 
+test('markup inside a code span stays in the slug', () => {
+  // GitHub renders `<dialog>` in a code span as text, so the anchor keeps `dialog`.
+  const root = makeSandbox();
+  writeFile(root, 'skills/hardening/SKILL.md', [
+    'See [a](references/patterns.md#use-dialog-for-modals).',
+    'See [b](references/patterns.md#the-docsurl-link-form).',
+    '',
+  ].join('\n'));
+  writeFile(root, 'skills/hardening/references/patterns.md', [
+    '## Use `<dialog>` for modals',
+    '## The `[docs](url)` link form',
+    '',
+  ].join('\n'));
+
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
 test('a heading-like line inside a fenced block is not an anchor', () => {
   // Bash comments in a fenced example look like H1s.
   const root = makeSandbox();
