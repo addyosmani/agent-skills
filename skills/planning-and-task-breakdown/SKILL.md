@@ -171,7 +171,7 @@ When using an external tracker, note it in `tasks/plan.md` (e.g. "Tasks tracked 
 Source spec: [path to the spec this plan was generated from, e.g. SPEC.md or SPEC-<change>.md; omit if no spec]
 
 ## Overview
-[One paragraph summary of what we're building]
+[One paragraph summary of what we are building]
 
 ## Architecture Decisions
 - [Key decision 1 and rationale]
