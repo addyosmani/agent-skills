@@ -118,6 +118,7 @@ The `agents/` directory contains pre-configured agent personas:
 | `test-engineer.md` | Test strategy and writing |
 | `security-auditor.md` | Vulnerability detection |
 | `web-performance-auditor.md` | Core Web Vitals & performance audit (via `/webperf`) |
+| `accessibility-auditor.md` | WCAG 2.2 AA conformance audit (via `/a11y`) |
 
 Load an agent definition when you need specialized review. For example, ask your coding agent to "review this change using the code-reviewer agent persona" and provide the agent definition.
 
@@ -137,6 +138,7 @@ The `.claude/commands/` directory contains slash commands for Claude Code:
 | `/code-simplify` | code-simplification |
 | `/ship` | shipping-and-launch |
 | `/webperf` | web-performance-auditor (specialist agent, web apps only) |
+| `/a11y` | accessibility-engineering + accessibility-auditor (specialist audit, interfaces only) |
 
 > **Note:** When installed as a Claude Code plugin you may see a warning like
 > _"Default commands/ folder is ignored because the manifest sets 'commands'"_.
