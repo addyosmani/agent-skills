@@ -57,7 +57,7 @@ const SKILLS_DIR = path.join(ROOT, 'skills');
 // `../` segments: `references/x.md`, `../../references/x.md`. Anchored on a
 // non-path character so `myreferences/x.md` does not match. An optional
 // `#fragment` is captured separately.
-const REFERENCE_LINK_RE = /(?<![A-Za-z0-9._/-])((?:\.\.\/)*references\/[A-Za-z0-9._-]+\.md)(?:#([\p{L}\p{N}_-]+))?/gu;
+const REFERENCE_LINK_RE = /(?<![A-Za-z0-9._/-])((?:\.\.\/)*references\/[A-Za-z0-9._-]+\.md)(?:#([\p{L}\p{M}\p{N}_-]+))?/gu;
 
 // GitHub's heading anchor: the rendered text, lowercased, with everything but
 // letters, numbers, `_`, `-` and spaces dropped, then spaces turned to hyphens.

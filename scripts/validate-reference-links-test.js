@@ -386,6 +386,15 @@ test('passes when an anchor matches a heading in the target file', () => {
   assert.match(result.stdout, /1 skills checked — 0 error\(s\) — PASSED/);
 });
 
+test('keeps combining marks in Unicode heading anchors', () => {
+  const root = makeSandbox();
+  writeFile(root, 'references/checklist.md', '# Cafe\u0301 checklist\n');
+  writeFile(root, 'skills/review/SKILL.md', 'See [checklist](../../references/checklist.md#cafe\u0301-checklist).\n');
+
+  const result = run(root);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
 test('fails when an anchor matches no heading in the target file', () => {
   // The file exists, so the existing check is satisfied; only the fragment is stale.
   const root = makeSandbox();
