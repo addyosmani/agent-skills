@@ -118,6 +118,25 @@ test('does not mistake the tail of an unrelated filename for an artifact path', 
   assert.match(result.stdout, /1 files checked — 0 error\(s\) — PASSED/);
 });
 
+test('reports the full artifact path when a directory name contains Unicode', () => {
+  const root = makeSandbox();
+  writeFile(root, '.claude/commands/plan.md', 'Read the plan from `章節/tasks/plan.md`.\n');
+
+  const result = run(root);
+
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /章節\/tasks\/plan\.md/);
+});
+
+test('ignores unrelated filenames that begin with a Unicode letter', () => {
+  const root = makeSandbox();
+  writeFile(root, '.claude/commands/plan.md', 'Attach `旧plan.md`. Save the plan to `tasks/plan.md`.\n');
+
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
 test('skips guarded files that do not exist', () => {
   const root = makeSandbox();
   writeFile(root, '.claude/commands/spec.md', 'Save the spec as `SPEC.md`.\n');
