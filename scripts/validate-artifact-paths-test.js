@@ -118,6 +118,29 @@ test('does not mistake the tail of an unrelated filename for an artifact path', 
   assert.match(result.stdout, /1 files checked — 0 error\(s\) — PASSED/);
 });
 
+test('does not mistake the start of a longer filename or directory for an artifact', () => {
+  const root = makeSandbox();
+  writeFile(
+    root,
+    'docs/adoption-guide.md',
+    'See `archive/plan.md.bak`, `examples/SPEC.mdx`, and `archive/todo.md/README.md`. Save to `tasks/plan.md`.\n',
+  );
+
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test('still reports drifted artifact paths immediately before a sentence period', () => {
+  const root = makeSandbox();
+  writeFile(root, 'docs/adoption-guide.md', 'Save the plan to archive/plan.md.\n');
+
+  const result = run(root);
+
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /L1: archive\/plan\.md — not an approved/);
+});
+
 test('skips guarded files that do not exist', () => {
   const root = makeSandbox();
   writeFile(root, '.claude/commands/spec.md', 'Save the spec as `SPEC.md`.\n');

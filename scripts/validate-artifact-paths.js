@@ -74,7 +74,9 @@ const GUARDED_FILES = [
 // drifted spec.md are both caught, then compared against the allowlist. The
 // lookbehind keeps the match from starting mid-word, so `test-plan.md` or
 // `release_todo.md` are not mistaken for a drifted `plan.md` / `todo.md`.
-const ARTIFACT_RE = /(?<![A-Za-z0-9._[\]-])(?:[A-Za-z0-9._[\]-]+\/)*(?:spec|plan|todo)\.md/gi;
+// The lookahead rejects longer filenames and directories, but allows a
+// sentence-ending period after a complete path.
+const ARTIFACT_RE = /(?<![A-Za-z0-9._[\]-])(?:[A-Za-z0-9._[\]-]+\/)*(?:spec|plan|todo)\.md(?![\w\/-]|\.[\w-])/gi;
 
 function findViolations(relPath) {
   const abs = path.join(ROOT, relPath);
