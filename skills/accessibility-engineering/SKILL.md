@@ -115,7 +115,7 @@ Apply the accessibility checklist (`../../references/accessibility-checklist.md`
 
 - `../../references/accessibility-checklist.md` — Quick reference for WCAG 2.2 AA
 - `../frontend-ui-engineering/SKILL.md` — Building accessible components from the start
-- `agents/accessibility-auditor.md` — Dedicated a11y audit persona for deep reviews
+- `../../agents/accessibility-auditor.md` — Dedicated a11y audit persona for deep reviews
 
 ## Verification
 
