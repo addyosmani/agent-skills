@@ -156,7 +156,7 @@ Picking a dimension means installing something. Don't leave the user with a numb
 | Performance: page | Lighthouse | `npm i -D lighthouse` | `lighthouse $URL --output=json --quiet` | LCP, CLS, performance score |
 | Performance: bundle | size-limit | `npm i -D size-limit` | `size-limit --json` | per-entry byte budget |
 | Accessibility | axe-core | `npm i -D @axe-core/cli` | `npm run check:a11y` (below) | zero critical or serious |
-| Architecture | dependency-cruiser | `npm i -D dependency-cruiser` | `depcruise --validate src` | any violation |
+| Architecture | dependency-cruiser | `npm i -D dependency-cruiser` | `depcruise src` | any violation |
 | Assertion quality | Stryker | `npm i -D @stryker-mutator/core` | `stryker run --mutate <changed files>` | mutation score |
 
 Five things that will bite you if you skip them:
