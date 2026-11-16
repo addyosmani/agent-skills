@@ -103,6 +103,35 @@ test('checks markdown link syntax, not just backtick mentions', () => {
   assert.match(result.stdout, /L1: references\/definition-of-done\.md/);
 });
 
+test('fails when a references link uses the ./ prefix and the file is missing', () => {
+  // The prefix is a path spelling, not an exemption: existence and anchors are
+  // resolved from the file that contains the link.
+  const root = makeSandbox();
+  writeFile(root, 'skills/using-agent-skills/SKILL.md', 'See `./references/definition-of-done.md`.\n');
+
+  const result = run(root);
+
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /L1: \.\/references\/definition-of-done\.md — resolves to/);
+  assert.match(result.stdout, /1 skills checked — 1 error\(s\) — FAILED/);
+});
+
+test('fails when a link reaches another directory references file', () => {
+  // `../other-skill/references/x.md` escapes the skill even though it ends in a
+  // references/ path; a per-skill install has no sibling skill to reach into.
+  const root = makeSandbox();
+  writeFile(root, 'skills/hardening/SKILL.md', 'See `../other-skill/references/patterns.md`.\n');
+
+  const result = run(root);
+
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(
+    result.stdout,
+    /L1: \.\.\/other-skill\/references\/patterns\.md — leaves skills\/hardening\//
+  );
+  assert.match(result.stdout, /1 skills checked — 1 error\(s\) — FAILED/);
+});
+
 test('passes when a skill colocates its own references directory', () => {
   // CLAUDE.md allows self-contained skills to keep references under
   // skills/<name>/references/. Those links are correct as written.

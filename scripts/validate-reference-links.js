@@ -46,11 +46,13 @@ const { COPIES } = require('./lib/reference-manifest');
 const ROOT = path.resolve(__dirname, '..');
 const SKILLS_DIR = path.join(ROOT, 'skills');
 
-// A link into a references/ directory, with any number of leading `../`
-// segments. Anchored on a non-path character so `myreferences/x.md` does not
-// match. The leading segments are captured so an escaping link can be named as
-// such even when its target happens to exist.
-const REFERENCE_LINK_RE = /(?<![A-Za-z0-9._/-])((?:\.\.\/)*)(references\/[A-Za-z0-9._-]+\.md)(?:#([\p{L}\p{N}_-]+))?/gu;
+// A link into a references/ directory: optional `./`/`../` prefixes, optional
+// path segments, then the references/ directory and the file. Capturing the
+// whole path matters — `../other-skill/references/x.md` leaves the skill just
+// as surely as `../../references/x.md`, and `./references/x.md` is the same
+// link as `references/x.md`. Anchored on a non-path character so
+// `myreferences/x.md` does not match.
+const REFERENCE_LINK_RE = /(?<![A-Za-z0-9._/-])((?:\.{1,2}\/)*)((?:[A-Za-z0-9._-]+\/)*references\/[A-Za-z0-9._-]+\.md)(?:#([\p{L}\p{N}_-]+))?/gu;
 
 // A markdown file beside the one containing it. Only applied inside a skill's
 // references/ directory, and only for a name the manifest copies there: other
