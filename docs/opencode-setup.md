@@ -248,6 +248,7 @@ These rules are enforced by your project's `AGENTS.md`, not by the copy of the s
 - Skill invocation depends on model compliance.
 - OpenCode does not install skills automatically; copy or install the directories you need.
 - If a skill references files under `references/`, you may need to copy those as well when installing manually.
+- **Windows symlink warning:** `.opencode/skills` is a committed git symlink to `../skills/`. Without symlink support, git checks it out as a text file and a host reading that directory reports `ENOTDIR`. Enable symlinks (`git config --global core.symlinks true`) before checkout, or recreate the link from an elevated prompt with `mklink /D .opencode\skills ..\skills`. Ignoring the warning is also fine for OMP: it loads the 25 skills from the plugin root, not this directory.
 
 ## Summary
 

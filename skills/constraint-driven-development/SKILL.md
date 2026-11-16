@@ -50,7 +50,7 @@ Never ask what you can read. Before the first question, gather:
 | Existing linters | `eslint.config.*`, `biome.json`, `.ruff.toml` |
 | Coverage today | `coverage/` output, or run the suite once |
 | CI | `.github/workflows/`, `.gitlab-ci.yml` |
-| Agent harness | `.claude/`, `.codex/`, `AGENTS.md` |
+| Agent harness | `.claude/`, `.codex/`, `.omp/`, `AGENTS.md` |
 
 Report what you found in two lines, then ask only what's left.
 
@@ -137,7 +137,7 @@ number and no command in this column is an aspiration, not a constraint.
 | W1 | `no-explicit-any` | `src/legacy/**` | Rewrite tracked in ENG-441 | @addy | 2026-11-01 |
 ```
 
-Then add one line to `AGENTS.md` and `CLAUDE.md`: `Read CONSTRAINTS.md before writing code. Do not weaken it to make a change pass.`
+Then add one line to `AGENTS.md` — and, when the repository already uses its host's own rules file, the same line there (for example `CLAUDE.md`): `Read CONSTRAINTS.md before writing code. Do not weaken it to make a change pass.`
 
 ### Step 4: Install what each dimension needs
 
@@ -305,7 +305,7 @@ The skill was applied correctly when:
 - [ ] At least one constraint is external (not judged by this project's own tests)
 - [ ] Measured-only metrics record today's value and a direction
 - [ ] Exceptions have an owner and an expiry date
-- [ ] `AGENTS.md` or `CLAUDE.md` points at the file
+- [ ] `AGENTS.md` (or the host's own rules file) points at the file
 - [ ] A trial run on the current branch produces no failures the user disagrees with
 - [ ] Each enforced command fails on a deliberate violation and scanner error, passes a clean control, and preserves the agreed severity threshold
 

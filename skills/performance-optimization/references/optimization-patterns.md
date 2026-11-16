@@ -2,7 +2,7 @@
 
 Worked fixes for the anti-patterns named in Step 3 of the `performance-optimization` skill. The skill states the rule and the signature to look for; this file shows one concrete implementation. Open the section you need after Step 2 has identified the bottleneck — it is not meant to be read top to bottom.
 
-Checklists, measurement commands, TTFB diagnosis, and caching read/write strategies live in `../../../references/performance-checklist.md`.
+Checklists, measurement commands, TTFB diagnosis, and caching read/write strategies live in `performance-checklist.md`.
 
 ## N+1 Queries (Backend)
 
@@ -247,4 +247,4 @@ res.set('Cache-Control', 'public, max-age=300'); // 5 minutes
 
 **Guard against the stampede.** A hot key expires, every concurrent request misses together, and the origin takes the full load at once, which is how a cache turns into an outage instead of preventing one. Serve stale while a single request recomputes (`stale-while-revalidate`), or coalesce concurrent misses behind one in-flight promise so N waiters cause one recompute.
 
-**Do not cache:** anything whose staleness is a correctness bug (balances, permissions, inventory at checkout), or per-user data under a key that does not identify the user. See `../../../references/performance-checklist.md#caching-strategies` for request coalescing, write strategies, negative caching, and the cache checklist.
+**Do not cache:** anything whose staleness is a correctness bug (balances, permissions, inventory at checkout), or per-user data under a key that does not identify the user. See `performance-checklist.md#caching-strategies` for request coalescing, write strategies, negative caching, and the cache checklist.

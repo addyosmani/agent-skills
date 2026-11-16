@@ -252,7 +252,7 @@ For shipped features:
 
 Special consideration for AI agent context:
 
-- **CLAUDE.md / rules files** — Document project conventions so agents follow them
+- **Agent rules files** (`AGENTS.md`, `CLAUDE.md`, …) — Document project conventions so agents follow them
 - **Spec files** — Keep specs updated so agents build the right thing
 - **ADRs** — Help agents understand why past decisions were made (prevents re-deciding)
 - **Inline gotchas** — Prevent agents from falling into known traps
@@ -294,5 +294,5 @@ After documenting:
 - [ ] API functions have parameter and return type documentation
 - [ ] Known gotchas are documented inline where they matter
 - [ ] No commented-out code remains
-- [ ] Rules files (CLAUDE.md etc.) are current and accurate
+- [ ] Rules files (`AGENTS.md`, `CLAUDE.md`, etc.) are current and accurate
 - [ ] Prose edits preserve source details, decision trade-offs, and qualifiers without adding unsupported guarantees

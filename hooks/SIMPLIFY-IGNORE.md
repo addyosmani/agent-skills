@@ -46,6 +46,16 @@ result[3] = buf[3] ^ key[3];
 
 > **Note:** The hook stores temporary backups in `.claude/.simplify-ignore-cache/`. Make sure this path is in your `.gitignore`.
 
+## OMP
+
+This plugin ships no OMP equivalent. `hooks/simplify-ignore.sh` is loaded by nothing on OMP: OMP discovers hooks as `hooks/pre|post/*.{ts,js}` extension factories or through `package.json#omp.extensions`, and a Bash script that reads a JSON envelope on stdin is neither.
+
+The in-memory port does not work. OMP's default edit mode is `hashline`, and `read` records its snapshot and seen lines in the session `EditStore` before any `tool_result` runs. Masking the returned text changes the line count the model works from while the store still holds the original numbering, so `edit.enforceSeenLines` then rejects the model's edit or applies it to the wrong lines.
+
+A future port has to mask on disk instead: during `tool_call` (which runs before the tool executes, so the snapshot sees the masked file), with a per-file backup, restoring on `session_shutdown` — including the crash case where the process is killed while a file is masked.
+
+The ceiling applies even then: `bash` (`cat`, `sed`, `eval`) reads the real file, so this is a guard against a cooperative model, not a sandbox.
+
 ## How it works
 
 One script, three hook events:

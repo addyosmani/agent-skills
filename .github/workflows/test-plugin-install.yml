@@ -78,6 +78,61 @@ jobs:
       - name: Test artifact-path validator
         run: node --test scripts/validate-artifact-paths-test.js
 
+  # The OMP surface is packaging, not content: a wrong `package.json#omp` key or
+  # a missing command file still passes every content validator. This job links
+  # and installs the plugin in a throwaway profile and inspects what OMP sees.
+  validate-omp:
+    name: Validate OMP packaging
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Link and install the plugin in an isolated HOME
+        run: |
+          set -euo pipefail
+          if ! command -v omp >/dev/null 2>&1; then
+            echo "omp not installed — skipping"
+            exit 0
+          fi
+
+          # `omp plugin link` writes under the user's home (~/.omp/plugins and
+          # omp-plugins.lock.json). Move HOME so this never touches a real
+          # profile on a persistent runner; a relative PI_CONFIG_DIR would only
+          # relocate under HOME and would not isolate it.
+          export HOME="$(mktemp -d)"
+
+          assert_doctor() {
+            omp plugin doctor | tee "$HOME/doctor.txt"
+            if grep -q "not an omp plugin" "$HOME/doctor.txt"; then
+              echo "omp plugin doctor rejected the plugin"; exit 1
+            fi
+          }
+
+          assert_skills() {
+            omp skill list --json | jq -e '.skills | length == 25'
+          }
+
+          omp plugin link .
+          assert_doctor
+          assert_skills
+
+          # Command discovery is not exposed as a CLI listing, so assert the
+          # files the names map to.
+          test -f commands/code-review.md
+          test -f commands/plan.md
+
+          # Repeat through the install path. A local path registers as a link,
+          # so this checks that `install` accepts the plugin and does not add a
+          # second, conflicting registration.
+          omp plugin install "$PWD"
+          assert_doctor
+          assert_skills
+
   # Ubuntu coverage stays in the existing jobs above, preserving their check names.
   validate-platforms:
     name: Validate tooling (${{ matrix.os }})

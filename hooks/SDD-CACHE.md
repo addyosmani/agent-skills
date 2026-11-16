@@ -50,6 +50,12 @@ This hook caches fetched content on disk, but **revalidates with the origin serv
 
 3. Use `/source-driven-development` (or the skill) as usual. No changes to the skill or the agent's workflow — the cache is transparent.
 
+## OMP
+
+There is no OMP equivalent. OMP has no `WebFetch` tool: a fetch is `read` on an `http(s)` URL, `web_search`, or the browser tools.
+
+The cache cannot be reproduced with OMP's hooks. `tool_call` cannot fulfil a call with cached content — returning `{ block: true }` aborts the call and discards its context — and `tool_result` fires only after the network read has already happened.
+
 ## Mental model
 
 HTTP resource cache keyed by URL. Freshness is delegated to the origin via `ETag` / `Last-Modified`; no TTL, no prompt in the key.

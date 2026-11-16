@@ -117,13 +117,15 @@ If a skill does not need runnable helpers, do not create an empty `scripts/` dir
 
 ## Shared References
 
-Checklists used by more than one skill — testing, security, performance, accessibility, definition-of-done — live in `references/` at the repository root, deliberately *not* inside any skill directory.
+Checklists used by more than one skill — testing, security, performance, accessibility, definition-of-done — have one editable source in `references/` at the repository root.
 
-This is a pack-level design choice. The Agent Skills spec describes a skill as a self-contained directory, but several skills here point at the same checklists. Colocating those would force one of two options: copy the checklist into every skill that uses it, or pick one skill to "own" it and have the others reach into that directory. Both drift over time. A single repo-root copy stays the source of truth.
+This is a pack-level design choice. Several skills point at the same checklists, so per-skill ownership would force either duplication or one skill reaching into another's directory. Both drift over time. A single root copy stays the source of truth.
 
-The tradeoff is portability: a whole-repo install (such as the Claude Code marketplace plugin) carries `references/` along, but a per-skill install that copies only `skills/<name>/` leaves the repo-root sibling behind, and those links resolve to nothing. That gap is tracked in [#361](https://github.com/addyosmani/agent-skills/issues/361).
+The copies keep each skill self-contained. A whole-repo install carries `references/` along, but a per-skill install copies only `skills/<name>/`, so a link that reaches the repository root resolves to nothing — and OMP's `skill://` guard rejects any path that leaves the skill directory ([#361](https://github.com/addyosmani/agent-skills/issues/361)). `node scripts/sync-references.js` therefore writes a byte-identical copy into each consuming skill's `references/` directory, and `scripts/validate-reference-links.js` fails the build when a copy differs from its source.
 
-Current convention: material used by exactly one skill is a supporting file inside that skill's directory; material shared across skills goes in `references/`.
+Link a shared checklist as `references/<file>.md` from `SKILL.md`, and by bare name (`<file>.md`) from inside a skill's own `references/` directory. Edit the root copy and re-run `node scripts/sync-references.js`; never edit a copy.
+
+Current convention: material used by exactly one skill is a supporting file inside that skill's directory; material shared across skills is canonical in the root `references/`.
 
 ## Context Efficiency
 
@@ -174,7 +176,7 @@ This is about skill *content*; the portability of `references/` *paths* is a sep
 - Skill directories: `lowercase-hyphen-separated`
 - Skill files: `SKILL.md` (always uppercase)
 - Supporting files: `lowercase-hyphen-separated.md`
-- Shared references: stored in the root `references/` directory, not inside skill directories (see [Shared References](#shared-references) for why).
+- Shared references: canonical in the root `references/` directory and copied into each consuming skill by `node scripts/sync-references.js`; link the copy, never edit it (see [Shared References](#shared-references) for why).
 - Skill-specific references: a single supporting doc can stay as a loose file in the skill directory (the `Supporting files` entry above); when several related docs travel with the skill, the emerging convention for self-contained, distributable skills is to group them in a `references/` directory inside the skill directory, so the skill carries its own supporting docs.
 
 ## Cross-Skill References

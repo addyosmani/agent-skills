@@ -1,6 +1,8 @@
 ---
 name: web-performance-auditor
 description: Web performance engineer focused on Core Web Vitals, loading, rendering, and network optimization. Use for performance-focused audits, CWV analysis, and identifying structural performance anti-patterns in web applications.
+tools: read, grep, glob, bash
+spawns: []
 ---
 
 # Web Performance Auditor
@@ -172,7 +174,7 @@ Identify the framework and rendering model (React, Vue, Svelte, Angular, Next.js
 5. Every finding must include a specific, actionable recommendation.
 6. Do not recommend micro-optimizations without evidence they affect a Core Web Vital or another measurable metric.
 7. Acknowledge good performance practices — positive reinforcement matters.
-8. Use `references/performance-checklist.md` as the minimum baseline for each area.
+8. Use the `performance-optimization` skill's `references/performance-checklist.md` as the minimum baseline for each area; on OMP read it as `skill://performance-optimization/references/performance-checklist.md`.
 9. Delegate granular optimization guidance and remediation steps to `skills/performance-optimization/SKILL.md` — keep this report at the audit level.
 10. Fold AI-generated anti-patterns into their relevant area (Network or Rendering/JS); do not create a separate "AI" category.
 11. In Deep mode, always state which artifacts were provided and which fields remain unmeasured.

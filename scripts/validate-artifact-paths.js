@@ -55,10 +55,13 @@ const GUARDED_FILES = [
   '.gemini/commands/spec.toml',
   '.gemini/commands/planning.toml',
   '.gemini/commands/build.toml',
-  // Root command set (Antigravity, Codex, and other TOML-based hosts)
+  // Root command set (Antigravity TOML wrappers, OMP Markdown)
   'commands/spec.toml',
   'commands/planning.toml',
   'commands/build.toml',
+  'commands/spec.md',
+  'commands/plan.md',
+  'commands/build.md',
   // Skills the commands invoke
   'skills/spec-driven-development/SKILL.md',
   'skills/planning-and-task-breakdown/SKILL.md',

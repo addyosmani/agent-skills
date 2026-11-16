@@ -153,7 +153,7 @@ Before defining a custom subagent, check whether one of these covers the role:
 
 | Built-in | Purpose |
 |----------|---------|
-| `Explore` | Read-only codebase search and analysis. Use this for Pattern 5 (research isolation). |
+| `Explore` | Read-only codebase search and analysis. Use this for Pattern 5 (research isolation). On OMP the equivalent built-in is `scout`. |
 | `Plan` | Read-only research during plan mode. |
 | `general-purpose` | Multi-step tasks needing both exploration and modification. |
 

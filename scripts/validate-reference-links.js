@@ -4,44 +4,36 @@
  *
  * Guards links from skills to the shared `references/` checklists.
  *
- * Those checklists live in the repo-root `references/` directory, but every
- * SKILL.md used to link them as `references/<file>.md` — a path relative to
- * the skill's own directory, which is two levels below the root. All 18 links
- * across 11 skills resolved to files that do not exist, in the repo and in
- * every plugin-install layout (~/.claude/plugins/cache/..., ~/.codex/...).
- * Agents that followed the guidance — for example using-agent-skills pointing
- * at the Definition of Done — hit a file-not-found and stalled.
+ * The checklists have one editable source at the repository root, but a skill
+ * may be installed on its own, and OMP's `skill://` containment guard rejects a
+ * link that leaves the skill directory. So every consuming skill carries a
+ * byte-identical copy at `skills/<name>/references/<file>.md`, written by
+ * `node scripts/sync-references.js`, and every link inside the skill resolves
+ * inside the skill.
  *
- * Nothing else in CI catches this: validate-artifact-paths.js is scoped to
- * spec/plan/todo artifacts and is explicitly not a general markdown linter.
+ * Three rules are enforced here:
  *
- * The rule enforced here: every `references/*.md` link in a SKILL.md must
- * resolve to an existing file relative to that skill's own directory. This
- * accepts both conventions in CLAUDE.md — shared checklists reached via
- * `../../references/`, and a skill's own colocated `references/` directory.
- *
- * The markdown files inside a skill's own `references/` directory get the
- * same check, with each link resolved from the file that contains it. They
- * sit one directory deeper than SKILL.md, so from there the shared checklists
- * are `../../../references/`: the same off-by-a-level mistake, one level down.
+ *   1. A `references/*.md` link is resolved from the file that contains it and
+ *      must not leave the skill directory. `../../references/x.md` used to be
+ *      the convention; from a SKILL.md it now escapes the skill, so it fails.
+ *   2. Inside `skills/<name>/references/`, a sibling is linked bare (`x.md` or
+ *      `./x.md`) and gets the same existence and anchor checks.
+ *   3. Every generated copy must be byte-identical to its canonical source.
+ *      The pair list is `scripts/lib/reference-manifest.js`, the same list
+ *      `sync-references.js` writes, so writer and checker cannot drift.
  *
  * A `#fragment` after such a link must match a heading in the target file,
  * slugged the way GitHub renders anchors. The file existing is not enough:
  * renaming a heading breaks every link to it while the path still resolves.
  *
- * Scope is deliberately narrow: only `references/*.md` links, only SKILL.md
- * and `skills/<name>/references/*.md` files. It is not a general markdown
- * path linter — skills legitimately mention paths that do not exist yet
- * (`tasks/todo.md`, `PERF.md`, `docs/ideas/[idea-name].md`), and those must
- * not fail the build.
+ * Scope is deliberately narrow: only links to markdown reference files, only
+ * SKILL.md and `skills/<name>/references/*.md` files. It is not a general
+ * markdown path linter — skills legitimately mention paths that do not exist
+ * yet (`tasks/todo.md`, `PERF.md`, `docs/ideas/[idea-name].md`), and those must
+ * not fail the build. Fenced code blocks are exempt for the same reason: text
+ * inside a fence is an example, not a link an agent will follow.
  *
- * Fenced code blocks are exempt for the same reason. Text inside a fence is
- * an example, not a link an agent will follow — and this rule in particular
- * has to be documentable: the failure message below tells authors to write
- * `../../references/<file>.md` rather than `references/<file>.md`, which no
- * skill could show as an example without failing the very check explaining it.
- *
- * Exit codes: 0 = all clear, 1 = one or more unresolvable links.
+ * Exit codes: 0 = all clear, 1 = one or more violations.
  */
 
 'use strict';
@@ -49,15 +41,23 @@
 const fs = require('fs');
 const path = require('path');
 const { stripFencedCodeBlocks } = require('./lib/skill-lint');
+const { COPIES } = require('./lib/reference-manifest');
 
 const ROOT = path.resolve(__dirname, '..');
 const SKILLS_DIR = path.join(ROOT, 'skills');
 
-// Matches a link to a references/ markdown file, with any number of leading
-// `../` segments: `references/x.md`, `../../references/x.md`. Anchored on a
-// non-path character so `myreferences/x.md` does not match. An optional
-// `#fragment` is captured separately.
-const REFERENCE_LINK_RE = /(?<![A-Za-z0-9._/-])((?:\.\.\/)*references\/[A-Za-z0-9._-]+\.md)(?:#([\p{L}\p{N}_-]+))?/gu;
+// A link into a references/ directory, with any number of leading `../`
+// segments. Anchored on a non-path character so `myreferences/x.md` does not
+// match. The leading segments are captured so an escaping link can be named as
+// such even when its target happens to exist.
+const REFERENCE_LINK_RE = /(?<![A-Za-z0-9._/-])((?:\.\.\/)*)(references\/[A-Za-z0-9._-]+\.md)(?:#([\p{L}\p{N}_-]+))?/gu;
+
+// A markdown file beside the one containing it. Only applied inside a skill's
+// references/ directory, and only for a name the manifest copies there: other
+// bare `.md` names (`AGENTS.md`, `CONSTRAINTS.md`) are artifacts the skill
+// refers to, not links to a local file.
+const SIBLING_LINK_RE = /(?<![A-Za-z0-9._/-])(?:\.\/)?([A-Za-z0-9._-]+\.md)(?:#([\p{L}\p{N}_-]+))?/gu;
+const CHECKLIST_FILES = new Set(COPIES.map(({ file }) => file));
 
 // GitHub's heading anchor: the rendered text, lowercased, with everything but
 // letters, numbers, `_`, `-` and spaces dropped, then spaces turned to hyphens.
@@ -86,22 +86,41 @@ function headingAnchors(file) {
   return anchors;
 }
 
-// A link is resolved from the directory of the file that contains it.
-function findViolations(file) {
+// A link is resolved from the directory of the file that contains it, and must
+// stay inside the skill directory.
+function findViolations(file, skillDir = path.dirname(file)) {
   const violations = [];
   const baseDir = path.dirname(file);
+  const allowSiblings = path.basename(baseDir) === 'references';
   // Share the linter's fence rules; blanked lines preserve diagnostic positions.
   const lines = stripFencedCodeBlocks(fs.readFileSync(file, 'utf8')).split('\n');
 
+  function record(line, link, anchor) {
+    const target = path.resolve(baseDir, link);
+    const relative = path.relative(skillDir, target);
+    const outsideSkill = relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative);
+    if (outsideSkill) {
+      violations.push({ line, link, target, escapes: true });
+    } else if (!fs.existsSync(target)) {
+      violations.push({ line, link, target });
+    } else if (anchor && !headingAnchors(target).has(anchor)) {
+      violations.push({ line, link, target, anchor });
+    }
+  }
+
   lines.forEach((line, i) => {
+    const spans = [];
     for (const match of line.matchAll(REFERENCE_LINK_RE)) {
-      const [, link, anchor] = match;
-      const target = path.resolve(baseDir, link);
-      if (!fs.existsSync(target)) {
-        violations.push({ line: i + 1, link, target });
-      } else if (anchor && !headingAnchors(target).has(anchor)) {
-        violations.push({ line: i + 1, link, target, anchor });
-      }
+      spans.push([match.index, match.index + match[0].length]);
+      record(i + 1, `${match[1]}${match[2]}`, match[3]);
+    }
+    if (!allowSiblings) return;
+    for (const match of line.matchAll(SIBLING_LINK_RE)) {
+      if (!CHECKLIST_FILES.has(match[1])) continue;
+      const start = match.index;
+      const end = start + match[0].length;
+      if (spans.some(([from, to]) => start < to && end > from)) continue;
+      record(i + 1, match[1], match[2]);
     }
   });
 
@@ -119,6 +138,20 @@ function skillReferenceFiles(skillDir) {
     .filter((file) => fs.statSync(file).isFile());
 }
 
+// Generated copies that no longer match their canonical checklist. A pair with
+// either side absent is skipped: a missing copy is already reported as a broken
+// link, and a sandbox fixture may ship only the files it exercises.
+function findDrift() {
+  const drift = [];
+  for (const { skill, file } of COPIES) {
+    const canonical = path.join(ROOT, 'references', file);
+    const copy = path.join(ROOT, 'skills', skill, 'references', file);
+    if (!fs.existsSync(canonical) || !fs.existsSync(copy)) continue;
+    if (!fs.readFileSync(canonical).equals(fs.readFileSync(copy))) drift.push({ canonical, copy });
+  }
+  return drift;
+}
+
 function toPosix(file) {
   return path.relative(ROOT, file).split(path.sep).join('/');
 }
@@ -133,8 +166,9 @@ function main() {
 
   let checked = 0;
   let errors = 0;
-  let referenceFileErrors = 0;
+  let missingErrors = 0;
   let anchorErrors = 0;
+  let escapeErrors = 0;
 
   const skillNames = fs.readdirSync(SKILLS_DIR).sort();
   for (const name of skillNames) {
@@ -144,7 +178,7 @@ function main() {
 
     checked++;
     for (const file of [skillFile, ...skillReferenceFiles(skillDir)]) {
-      const violations = findViolations(file);
+      const violations = findViolations(file, skillDir);
 
       if (violations.length === 0) {
         console.log(`  ✓  ${toPosix(file)}`);
@@ -152,31 +186,47 @@ function main() {
       }
 
       console.log(`  ✗  ${toPosix(file)}`);
-      for (const { line, link, target, anchor } of violations) {
+      for (const { line, link, target, anchor, escapes } of violations) {
         errors++;
+        if (escapes) {
+          console.log(`       L${line}: ${link} — leaves ${toPosix(skillDir)}/, resolving to ${toPosix(target)}`);
+          escapeErrors++;
+          continue;
+        }
         if (anchor) {
           console.log(`       L${line}: ${link}#${anchor} — no heading in ${toPosix(target)} produces #${anchor}`);
           anchorErrors++;
           continue;
         }
         console.log(`       L${line}: ${link} — resolves to ${toPosix(target)}, which does not exist`);
-        if (file !== skillFile) referenceFileErrors++;
+        missingErrors++;
       }
     }
+  }
+
+  const drift = findDrift();
+  for (const { canonical, copy } of drift) {
+    errors++;
+    console.log(`  ✗  ${toPosix(copy)}`);
+    console.log(`       generated copy differs from ${toPosix(canonical)}`);
   }
 
   const status = errors > 0 ? 'FAILED' : 'PASSED';
   console.log(`\n${checked} skills checked — ${errors} error(s) — ${status}`);
 
   if (errors > 0) {
-    if (errors > anchorErrors) {
-      console.log('\nLinks to references/ are resolved from the directory of the file that contains them.');
-      console.log('Shared checklists live in the repo-root references/, two levels up from a SKILL.md:');
-      console.log('use `../../references/<file>.md`, not `references/<file>.md`.');
-      if (referenceFileErrors > 0) {
-        console.log('From a file inside skills/<name>/references/ they are three levels up:');
-        console.log('use `../../../references/<file>.md`.');
-      }
+    if (escapeErrors > 0) {
+      console.log('\nA link must resolve inside the skill directory.');
+      console.log('Shared checklists are copied into each consuming skill: from a SKILL.md link');
+      console.log('`references/<file>.md`; from a file inside `skills/<name>/references/` link');
+      console.log('the sibling as `<file>.md`.');
+    }
+    if (missingErrors > 0) {
+      console.log('\nEdit the canonical checklist in `references/` and run `node scripts/sync-references.js`');
+      console.log('to regenerate the copies. Never edit a generated copy.');
+    }
+    if (drift.length > 0) {
+      console.log('\nEdit `references/<file>.md` and run `node scripts/sync-references.js` to refresh the copies.');
     }
     if (anchorErrors > 0) {
       console.log("\nAnchors are matched against GitHub's heading slugs: the heading text lowercased,");

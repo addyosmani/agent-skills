@@ -39,6 +39,9 @@ const DIRS = {
   claude:     { dir: path.join(ROOT, '.claude', 'commands'), ext: '.md'   },
   gemini:     { dir: path.join(ROOT, '.gemini', 'commands'), ext: '.toml' },
   antigravity:{ dir: path.join(ROOT, 'commands'),            ext: '.toml' },
+  // OMP reads `commands/*.md` from an enabled plugin root, so the same
+  // directory carries a second extension per host.
+  omp:        { dir: path.join(ROOT, 'commands'),            ext: '.md'   },
 };
 
 // Commands where the file stem differs between Claude and the TOML dirs.
@@ -48,6 +51,17 @@ const NAME_MAP = {
 };
 const NAME_MAP_REVERSE = Object.fromEntries(
   Object.entries(NAME_MAP).map(([k, v]) => [v, k])
+);
+
+// OMP registers built-ins before file commands, and a built-in with the same
+// name shadows the file command completely. `review` is taken there (OMP ships
+// its own single-pass reviewer), so the OMP surface renames it instead of
+// shipping a dead command. `plan` is verified free on OMP, so it keeps its name.
+const OMP_NAME_MAP = {
+  review: 'code-review',
+};
+const OMP_NAME_MAP_REVERSE = Object.fromEntries(
+  Object.entries(OMP_NAME_MAP).map(([k, v]) => [v, k])
 );
 
 // ─── Parsers ──────────────────────────────────────────────────────────────────
@@ -93,6 +107,7 @@ function main() {
     claude:      loadCommands(DIRS.claude),
     gemini:      loadCommands(DIRS.gemini),
     antigravity: loadCommands(DIRS.antigravity),
+    omp:         loadCommands(DIRS.omp),
   };
 
   // Canonical command list: use Claude stems as the reference.
@@ -115,14 +130,25 @@ function main() {
   // Commands in Claude not found in TOML dirs
   for (const stem of claudeStems) {
     const tomlStem = NAME_MAP[stem] ?? stem;
+    const ompStem  = OMP_NAME_MAP[stem] ?? stem;
     const missing  = [];
     if (!(tomlStem in byTool.gemini))      missing.push('.gemini/commands');
     if (!(tomlStem in byTool.antigravity)) missing.push('commands');
+    if (!(ompStem  in byTool.omp))         missing.push('commands (.md)');
     if (missing.length) {
       console.log(`  ✗  ${stem} — missing in: ${missing.join(', ')}`);
       errors++;
     } else {
       console.log(`  ✓  ${stem}${stem !== tomlStem ? ` (${tomlStem} in toml dirs)` : ''}`);
+    }
+  }
+
+  // Commands in the OMP Markdown surface not found in Claude
+  for (const stem of Object.keys(byTool.omp).sort()) {
+    const claudeStem = OMP_NAME_MAP_REVERSE[stem] ?? stem;
+    if (!(claudeStem in byTool.claude)) {
+      console.log(`  ✗  ${stem} — present in commands (.md) but missing in .claude/commands`);
+      errors++;
     }
   }
 
@@ -166,14 +192,17 @@ function main() {
 
   for (const claudeStem of claudeStems) {
     const tomlStem   = NAME_MAP[claudeStem] ?? claudeStem;
+    const ompStem    = OMP_NAME_MAP[claudeStem] ?? claudeStem;
     const descClaude = byTool.claude[claudeStem];
     const descGemini = byTool.gemini[tomlStem];
     const descAgy    = byTool.antigravity[tomlStem];
+    const descOmp    = byTool.omp[ompStem];
 
     const malformed = [
       ['.claude/commands', byTool.claude, claudeStem],
       ['.gemini/commands', byTool.gemini, tomlStem],
       ['commands/', byTool.antigravity, tomlStem],
+      ['commands/ (.md)', byTool.omp, ompStem],
     ].filter(([, commands, stem]) => Object.prototype.hasOwnProperty.call(commands, stem) && commands[stem] == null);
 
     if (malformed.length) {
@@ -185,12 +214,12 @@ function main() {
       continue;
     }
 
-    if (descClaude == null || descGemini == null || descAgy == null) {
+    if (descClaude == null || descGemini == null || descAgy == null || descOmp == null) {
       // Missing file already flagged by parity check
       continue;
     }
 
-    const allMatch = descClaude === descGemini && descGemini === descAgy;
+    const allMatch = descClaude === descGemini && descGemini === descAgy && descAgy === descOmp;
 
     if (allMatch) {
       console.log(`  ✓  ${claudeStem}`);
@@ -199,6 +228,7 @@ function main() {
       console.log(`       .claude:      ${descClaude}`);
       console.log(`       .gemini:      ${descGemini}`);
       console.log(`       commands/:    ${descAgy}`);
+      console.log(`       commands/ md: ${descOmp}`);
       errors++;
     }
   }

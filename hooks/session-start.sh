@@ -2,10 +2,11 @@
 # agent-skills session start hook
 # Injects the using-agent-skills meta-skill into a new session.
 #
-# Not wired by the plugin: hosts that already route skills from their
-# descriptions (Claude Code, Codex CLI) would run a second router on top of
-# the native one — see docs/getting-started.md. Wire this script into a
-# SessionStart hook only on hosts without native skill routing.
+# Not wired by the plugin: OMP routes skills natively from their descriptions,
+# so injecting using-agent-skills there would stack a second router on top of
+# the native one. Hosts that route skills from their descriptions (Claude Code,
+# Codex CLI) have the same reason — see docs/getting-started.md. Wire this
+# script into a SessionStart hook only on hosts without native skill routing.
 #
 # Every output path must emit the standard SessionStart envelope
 #   {"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "..."}}

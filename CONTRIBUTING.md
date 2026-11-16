@@ -60,7 +60,7 @@ The frontmatter fields above are required. The section anatomy is a recommended 
 - Don't add skills that are vague advice instead of actionable processes
 - Don't create supporting files unless content exceeds 100 lines
 - Don't create an empty `scripts/` directory just to match another skill — add `scripts/` only when the skill includes runnable helpers
-- Don't put reference material inside skill directories — use `references/` instead
+- Keep shared checklists canonical in the root `references/` directory — `node scripts/sync-references.js` copies each one into the skills that consume it, and CI fails when a copy drifts; edit the root copy, never a copy
 
 ## Modifying Existing Skills
 

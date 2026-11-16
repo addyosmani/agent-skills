@@ -1,0 +1,12 @@
+{
+  "name": "agent-skills",
+  "version": "0.6.15",
+  "private": true,
+  "description": "Production-grade engineering skills for AI coding agents covering the full software development lifecycle from spec to ship.",
+  "author": "Addy Osmani",
+  "license": "MIT",
+  "repository": "https://github.com/addyosmani/agent-skills",
+  "omp": {
+    "name": "agent-skills"
+  }
+}

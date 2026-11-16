@@ -31,7 +31,7 @@ docs/         → Setup guides for different tools
 - YAML frontmatter with `name` and `description` fields
 - Description starts with what the skill does (third person), followed by trigger conditions ("Use when...")
 - Every skill has: Overview, When to Use, Process, Common Rationalizations, Red Flags, Verification
-- Shared references are in the root `references/` directory; the emerging convention for self-contained, distributable skills keeps a skill's own references inside `skills/<name>/references/`
+- Shared checklists are canonical in the root `references/` directory; `node scripts/sync-references.js` copies each into the consuming skills, and `scripts/validate-reference-links.js` fails when a copy drifts — edit the root copy, never a copy
 - Supporting files only created when content exceeds 100 lines
 
 ## Contributing

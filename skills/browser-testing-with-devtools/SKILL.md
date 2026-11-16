@@ -25,7 +25,7 @@ Use Chrome DevTools MCP to give your agent eyes into the browser. This bridges t
 
 ### Installation
 
-Add the following to your project's `.mcp.json` or Claude Code settings:
+Add the following to `.mcp.json` at the project root (read by Claude Code, OMP and other clients), or to host-native config (`.omp/mcp.json` for OMP, `.claude/settings.json` for Claude Code):
 
 ```json
 {

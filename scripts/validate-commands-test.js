@@ -32,10 +32,21 @@ function writeFile(root, relativePath, content) {
   fs.writeFileSync(file, content);
 }
 
+// OMP takes the same root `commands/` directory with a `.md` extension, and
+// renames the two stems that collide with its built-ins.
+const OMP_STEM = { review: 'code-review' };
+
 function writeClaudeCommand(root, stem, descriptionLine) {
   writeFile(
     root,
     path.join('.claude', 'commands', `${stem}.md`),
+    `---\n${descriptionLine}\n---\n\n# Command\n`,
+  );
+  // Every command needs an OMP twin; write it from the same description so a
+  // fixture that only means to test Claude still satisfies the parity check.
+  writeFile(
+    root,
+    path.join('commands', `${OMP_STEM[stem] ?? stem}.md`),
     `---\n${descriptionLine}\n---\n\n# Command\n`,
   );
 }
@@ -243,4 +254,49 @@ test('a nested description does not supply a missing command description', () =>
   const result = run(root);
   assert.equal(result.status, 1, result.stdout + result.stderr);
   assert.match(result.stdout, /missing or malformed description/);
+});
+
+// ─── OMP surface ──────────────────────────────────────────────────────────────
+// OMP gets the same root `commands/` directory as Markdown, and renames the two
+// stems its own built-ins would shadow.
+
+test('passes when review is renamed to code-review on the OMP surface', () => {
+  const root = makeSandbox();
+  const description = 'Conduct a five-axis code review';
+  writeClaudeCommand(root, 'review', `description: ${description}`);
+  writeTomlCommand(root, path.join('.gemini', 'commands'), 'review', `description = "${description}"`);
+  writeTomlCommand(root, 'commands', 'review', `description = "${description}"`);
+  // writeClaudeCommand already wrote commands/code-review.md
+  const result = run(root);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /✓ {2}review/);
+});
+
+test('fails when the OMP Markdown twin is missing', () => {
+  const root = makeSandbox();
+  writeFile(root, path.join('.claude', 'commands', 'deploy.md'), '---\ndescription: Deploy\n---\n\n# Command\n');
+  writeTomlCommand(root, path.join('.gemini', 'commands'), 'deploy', 'description = "Deploy"');
+  writeTomlCommand(root, 'commands', 'deploy', 'description = "Deploy"');
+  const result = run(root);
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /deploy — missing in: commands \(\.md\)/);
+});
+
+test('fails when an OMP Markdown command has no Claude twin', () => {
+  const root = makeSandbox();
+  writeFile(root, path.join('commands', 'deploy.md'), '---\ndescription: Deploy\n---\n\n# Command\n');
+  const result = run(root);
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /deploy — present in commands \(\.md\) but missing in \.claude\/commands/);
+});
+
+test('fails when the OMP twin description drifts', () => {
+  const root = makeSandbox();
+  writeClaudeCommand(root, 'build', 'description: Build the thing');
+  writeTomlCommand(root, path.join('.gemini', 'commands'), 'build', 'description = "Build the thing"');
+  writeTomlCommand(root, 'commands', 'build', 'description = "Build the thing"');
+  writeFile(root, path.join('commands', 'build.md'), '---\ndescription: Build the other thing\n---\n\n# Command\n');
+  const result = run(root);
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /commands\/ md: Build the other thing/);
 });

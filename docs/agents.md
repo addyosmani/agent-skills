@@ -99,7 +99,7 @@ Why this fails:
 ## Rules for personas
 
 1. A persona is a single role with a single output format. If you find yourself adding a second role, create a second persona.
-2. **Personas do not invoke other personas.** Composition is the job of slash commands or the user. On Claude Code this is also a hard platform constraint — *"subagents cannot spawn other subagents"* — so the rule is enforced for you.
+2. **Personas do not invoke other personas.** Composition is the job of slash commands or the user. On Claude Code this is also a hard platform constraint — *"subagents cannot spawn other subagents"* — so the rule is enforced for you. On OMP, `spawns: []` in the persona frontmatter removes the `task` tool from that agent, so a nested invocation cannot start.
 3. A persona may invoke skills (the *how*).
 4. Every persona file ends with a "Composition" block stating where it fits.
 
@@ -113,6 +113,14 @@ The personas in this repo are designed to work as Claude Code subagents and as A
 Subagents only report results back to the main agent. Agent Teams let teammates message each other directly. Use subagents when reports are enough; use Agent Teams when sub-agents need to challenge each other's findings (e.g. competing-hypothesis debugging). See [references/orchestration-patterns.md](../references/orchestration-patterns.md) for the full mapping.
 
 Plugin agents do not support `hooks`, `mcpServers`, or `permissionMode` frontmatter — those fields are silently ignored. Avoid relying on them when authoring new personas here.
+
+## OMP interop
+
+OMP discovers `agents/*.md` from the installed plugin root. Dispatch is a `task` call with `agent: <name>`, and the honored frontmatter fields are `name`, `description`, `tools`, and `spawns`. `.claude/agents/` is intentionally skipped so the same persona is not registered twice.
+
+`tools` narrows the built-in tool list for that agent; MCP, extension, and custom tools are still added on top. `spawns: []` removes the `task` tool, which is how rule 2 above is enforced on OMP. The list is capability, not a sandbox: an agent given `bash` can write files and reach the network whether or not `write` and `edit` are declared.
+
+Never add an agent whose frontmatter `name` is `reviewer`. OMP resolves agent names exactly, so it would replace the bundled reviewer and break the structured `/review` contract.
 
 ## Adding a new persona
 
