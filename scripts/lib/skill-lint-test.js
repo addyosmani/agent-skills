@@ -112,6 +112,43 @@ test('a fully valid skill produces no errors', () => {
   assert.deepEqual(errors, []);
 });
 
+test('code-review-and-quality stays within its UTF-8 byte budget', () => {
+  const content = withAllSections([
+    '---',
+    'name: code-review-and-quality',
+    'description: Reviews code. Use when reviewing a change.',
+    '---',
+  ].join('\n')) + 'é'.repeat(15 * 1024);
+
+  const { errors } = lintSkillContent('code-review-and-quality', content, KNOWN);
+
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /SKILL\.md is .* bytes, over the 15360-byte budget/);
+});
+
+test('code-review-and-quality may use the full byte budget', () => {
+  const content = withAllSections([
+    '---',
+    'name: code-review-and-quality',
+    'description: Reviews code. Use when reviewing a change.',
+    '---',
+  ].join('\n'));
+  const atBudget = content + 'x'.repeat(15 * 1024 - Buffer.byteLength(content, 'utf8'));
+
+  assert.equal(Buffer.byteLength(atBudget, 'utf8'), 15 * 1024);
+  const { errors } = lintSkillContent('code-review-and-quality', atBudget, KNOWN);
+
+  assert.deepEqual(errors, []);
+});
+
+test('the code-review-and-quality byte budget does not apply to other skills', () => {
+  const content = withAllSections(VALID_FRONTMATTER) + 'é'.repeat(15 * 1024);
+
+  const { errors } = lintSkillContent('alpha', content, KNOWN);
+
+  assert.deepEqual(errors, []);
+});
+
 test('reports a description with no trigger clause', () => {
   const content = withAllSections(
     ['---', 'name: alpha', 'description: Designs alpha things and nothing more.', '---'].join('\n')

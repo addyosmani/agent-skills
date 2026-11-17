@@ -129,6 +129,7 @@ Current convention: material used by exactly one skill is a supporting file insi
 
 Skills load on demand: only the skill name and description sit in context at startup. The full `SKILL.md` loads only when an agent decides the skill is relevant. To keep that load cheap:
 
+- Keep `skills/code-review-and-quality/SKILL.md` under 15 KiB (15,360 UTF-8 bytes) so hosts with bounded skill output can read the complete entrypoint. The validator enforces this limit; move detailed material into its skill-local references.
 - **Keep `SKILL.md` under 500 lines.** Move detailed reference material into supporting files.
 - **Write specific descriptions.** A precise description helps the agent activate the skill at the right moment and skip it otherwise.
 - **Use progressive disclosure.** Reference supporting files that are read only when the workflow reaches them.

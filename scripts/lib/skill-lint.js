@@ -17,6 +17,7 @@
  *   - required sections are present
  *   - a skill's subdirectories are non-empty (skill-anatomy.md: Supporting Files)
  *   - supporting .md filenames are lowercase-hyphen-separated
+ *   - code-review-and-quality/SKILL.md stays within its UTF-8 byte budget
  *
  * Checks (warnings, do not block CI):
  *   - cross-skill references point to known skills
@@ -29,6 +30,7 @@ const path = require('path');
 // ─── Config ──────────────────────────────────────────────────────────────────
 
 const MAX_DESCRIPTION_LENGTH = 1024;
+const MAX_CODE_REVIEW_SKILL_BYTES = 15 * 1024;
 
 // SKILL.md loads in full the moment an agent activates the skill, so its length
 // is paid for on every activation (docs/skill-anatomy.md -> Context Efficiency).
@@ -350,6 +352,16 @@ function lintSkillContent(dirName, content, knownSkills) {
   const errors   = [];
   const warnings = [];
   let   exempt   = false;
+
+  if (dirName === 'code-review-and-quality') {
+    const byteLength = Buffer.byteLength(content, 'utf8');
+    if (byteLength > MAX_CODE_REVIEW_SKILL_BYTES) {
+      errors.push(
+        `SKILL.md is ${byteLength} bytes, over the ${MAX_CODE_REVIEW_SKILL_BYTES}-byte budget ` +
+        '(15 KiB; see issue #791)',
+      );
+    }
+  }
 
   // ── Frontmatter ──────────────────────────────────────────────────────────
   const fm = parseFrontmatter(content);
