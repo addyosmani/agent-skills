@@ -206,6 +206,8 @@ Check the author's verification story:
 - Is there a before/after comparison?
 ```
 
+Before you run tests or probes yourself, confirm the checkout is clean and on the reviewed ref (`git status --short` is empty and `git rev-parse HEAD` matches the PR head), and name that ref in the review. A working copy can hold uncommitted edits from another session, so evidence from it may describe code that is not in the change.
+
 ## Multi-Model Review Pattern
 
 Use different models for different review perspectives:
