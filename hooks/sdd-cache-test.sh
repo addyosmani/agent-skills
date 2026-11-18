@@ -240,6 +240,28 @@ assert_eq "pre serves the entry post wrote (exit 2)" "2" "$RC"
 served=$(printf '%s\n' "$ERR" | sed -n '/BEGIN CACHED CONTENT/,/END CACHED CONTENT/p' | sed '1d;$d')
 assert_eq "round-trip content byte-exact" "$BODY" "$served"
 
+# ── Test 16: post — large responses do not travel through argv ────────────
+printf '\nTest 16: post — cache a 2 MiB response\n'
+P="$TMPDIR/t16"; mkdir -p "$P"
+jq -n --arg url "$URL" '
+  {tool_input:{url:$url, prompt:"test prompt"},
+   tool_response:{result: (("x" * (2 * 1024 * 1024)) + "\nquotes: \" \\ $ ` ü end")}}
+' > "$P/input.json"
+CURL_STUB_HEADERS='HTTP/2 200
+etag: "large-etag"' \
+  run_hook sdd-cache-post.sh "$P" "$(cat "$P/input.json")"
+CF="$P/.claude/sdd-cache/$(hash_key "$URL").json"
+assert_eq "large response exits 0" "0" "$RC"
+assert_eq "large response has no errors" "" "$ERR"
+assert_eq "large response is cached" "1" "$([ -f "$CF" ] && echo 1 || echo 0)"
+if [ -f "$CF" ]; then
+  matches=$(jq -n --slurpfile input "$P/input.json" --slurpfile cache "$CF" \
+    '$input[0].tool_response.result == $cache[0].content')
+  assert_eq "large cached content is exact" "true" "$matches"
+  assert_eq "large response retains validator" '"large-etag"' "$(jq -r '.etag' "$CF")"
+fi
+assert_eq "no temporary cache files remain" "0" "$(find "$P/.claude/sdd-cache" -name '*.tmp' | wc -l | tr -d ' ')"
+
 # ── Summary ──────────────────────────────────────────────────────────────
 printf '\n══════════════════════════════════════════\n'
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
