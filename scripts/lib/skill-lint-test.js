@@ -549,6 +549,20 @@ test('SKILL.md is exempt from the supporting-file naming rule', () => {
   assert.deepEqual(lintSkillLayout(dir), []);
 });
 
+test('HUMAN.md at the skill root is exempt from the supporting-file naming rule', () => {
+  const dir = makeSkillDir({ files: { 'SKILL.md': 'x\n', 'HUMAN.md': 'x\n' } });
+
+  assert.deepEqual(lintSkillLayout(dir), []);
+});
+
+test('HUMAN.md below the skill root is not exempt', () => {
+  const dir = makeSkillDir({ files: { 'SKILL.md': 'x\n', 'references/HUMAN.md': 'x\n' } });
+
+  const errors = lintSkillLayout(dir);
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /`references\/HUMAN\.md`/);
+});
+
 test('non-markdown files are left to the Script Requirements conventions', () => {
   const dir = makeSkillDir({ files: { 'scripts/Idea_Refine.sh': '#!/bin/bash\nset -e\n' } });
 
