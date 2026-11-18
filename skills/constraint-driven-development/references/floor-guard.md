@@ -19,6 +19,7 @@ This is the reference. Adapt the patterns to your stack; keep the contract ident
 // floor-guard.mjs — diff-scoped enforcement of the CONSTRAINTS.md floor.
 // Usage: node floor-guard.mjs [--base <ref>]   (default base: origin/main)
 import { execFileSync } from 'node:child_process';
+import { closeSync, lstatSync, openSync, readSync } from 'node:fs';
 
 const base = (() => {
   const i = process.argv.indexOf('--base');
@@ -27,8 +28,19 @@ const base = (() => {
 
 // `git diff --no-index` exits 1 whenever the two sides differ, which is the normal case for a
 // new file, so that output is kept. Any other failure is null, and null never reads as clean.
+// The guard parses git's output, so the user's config and environment must not reshape it:
+// color codes, an external diff driver or textconv, or a missing a/ b/ prefix would each turn a
+// violation into lines the parser skips, and skipped lines read as clean. GIT_EXTERNAL_DIFF and
+// GIT_DIFF_OPTS are dropped from the environment for the same reason.
+const env = { ...process.env };
+delete env.GIT_EXTERNAL_DIFF; delete env.GIT_DIFF_OPTS;
+const MAX_DIFF_BYTES = 8 * 1024 * 1024;
 const git = (args, { diffExit = false } = {}) => {
-  try { return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }); }
+  try {
+    return execFileSync('git', args, {
+      encoding: 'utf8', env, maxBuffer: MAX_DIFF_BYTES, stdio: ['ignore', 'pipe', 'pipe'],
+    });
+  }
   catch (e) { return diffExit && e.status === 1 && typeof e.stdout === 'string' ? e.stdout : null; }
 };
 const bail = (msg) => { console.error('floor-guard: ' + msg); process.exit(2); };
@@ -44,17 +56,72 @@ process.chdir(top);
 const mergeBase = git(['merge-base', base, 'HEAD'])?.trim();
 if (!mergeBase) bail('no merge base against ' + base);
 
-// Unified diff plus untracked files (git diff alone cannot see new files).
-const tracked = git(['diff', '--unified=0', mergeBase, '--']);
+// Unified diff plus untracked files (git diff alone cannot see new files). Let Git classify
+// binaries; forcing --text on every path expands binary blobs into huge output and makes a NUL
+// anywhere in a text diff look like proof that the whole file is binary.
+const DIFF = ['--unified=0', '--no-color', '--no-ext-diff', '--no-textconv', '--find-renames',
+  '--src-prefix=a/', '--dst-prefix=b/'];
+const tracked = git(['diff', ...DIFF, mergeBase, '--']);
 if (tracked === null) bail('could not diff against ' + mergeBase);
-const untrackedFiles = git(['ls-files', '--others', '--exclude-standard']);
+const renameStatus = git(['diff', '--name-status', '-z', '--find-renames', mergeBase, '--']);
+if (renameStatus === null) bail('could not identify renamed files against ' + mergeBase);
+const renames = [], changedFiles = [];
+const statusFields = renameStatus.split('\0').filter(Boolean);
+for (let i = 0; i < statusFields.length;) {
+  const status = statusFields[i++];
+  const pathCount = status[0] === 'R' || status[0] === 'C' ? 2 : 1;
+  const paths = statusFields.slice(i, i + pathCount);
+  if (status[0] === 'R') renames.push(paths);
+  if (status[0] !== 'D') changedFiles.push(paths[pathCount - 1]);
+  i += pathCount;
+}
+const untrackedFiles = git(['ls-files', '--others', '--exclude-standard', '-z']);
 if (untrackedFiles === null) bail('could not list untracked files');
-const untracked = untrackedFiles.split('\n').filter(Boolean).map((f) => {
-  const d = git(['diff', '--no-index', '--unified=0', '/dev/null', f], { diffExit: true });
+let diffBytes = Buffer.byteLength(tracked, 'utf8') + 1;
+if (diffBytes > MAX_DIFF_BYTES) bail('diff exceeds the 8 MiB safety limit');
+const diffParts = [tracked];
+const untrackedPaths = untrackedFiles.split('\0').filter(Boolean);
+for (const f of untrackedPaths) {
+  const d = git(['diff', '--no-index', ...DIFF, '/dev/null', f], { diffExit: true });
   if (d === null) bail('could not diff untracked file ' + f);
-  return d;
-}).join('\n');
-const diff = tracked + '\n' + untracked;
+  diffBytes += Buffer.byteLength(d, 'utf8') + 1;
+  if (diffBytes > MAX_DIFF_BYTES) bail('diff exceeds the 8 MiB safety limit');
+  diffParts.push(d);
+}
+
+// A deliberate `-diff` attribute suppresses even text hunks. Preserve the guard for those files
+// without forcing text mode on every path: only retry explicitly disabled, regular files that
+// have no NUL in Git's 8 KiB binary-classification window.
+for (const f of new Set([...changedFiles, ...untrackedPaths])) {
+  const attr = git(['check-attr', '-z', 'diff', '--', f]);
+  if (attr === null) bail('could not inspect diff attribute for ' + f);
+  const attrFields = attr.split('\0');
+  if (attrFields[2] !== 'unset') continue;
+
+  let fd;
+  try {
+    if (!lstatSync(f).isFile()) continue;
+    fd = openSync(f, 'r');
+    const prefix = Buffer.alloc(8000);
+    const bytesRead = readSync(fd, prefix, 0, prefix.length, 0);
+    if (prefix.subarray(0, bytesRead).includes(0)) continue;
+  } catch {
+    continue;
+  } finally {
+    if (fd !== undefined) closeSync(fd);
+  }
+
+  const isUntracked = untrackedPaths.includes(f);
+  const args = isUntracked
+    ? ['diff', '--no-index', '--text', ...DIFF, '/dev/null', f]
+    : ['diff', '--text', ...DIFF, mergeBase, '--', f];
+  const textDiff = git(args, { diffExit: isUntracked });
+  if (textDiff === null) bail('could not inspect text file with diff disabled: ' + f);
+  diffBytes += Buffer.byteLength(textDiff, 'utf8') + 1;
+  if (diffBytes > MAX_DIFF_BYTES) bail('diff exceeds the 8 MiB safety limit');
+  diffParts.push(textDiff);
+}
+const diff = diffParts.join('\n');
 
 // Walk the diff. `---` and `+++` are file headers only between a file's `diff` line and its first
 // `@@` hunk; inside a hunk every line is content, so an added `++i` (shown as `+++i`) or a removed
@@ -64,7 +131,7 @@ const added = [], removed = [], deleted = [];
 const pathOf = (s) => s.replace(/^[ab]\//, '');
 let file = '', oldFile = '', inHeader = false;
 for (const line of diff.split('\n')) {
-  if (line.startsWith('diff ')) inHeader = true;
+  if (line.startsWith('diff ')) { inHeader = true; file = ''; oldFile = ''; }
   else if (line.startsWith('@@')) inHeader = false;
   else if (inHeader) {
     if (line.startsWith('--- ')) oldFile = pathOf(line.slice(4));
@@ -80,8 +147,25 @@ for (const line of diff.split('\n')) {
 
 const findings = [];
 const flag = (rule, f, text) => findings.push({ rule, file: f, text: text.trim().slice(0, 120) });
-const isTest = (f) => /\.(test|spec)\.|_test\.|test_/.test(f);
+const isTest = (f) => {
+  const normalized = f.replace(/\\/g, '/');
+  const name = normalized.slice(normalized.lastIndexOf('/') + 1);
+  if (/(?:^|\/)(?:__fixtures__|fixtures?)(?:\/|$)/i.test(normalized)) return false;
+  if (!/\.(?:c|cc|cpp|cxx|h|hpp|js|jsx|mjs|cjs|ts|tsx|mts|cts|py|pyi|go|rs|java|kt|kts|rb|php|swift|cs|sh)$/i.test(name)) {
+    return false;
+  }
+  return /(?:^|\/)(?:test|tests|__tests__|spec|specs)\//i.test(normalized)
+    || /(?:^|\/)[^/]+\.(?:test|spec)\.[^.]+$/i.test(normalized)
+    || /(?:^|\/)[^/]+_(?:test|spec)\.[^.]+$/i.test(normalized)
+    || /(?:^|\/)test_[^/]+\.[^.]+$/i.test(normalized);
+};
 const isConstraints = (f) => /CONSTRAINTS\.md$/.test(f);
+
+for (const [from, to] of renames) {
+  if ((isTest(from) && !isTest(to)) || (isConstraints(from) && !isConstraints(to))) {
+    deleted.push(from);
+  }
+}
 
 // 1. Silenced checker — extend this list for your ecosystem.
 const SUPPRESSIONS = /@ts-ignore|@ts-nocheck|eslint-disable|biome-ignore|# *noqa|# *type: *ignore|istanbul ignore|nosemgrep|gitleaks:allow|Stryker disable/;
@@ -99,6 +183,7 @@ for (const { file, text } of added) {
 
 // 2b. A test file deleted, or an assertion removed from a test file that still exists.
 for (const f of deleted) if (isTest(f)) flag('test-deleted', f, 'file deleted');
+for (const f of deleted) if (isConstraints(f)) flag('rule-removed', f, 'CONSTRAINTS.md deleted');
 for (const { file, text } of removed) {
   if (isTest(file) && !deleted.includes(file) && /\b(expect|assert|should)\b/.test(text)) {
     flag('assertion-removed', file, text);
