@@ -103,9 +103,64 @@ test('a skill claiming its own exemption without being allowlisted fails loud', 
   assert.equal(errors.filter(e => /Frontmatter key 'exempt' is not an Agent Skills spec field/.test(e)).length, 1);
 });
 
+// ─── Cross-skill references ──────────────────────────────────────────────────
+
+/** Warnings from a valid skill whose body is `body`, with one real skill name known. */
+const REF_KNOWN = new Set([...KNOWN, 'test-driven-development']);
+function refWarnings(body) {
+  const { warnings } = lintSkillContent('alpha', withAllSections(VALID_FRONTMATTER) + '\n' + body, REF_KNOWN);
+  return warnings.filter(w => /Dead cross-reference/.test(w));
+}
+
+test('a dead reference in prose still warns', () => {
+  const warnings = refWarnings('Use the `made-up-skill` skill for this.');
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /`made-up-skill`/);
+});
+
+test('references inside fenced code blocks are not collected', () => {
+  const body = ['A template for a new skill:', '', '```markdown', 'See `made-up-skill` for details.', 'Use the `other-fake-skill` skill.', '```'].join('\n');
+  assert.deepEqual(refWarnings(body), []);
+});
+
+test('ASCII diagram arrows inside fences are still collected', () => {
+  const body = ['```', 'alpha ──→ made-up-skill ──→ beta', '```'].join('\n');
+  const warnings = refWarnings(body);
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /`made-up-skill`/);
+});
+
+test('capitalized See and Follow, and bare Follow `name`, are collected', () => {
+  assert.equal(refWarnings('See `made-up-skill` for the loop.').length, 1);
+  assert.equal(refWarnings('Follow `made-up-skill` before merging.').length, 1);
+  assert.equal(refWarnings('Follow the `made-up-skill` skill.').length, 1);
+});
+
+test('skills/<name>/SKILL.md paths and the plural `skills` are collected', () => {
+  assert.equal(refWarnings('Read skills/made-up-skill/SKILL.md first.').length, 1);
+  assert.equal(refWarnings('The `made-up-skill` skills cover this.').length, 1);
+});
+
+test('a single backticked word without a hyphen is not a reference', () => {
+  assert.deepEqual(refWarnings('See `main` for the entry point. Follow `trunk` here.'), []);
+});
+
+test('a relationship bullet naming a misspelt skill warns', () => {
+  const warnings = refWarnings('- **`test-driven-developmnt`**: the RED step is a disproof attempt.');
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /`test-driven-developmnt`/);
+});
+
+test('a relationship bullet naming a known skill is silent', () => {
+  assert.deepEqual(refWarnings('- **`test-driven-development`**: the RED step is a disproof attempt.'), []);
+});
+
+test('a glossary bullet of hyphenated terms is not a reference', () => {
+  const body = ['- **`at-least-once`**: a delivery guarantee, not a skill', '- **`write-ahead`**: a log', '- **`dead-letter`**: a queue'].join('\n');
+  assert.deepEqual(refWarnings(body), []);
+});
+
 // ─── Guardrails on the rules this change sits beside ─────────────────────────
-// Deliberately narrow: #428 rewrites frontmatter parsing and the cross-reference
-// patterns, so asserting their behaviour here would collide with that work.
 
 test('a fully valid skill produces no errors', () => {
   const { errors } = lintSkillContent('alpha', withAllSections(VALID_FRONTMATTER), KNOWN);
