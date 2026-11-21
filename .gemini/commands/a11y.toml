@@ -8,7 +8,7 @@ Invoke the accessibility-engineering skill.
 ## Determine the mode
 
 **Deep mode** — activate when any of these is available:
-- An axe-core or pa11y JSON report file (run with `bash skills/accessibility-engineering/scripts/audit-a11y.sh url <url> --json`)
+- An axe-core or pa11y JSON report file (generate a combined report using the audit-script path instructions in the loaded `accessibility-engineering` skill)
 - A live URL — the agent can instruct the user to run the audit script above
 - Chrome DevTools MCP (for live DOM inspection, contrast checking, and rendering analysis)
 
