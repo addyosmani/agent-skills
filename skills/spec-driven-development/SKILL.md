@@ -62,7 +62,7 @@ Build order: identity → billing, notifications → reporting
 
 **The map is gated like every phase.** The human reviews module boundaries, dependency direction, and build order before any module spec is written. Getting the map wrong is expensive; reviewing ten lines is not.
 
-**Then recurse per module.** Run Specify → Plan → Tasks → Implement for each module in dependency order. Each module gets its own spec, scoped to that module's objective, boundaries, and success criteria. Save the approved map at the project root and each module's spec alongside it, named by module id (`SPEC-identity.md`, `SPEC-billing.md`) — the map, not filename guessing, is the index of what exists.
+**Then recurse per module.** Run Specify → Plan → Tasks → Implement for each module in dependency order. Each module gets its own spec, scoped to that module's objective, boundaries, and success criteria. Save the approved map as `spec/capability-map.md` and each module's spec alongside it in `spec/`, named by module id (`spec/SPEC-identity.md`, `spec/SPEC-billing.md`) — `/build` already accepts specs under `spec/`, and the root stays uncluttered — the map, not filename guessing, is the index of what exists.
 
 ### Phase 1: Specify
 

@@ -191,3 +191,11 @@ test('guards the Copilot setup doc, whose prompt-file aliases name the artifacts
   assert.match(result.stdout, /docs\/copilot-setup\.md/);
   assert.match(result.stdout, /specs\/\[name\]\/spec\.md/);
 });
+
+test('spec-driven-development saves the capability map and module specs under spec/, not the project root', () => {
+  const skill = fs.readFileSync(path.join(__dirname, '..', 'skills', 'spec-driven-development', 'SKILL.md'), 'utf8');
+
+  assert.match(skill, /spec\/capability-map\.md/);
+  assert.match(skill, /spec\/SPEC-identity\.md/);
+  assert.doesNotMatch(skill, /at the project root and each module/);
+});
