@@ -244,3 +244,59 @@ test('a nested description does not supply a missing command description', () =>
   assert.equal(result.status, 1, result.stdout + result.stderr);
   assert.match(result.stdout, /missing or malformed description/);
 });
+
+// The TOML files are only regex-scraped for `description`; no TOML parser
+// sees the rest of the file. Gemini CLI does parse them strictly, so a slip
+// the scrape can't see left the command unloadable while this check passed.
+
+function writeTomlFile(root, directory, stem, content) {
+  writeFile(root, path.join(directory, `${stem}.toml`), content);
+}
+
+test('a TOML prompt whose multi-line string is never closed is rejected', () => {
+  const root = makeSandbox();
+  writeMatchingCommands(root, 'build', 'Build the thing');
+  writeTomlFile(
+    root,
+    path.join('.gemini', 'commands'),
+    'build',
+    'description = "Build the thing"\n\nprompt = """\nInvoke the skill.\n',
+  );
+
+  const result = run(root);
+
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /\.gemini\/commands\/build\.toml — multi-line string opened on line 3 is never closed/);
+});
+
+test('a TOML command with no prompt key is rejected', () => {
+  const root = makeSandbox();
+  writeMatchingCommands(root, 'build', 'Build the thing');
+  writeTomlFile(root, 'commands', 'build', 'description = "Build the thing"\npromt = """\nInvoke the skill.\n"""\n');
+
+  const result = run(root);
+
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /commands\/build\.toml — no top-level `prompt` key/);
+});
+
+test('closed multi-line prompts pass, including quotes and delimiters inside them', () => {
+  const root = makeSandbox();
+  writeMatchingCommands(root, 'build', 'Build the thing');
+  const content = [
+    'description = "Build the thing"',
+    '',
+    'prompt = """',
+    'Say "done" when finished. An escaped delimiter \\""" stays inside.',
+    "A literal ''' is just text here.",
+    '"""',
+    '',
+  ].join('\n');
+  writeTomlFile(root, path.join('.gemini', 'commands'), 'build', content);
+  writeTomlFile(root, 'commands', 'build', "description = \"Build the thing\"\nprompt = '''\nLiteral \"\"\" body\n'''\n");
+
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /Checking TOML command structure/);
+});

@@ -11,6 +11,7 @@
  *   - Every command present in one directory exists in all three
  *   - The 'description' field is identical across all three equivalents
  *   - Claude command frontmatter is valid YAML, not merely splittable
+ *   - TOML command files close every multi-line string and define `prompt`
  *
  * What this does NOT check:
  *   Prompt body differences are intentional — each tool has its own
@@ -63,6 +64,44 @@ function descriptionFromToml(filePath) {
   if (doubleMatch) return doubleMatch[1].replace(/\\"/g, '"');
   const singleMatch = content.match(/^description\s*=\s*'([^']*)'/m);
   return singleMatch ? singleMatch[1] : null;
+}
+
+// descriptionFromToml only scrapes one line, so nothing above reads the rest of
+// a TOML file. Gemini CLI parses it strictly and skips a command it can't load.
+// This catches the two slips that pass the scrape: a multi-line string that is
+// never closed (invalid TOML), and a missing `prompt` key (required by Gemini).
+// It is not a full TOML parser.
+function tomlStructureErrors(content) {
+  const errors = [];
+  const lines = content.split(/\r?\n/);
+  let open = null; // { delim, line } while inside a """ or ''' string
+  let hasPrompt = false;
+  let inTable = false; // keys after a [table] header aren't top-level
+
+  const closes = (text, delim) => (delim === "'''"
+    ? text.includes("'''")
+    // In a basic string, \" is an escaped quote, so \""" doesn't close it.
+    : /(^|[^\\])(\\\\)*"""/.test(text));
+
+  lines.forEach((text, i) => {
+    let rest = text;
+    if (!open) {
+      if (/^\s*\[/.test(rest)) inTable = true;
+      const key = rest.match(/^\s*(["']?)([A-Za-z0-9_-]+)\1\s*=\s*/);
+      if (!key) return;
+      if (key[2] === 'prompt' && !inTable) hasPrompt = true;
+      rest = rest.slice(key[0].length);
+      const delim = ['"""', "'''"].find(d => rest.startsWith(d));
+      if (!delim) return;
+      open = { delim, line: i + 1 };
+      rest = rest.slice(3);
+    }
+    if (closes(rest, open.delim)) open = null;
+  });
+
+  if (open) errors.push(`multi-line string opened on line ${open.line} is never closed`);
+  if (!hasPrompt) errors.push('no top-level `prompt` key');
+  return errors;
 }
 
 // ─── Loader ───────────────────────────────────────────────────────────────────
@@ -136,8 +175,8 @@ function main() {
   }
 
   // ── Claude frontmatter validity ─────────────────────────────────────────────
-  // Only the .md directory: the TOML dirs are parsed by a real TOML parser
-  // already, so a malformed one surfaces as a missing description above.
+  // Only the .md directory: the YAML rules don't apply to TOML, where a colon
+  // in a description is fine. The TOML files get their own check below.
   console.log('\nChecking Claude command frontmatter...');
 
   for (const stem of claudeStems) {
@@ -158,6 +197,31 @@ function main() {
     for (const message of yamlErrors) {
       console.log(`       ${message}`);
       errors++;
+    }
+  }
+
+  // ── TOML command structure ──────────────────────────────────────────────────
+  console.log('\nChecking TOML command structure...');
+
+  for (const [tool, toolDir] of [['gemini', '.gemini/commands'], ['antigravity', 'commands']]) {
+    const { dir, ext } = DIRS[tool];
+    for (const stem of Object.keys(byTool[tool]).sort()) {
+      let tomlErrors;
+      try {
+        tomlErrors = tomlStructureErrors(fs.readFileSync(path.join(dir, `${stem}${ext}`), 'utf8'));
+      } catch (e) {
+        console.log(`  ✗  ${toolDir}/${stem}${ext} — cannot read file: ${e.message}`);
+        errors++;
+        continue;
+      }
+      if (tomlErrors.length === 0) {
+        console.log(`  ✓  ${toolDir}/${stem}${ext}`);
+        continue;
+      }
+      for (const message of tomlErrors) {
+        console.log(`  ✗  ${toolDir}/${stem}${ext} — ${message}`);
+        errors++;
+      }
     }
   }
 
