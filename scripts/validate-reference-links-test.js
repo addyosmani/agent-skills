@@ -445,7 +445,7 @@ test('fails when an anchor matches no heading in the target file', () => {
   assert.match(result.stdout, /1 skills checked — 1 error\(s\) — FAILED/);
   assert.match(result.stdout, /GitHub's heading slugs/);
   // The path was right, so the path hint would only mislead.
-  assert.doesNotMatch(result.stdout, /Reach a shared checklist/);
+  assert.doesNotMatch(result.stdout, /Link a shared checklist/);
 });
 
 test('a repeated heading gets a -1 suffix, as on GitHub', () => {

@@ -161,3 +161,22 @@ test('copies bytes unchanged, and --check sees drift that decodes to the same te
   assert.equal(check.status, 1, check.stdout + check.stderr);
   assert.ok(check.stdout.includes(`stale    ${COPY}`), check.stdout);
 });
+
+test('a skill that drops its last shared link loses references/ when nothing else is in it', () => {
+  const root = makeSandbox();
+  writeFile(root, 'references/definition-of-done.md', '# DoD\n');
+  writeFile(root, 'skills/planning/SKILL.md', LINKED);
+  writeFile(root, 'skills/shipping/SKILL.md', LINKED);
+  writeFile(root, 'skills/shipping/references/notes.md', '# Notes\n');
+  assert.equal(run(root).status, 0);
+  assert.ok(exists(root, 'skills/planning/references/shared/definition-of-done.md'));
+
+  writeFile(root, 'skills/planning/SKILL.md', 'No checklist here.\n');
+  writeFile(root, 'skills/shipping/SKILL.md', 'No checklist here.\n');
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.equal(exists(root, 'skills/planning/references'), false);
+  assert.equal(exists(root, 'skills/shipping/references/shared'), false);
+  assert.equal(readFile(root, 'skills/shipping/references/notes.md'), '# Notes\n');
+});

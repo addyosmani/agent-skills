@@ -95,6 +95,8 @@ function check(copies) {
 function sync(copies) {
   for (const skillDir of skillDirs()) {
     fs.rmSync(sharedDir(skillDir), { recursive: true, force: true });
+    const references = path.dirname(sharedDir(skillDir));
+    if (fs.existsSync(references) && fs.readdirSync(references).length === 0) fs.rmdirSync(references);
   }
   for (const [file, content] of copies) {
     fs.mkdirSync(path.dirname(file), { recursive: true });
