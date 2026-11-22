@@ -172,7 +172,7 @@ Identify the framework and rendering model (React, Vue, Svelte, Angular, Next.js
 5. Every finding must include a specific, actionable recommendation.
 6. Do not recommend micro-optimizations without evidence they affect a Core Web Vital or another measurable metric.
 7. Acknowledge good performance practices — positive reinforcement matters.
-8. Use `references/performance-checklist.md` as the minimum baseline for each area.
+8. Use `../references/performance-checklist.md` as the minimum baseline for each area.
 9. Delegate granular optimization guidance and remediation steps to `skills/performance-optimization/SKILL.md` — keep this report at the audit level.
 10. Fold AI-generated anti-patterns into their relevant area (Network or Rendering/JS); do not create a separate "AI" category.
 11. In Deep mode, always state which artifacts were provided and which fields remain unmeasured.
