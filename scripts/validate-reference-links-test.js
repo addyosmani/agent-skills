@@ -530,3 +530,74 @@ test('a duplicate skips a slug occupied by an earlier literal heading', () => {
   const result = run(root);
   assert.equal(result.status, 0, result.stdout + result.stderr);
 });
+
+// Personas. agents/<name>.md sits one directory below the root, so the shared
+// checklists are `../references/` from there. The same link that is correct
+// inside a skill is short by one level inside a persona, and nothing else
+// checked it: validate-skills.js holds personas to frontmatter and Composition
+// only, so a persona could send an audit to a file-not-found and pass CI.
+
+function persona(root, name, link) {
+  writeFile(root, `agents/${name}.md`, [
+    '---',
+    `name: ${name}`,
+    'description: Reviews things. Use before merging.',
+    '---',
+    '',
+    '# Persona',
+    '',
+    `Check \`${link}\` as the minimum baseline.`,
+    '',
+    '## Composition',
+    '',
+    '- **Invoke via:** `/ship`.',
+    '',
+  ].join('\n'));
+}
+
+test('passes when a persona reaches the shared checklist one level up', () => {
+  const root = makeSandbox();
+  writeFile(root, 'references/accessibility-checklist.md', '# Accessibility\n');
+  persona(root, 'accessibility-auditor', '../references/accessibility-checklist.md');
+
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /✓ {2}agents\/accessibility-auditor\.md/);
+  assert.match(result.stdout, /0 skills and 1 personas checked — 0 error\(s\) — PASSED/);
+});
+
+test('fails when a persona links the shared checklist as if it were colocated', () => {
+  // Resolved from agents/, so this lands at agents/references/..., which does
+  // not exist. The skill form of the same link is correct, which is why it
+  // read as right in the persona.
+  const root = makeSandbox();
+  writeFile(root, 'references/accessibility-checklist.md', '# Accessibility\n');
+  persona(root, 'accessibility-auditor', 'references/accessibility-checklist.md');
+
+  const result = run(root);
+
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /✗ {2}agents\/accessibility-auditor\.md/);
+  assert.match(
+    result.stdout,
+    /L8: references\/accessibility-checklist\.md — resolves to agents\/references\/accessibility-checklist\.md, which does not exist/
+  );
+  assert.match(result.stdout, /From a persona in agents\/ they are one level up:/);
+  assert.match(result.stdout, /use `\.\.\/references\/<file>\.md`/);
+  assert.match(result.stdout, /0 skills and 1 personas checked — 1 error\(s\) — FAILED/);
+});
+
+test('a persona link that resolves is still checked, and README is not a persona', () => {
+  // agents/README.md is an index, mirroring how validate-skills.js skips it.
+  const root = makeSandbox();
+  writeFile(root, 'references/security-checklist.md', '# Security\n');
+  writeFile(root, 'agents/README.md', 'See `references/security-checklist.md`.\n');
+
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  // No persona files, so the summary keeps its skills-only form.
+  assert.match(result.stdout, /0 skills checked — 0 error\(s\) — PASSED/);
+  assert.doesNotMatch(result.stdout, /README/);
+});

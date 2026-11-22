@@ -25,6 +25,14 @@
  * sit one directory deeper than SKILL.md, so from there the shared checklists
  * are `../../../references/`: the same off-by-a-level mistake, one level down.
  *
+ * Personas (`agents/<name>.md`) get the same check for the same reason: they
+ * sit one directory below the root, so a persona reaches the shared checklists
+ * as `../references/`. validate-skills.js already holds personas to the
+ * frontmatter and Composition rules in docs/agents.md, but a persona that
+ * pointed at `references/<file>.md` — resolved from `agents/`, so at a
+ * directory that does not exist — passed every check while sending the audit
+ * to a file-not-found.
+ *
  * A `#fragment` after such a link must match a heading in the target file,
  * slugged the way GitHub renders anchors. The file existing is not enough:
  * renaming a heading breaks every link to it while the path still resolves.
@@ -52,6 +60,7 @@ const { stripFencedCodeBlocks } = require('./lib/skill-lint');
 
 const ROOT = path.resolve(__dirname, '..');
 const SKILLS_DIR = path.join(ROOT, 'skills');
+const AGENTS_DIR = path.join(ROOT, 'agents');
 
 // Matches a link to a references/ markdown file, with any number of leading
 // `../` segments: `references/x.md`, `../../references/x.md`. Anchored on a
@@ -130,20 +139,44 @@ function toPosix(file) {
   return path.relative(ROOT, file).split(path.sep).join('/');
 }
 
-function main() {
-  console.log('Checking references/ links in skills...\n');
+// Print one file's result and fold its violations into the running counts.
+// Returns the number of violations it reported. A skill's own references/
+// files count separately so the footer can name the three-levels-up form only
+// when that mistake is actually present.
+function reportFile(file, violations, counts, { referenceFile = false } = {}) {
+  if (violations.length === 0) {
+    console.log(`  ✓  ${toPosix(file)}`);
+    return 0;
+  }
 
-  if (!fs.existsSync(SKILLS_DIR)) {
-    console.log('No skills/ directory — nothing to check.');
+  console.log(`  ✗  ${toPosix(file)}`);
+  for (const { line, link, target, anchor } of violations) {
+    counts.anchorErrors += anchor ? 1 : 0;
+    if (anchor) {
+      console.log(`       L${line}: ${link}#${anchor} — no heading in ${toPosix(target)} produces #${anchor}`);
+      continue;
+    }
+    console.log(`       L${line}: ${link} — resolves to ${toPosix(target)}, which does not exist`);
+    if (referenceFile) counts.referenceFileErrors++;
+  }
+  return violations.length;
+}
+
+function main() {
+  console.log('Checking references/ links in skills and personas...\n');
+
+  // A repo with neither directory is not this repository; say so rather than
+  // reporting a clean pass over nothing.
+  if (!fs.existsSync(SKILLS_DIR) && !fs.existsSync(AGENTS_DIR)) {
+    console.log('No skills/ or agents/ directory — nothing to check.');
     return;
   }
 
+  const counts = { errors: 0, referenceFileErrors: 0, anchorErrors: 0, personaErrors: 0 };
   let checked = 0;
-  let errors = 0;
-  let referenceFileErrors = 0;
-  let anchorErrors = 0;
+  let personasChecked = 0;
 
-  const skillNames = fs.readdirSync(SKILLS_DIR).sort();
+  const skillNames = fs.existsSync(SKILLS_DIR) ? fs.readdirSync(SKILLS_DIR).sort() : [];
   for (const name of skillNames) {
     const skillDir = path.join(SKILLS_DIR, name);
     const skillFile = path.join(skillDir, 'SKILL.md');
@@ -151,41 +184,43 @@ function main() {
 
     checked++;
     for (const file of [skillFile, ...skillReferenceFiles(skillDir)]) {
-      const violations = findViolations(file);
-
-      if (violations.length === 0) {
-        console.log(`  ✓  ${toPosix(file)}`);
-        continue;
-      }
-
-      console.log(`  ✗  ${toPosix(file)}`);
-      for (const { line, link, target, anchor } of violations) {
-        errors++;
-        if (anchor) {
-          console.log(`       L${line}: ${link}#${anchor} — no heading in ${toPosix(target)} produces #${anchor}`);
-          anchorErrors++;
-          continue;
-        }
-        console.log(`       L${line}: ${link} — resolves to ${toPosix(target)}, which does not exist`);
-        if (file !== skillFile) referenceFileErrors++;
-      }
+      counts.errors += reportFile(file, findViolations(file), counts, { referenceFile: file !== skillFile });
     }
   }
 
-  const status = errors > 0 ? 'FAILED' : 'PASSED';
-  console.log(`\n${checked} skills checked — ${errors} error(s) — ${status}`);
+  // Personas sit one directory below the root, so the same relative link is
+  // short by one `../` there. README.md is an index, not a persona.
+  const personaFiles = fs.existsSync(AGENTS_DIR)
+    ? fs.readdirSync(AGENTS_DIR).filter((f) => f.endsWith('.md') && !/^readme\.md$/i.test(f)).sort()
+    : [];
+  for (const name of personaFiles) {
+    const reported = reportFile(path.join(AGENTS_DIR, name), findViolations(path.join(AGENTS_DIR, name)), counts);
+    counts.errors += reported;
+    if (reported > 0) counts.personaErrors++;
+    personasChecked++;
+  }
 
-  if (errors > 0) {
-    if (errors > anchorErrors) {
+  const status = counts.errors > 0 ? 'FAILED' : 'PASSED';
+  const summary = personasChecked > 0
+    ? `\n${checked} skills and ${personasChecked} personas checked — ${counts.errors} error(s) — ${status}`
+    : `\n${checked} skills checked — ${counts.errors} error(s) — ${status}`;
+  console.log(summary);
+
+  if (counts.errors > 0) {
+    if (counts.errors > counts.anchorErrors) {
       console.log('\nLinks to references/ are resolved from the directory of the file that contains them.');
       console.log('Shared checklists live in the repo-root references/, two levels up from a SKILL.md:');
       console.log('use `../../references/<file>.md`, not `references/<file>.md`.');
-      if (referenceFileErrors > 0) {
+      if (counts.referenceFileErrors > 0) {
         console.log('From a file inside skills/<name>/references/ they are three levels up:');
         console.log('use `../../../references/<file>.md`.');
       }
+      if (counts.personaErrors > 0) {
+        console.log('From a persona in agents/ they are one level up:');
+        console.log('use `../references/<file>.md`.');
+      }
     }
-    if (anchorErrors > 0) {
+    if (counts.anchorErrors > 0) {
       console.log("\nAnchors are matched against GitHub's heading slugs: the heading text lowercased,");
       console.log('punctuation dropped, spaces turned to hyphens, and -1, -2, ... for repeated headings.');
     }
