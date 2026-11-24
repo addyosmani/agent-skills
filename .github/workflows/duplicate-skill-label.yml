@@ -1,0 +1,113 @@
+name: Duplicate Skill Labeler
+
+# Flags PRs that add a skills/<name>/SKILL.md already added by another open PR
+# (name collisions only — see issue #315 and the scope decided in #313).
+#
+# Runs on pull_request_target so it can label fork PRs. This is safe ONLY
+# because the job never checks out or executes PR head code: it reads PR
+# metadata via the API and toggles a label. Do not add a checkout of the
+# fork code to this workflow.
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: duplicate-skill-label-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  check-collisions:
+    name: Check for skill name collisions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compare added skills against other open PRs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const LABEL = 'duplicate';
+            const SKILL_RE = /^skills\/([^/]+)\/SKILL\.md$/;
+            const { owner, repo } = context.repo;
+            const prNumber = context.payload.pull_request.number;
+
+            const addedSkills = async (pull_number) => {
+              const files = await github.paginate(github.rest.pulls.listFiles, {
+                owner, repo, pull_number, per_page: 100,
+              });
+              return files
+                .filter((f) => f.status === 'added')
+                .map((f) => SKILL_RE.exec(f.filename)?.[1])
+                .filter(Boolean);
+            };
+
+            const ours = new Set(await addedSkills(prNumber));
+            core.info(`PR #${prNumber} adds ${ours.size} skill(s): ${[...ours].join(', ') || '(none)'}`);
+
+            const collisions = [];
+            if (ours.size > 0) {
+              const openPRs = await github.paginate(github.rest.pulls.list, {
+                owner, repo, state: 'open', per_page: 100,
+              });
+              for (const pr of openPRs) {
+                if (pr.number === prNumber) continue;
+                const overlap = (await addedSkills(pr.number)).filter((name) => ours.has(name));
+                if (overlap.length > 0) {
+                  collisions.push({ number: pr.number, title: pr.title, url: pr.html_url, skills: overlap });
+                }
+              }
+            }
+
+            const currentLabels = await github.paginate(github.rest.issues.listLabelsOnIssue, {
+              owner, repo, issue_number: prNumber, per_page: 100,
+            });
+            const hasLabel = currentLabels.some((l) => l.name === LABEL);
+
+            if (collisions.length > 0) {
+              if (!hasLabel) {
+                // Self-heal if the default 'duplicate' label was deleted:
+                // create it (ignoring already-exists races), then retry once.
+                try {
+                  await github.rest.issues.addLabels({
+                    owner, repo, issue_number: prNumber, labels: [LABEL],
+                  });
+                } catch (e) {
+                  await github.rest.issues.createLabel({
+                    owner, repo, name: LABEL, color: 'cfd3d7',
+                    description: 'This issue or pull request already exists',
+                  }).catch((err) => { if (err.status !== 422) throw err; });
+                  await github.rest.issues.addLabels({
+                    owner, repo, issue_number: prNumber, labels: [LABEL],
+                  });
+                }
+              }
+              core.summary.addHeading('Duplicate skill detected', 3);
+              core.summary.addRaw(
+                `This PR adds a \`skills/<name>/SKILL.md\` that another open PR also adds. ` +
+                `Per the [contributing pre-flight checks](https://github.com/${owner}/${repo}/blob/main/CONTRIBUTING.md#before-proposing-a-new-skill), ` +
+                `coordinate with the colliding PR instead of duplicating it.\n\n`
+              );
+              const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+              core.summary.addTable([
+                [{ data: 'Colliding PR', header: true }, { data: 'Skill(s)', header: true }],
+                ...collisions.map((c) => [
+                  `<a href="${c.url}">#${c.number} — ${esc(c.title)}</a>`,
+                  c.skills.map((s) => `<code>${esc(s)}</code>`).join(', '),
+                ]),
+              ]);
+              await core.summary.write();
+              core.notice(
+                `Labeled #${prNumber} '${LABEL}': collides with ` +
+                collisions.map((c) => `#${c.number} (${c.skills.join(', ')})`).join(', ')
+              );
+            } else if (hasLabel) {
+              await github.rest.issues.removeLabel({
+                owner, repo, issue_number: prNumber, name: LABEL,
+              }).catch((e) => { if (e.status !== 404) throw e; });
+              core.notice(`No remaining skill name collision — removed '${LABEL}' label from #${prNumber}.`);
+            } else {
+              core.info('No skill name collisions with other open PRs.');
+            }
