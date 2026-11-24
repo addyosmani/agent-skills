@@ -83,7 +83,7 @@ For each finding, apply the remediation in order:
 2. **Add ARIA as bridge** — If native HTML can't express the pattern, add ARIA attributes
 3. **Test the fix** — Re-run the automated check and manual verification
 
-Apply the accessibility checklist (`../../references/accessibility-checklist.md`) as a minimal baseline.
+Apply the accessibility checklist (`references/shared/accessibility-checklist.md`) as a minimal baseline.
 
 ## Common Rationalizations
 
@@ -113,7 +113,7 @@ Apply the accessibility checklist (`../../references/accessibility-checklist.md`
 
 ## See Also
 
-- `../../references/accessibility-checklist.md` — Quick reference for WCAG 2.2 AA
+- `references/shared/accessibility-checklist.md` — Quick reference for WCAG 2.2 AA
 - `../frontend-ui-engineering/SKILL.md` — Building accessible components from the start
 - `../../agents/accessibility-auditor.md` — Dedicated a11y audit persona for deep reviews
 

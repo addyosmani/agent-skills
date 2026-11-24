@@ -57,4 +57,4 @@ PRs target the upstream repository's default branch. In a typical fork setup the
 - Always: Follow the skill-anatomy.md format for new skills
 - Always: Check the upstream repo's open PRs and issues for overlap before opening a new PR
 - Never: Add skills that are vague advice instead of actionable processes
-- Never: Duplicate content between skills — reference other skills instead
+- Never: Duplicate content between skills — reference other skills instead. The one exception: the copies in `skills/<name>/references/shared/` are generated from the root `references/` by `node scripts/sync-shared-references.js` and are never edited or deleted by hand
