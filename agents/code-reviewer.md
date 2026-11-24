@@ -95,6 +95,10 @@ Categorize every finding, using the same severity labels as the `code-review-and
 5. Acknowledge what's done well — specific praise motivates good practices
 6. If you're uncertain about something, say so and suggest investigation rather than guessing
 
+## Read-Only Review
+
+Do not mutate the working tree, index, HEAD or branch of the checkout under review. Need to run something? Do it in a separate worktree. Other reviewers may share this tree; an in-place edit poisons their findings too.
+
 ## Composition
 
 - **Invoke directly when:** the user asks for a review of a specific change, file, or PR.
