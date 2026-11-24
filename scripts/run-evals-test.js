@@ -309,7 +309,10 @@ for (const [args, diagnostic] of [
   [['--min-rank1', 'NaN'], /--min-rank1 must be a number from 0 to 100/],
   [['--min-rank1', 'Infinity'], /--min-rank1 must be a number from 0 to 100/],
   [['--min-rank1', '-1'], /--min-rank1 must be a number from 0 to 100/],
-  [['--dry-run'], /--dry-run applies only to behavioral evals/],
+  [['--dry-run'], /--dry-run applies only to behavioral evals and --regrade/],
+  [['--behavioral', 'alpha-skill', '--record', 'extra'], /Unexpected argument: extra/],
+  [['--behavioral', 'alpha-skill', '--record', '--record'], /Duplicate option: --record/],
+  [['--regrade', 'run.json', '--rubric', 'case.json', '--regrade', 'other.json'], /Duplicate option: --regrade/],
   [['--behavioral', 'alpha-skill', '--min-rank1', '95'], /--min-rank1 applies only to deterministic evals/],
 ]) {
   test(`rejects invalid CLI arguments before running evals: ${JSON.stringify(args)}`, () => {
@@ -320,6 +323,23 @@ for (const [args, diagnostic] of [
       assert.match(result.stderr, diagnostic);
       assert.equal(result.stdout, '');
       assert.equal(fs.existsSync(path.join(root, 'evals/results')), false);
+    } finally { fs.rmSync(root, { recursive: true, force: true }); }
+  });
+}
+
+// #667's flags must reach its own handling, not the unknown-option check:
+// --record is a boolean, --regrade, --rubric and --model take a value.
+for (const args of [
+  ['--regrade', 'missing-run.json', '--rubric', 'missing-case.json'],
+  ['--regrade', 'missing-run.json', '--rubric', 'missing-case.json', '--model', 'some-model', '--dry-run'],
+  ['--behavioral', 'alpha-skill', '--record', '--model', 'some-model', '--dry-run'],
+]) {
+  test(`parses the record and regrade options: ${JSON.stringify(args)}`, () => {
+    const root = makeSandbox();
+    try {
+      writeSkill(root, 'alpha-skill', 'Handles alpha widgets.');
+      const result = run(root, args);
+      assert.doesNotMatch(result.stderr, /Unknown option|Unexpected argument|Duplicate option|requires a value/);
     } finally { fs.rmSync(root, { recursive: true, force: true }); }
   });
 }
