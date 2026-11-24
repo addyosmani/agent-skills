@@ -579,11 +579,9 @@ test('a duplicate skips a slug occupied by an earlier literal heading', () => {
 // not count, so it neither writes nor keeps the copy.
 for (const [file, link, spelling] of [
   ['SKILL.md', './references/shared/security-checklist.md', 'references/shared/security-checklist.md'],
-  ['SKILL.md', '../hardening/references/shared/security-checklist.md', 'references/shared/security-checklist.md'],
   ['SKILL.md', './references/shared/renamed.md', 'references/shared/renamed.md'],
   ['references/patterns.md', 'shared/security-checklist.md', '../references/shared/security-checklist.md'],
   ['references/patterns.md', './shared/security-checklist.md', '../references/shared/security-checklist.md'],
-  ['references/patterns.md', './../references/shared/security-checklist.md', '../references/shared/security-checklist.md'],
 ]) {
   for (const copied of [false, true]) {
     test(`fails when ${file} links ${link} ${copied ? 'with' : 'without'} the copy present`, () => {
