@@ -35,22 +35,23 @@ These are Claude Code conventions. Keep the shared, published `SKILL.md` limited
 
 Gemini CLI and Antigravity discover skills the same way: they match `name` and `description`, then load the full skill on demand. Runtime orchestration lives in a separate resource, not in the skill frontmatter.
 
-- **Subagent definitions** live in `.gemini/agents/*.md`, which are distinct from skills. Their schema is `kind` (`local` or `remote`), `model`, `temperature`, `max_turns`, and `tools`. Note that this is a subagent schema, not a skill schema: the two should not be merged into one `SKILL.md`.
+- **Subagent definitions** live in `.gemini/agents/*.md`, which are distinct from skills. Their schema requires `name` and `description`, and accepts `kind` (`local` or `remote`), `model`, `temperature`, `max_turns`, and `tools`. Note that this is a subagent schema, not a skill schema: the two should not be merged into one `SKILL.md`.
 - **Model routing** can send lighter tasks (formatting, documentation, git operations) to a faster model and reserve a stronger model for cognitively demanding work (debugging, security auditing, interface design).
 - **Tool restrictions** enforce least-privilege per subagent, which also trims unused tool schemas from the prompt.
 - **Turn limits** (`max_turns`) cap execution to avoid runaway correction loops.
 
 ### Model guidance
 
-Google recommends omitting `temperature` for Gemini 3.x models and using `thinking_level` instead. Do not hardcode `temperature` on skills or subagents routed to 3.x models; prefer `thinking_level` and revisit this guidance as the models evolve.
+Google recommends omitting `temperature` for Gemini 3.x models and using `thinking_level` instead. Do not hardcode `temperature` on skills or subagents routed to 3.x models, and revisit this guidance as the models evolve. `thinking_level` is a model setting, not a subagent field: set it in Gemini CLI's model configuration, not in the agent file.
 
 ```yaml
 # .gemini/agents/security-auditor.md
 ---
+name: security-auditor
+description: Finds security vulnerabilities in code.
 kind: local
-model: gemini-3-pro
-thinking_level: high   # not: temperature: 0.1
-tools: [read_file, grep]
+model: gemini-3-pro   # no temperature for 3.x models
+tools: [read_file, grep_search]
 max_turns: 10
 ---
 ```

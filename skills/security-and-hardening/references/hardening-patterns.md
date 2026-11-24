@@ -2,11 +2,11 @@
 
 Code patterns and decision aids for the `security-and-hardening` skill. The skill states each rule; this file shows one concrete implementation of it. Open the section you need when you reach that code — it is not meant to be read top to bottom.
 
-Shared checklists (threat modeling, pre-commit checks, security headers, CORS, the package-manager matrix, install-script gate, and the OWASP quick-reference tables) live in `../../../references/security-checklist.md`.
+Shared checklists (threat modeling, pre-commit checks, security headers, CORS, the package-manager matrix, install-script gate, and the OWASP quick-reference tables) live in `../references/shared/security-checklist.md`.
 
 ## OWASP Top 10 Prevention Patterns
 
-These are prevention patterns, not a ranking. For the 2021 ordering, see the quick-reference table in `../../../references/security-checklist.md#owasp-top-10-quick-reference`.
+These are prevention patterns, not a ranking. For the 2021 ordering, see the quick-reference table in `../references/shared/security-checklist.md#owasp-top-10-quick-reference`.
 
 ### Injection
 
@@ -32,8 +32,10 @@ const hashedPassword = await hash(plaintext, SALT_ROUNDS);
 const isValid = await compare(plaintext, hashedPassword);
 
 // Session management
+const SESSION_SECRET = process.env.SESSION_SECRET;  // From environment, not code
+if (!SESSION_SECRET) throw new Error('SESSION_SECRET not configured');
 app.use(session({
-  secret: process.env.SESSION_SECRET,  // From environment, not code
+  secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -127,17 +129,19 @@ if (!API_KEY) throw new Error('STRIPE_API_KEY not configured');
 
 Any time the server fetches a URL the user influenced — webhooks, "import from URL", image proxies, link previews — an attacker can aim it at internal services (cloud metadata, `localhost`, private IPs).
 
+**Incomplete example — URL pre-validation only.** The checks below reject disallowed URLs and addresses at validation time, but do not bind the later connection to those addresses. Do not copy this as a complete SSRF defense.
+
 ```typescript
 // BAD: fetch whatever the user gives you
 await fetch(req.body.webhookUrl);
 
-// GOOD: allowlist scheme + host, reject if ANY resolved IP is private, forbid redirects
+// PARTIAL: allowlist scheme + host, reject private/reserved IPs before connecting
 import { lookup } from 'node:dns/promises';
 import ipaddr from 'ipaddr.js';
 
 const ALLOWED_HOSTS = new Set(['hooks.example.com']);
 
-async function assertSafeUrl(raw: string): Promise<URL> {
+async function prevalidateUrl(raw: string): Promise<URL> {
   const url = new URL(raw);
   if (url.protocol !== 'https:') throw new Error('https only');
   if (!ALLOWED_HOSTS.has(url.hostname)) throw new Error('host not allowed');
@@ -149,12 +153,13 @@ async function assertSafeUrl(raw: string): Promise<URL> {
   return url;
 }
 
-await fetch(await assertSafeUrl(req.body.webhookUrl), { redirect: 'error' });
+// INCOMPLETE: fetch resolves DNS again; the checked addresses are not pinned.
+await fetch(await prevalidateUrl(req.body.webhookUrl), { redirect: 'error' });
 ```
 
 The `range() !== 'unicast'` check covers loopback, link-local `169.254.169.254` (cloud metadata, the #1 SSRF target), private, and unique-local ranges across IPv4 and IPv6.
 
-**Caveat — this still has a TOCTOU gap.** `fetch` resolves DNS again after the check, so an attacker using a short-TTL record can rebind to an internal IP between validation and connection. For high-risk surfaces, resolve once and connect to the pinned IP, or put a filtering agent in front (`request-filtering-agent` / `ssrf-req-filter`).
+**Close the check/connection gap before using this with untrusted URLs.** An attacker using a short-TTL record can rebind to an internal IP between validation and connection. Use an HTTP transport that connects only to validated addresses, or a filtering transport that enforces the destination policy at connection time. Preserve the original hostname for the HTTP `Host` header, TLS SNI, and certificate verification; keep redirects disabled and enforce the same policy on retries and fallback connections. See the [OWASP SSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html#domain-name).
 
 ## Input Validation Patterns
 
@@ -210,7 +215,7 @@ function validateUpload(file: UploadedFile) {
 
 A delete, move, or overwrite is only as safe as the value that names its target. Reading that value from the kernel, a job payload, or a sibling service proves where it *arrived from*, not who *wrote* it — another process's command line is as attacker-controlled as a form field. A shape check ("absolute path, at least one directory deep") proves well-formedness and gets mistaken for authorization; that is how a cleanup routine deletes the root instead of the leaf.
 
-Before a destructive call, require all three: the resolved target sits under an **allowlisted root** (compare after resolving symlinks, never on the raw string); it is at least one level **below** that root, so a root is never itself the target; and it carries **evidence that it is yours**, read *before* the operation and before any teardown that removes it — otherwise "absent" and "not mine" are indistinguishable. On refusal, log the rejected target and stop: a cleanup that falls back to a broader default path is the failure this guards against. Worked example in `../../../references/security-checklist.md#destructive-path-operations`.
+Before a destructive call, require all three: the resolved target sits under an **allowlisted root** (compare after resolving symlinks, never on the raw string); it is at least one level **below** that root, so a root is never itself the target; and it carries **evidence that it is yours**, read *before* the operation and before any teardown that removes it — otherwise "absent" and "not mine" are indistinguishable. On refusal, log the rejected target and stop: a cleanup that falls back to a broader default path is the failure this guards against. Worked example in `../references/shared/security-checklist.md#destructive-path-operations`.
 
 Two limits, because the check reads stronger than it is. A marker inside the tree is self-attestation — anything that can write there can write the marker — so the expected owner has to come from authenticated state, and the marker needs integrity protection (restrictive ownership, or a MAC) before it counts as authorization. And resolving a path and then operating on the *name* is a check/use race wherever an untrusted process can swap an ancestor: on a shared volume, hold the target by descriptor and use no-follow, beneath-the-root operations, or make sure the hierarchy cannot change for the duration.
 

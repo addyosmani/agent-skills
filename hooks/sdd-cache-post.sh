@@ -27,12 +27,12 @@ dbg() {
   mkdir -p "$dir"
   printf '%s [post] %s\n' "$(date -u +%FT%TZ)" "$*" >> "$dir/.debug.log"
 }
-dbg "fired, input=$(printf '%s' "$INPUT" | head -c 400)"
+dbg "fired, input=${INPUT:0:400}"
 
 URL=$(printf '%s'    "$INPUT" | jq -r '.tool_input.url    // empty' 2>/dev/null || true)
 PROMPT=$(printf '%s' "$INPUT" | jq -r '.tool_input.prompt // empty' 2>/dev/null || true)
 if [ -z "$URL" ]; then dbg "no url in tool_input, exit"; exit 0; fi
-dbg "url=$URL prompt=$(printf '%s' "$PROMPT" | head -c 80)"
+dbg "url=$URL prompt=${PROMPT:0:80}"
 
 # WebFetch tool_response shape (Claude Code as of 2026-04): an object with
 # keys bytes, code, codeText, durationMs, result, url — content lives at
@@ -115,14 +115,14 @@ fi
 NOW=$(date +%s)
 
 TMP="${CACHE_FILE}.$$.tmp"
-if jq -n \
+# Response bodies can exceed argv limits; read the content from stdin.
+if printf '%s' "$CONTENT" | jq -Rs \
   --arg url           "$URL" \
   --arg prompt        "$PROMPT" \
   --arg etag          "$ETAG" \
   --arg last_modified "$LAST_MOD" \
-  --arg content       "$CONTENT" \
   --argjson fetched_at "$NOW" \
-  '{url: $url, prompt: $prompt, etag: $etag, last_modified: $last_modified, content: $content, fetched_at: $fetched_at}' \
+  '{url: $url, prompt: $prompt, etag: $etag, last_modified: $last_modified, content: ., fetched_at: $fetched_at}' \
   > "$TMP"
 then
   mv "$TMP" "$CACHE_FILE"
