@@ -59,13 +59,18 @@ const diff = tracked + '\n' + untracked;
 // Walk the diff. `---` and `+++` are file headers only between a file's `diff` line and its first
 // `@@` hunk; inside a hunk every line is content, so an added `++i` (shown as `+++i`) or a removed
 // `-- comment` is a change, not a header. Both headers name the file, so a deletion
-// (`+++ /dev/null`) keeps its name.
+// (`+++ /dev/null`) keeps its name. Each `@@ -old +new @@` header sets the line numbers, so a
+// finding can name its location without repeating the line's text.
 const added = [], removed = [], deleted = [];
-const pathOf = (s) => s.replace(/^[ab]\//, '');
-let file = '', oldFile = '', inHeader = false;
+const pathOf = (s) => s.replace(/^[ab]\//, '').replace(/\t$/, ''); // git ends a path with a space in a tab
+let file = '', oldFile = '', inHeader = false, oldLine = 0, newLine = 0;
 for (const line of diff.split('\n')) {
   if (line.startsWith('diff ')) inHeader = true;
-  else if (line.startsWith('@@')) inHeader = false;
+  else if (line.startsWith('@@')) {
+    inHeader = false;
+    const m = /^@@ -(\d+)(?:,\d+)? \+(\d+)/.exec(line);
+    if (m) { oldLine = Number(m[1]); newLine = Number(m[2]); }
+  }
   else if (inHeader) {
     if (line.startsWith('--- ')) oldFile = pathOf(line.slice(4));
     else if (line.startsWith('+++ ')) {
@@ -74,12 +79,17 @@ for (const line of diff.split('\n')) {
       if (newFile === '/dev/null') deleted.push(file);
     }
   }
-  else if (line.startsWith('+')) added.push({ file, text: line.slice(1) });
-  else if (line.startsWith('-')) removed.push({ file, text: line.slice(1) });
+  else if (line.startsWith('+')) added.push({ file, line: newLine++, text: line.slice(1) });
+  else if (line.startsWith('-')) removed.push({ file, oldPath: oldFile, line: oldLine++, text: line.slice(1) });
+  else if (line.startsWith(' ')) { oldLine++; newLine++; } // context, e.g. from diff.interHunkContext
 }
 
+// A finding carries the file and line, never the line's text: a suppressed or TODO line is often
+// the one holding a secret-like value, and the report ends up in terminals and agent logs.
 const findings = [];
-const flag = (rule, f, text) => findings.push({ rule, file: f, text: text.trim().slice(0, 120) });
+const flag = (rule, where) => findings.push({ rule, where });
+const at = (l) => `${l.file}:${l.line}`; // added line, numbered in the new file
+const atBase = (l) => `${l.oldPath}:${l.line} (removed)`; // removed line, named and numbered as in the base
 const isTest = (f) => /\.(test|spec)\.|_test\.|test_/.test(f);
 const isConstraints = (f) => /CONSTRAINTS\.md$/.test(f);
 
@@ -90,18 +100,19 @@ const STUBS = /throw new (Error|NotImplemented).*[Nn]ot implemented|catch\s*\(\w
 // 2. A test made easier (added skips).
 const SKIPS = /\.(skip|todo)\b|\bxit\(|\bxdescribe\(|@pytest\.mark\.skip|t\.Skip\(/;
 
-for (const { file, text } of added) {
-  if (SUPPRESSIONS.test(text)) flag('silenced-checker', file, text);
-  if (STUBS.test(text)) flag('unfinished-work', file, text);
-  if (SKIPS.test(text)) flag('test-made-easier', file, text);
-  if (isConstraints(file) && /^\| *(W|E)\d+ *\|/.test(text)) flag('new-exception', file, text);
+for (const l of added) {
+  const { file, text } = l;
+  if (SUPPRESSIONS.test(text)) flag('silenced-checker', at(l));
+  if (STUBS.test(text)) flag('unfinished-work', at(l));
+  if (SKIPS.test(text)) flag('test-made-easier', at(l));
+  if (isConstraints(file) && /^\| *(W|E)\d+ *\|/.test(text)) flag('new-exception', at(l));
 }
 
 // 2b. A test file deleted, or an assertion removed from a test file that still exists.
-for (const f of deleted) if (isTest(f)) flag('test-deleted', f, 'file deleted');
-for (const { file, text } of removed) {
-  if (isTest(file) && !deleted.includes(file) && /\b(expect|assert|should)\b/.test(text)) {
-    flag('assertion-removed', file, text);
+for (const f of deleted) if (isTest(f)) flag('test-deleted', `${f} (file deleted)`);
+for (const l of removed) {
+  if (isTest(l.file) && !deleted.includes(l.file) && /\b(expect|assert|should)\b/.test(l.text)) {
+    flag('assertion-removed', atBase(l));
   }
 }
 
@@ -142,7 +153,7 @@ const addedRules = added.filter((l) => isConstraints(l.file) && ruleKey(l.text) 
 for (const r of removedRules) {
   const a = addedRules.find((x) => ruleKey(x.text) === ruleKey(r.text));
   if (!a) {
-    if (!isException(r.text)) flag('rule-removed', r.file, r.text); // dropping an exception tightens: silent
+    if (!isException(r.text)) flag('rule-removed', atBase(r)); // dropping an exception tightens: silent
     continue;
   }
   const before = thresholds(r.text), after = thresholds(a.text);
@@ -159,12 +170,12 @@ for (const r of removedRules) {
       }
     });
   }
-  if (verdict) flag(verdict, r.file, r.text + '  ->  ' + a.text);
+  if (verdict) flag(verdict, `${atBase(r)} -> ${at(a)}`);
 }
 
 if (findings.length === 0) { console.log('floor-guard: clean'); process.exit(0); }
 console.error('floor-guard: ' + findings.length + ' floor violation(s):');
-for (const f of findings) console.error(`  [${f.rule}] ${f.file}: ${f.text}`);
+for (const f of findings) console.error(`  [${f.rule}] ${f.where}`);
 if (findings.some((f) => f.rule === 'rule-removed')) {
   console.error('\nA rule-removed finding can also mean the rule\'s label changed: rename a rule in one commit and change its thresholds in another.');
 }
