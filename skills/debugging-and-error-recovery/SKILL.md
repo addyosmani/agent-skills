@@ -227,18 +227,18 @@ function getConfig(key: string): string {
 }
 
 // Graceful degradation (instead of broken feature)
-function renderChart(data: ChartData[]) {
+function renderChart(
+  data: ChartData[],
+  ChartBoundary: React.ComponentType<React.PropsWithChildren>
+) {
   if (data.length === 0) {
     return <EmptyState message="No data available for this period" />;
   }
-  try {
-    return <Chart data={data} />;
-  } catch (error) {
-    console.error('Chart render failed:', error);
-    return <ErrorState message="Unable to display chart" />;
-  }
+  return <ChartBoundary><Chart data={data} /></ChartBoundary>;
 }
 ```
+
+JSX creates an element; React invokes the child component later. A `try/catch` around `<Chart />` cannot catch its render failure. Pass the application's chart error boundary as `ChartBoundary`, configured to report descendant errors and render `<ErrorState message="Unable to display chart" />`. The [shipping error-reporting pattern](../shipping-and-launch/SKILL.md#error-reporting) shows the native React boundary lifecycle; adapt its fallback to the chart's error state.
 
 ## Instrumentation Guidelines
 
