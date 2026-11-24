@@ -61,6 +61,21 @@ jobs:
       - name: Test session-start hook payload
         run: bash hooks/session-start-test.sh
 
+  check-shared-references-on-main:
+    name: Check shared references on main
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Check shared-reference copies in skills
+        run: node scripts/sync-shared-references.js --check
+
   validate-commands:
     name: Validate command parity and description sync
     runs-on: ubuntu-latest
