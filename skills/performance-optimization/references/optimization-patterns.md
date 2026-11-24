@@ -220,9 +220,11 @@ async function getAppConfig(): Promise<AppConfig> {
   if (cachedConfig && Date.now() < cacheExpiry) {
     return cachedConfig;
   }
-  cachedConfig = await db.config.findFirst();
+  const config = await db.config.findFirst();
+  if (!config) throw new Error('App config row is missing');
+  cachedConfig = config;
   cacheExpiry = Date.now() + CACHE_TTL;
-  return cachedConfig;
+  return config;
 }
 
 // HTTP caching headers for static assets
