@@ -113,7 +113,9 @@ function gradeRecorded(file, record, ev, model, historical, grade) {
   let outcome;
   try {
     outcome = grade(record.evidence.trace, ev, model);
-    Object.assign(attempt, { status: outcome.grading ? 'graded' : 'invalid', ...outcome });
+    Object.assign(attempt, { status: outcome.grading ? 'graded' : outcome.graderError ? 'error' : 'invalid', ...outcome });
+    // Same shape as when a grader failure threw: the message lives in `error`.
+    if (outcome.graderError) attempt.error = outcome.graderError.trim();
   } catch (error) {
     attempt.status = 'error';
     attempt.error = error.message;

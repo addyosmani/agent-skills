@@ -561,7 +561,7 @@ function extractExecutorModel(trace) {
 }
 
 function clearGradingSlot(base) {
-  for (const suffix of ['grading.json', 'grading.raw.txt', 'execution.raw.txt', 'execution.error.txt']) {
+  for (const suffix of ['grading.json', 'grading.raw.txt', 'grading.error.txt', 'execution.raw.txt', 'execution.error.txt']) {
     fs.rmSync(`${base}.${suffix}`, { force: true });
   }
 }
@@ -602,7 +602,20 @@ function gradeTrace(trace, ev, model) {
   ].join('\n\n');
   // The trace can be megabytes; pass the grader prompt via stdin, never
   // argv, or it would blow past the OS argument-size limit (E2BIG).
-  const raw = execFileSync('claude', ['-p', ...(model ? ['--model', model] : [])], { input: graderPrompt, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, timeout: GRADER_TIMEOUT_MS });
+  let raw;
+  try {
+    raw = execFileSync('claude', ['-p', ...(model ? ['--model', model] : [])], { input: graderPrompt, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, timeout: GRADER_TIMEOUT_MS });
+  } catch (error) {
+    // A timeout or crash is an ungraded outcome, not an exception: callers
+    // keep the evidence (the run's trace, a record's attempt) and continue.
+    const failure = `${error.code || `exit ${error.status ?? 'unknown'}`}: ${error.message}`;
+    return {
+      raw: String(error.stdout || ''),
+      grading: null,
+      gradingError: `grading incomplete: ${failure}`,
+      graderError: `${failure}\n${error.stderr || ''}`,
+    };
+  }
   let gradingError = 'grader returned invalid JSON';
   const grading = parseGrading(raw, ev.expectations, (reason) => { gradingError = reason; });
   return { raw, grading, ...(!grading ? { gradingError } : {}) };
@@ -719,9 +732,19 @@ function runBehavioral(skillName, dryRun, { record = false, model, evalId = null
       staged,
     }) : null;
     if (saved) console.log(`record saved -> ${saved.file}`);
-    const { raw, grading, gradingError } = saved
+    const { raw, grading, gradingError, graderError } = saved
       ? gradeRecorded(saved.file, saved.record, ev, model, false, gradeTrace)
       : gradeTrace(trace, ev, model);
+    if (graderError) {
+      // A grader timeout or crash after a paid executor run: keep the trace
+      // and whatever the grader printed, then move on to the next eval.
+      fs.writeFileSync(`${base}.execution.raw.txt`, trace);
+      fs.writeFileSync(`${base}.grading.raw.txt`, raw);
+      fs.writeFileSync(`${base}.grading.error.txt`, graderError);
+      console.log(`  ✗  eval ${ev.id}: ${gradingError}; execution and grading evidence retained`);
+      failures++;
+      continue;
+    }
     const runMeta = {
       executor_model: extractExecutorModel(trace),
       grader_model: 'unknown',
