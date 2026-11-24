@@ -574,3 +574,62 @@ test('a duplicate skips a slug occupied by an earlier literal heading', () => {
   const result = run(root);
   assert.equal(result.status, 0, result.stdout + result.stderr);
 });
+
+// Spellings that open the right file but that sync-shared-references.js does
+// not count, so it neither writes nor keeps the copy.
+for (const [file, link, spelling] of [
+  ['SKILL.md', './references/shared/security-checklist.md', 'references/shared/security-checklist.md'],
+  ['SKILL.md', './references/shared/renamed.md', 'references/shared/renamed.md'],
+  ['references/patterns.md', 'shared/security-checklist.md', '../references/shared/security-checklist.md'],
+  ['references/patterns.md', './shared/security-checklist.md', '../references/shared/security-checklist.md'],
+]) {
+  for (const copied of [false, true]) {
+    test(`fails when ${file} links ${link} ${copied ? 'with' : 'without'} the copy present`, () => {
+      const root = makeSandbox();
+      writeFile(root, 'references/security-checklist.md', '# Security\n');
+      if (copied) copyShared(root, 'hardening', 'security-checklist.md');
+      writeFile(root, 'skills/hardening/SKILL.md', '# Hardening\n');
+      writeFile(root, `skills/hardening/${file}`, `# Title\n\nSee \`${link}\`.\nSee [it](${link}#security).\n`);
+
+      const result = run(root);
+
+      assert.equal(result.status, 1, result.stdout + result.stderr);
+      for (const line of [3, 4]) {
+        assert.ok(
+          result.stdout.includes(`L${line}: ${link} — the sync script does not see this spelling, write \`${spelling}\`\n`),
+          result.stdout
+        );
+      }
+      assert.match(result.stdout, /1 skills checked — 2 error\(s\) — FAILED/);
+    });
+  }
+}
+
+test('ignores the uncounted spellings inside a fenced block', () => {
+  const root = makeSandbox();
+  writeFile(root, 'references/security-checklist.md', '# Security\n');
+  writeFile(root, 'skills/hardening/SKILL.md', '```markdown\n[a](./references/shared/security-checklist.md)\n```\n');
+  writeFile(root, 'skills/hardening/references/patterns.md', '```markdown\n[a](shared/security-checklist.md)\n```\n');
+
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /1 skills checked — 0 error\(s\) — PASSED/);
+});
+
+test('leaves shared/ paths alone that do not name a shared checklist', () => {
+  // `shared/x.md` may be a path in the user's own project.
+  const root = makeSandbox();
+  writeFile(root, 'references/security-checklist.md', '# Security\n');
+  writeFile(root, 'skills/hardening/SKILL.md', 'See `shared/security-checklist.md` and `./references/own.md`.\n');
+  writeFile(
+    root,
+    'skills/hardening/references/patterns.md',
+    'See `shared/x.md`, `./shared/x.md`, `docs/shared/security-checklist.md` and `~/shared/security-checklist.md`.\n'
+  );
+
+  const result = run(root);
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /1 skills checked — 0 error\(s\) — PASSED/);
+});

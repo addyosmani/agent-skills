@@ -24,13 +24,17 @@
  * The markdown files inside a skill's own `references/` directory get the
  * same check, with each link resolved from the file that contains it.
  *
+ * A path that reaches the skill's `references/shared/` copy under any other
+ * spelling fails too, whether or not the copy exists: sync-shared-references.js
+ * does not count it, so it would neither write nor keep the copy.
+ *
  * A `#fragment` after such a link must match a heading in the target file,
  * slugged the way GitHub renders anchors. The file existing is not enough:
  * renaming a heading breaks every link to it while the path still resolves.
  *
- * Scope is deliberately narrow: only `references/*.md` links, only SKILL.md
- * and `skills/<name>/references/*.md` files. It is not a general markdown
- * path linter — skills legitimately mention paths that do not exist yet
+ * Scope is deliberately narrow: only `references/*.md` links and paths
+ * to a shared copy, only SKILL.md and `skills/<name>/references/*.md` files.
+ * It is not a general markdown path linter — skills legitimately mention paths that do not exist yet
  * (`tasks/todo.md`, `PERF.md`, `docs/ideas/[idea-name].md`), and those must
  * not fail the build.
  *
@@ -57,6 +61,9 @@ const SKILLS_DIR = path.join(ROOT, 'skills');
 // non-path character so `myreferences/x.md` does not match. An optional
 // `#fragment` is captured separately.
 const REFERENCE_LINK_RE = /(?<![A-Za-z0-9._/-])((?:\.\.\/)*references\/(?:shared\/)?[A-Za-z0-9._-]+\.md)(?:#([\p{L}\p{N}_-]+))?/gu;
+
+// Matches any relative path to a markdown file in a directory named shared/.
+const SHARED_PATH_RE = /(?<![A-Za-z0-9._/-])(?:[A-Za-z0-9._-]+\/+)*shared\/+([A-Za-z0-9._-]+\.md)/g;
 
 // GitHub's heading anchor: the rendered text, lowercased, with everything but
 // letters, numbers, `_`, `-` and spaces dropped, then spaces turned to hyphens.
@@ -96,6 +103,8 @@ function headingAnchors(file) {
 function findViolations(file, skillDir) {
   const violations = [];
   const baseDir = path.dirname(file);
+  const sharedDir = path.join(skillDir, 'references', 'shared');
+  const sharedPrefix = baseDir === skillDir ? 'references/shared/' : '../references/shared/';
   // Share the linter's fence rules; blanked lines preserve diagnostic positions.
   const lines = stripFencedCodeBlocks(fs.readFileSync(file, 'utf8')).split('\n');
 
@@ -110,6 +119,15 @@ function findViolations(file, skillDir) {
       } else if (anchor && !headingAnchors(target).has(anchor)) {
         violations.push({ line: i + 1, link, target, anchor });
       }
+    }
+
+    for (const [link, name] of line.matchAll(SHARED_PATH_RE)) {
+      const target = path.resolve(baseDir, link);
+      const spelling = sharedPrefix + name;
+      if (path.dirname(target) !== sharedDir || link === spelling) continue;
+      // A bare `shared/x.md` may be a path in the user's own project.
+      if (!link.includes('references/') && !fs.existsSync(path.join(ROOT, 'references', name))) continue;
+      violations.push({ line: i + 1, link, target, spelling });
     }
   });
 
@@ -159,11 +177,15 @@ function main() {
       }
 
       console.log(`  ✗  ${toPosix(file)}`);
-      for (const { line, link, target, anchor, outside } of violations) {
+      for (const { line, link, target, anchor, outside, spelling } of violations) {
         errors++;
         if (anchor) {
           console.log(`       L${line}: ${link}#${anchor} — no heading in ${toPosix(target)} produces #${anchor}`);
           anchorErrors++;
+          continue;
+        }
+        if (spelling) {
+          console.log(`       L${line}: ${link} — the sync script does not see this spelling, write \`${spelling}\``);
           continue;
         }
         if (outside) {
