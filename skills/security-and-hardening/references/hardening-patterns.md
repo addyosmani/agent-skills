@@ -129,17 +129,19 @@ if (!API_KEY) throw new Error('STRIPE_API_KEY not configured');
 
 Any time the server fetches a URL the user influenced — webhooks, "import from URL", image proxies, link previews — an attacker can aim it at internal services (cloud metadata, `localhost`, private IPs).
 
+**Incomplete example — URL pre-validation only.** The checks below reject disallowed URLs and addresses at validation time, but do not bind the later connection to those addresses. Do not copy this as a complete SSRF defense.
+
 ```typescript
 // BAD: fetch whatever the user gives you
 await fetch(req.body.webhookUrl);
 
-// GOOD: allowlist scheme + host, reject if ANY resolved IP is private, forbid redirects
+// PARTIAL: allowlist scheme + host, reject private/reserved IPs before connecting
 import { lookup } from 'node:dns/promises';
 import ipaddr from 'ipaddr.js';
 
 const ALLOWED_HOSTS = new Set(['hooks.example.com']);
 
-async function assertSafeUrl(raw: string): Promise<URL> {
+async function prevalidateUrl(raw: string): Promise<URL> {
   const url = new URL(raw);
   if (url.protocol !== 'https:') throw new Error('https only');
   if (!ALLOWED_HOSTS.has(url.hostname)) throw new Error('host not allowed');
@@ -151,12 +153,13 @@ async function assertSafeUrl(raw: string): Promise<URL> {
   return url;
 }
 
-await fetch(await assertSafeUrl(req.body.webhookUrl), { redirect: 'error' });
+// INCOMPLETE: fetch resolves DNS again; the checked addresses are not pinned.
+await fetch(await prevalidateUrl(req.body.webhookUrl), { redirect: 'error' });
 ```
 
 The `range() !== 'unicast'` check covers loopback, link-local `169.254.169.254` (cloud metadata, the #1 SSRF target), private, and unique-local ranges across IPv4 and IPv6.
 
-**Caveat — this still has a TOCTOU gap.** `fetch` resolves DNS again after the check, so an attacker using a short-TTL record can rebind to an internal IP between validation and connection. For high-risk surfaces, resolve once and connect to the pinned IP, or put a filtering agent in front (`request-filtering-agent` / `ssrf-req-filter`).
+**Close the check/connection gap before using this with untrusted URLs.** An attacker using a short-TTL record can rebind to an internal IP between validation and connection. Use an HTTP transport that connects only to validated addresses, or a filtering transport that enforces the destination policy at connection time. Preserve the original hostname for the HTTP `Host` header, TLS SNI, and certificate verification; keep redirects disabled and enforce the same policy on retries and fallback connections. See the [OWASP SSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html#domain-name).
 
 ## Input Validation Patterns
 
