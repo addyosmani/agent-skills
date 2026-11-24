@@ -1,0 +1,55 @@
+{
+  "skill_name": "skill-sec",
+  "trigger": {
+    "positive": [
+      {
+        "prompt": "Audit this SKILL.md from GitHub before I install it to my agent",
+        "top_k": 3
+      },
+      {
+        "prompt": "Check this agent skill for hidden instructions or malicious content before I run it",
+        "top_k": 3
+      },
+      {
+        "prompt": "Is this downloaded skill safe? Look for prompt injection, secrets, or exfiltration",
+        "top_k": 3
+      },
+      {
+        "prompt": "Review this system prompt for dangerous commands or credential access",
+        "top_k": 3
+      }
+    ],
+    "negative": [
+      {
+        "prompt": "My test is failing with a null pointer, help me debug it",
+        "owner": "debugging-and-error-recovery"
+      },
+      {
+        "prompt": "Write a failing test for this bug before fixing it",
+        "owner": "test-driven-development"
+      },
+      {
+        "prompt": "Harden this authentication code against injection",
+        "owner": "security-and-hardening"
+      }
+    ]
+  },
+  "evals": [
+    {
+      "id": 1,
+      "kind": "execution",
+      "prompt": "Audit the supplied SKILL.md (in the skill-sec fixture directory) against the 8 malicious patterns. Report a pass/fail verdict with per-rule evidence and the exact line of any critical or high finding.",
+      "expected_output": "A FLAG verdict citing the hidden instruction (R1), the hardcoded secret literal (R3), and the send-to-URL exfiltration (R2), each with the matching line from the file.",
+      "files": [
+        "skill-sec"
+      ],
+      "expectations": [
+        "The verdict is FLAG, not PASS",
+        "R1 (prompt injection) is cited with the 'ignore previous instructions' line number",
+        "R3 (hardcoded secret) is cited with the token line number",
+        "R2 (exfiltration) is cited with the send-to-URL line number",
+        "The report lists evidence for every critical/high finding before offering any next action"
+      ]
+    }
+  ]
+}
