@@ -40,7 +40,7 @@ npx --yes @axe-core/cli@4.13.0 http://localhost:3000 --dir ./a11y-reports --save
 npx --yes pa11y@9.1.1 http://localhost:3000
 ```
 
-For a combined report, run `bash skills/accessibility-engineering/scripts/audit-a11y.sh url <url> --json`. It runs both pinned tools, records their status and versions, and fails rather than reporting a clean result when either tool does not produce a valid report.
+For a combined report, resolve [scripts/audit-a11y.sh](scripts/audit-a11y.sh) relative to this skill's directory, then run `bash "<absolute-skill-directory>/scripts/audit-a11y.sh" url <url> --json`. Replace `<absolute-skill-directory>` with the absolute path to the directory containing this loaded `SKILL.md`; a plugin or per-skill install may place it outside the project being audited. It runs both pinned tools, records their status and versions, and fails rather than reporting a clean result when either tool does not produce a valid report.
 
 Review the violations grouped by severity:
 - **Critical** — Blocks screen reader access entirely (missing alt text on info images, empty buttons)
