@@ -214,7 +214,9 @@ class ErrorBoundary extends React.Component<React.PropsWithChildren> {
 }
 
 // Server-side error reporting
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((err: Error & { status?: number }, req: Request, res: Response, next: NextFunction) => {
+  if (err.status && err.status >= 400 && err.status < 500) return res.status(err.status).json({ error: { code: 'CLIENT_ERROR', message: err.message } });
+
   reportError(err, {
     method: req.method,
     url: req.url,
