@@ -136,8 +136,9 @@ function main() {
   }
 
   // ── Claude frontmatter validity ─────────────────────────────────────────────
-  // Only the .md directory: the TOML dirs are parsed by a real TOML parser
-  // already, so a malformed one surfaces as a missing description above.
+  // Only the .md directory. The TOML files are parsed with Python's tomllib
+  // (and checked for a `prompt` key) by the "Parse TOML command files" step in
+  // .github/workflows/test-plugin-install.yml.
   console.log('\nChecking Claude command frontmatter...');
 
   for (const stem of claudeStems) {
