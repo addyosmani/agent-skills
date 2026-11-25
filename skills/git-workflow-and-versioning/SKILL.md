@@ -149,9 +149,12 @@ refactor/<short-description>  → refactor/auth-module
 For parallel AI agent work, use git worktrees to run multiple branches simultaneously:
 
 ```bash
-# Create a worktree for a feature branch
-git worktree add ../project-feature-a feature/task-creation
-git worktree add ../project-feature-b feature/user-settings
+# Create worktrees on new feature branches
+git worktree add -b feature/task-creation ../project-feature-a
+git worktree add -b feature/user-settings ../project-feature-b
+
+# For an existing branch, pass the path first:
+# git worktree add ../project-feature-a feature/task-creation
 
 # Each worktree is a separate directory with its own branch
 # Agents can work in parallel without interfering
