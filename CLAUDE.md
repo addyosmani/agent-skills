@@ -8,9 +8,9 @@ This is the agent-skills project — a collection of production-grade engineerin
 
 ```
 skills/       → Core skills (SKILL.md per directory)
-agents/       → Reusable agent personas (code-reviewer, test-engineer, security-auditor, web-performance-auditor)
+agents/       → Reusable agent personas (code-reviewer, test-engineer, security-auditor, web-performance-auditor, accessibility-auditor)
 hooks/        → Session lifecycle hooks
-.claude/commands/ → Slash commands (/spec, /plan, /build, /test, /review, /code-simplify, /ship; plus /webperf specialist audit)
+.claude/commands/ → Slash commands (/spec, /plan, /build, /test, /review, /code-simplify, /ship; plus the /webperf and /a11y specialist audits)
 references/   → Supplementary checklists (testing, performance, security, accessibility, observability)
 evals/        → Skill eval cases + framework (see evals/README.md)
 docs/         → Setup guides for different tools
@@ -22,7 +22,7 @@ docs/         → Setup guides for different tools
 **Plan:** planning-and-task-breakdown
 **Build:** incremental-implementation, test-driven-development, context-engineering, source-driven-development, doubt-driven-development, frontend-ui-engineering, api-and-interface-design
 **Verify:** browser-testing-with-devtools, debugging-and-error-recovery
-**Review:** code-review-and-quality, code-simplification, security-and-hardening, performance-optimization
+**Review:** code-review-and-quality, code-simplification, security-and-hardening, performance-optimization, accessibility-engineering
 **Ship:** git-workflow-and-versioning, ci-cd-and-automation, deprecation-and-migration, documentation-and-adrs, observability-and-instrumentation, shipping-and-launch
 
 ## Conventions
@@ -57,4 +57,4 @@ PRs target the upstream repository's default branch. In a typical fork setup the
 - Always: Follow the skill-anatomy.md format for new skills
 - Always: Check the upstream repo's open PRs and issues for overlap before opening a new PR
 - Never: Add skills that are vague advice instead of actionable processes
-- Never: Duplicate content between skills — reference other skills instead
+- Never: Duplicate content between skills — reference other skills instead. The one exception: the copies in `skills/<name>/references/shared/` are generated from the root `references/` by `node scripts/sync-shared-references.js` and are never edited or deleted by hand

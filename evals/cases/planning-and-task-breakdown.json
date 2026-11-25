@@ -21,7 +21,8 @@
         "owner": "debugging-and-error-recovery"
       },
       {
-        "prompt": "Encode the output so it is safe against XSS"
+        "prompt": "Encode the output so it is safe against XSS",
+        "owner": "security-and-hardening"
       }
     ]
   },

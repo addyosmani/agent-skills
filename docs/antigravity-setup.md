@@ -45,13 +45,14 @@ agy plugin list
 
 ## Lifecycle Workflows and Command Compatibility
 
-Antigravity's [migration tooling](https://www.agy.dev/docs/cli/gcli-migration/) reports the 8 legacy definitions in `commands/*.toml` as "converted to skills." In affected `agy` 1.1.x releases, validation succeeds but the converted wrappers do not appear in the slash-command or skill catalog. A successful `agy plugin validate` therefore confirms the files are well formed, not that `/build` and the other short wrappers are available. This is tracked in [agent-skills #445](https://github.com/addyosmani/agent-skills/issues/445) and upstream in [antigravity-cli #788](https://github.com/google-antigravity/antigravity-cli/issues/788).
+Antigravity's [migration tooling](https://www.agy.dev/docs/cli/gcli-migration/) reports the 10 legacy definitions in `commands/*.toml` as "converted to skills." In affected `agy` 1.1.x releases, validation succeeds but the converted wrappers do not appear in the slash-command or skill catalog. A successful `agy plugin validate` therefore confirms the files are well formed, not that `/build` and the other short wrappers are available. This is tracked in [agent-skills #445](https://github.com/addyosmani/agent-skills/issues/445) and upstream in [antigravity-cli #788](https://github.com/google-antigravity/antigravity-cli/issues/788).
 
 Use the native plugin skills directly while that importer limitation applies:
 
 | Intended wrapper | Direct Antigravity invocation | Notes |
 |------------------|-------------------------------|-------|
 | `/spec` | `/agent-skills:spec-driven-development` | Writes a structured spec before code |
+| `/constraints` | `/agent-skills:constraint-driven-development` | Defines and enforces the project's quality bar |
 | `/planning` | `/agent-skills:planning-and-task-breakdown` | Antigravity's built-in `/planning` command is a separate plan-mode control |
 | `/build` | `/agent-skills:incremental-implementation` | Also invoke `/agent-skills:test-driven-development`; wrapper-only `/build auto` orchestration is unavailable |
 | `/test` | `/agent-skills:test-driven-development` | Runs the red-green-refactor workflow |
@@ -59,6 +60,7 @@ Use the native plugin skills directly while that importer limitation applies:
 | `/code-simplify` | `/agent-skills:code-simplification` | Simplifies without changing behavior |
 | `/ship` | `/agent-skills:shipping-and-launch` | The wrapper's automatic persona fan-out is unavailable; invoke specialist agents separately |
 | `/webperf` | Select `web-performance-auditor` from `/agents` | This workflow is a persona, not a skill |
+| `/a11y` | `/agent-skills:accessibility-engineering` | Audits an interface for WCAG 2.2 AA and remediates the violations found |
 
 Do not add YAML frontmatter to the TOML files as a workaround. Gemini CLI reads the parallel TOML command format with a strict parser, and `---` frontmatter makes those files invalid TOML without changing Antigravity's conversion behavior.
 
@@ -106,7 +108,9 @@ You can invoke these personas directly within your session or when delegating ta
 ## Configuration & Customization
 
 ### Project-Specific Enforcements (`AGENTS.md`)
-To enforce strict skill compliance (e.g. requiring a spec or plan before writing code), copy or link `AGENTS.md` into the root of your workspace. Antigravity CLI reads this file to align the agent's behavior and planning phase with your team's conventions.
+To enforce strict skill compliance (e.g. requiring a spec or plan before writing code), create a project-specific `AGENTS.md` in the root of your workspace. Describe your project's conventions, test commands, and required skill workflows there.
+
+This repository's root `AGENTS.md` and `CLAUDE.md` configure agents contributing to Agent Skills itself. Do not copy or link them into your project or global agent configuration; the reusable assets are the skills in `skills/`. See [Repo-scoped files](../CONTRIBUTING.md#repo-scoped-files).
 
 ### Sandbox Mode
 If you want to run skills or scripts with limited terminal permissions (for safety when running third-party validation tests), launch the CLI with:

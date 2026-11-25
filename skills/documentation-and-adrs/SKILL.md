@@ -1,6 +1,6 @@
 ---
 name: documentation-and-adrs
-description: Records decisions and documentation. Use when making architectural decisions, changing public APIs, shipping features, or when you need to record context that future engineers and agents will need to understand the codebase.
+description: Records decisions and documentation, and detects when documentation has drifted from the code it describes. Use when you need to document an architecture decision (ADR) or the reasoning behind a design choice, when changing public APIs, shipping features, when docs may be stale or out of sync with the code they describe, when working out which module docs are still accurate, or when setting up a check so docs cannot silently go out of date again.
 ---
 
 # Documentation and ADRs
@@ -51,7 +51,7 @@ Store ADRs in `docs/decisions/` with sequential numbering (unless the project al
 # ADR-001: Use PostgreSQL for primary database
 
 ## Status
-Accepted | Superseded by ADR-XXX | Deprecated
+Proposed | Accepted | Superseded by ADR-XXX | Deprecated
 
 ## Date
 2025-01-15
@@ -111,8 +111,9 @@ Comment the *why*, not the *what*:
 counter += 1;
 
 // GOOD: Explains non-obvious intent
-// Rate limit uses a sliding window — reset counter at window boundary,
-// not on a fixed schedule, to prevent burst attacks at window edges
+// Rate limit uses a fixed window that opens on the first request after the
+// previous one expires, not on a clock schedule. Known gap: a client can spend
+// the full limit just before a reset and again just after (2x in a moment)
 if (now - windowStart > WINDOW_SIZE_MS) {
   counter = 0;
   windowStart = now;
@@ -256,6 +257,31 @@ Special consideration for AI agent context:
 - **ADRs** — Help agents understand why past decisions were made (prevents re-deciding)
 - **Inline gotchas** — Prevent agents from falling into known traps
 
+## Prose Review
+
+After checking the technical content, review the prose for the people who will use it. Clearer wording must not change the decision or its limits.
+
+1. Mark the details that must survive the edit: names, numbers and units, commands, paths, links, conditions, trade-offs, and uncertainty. Check them against the available code and decision context; flag anything you cannot substantiate.
+2. Replace stock introductions, promotional adjectives, and repeated summaries with the concrete information the reader needs. Do not replace an unsupported claim with an invented example or a stronger guarantee. Keep necessary technical repetition and the project's established terminology.
+3. Compare the edited document with the original and its sources. Restore any lost qualifier or caveat, verify command and code examples still work as documented, and explain any unresolved factual question rather than polishing it away.
+
+## Documentation Drift
+
+A document that was true when written still reads as authoritative after the code moves on. When a doc may be stale, decide from version control, not from how confident the doc sounds:
+
+```bash
+code=$(git log -1 --format=%H -- src/rate-limiter.js)
+doc=$(git log -1 --format=%H -- docs/rate-limiter.md)
+if [ "$code" = "$doc" ]; then echo "current: changed together"
+elif git merge-base --is-ancestor "$doc" "$code"; then echo "stale: code changed after the doc"
+elif git merge-base --is-ancestor "$code" "$doc"; then echo "current: doc changed after the code"
+else echo "can't tell"; fi
+```
+
+Unordered history (divergent branches, a rebase, a shallow clone) means "can't tell". Say that; never report it as current.
+
+When you correct a doc that has a change log, append a dated entry that says why it changed. Never rewrite or collapse earlier entries: git keeps the old text, but the log is the only record of the reasons.
+
 ## Common Rationalizations
 
 | Rationalization | Reality |
@@ -265,6 +291,7 @@ Special consideration for AI agent context:
 | "Nobody reads docs" | Agents do. Future engineers do. Your 3-months-later self does. |
 | "ADRs are overhead" | A 10-minute ADR prevents a 2-hour debate about the same decision six months later. |
 | "Comments get outdated" | Comments on *why* are stable. Comments on *what* get outdated — that's why you only write the former. |
+| "I'll tidy the change log while I'm in here" | Git holds the old text; the log holds the reasons. Rewriting it destroys the only copy of the reasoning and preserves nothing. |
 
 ## Red Flags
 
@@ -275,6 +302,8 @@ Special consideration for AI agent context:
 - TODO comments that have been there for weeks
 - No ADRs in a project with significant architectural choices
 - Documentation that restates the code instead of explaining intent
+- A change log that has been rewritten rather than appended to
+- A doc called current when the commit order of the doc and its code could not be determined
 
 ## Verification
 
@@ -286,3 +315,6 @@ After documenting:
 - [ ] Known gotchas are documented inline where they matter
 - [ ] No commented-out code remains
 - [ ] Rules files (CLAUDE.md etc.) are current and accurate
+- [ ] Prose edits preserve source details, decision trade-offs, and qualifiers without adding unsupported guarantees
+- [ ] Change logs were appended to rather than rewritten
+- [ ] A doc whose staleness could not be determined is reported as "can't tell", not as current

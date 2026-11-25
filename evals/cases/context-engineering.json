@@ -39,6 +39,20 @@
         "A specific context-loading plan is produced (what to load, when, and why)",
         "Context is scoped to the task instead of loading everything"
       ]
+    },
+    {
+      "id": 3,
+      "prompt": "Read the attached context-budget notes and write a short context-management plan to context-plan.md before the next task. Do not edit application files or restart the session.",
+      "expected_output": "A context plan using the reported 60% host boundary rather than a universal 75% rule, preserving accepted scope and live evidence",
+      "files": [
+        "context-budget"
+      ],
+      "expectations": [
+        "The plan uses the reported 55% occupancy and 60% compaction boundary to make room before the next large operation, instead of waiting for a universal 75% threshold",
+        "Irrelevant import-error logs and replaced drafts are summarized or dropped while the accepted read-only scope, active retry-test result and exact command are preserved",
+        "The completed task status, next task and unresolved caller-guard question remain in the handoff, without treating context cleanup as permission to edit or publish",
+        "The agent writes context-plan.md without editing application files or starting another session"
+      ]
     }
   ]
 }

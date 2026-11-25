@@ -41,21 +41,40 @@ const ARTIFACT_ALLOWLIST = new Set([
 
 // The files that make up the spec -> plan -> build pipeline. Absent files are
 // skipped, not failed: this validator checks path consistency, not presence.
+//
+// The command bodies exist once per host surface (validate-commands.js checks
+// that the three sets stay in step on descriptions, but their prompt bodies
+// are allowed to differ), so a producer or consumer can drift on one surface
+// while the Claude Code copy stays correct. Every surface is guarded here.
 const GUARDED_FILES = [
+  // Claude Code commands
   '.claude/commands/spec.md',
   '.claude/commands/plan.md',
   '.claude/commands/build.md',
+  // Gemini CLI commands
+  '.gemini/commands/spec.toml',
+  '.gemini/commands/planning.toml',
+  '.gemini/commands/build.toml',
+  // Root command set (Antigravity, Codex, and other TOML-based hosts)
+  'commands/spec.toml',
+  'commands/planning.toml',
+  'commands/build.toml',
+  // Skills the commands invoke
   'skills/spec-driven-development/SKILL.md',
   'skills/planning-and-task-breakdown/SKILL.md',
+  // Docs that tell users where the artifacts live
   'docs/getting-started.md',
   'docs/adoption-guide.md',
+  'docs/copilot-setup.md', // its prompt-file aliases name the artifacts directly
 ];
 
 // Matches a path-like token ending in a spec/plan/todo artifact filename,
 // including an optional directory prefix with bracket placeholders like
 // docs/features/[feature-name]/spec.md. Case-insensitive so SPEC.md and a
-// drifted spec.md are both caught, then compared against the allowlist.
-const ARTIFACT_RE = /(?:[A-Za-z0-9._[\]-]+\/)*(?:spec|plan|todo)\.md/gi;
+// drifted spec.md are both caught, then compared against the allowlist. The
+// lookbehind keeps the match from starting mid-word, so `test-plan.md` or
+// `release_todo.md` are not mistaken for a drifted `plan.md` / `todo.md`.
+const ARTIFACT_RE = /(?<![A-Za-z0-9._[\]-])(?:[A-Za-z0-9._[\]-]+\/)*(?:spec|plan|todo)\.md/gi;
 
 function findViolations(relPath) {
   const abs = path.join(ROOT, relPath);

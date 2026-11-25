@@ -13,11 +13,20 @@
       {
         "prompt": "Clean up this working code, it has grown hard to follow",
         "top_k": 3
+      },
+      {
+        "prompt": "Simplify this function, it works but it is hard to read.",
+        "top_k": 3
+      },
+      {
+        "prompt": "Clean this up, it works but it has grown hard to follow. Here is the function.",
+        "top_k": 3
       }
     ],
     "negative": [
       {
-        "prompt": "Add a feature flag system to the app"
+        "prompt": "Add a feature flag system to the app",
+        "owner": "incremental-implementation"
       },
       {
         "prompt": "Diagnose why the build broke overnight",

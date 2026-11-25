@@ -1,6 +1,11 @@
 #!/bin/bash
 # agent-skills session start hook
-# Injects the using-agent-skills meta-skill into every new session
+# Injects the using-agent-skills meta-skill into a new session.
+#
+# Not wired by the plugin: hosts that already route skills from their
+# descriptions (Claude Code, Codex CLI) would run a second router on top of
+# the native one — see docs/getting-started.md. Wire this script into a
+# SessionStart hook only on hosts without native skill routing.
 #
 # Every output path must emit the standard SessionStart envelope
 #   {"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "..."}}

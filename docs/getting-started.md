@@ -2,6 +2,11 @@
 
 agent-skills works with any AI coding agent that accepts Markdown instructions. This guide covers the universal approach. For tool-specific setup, see the dedicated guides.
 
+Want a worked example before setting up your own project? The
+[interactive tutorials](https://skills.addy.ie/tutorials/) walk through a
+greenfield build, a brownfield feature, and a safe automation loop with
+copyable prompts for Claude Code, Codex, or any other agent.
+
 ## How Skills Work
 
 Each skill is a Markdown file (`SKILL.md`) that describes a specific engineering workflow. When loaded into an agent's context, the agent follows the workflow — including verification steps, anti-patterns to avoid, and exit criteria.
@@ -35,9 +40,23 @@ Copy the relevant `SKILL.md` content into your agent's system prompt, rules file
 
 **Conversation:** Reference the skill when giving instructions: "Follow the test-driven-development process for this change."
 
-### 4. Use the meta-skill for discovery
+### 4. Use the meta-skill for discovery when needed
 
-Start with the `using-agent-skills` skill loaded. It contains a flowchart that maps task types to the appropriate skill.
+If your agent does not route skills natively, start with the `using-agent-skills` skill loaded. It contains a flowchart that maps task types to the appropriate skill.
+
+If your host already discovers and activates skills from their descriptions, do not also paste `using-agent-skills` into an always-on system prompt or rules file. That creates two routers for the same task. Install the individual skills and let the host activate them on demand instead.
+
+### Existing projects need no migration
+
+Install the pack from the existing project's root using the normal setup path
+for your agent, then keep working in that project. Skills activate for matching
+tasks; they do not require a new repository layout or a one-time conversion of
+existing code.
+
+Do not copy this repository's root `AGENTS.md` or `CLAUDE.md` into the project.
+Those files configure contributors to agent-skills itself. Add only the skills
+and any project-specific instructions your agent normally reads. For a gradual
+rollout in an established codebase, follow the [Adoption Guide](adoption-guide.md).
 
 ## Recommended Setup
 
@@ -99,6 +118,7 @@ The `agents/` directory contains pre-configured agent personas:
 | `test-engineer.md` | Test strategy and writing |
 | `security-auditor.md` | Vulnerability detection |
 | `web-performance-auditor.md` | Core Web Vitals & performance audit (via `/webperf`) |
+| `accessibility-auditor.md` | WCAG 2.2 AA conformance audit (via `/a11y`) |
 
 Load an agent definition when you need specialized review. For example, ask your coding agent to "review this change using the code-reviewer agent persona" and provide the agent definition.
 
@@ -109,6 +129,7 @@ The `.claude/commands/` directory contains slash commands for Claude Code:
 | Command | Skill Invoked |
 |---------|---------------|
 | `/spec` | spec-driven-development |
+| `/constraints` | constraint-driven-development |
 | `/plan` | planning-and-task-breakdown |
 | `/build` | incremental-implementation + test-driven-development |
 | `/build auto` | planning-and-task-breakdown → incremental-implementation + test-driven-development (whole plan, one approval) |
@@ -117,6 +138,7 @@ The `.claude/commands/` directory contains slash commands for Claude Code:
 | `/code-simplify` | code-simplification |
 | `/ship` | shipping-and-launch |
 | `/webperf` | web-performance-auditor (specialist agent, web apps only) |
+| `/a11y` | accessibility-engineering + accessibility-auditor (specialist audit, interfaces only) |
 
 > **Note:** When installed as a Claude Code plugin you may see a warning like
 > _"Default commands/ folder is ignored because the manifest sets 'commands'"_.
@@ -166,6 +188,12 @@ The same artifacts are the handoff between sessions. For a small task, run the w
 **Before switching**, make sure those files reflect the decisions that still apply, the scope you approved, the questions still open, the next task, and the current verification state (which tests ran, against what).
 
 **In the new session**, read the actual files and look at `git status` before doing anything. Don't assume approvals you can't see in the artifacts. Treat a recorded "tests pass" as a claim about a specific baseline: re-run the checks it covers if the code has moved since, if it doesn't say what was run against what, or if you're about to touch the area it covered. If the baseline still holds, take it and get on with the next task — the point is a check proportional to what changed, not a full suite at every handoff.
+
+#### Task-boundary restarts and Ralph loops
+
+`/build auto` can run the whole approved plan in one session. It does not require or perform a fresh process per task. Its per-task status updates, verification results, and commits make each completed task a restartable boundary, so a capable external harness may exit and resume there without depending on chat history.
+
+A shell-level "Ralph loop" is harness behavior, not a separate skill workflow. If you use one, restart only after the current task has reached a recorded boundary; on re-entry, read the durable artifacts and repository state before selecting the next pending task. A process exit is not evidence that a task passed, and a restart must not bypass an approval gate. See the `context-engineering` skill's **Restartable Session Boundaries** section for the handoff checklist.
 
 This doesn't need the `/spec` and `/plan` wrappers — plain requests work in any agent, including a `npx skills add` install that only has the skills:
 

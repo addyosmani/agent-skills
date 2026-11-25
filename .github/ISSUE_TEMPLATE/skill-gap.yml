@@ -15,6 +15,7 @@ body:
       label: Affected skill
       description: Which skill did not work as expected?
       options:
+        - accessibility-engineering
         - api-and-interface-design
         - browser-testing-with-devtools
         - ci-cd-and-automation

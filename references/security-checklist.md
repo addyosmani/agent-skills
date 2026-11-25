@@ -29,7 +29,7 @@ Before reaching for controls, spend five minutes thinking like an attacker:
 
 ## Pre-Commit Checks
 
-- [ ] No secrets in code (`git diff --cached | grep -i "password\|secret\|api_key\|token"`)
+- [ ] No secrets in code (`git diff --cached -i -G'password|secret|api_key|token' --name-only` — lists only the names of files whose staged diff matches, never the value itself; any output means review those files before committing)
 - [ ] `.gitignore` covers: `.env`, `.env.local`, `*.pem`, `*.key`
 - [ ] `.env.example` uses placeholder values (not real secrets)
 
@@ -138,6 +138,9 @@ cors({ origin: '*' })  // Allows any origin
 - [ ] PII encrypted at rest (if required by regulation)
 - [ ] HTTPS for all external communication
 - [ ] Database backups encrypted
+- [ ] Personal data is classified, collected against a stated purpose, and minimized
+- [ ] Personal data has a retention limit and a working deletion path (incl. backups, caches, indexes)
+- [ ] Export/delete (data-subject) requests are supported where required; third-party sharing has consent and a data-processing agreement
 
 ## Dependency Security
 
@@ -214,18 +217,20 @@ res.status(500).json({
 
 ## OWASP Top 10 Quick Reference
 
+Numbering follows the [OWASP Top 10:2025](https://owasp.org/Top10/2025/). Cite a category with its year (`A06:2025`), since the 2021 edition used different numbers for several of the same categories.
+
 | # | Vulnerability | Prevention |
 |---|---|---|
-| 1 | Broken Access Control | Auth checks on every endpoint, ownership verification |
-| 2 | Cryptographic Failures | HTTPS, strong hashing, no secrets in code |
-| 3 | Injection | Parameterized queries, input validation |
-| 4 | Insecure Design | Threat modeling, spec-driven development |
-| 5 | Security Misconfiguration | Security headers, minimal permissions, audit deps |
-| 6 | Vulnerable Components | The ecosystem's dependency audit (`npm audit`, `pip-audit`, ...), keep deps updated, minimal deps |
-| 7 | Auth Failures | Strong passwords, rate limiting, session management |
-| 8 | Data Integrity Failures | Verify updates/dependencies, signed artifacts |
-| 9 | Logging Failures | Log security events, don't log secrets |
-| 10 | SSRF | Validate/allowlist URLs, restrict outbound requests |
+| A01 | Broken Access Control (now includes SSRF) | Auth checks on every endpoint, ownership verification; validate/allowlist server-side fetch URLs, restrict outbound requests |
+| A02 | Security Misconfiguration | Security headers, minimal permissions, secure defaults |
+| A03 | Software Supply Chain Failures | The ecosystem's dependency audit (`npm audit`, `pip-audit`, ...), keep deps updated, minimal deps, review new packages and install scripts |
+| A04 | Cryptographic Failures | HTTPS, strong hashing, no secrets in code |
+| A05 | Injection | Parameterized queries, input validation |
+| A06 | Insecure Design | Threat modeling, spec-driven development |
+| A07 | Authentication Failures | Strong passwords, rate limiting, session management |
+| A08 | Software or Data Integrity Failures | Verify updates, signed artifacts, no deserialization of untrusted data |
+| A09 | Security Logging and Alerting Failures | Log security events, alert on them, don't log secrets |
+| A10 | Mishandling of Exceptional Conditions | Fail closed, handle every error path, generic error bodies |
 
 ## OWASP Top 10 for LLMs Quick Reference
 

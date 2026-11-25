@@ -10,6 +10,7 @@
  * Checks (errors block CI):
  *   - Every command present in one directory exists in all three
  *   - The 'description' field is identical across all three equivalents
+ *   - Claude command frontmatter is valid YAML, not merely splittable
  *
  * What this does NOT check:
  *   Prompt body differences are intentional — each tool has its own
@@ -22,6 +23,13 @@
 
 const fs   = require('fs');
 const path = require('path');
+
+// The same frontmatter-validity rules validate-skills applies to SKILL.md.
+// Description extraction shares the top-level frontmatter reader with skills.
+// YAML validity is checked separately because Claude Code parses frontmatter
+// when the command is loaded. The #494 thread verified all 25 SKILL.md files
+// and the command files by hand; this makes the second half a check too.
+const { frontmatterYamlErrors, parseFrontmatter } = require(path.join(__dirname, 'lib', 'skill-lint.js'));
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -46,16 +54,7 @@ const NAME_MAP_REVERSE = Object.fromEntries(
 
 function descriptionFromMd(filePath) {
   const content = fs.readFileSync(filePath, 'utf8');
-  const match   = content.match(/^---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*\r?\n/);
-  if (!match) return null;
-  for (const line of match[1].split(/\r?\n/)) {
-    const colonIdx = line.indexOf(':');
-    if (colonIdx === -1) continue;
-    if (line.slice(0, colonIdx).trim() === 'description') {
-      return line.slice(colonIdx + 1).trim().replace(/^['"]|['"]$/g, '');
-    }
-  }
-  return null;
+  return parseFrontmatter(content)?.description ?? null;
 }
 
 function descriptionFromToml(filePath) {
@@ -132,6 +131,32 @@ function main() {
     const claudeStem = NAME_MAP_REVERSE[stem] ?? stem;
     if (!(claudeStem in byTool.claude)) {
       console.log(`  ✗  ${stem} — present in toml dirs but missing in .claude/commands`);
+      errors++;
+    }
+  }
+
+  // ── Claude frontmatter validity ─────────────────────────────────────────────
+  // Only the .md directory: the TOML dirs are parsed by a real TOML parser
+  // already, so a malformed one surfaces as a missing description above.
+  console.log('\nChecking Claude command frontmatter...');
+
+  for (const stem of claudeStems) {
+    const full = path.join(DIRS.claude.dir, `${stem}${DIRS.claude.ext}`);
+    let yamlErrors = [];
+    try {
+      yamlErrors = frontmatterYamlErrors(fs.readFileSync(full, 'utf8'));
+    } catch (e) {
+      console.log(`  ✗  ${stem} — cannot read file: ${e.message}`);
+      errors++;
+      continue;
+    }
+    if (yamlErrors.length === 0) {
+      console.log(`  ✓  ${stem}`);
+      continue;
+    }
+    console.log(`  ✗  ${stem}`);
+    for (const message of yamlErrors) {
+      console.log(`       ${message}`);
       errors++;
     }
   }

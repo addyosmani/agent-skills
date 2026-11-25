@@ -1,6 +1,6 @@
 ---
 name: source-driven-development
-description: Grounds every implementation decision in official documentation. Use when you want authoritative, source-cited code free from outdated patterns. Use when building with any framework or library where correctness matters.
+description: Grounds every implementation decision in official documentation. Use when you want to verify an approach against the official docs before implementing it, or when you want authoritative, source-cited code free from outdated patterns. Use when building with any framework or library where correctness matters.
 ---
 
 # Source-Driven Development
@@ -158,8 +158,9 @@ form submission state. React 19 replaced the manual
 isPending/setIsPending pattern with this hook.
 
 Source: https://react.dev/blog/2024/12/05/react-19#actions
-"useTransition now supports async functions [...] to handle
-pending states automatically"
+"In React 19, we're adding support for using async functions in
+transitions to handle pending states, errors, forms, and optimistic
+updates automatically."
 ```
 
 **Citation rules:**

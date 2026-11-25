@@ -29,7 +29,8 @@
         "owner": "performance-optimization"
       },
       {
-        "prompt": "Tag and publish the release"
+        "prompt": "Tag and publish the release",
+        "owner": "git-workflow-and-versioning"
       }
     ]
   },

@@ -1,6 +1,6 @@
 ---
 name: debugging-and-error-recovery
-description: Guides systematic root-cause debugging. Use when tests fail, builds break, behavior doesn't match expectations, or you encounter any unexpected error. Use when you need a systematic approach to finding and fixing the root cause rather than guessing.
+description: Guides systematic root-cause debugging. Use when tests fail, builds break, something that worked yesterday broke, behavior doesn't match expectations, or you encounter any unexpected error. Use when you need to figure out what broke and why — a systematic approach to finding and fixing the root cause rather than guessing. Use when asked what broke, why a test started failing, or why code throws, even when the diff, the function, or the stack trace is pasted inline and the cause looks obvious from reading it, so that the cause is named, the fix is minimal, and the reply says how to confirm it.
 ---
 
 # Debugging and Error Recovery
@@ -9,7 +9,7 @@ description: Guides systematic root-cause debugging. Use when tests fail, builds
 
 Systematic debugging with structured triage. When something breaks, stop adding features, preserve evidence, and follow a structured process to find and fix the root cause. Guessing wastes time. The triage checklist works for test failures, build errors, runtime bugs, and production incidents.
 
-When a CLI captures or transforms evidence, apply the support criteria and failure-preserving patterns in `../../references/agent-first-clis.md`.
+When a CLI captures or transforms evidence, apply the support criteria and failure-preserving patterns in `references/shared/agent-first-clis.md`.
 
 ## When to Use
 
@@ -83,7 +83,7 @@ npm test -- --grep "test name"
 npm test -- --verbose
 
 # Run in isolation (rules out test pollution)
-npm test -- --testPathPattern="specific-file" --runInBand
+npm test -- specific-file --runInBand
 ```
 
 ### Step 2: Localize
