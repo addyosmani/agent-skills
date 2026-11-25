@@ -69,6 +69,28 @@ jobs:
       - name: Validate commands across all tool directories
         run: node scripts/validate-commands.js
 
+      - name: Parse TOML command files
+        shell: python3 {0}
+        run: |
+          import glob, sys, tomllib
+          paths = sorted(glob.glob('.gemini/commands/*.toml') + glob.glob('commands/*.toml'))
+          if not paths:
+              sys.exit('no TOML command files found')
+          errors = 0
+          for path in paths:
+              try:
+                  with open(path, 'rb') as f:
+                      data = tomllib.load(f)
+              except tomllib.TOMLDecodeError as e:
+                  print(f'::error file={path}::{e}')
+                  errors += 1
+                  continue
+              if 'prompt' not in data:
+                  print(f'::error file={path}::missing required `prompt` key')
+                  errors += 1
+          print(f'{len(paths)} TOML command files parsed, {errors} error(s)')
+          sys.exit(1 if errors else 0)
+
       - name: Test command validator
         run: node --test scripts/validate-commands-test.js
 
