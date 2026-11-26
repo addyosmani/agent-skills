@@ -272,13 +272,14 @@ A document that was true when written still reads as authoritative after the cod
 ```bash
 code=$(git log -1 --format=%H -- src/rate-limiter.js)
 doc=$(git log -1 --format=%H -- docs/rate-limiter.md)
-if [ "$code" = "$doc" ]; then echo "current: changed together"
+if [ -z "$code" ] || [ -z "$doc" ] || [ "$(git rev-parse --is-shallow-repository)" = true ]; then echo "can't tell"
+elif [ "$code" = "$doc" ]; then echo "current: changed together"
 elif git merge-base --is-ancestor "$doc" "$code"; then echo "stale: code changed after the doc"
 elif git merge-base --is-ancestor "$code" "$doc"; then echo "current: doc changed after the code"
 else echo "can't tell"; fi
 ```
 
-Unordered history (divergent branches, a rebase, a shallow clone) means "can't tell". Say that; never report it as current.
+Unordered or missing history (divergent branches, a rebase, a shallow clone, a path with no commits) means "can't tell". Say that; never report it as current.
 
 When you correct a doc that has a change log, append a dated entry that says why it changed. Never rewrite or collapse earlier entries: git keeps the old text, but the log is the only record of the reasons.
 
