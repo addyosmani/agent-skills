@@ -270,15 +270,20 @@ After checking the technical content, review the prose for the people who will u
 A document that was true when written still reads as authoritative after the code moves on. When a doc may be stale, decide from version control, not from how confident the doc sounds:
 
 ```bash
-code=$(git log -1 --format=%H -- src/rate-limiter.js)
-doc=$(git log -1 --format=%H -- docs/rate-limiter.md)
-if [ "$code" = "$doc" ]; then echo "current: changed together"
-elif git merge-base --is-ancestor "$doc" "$code"; then echo "stale: code changed after the doc"
-elif git merge-base --is-ancestor "$code" "$doc"; then echo "current: doc changed after the code"
-else echo "can't tell"; fi
+if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+  echo "can't tell: shallow clone, every path resolves to the same tip commit"
+else
+  code=$(git log -1 --format=%H -- src/rate-limiter.js)
+  doc=$(git log -1 --format=%H -- docs/rate-limiter.md)
+  if [ -z "$code" ] || [ -z "$doc" ]; then echo "can't tell: no commit touches one of the paths"
+  elif [ "$code" = "$doc" ]; then echo "current: changed together"
+  elif git merge-base --is-ancestor "$doc" "$code"; then echo "stale: code changed after the doc"
+  elif git merge-base --is-ancestor "$code" "$doc"; then echo "current: doc changed after the code"
+  else echo "can't tell"; fi
+fi
 ```
 
-Unordered history (divergent branches, a rebase, a shallow clone) means "can't tell". Say that; never report it as current.
+Unordered history (divergent branches, a rebase, a shallow clone) means "can't tell". Say that; never report it as current. A shallow clone is the case that fails quietly: with `--depth 1` the tip is the only commit every path resolves to, so the two hashes are equal and the check reports files as changed together that never were. CI checkouts are shallow by default, so ask for history (`git fetch --unshallow`) before answering when the answer matters. Two empty answers — a path that was renamed, a typo, an untracked file — are no evidence of a shared change either.
 
 When you correct a doc that has a change log, append a dated entry that says why it changed. Never rewrite or collapse earlier entries: git keeps the old text, but the log is the only record of the reasons.
 
